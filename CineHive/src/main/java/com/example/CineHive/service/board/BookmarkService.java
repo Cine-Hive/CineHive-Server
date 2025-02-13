@@ -21,7 +21,29 @@ public class BookmarkService {
     private final UserRepository userRepository;
 
     @Transactional
-    public boolean toggleBookmark(String memEmail, Long boardId) {
+    public boolean addBookmark(String memEmail, Long boardId) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("Board not found"));
+
+        // 북마크가 이미 존재하지 않으면 새로운 북마크 추가
+        Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndBoard(user, board);
+        if (existingBookmark.isPresent()) {
+            return false; 
+        } else {
+            Bookmark bookmark = new Bookmark();
+            bookmark.setUser(user);
+            bookmark.setBoard(board);
+            bookmarkRepository.save(bookmark);
+            // 북마크 수 갱신
+            board.updateBookmarkCount();
+            return true; // 북마크 추가 후 true 반환
+        }
+    }
+
+    @Transactional
+    public boolean removeBookmark(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Board board = boardRepository.findById(boardId)
@@ -30,25 +52,18 @@ public class BookmarkService {
         Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndBoard(user, board);
 
         if (existingBookmark.isPresent()) {
-            // 북마크가 이미 있으면 삭제
-            bookmarkRepository.delete(existingBookmark.get());
-            board.updateBookmarkCount(); // 북마크 수 업데이트
-            boardRepository.save(board); // Board 엔티티 저장
-            return false; // 북마크 삭제됨
+            Bookmark bookmark = existingBookmark.get();
+            bookmarkRepository.delete(bookmark);
+
+            bookmarkRepository.flush();  // DB에 즉시 반영되도록 하는 함수
+
+            board.updateBookmarkCount();
+            boardRepository.save(board);
+            return true;
         } else {
-            // 없으면 추가
-            Bookmark bookmark = new Bookmark();
-            bookmark.setUser(user);
-            bookmark.setBoard(board);
-            bookmarkRepository.save(bookmark);
-            board.updateBookmarkCount(); // 북마크 수 업데이트
-            boardRepository.save(board); // Board 엔티티 저장
-            return true; // 북마크 추가됨
+            return false;
         }
     }
-
-
-
 
     public int getBookmarkCount(Long boardId) {
         Board board = boardRepository.findById(boardId)
