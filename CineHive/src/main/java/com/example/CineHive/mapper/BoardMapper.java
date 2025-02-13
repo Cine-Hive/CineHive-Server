@@ -17,6 +17,7 @@ public class BoardMapper {
         dto.setNickname(board.getUser().getMemNickname());
         dto.setEmail(board.getUser().getMemEmail());
         dto.setBrgRedDate(board.getBrdRegDate());
+        dto.setBookmarkcount(board.getBookmarkCount());
         return dto;
     }
 

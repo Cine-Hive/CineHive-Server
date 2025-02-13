@@ -21,5 +21,5 @@ public class BoardDto {
     private String nickname;
     private String email;
     private LocalDateTime brgRedDate;
-
+    private int bookmarkcount;
 }
