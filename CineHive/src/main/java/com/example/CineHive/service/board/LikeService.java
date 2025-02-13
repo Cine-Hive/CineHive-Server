@@ -2,7 +2,7 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.LikeEntity;
+import com.example.CineHive.entity.board.BoardLike;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.LikeRepository;
@@ -30,11 +30,11 @@ public class LikeService {
                 .orElseThrow(() -> new RuntimeException("Board not found"));
 
 
-        Optional<LikeEntity> existingLike = likeRepository.findByUserAndBoard(user, board);
+        Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
         if (existingLike.isPresent()) {
             return false;
         } else {
-            LikeEntity likes = new LikeEntity();
+            BoardLike likes = new BoardLike();
             likes.setUser(user);
             likes.setBoard(board);
             likeRepository.save(likes);
@@ -54,9 +54,9 @@ public class LikeService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Board not found"));
 
-        Optional<LikeEntity> existingLike = likeRepository.findByUserAndBoard(user, board);
+        Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
         if (existingLike.isPresent()) {
-            LikeEntity likes = existingLike.get();
+            BoardLike likes = existingLike.get();
             likeRepository.delete(likes);
 
             likeRepository.flush();

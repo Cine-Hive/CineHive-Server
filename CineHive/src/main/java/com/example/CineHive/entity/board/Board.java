@@ -32,12 +32,17 @@ public class Board {
     private int views;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LikeEntity> likes;
+    private List<BoardLike> likes;
 
     @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
     private int likeCount;
 
-    private int dislikes;
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardDisLike> dislikes;
+
+    @Column(name = "dislike_count", nullable = false, columnDefinition = "int default 0")
+    private int dislikeCount;
+
     private int reports;
 
     @ManyToOne
@@ -55,7 +60,7 @@ public class Board {
         this.brdRegDate = LocalDateTime.now();
         this.views = 0;
         this.likeCount = 0;
-        this.dislikes = 0;
+        this.dislikeCount = 0;
         this.reports = 0;
         this.bookmarkCount = 0;
     }
@@ -75,5 +80,13 @@ public class Board {
 
     public int getLikeCount() {
         return likeCount;
+    }
+
+    public void updateDisLikeCount() {
+        this.dislikeCount = this.dislikes != null ? this.dislikes.size() : 0;
+    }
+
+    public int getDisLikeCount() {
+        return dislikeCount;
     }
 }
