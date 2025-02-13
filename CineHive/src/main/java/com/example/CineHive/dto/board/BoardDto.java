@@ -1,10 +1,12 @@
 package com.example.CineHive.dto.board;
 
 
+import com.example.CineHive.entity.board.Board;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDateTime;
 
@@ -19,4 +21,5 @@ public class BoardDto {
     private String nickname;
     private String email;
     private LocalDateTime brgRedDate;
+
 }

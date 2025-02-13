@@ -7,11 +7,10 @@ import com.example.CineHive.exception.BoardNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
-
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,6 +21,7 @@ public class BoardService {
     @Autowired
     private UserRepository userRepository;
 
+    /*게시글 생성 */
     public Board createBoard(BoardDto boardDto) {
         User user = userRepository.findByMemEmail(boardDto.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + boardDto.getEmail()));
@@ -34,12 +34,13 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
-
+    /*게시글 상세글 조회 */
     public BoardDto getBoardPostId(Long postId) {
         Optional<Board> boardOptional = boardRepository.findById(postId);
         return boardOptional.map(BoardMapper::convertToDto).orElse(null);
     }
 
+    /*게시글 수정 */
     public Board updateBoard(Long id, String brdTitle, String brdContent) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
         if (optionalBoard.isPresent()) {
@@ -52,10 +53,17 @@ public class BoardService {
         }
     }
 
+    /*게시글 삭제 */
     public void deleteBoard(Long id) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
         boardRepository.delete(board);
+    }
+
+    /*게시글 전체 목록 조회 */
+    public List<BoardDto> getAllBoard() {
+        List<Board> boards = boardRepository.findAll();
+        return BoardMapper.convertToDtoList(boards);
     }
 
 }

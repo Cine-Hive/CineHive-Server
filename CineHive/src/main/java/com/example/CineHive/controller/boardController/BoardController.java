@@ -4,9 +4,12 @@ import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.service.board.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 public class BoardController {
@@ -40,6 +43,11 @@ public class BoardController {
     public ResponseEntity<Void> deleteBoard(@PathVariable Long id){
         boardService.deleteBoard(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/boards")
+    public ResponseEntity<List<BoardDto>> getBoards() {
+        List<BoardDto> boards = boardService.getAllBoard();
+        return new ResponseEntity<>(boards, HttpStatus.OK);
     }
 }
 
