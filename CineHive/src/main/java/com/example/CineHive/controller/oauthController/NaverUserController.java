@@ -116,10 +116,12 @@ public class NaverUserController {
         newUser.setMemType("네이버"); // 가입 유형 설정
         newUser.setGenres(userDto.getGenres());
 
+
         userRepository.save(newUser);
 
         NaverUser naverUser = naverUserRepository.findByNaverId(userDto.getNaverId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
+        naverUser.setMemUserId(userDto.getMemEmail());
         naverUser.setName(userDto.getMemName());
         naverUser.setGenres(userDto.getGenres());
         naverUserRepository.save(naverUser);

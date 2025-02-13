@@ -120,6 +120,7 @@ public class GoogleUserController {
 
         GoogleUser googleUser = googleUserRepository.findByGoogleId(userDto.getGoogleId())
                 .orElseThrow(() -> new IllegalArgumentException("Google User not found"));
+        googleUser.setMemUserId(userDto.getMemEmail());
         googleUser.setName(userDto.getMemName());  // 이름 업데이트
         googleUser.setGenres(userDto.getGenres());  // 장르 업데이트
         googleUserRepository.save(googleUser);

@@ -37,6 +37,10 @@ public class Board {
     @JoinColumn(name = "mem_id", referencedColumnName = "mem_id", nullable = false)
     private User user;
 
+    private int BookmarkCount;
+
+    @Column(name = "like_count")
+    private Integer like;
     @PrePersist
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
@@ -46,5 +50,12 @@ public class Board {
         this.reports = 0;
     }
 
+    public void incrementFavoriteCount() {
+        this.BookmarkCount++;
+    }
+
+    public void decrementFavoriteCount() {
+        this.BookmarkCount--;
+    }
 
 }
