@@ -12,27 +12,30 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Controller
+@RequestMapping("/bookmark")
 public class BookmarkController {
 
     @Autowired
     private BookmarkService bookmarkService;
 
-    // 북마크 등록
-    @PostMapping("/bookmark/add")
-    public ResponseEntity<String> addBookmark(@RequestParam String memEmail, @RequestParam Long boardId) {
+    // 북마크 추가
+    @PostMapping("/{boardId}/users/{memEmail}")
+    public ResponseEntity<String> addBookmark(@PathVariable Long boardId, @PathVariable String memEmail) {
         boolean isBookmarked = bookmarkService.addBookmark(memEmail, boardId);
         return ResponseEntity.ok(isBookmarked ? "Bookmarked" : "Already Exists");
     }
 
     // 북마크 삭제
-    @DeleteMapping("/bookmark/remove")
-    public ResponseEntity<String> removeBookmark(@RequestParam String memEmail, @RequestParam Long boardId) {
+    @DeleteMapping("/{boardId}/users/{memEmail}")
+    public ResponseEntity<String> removeBookmark(@PathVariable Long boardId, @PathVariable String memEmail) {
         boolean isRemoved = bookmarkService.removeBookmark(memEmail, boardId);
         return isRemoved ? ResponseEntity.ok("Unbookmarked") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bookmark Not Found");
     }
-    @GetMapping("/board/bookmark/{id}/count")
-    public ResponseEntity<Integer> getBookmarkCount(@PathVariable Long id) {
-        int bookmarkCount = bookmarkService.getBookmarkCount(id);
-        return ResponseEntity.ok(bookmarkCount); // 북마크 수 반환
+
+    // 특정 게시글의 북마크 개수 조회
+    @GetMapping("/{boardId}/count")
+    public ResponseEntity<Integer> getBookmarkCount(@PathVariable Long boardId) {
+        int bookmarkCount = bookmarkService.getBookmarkCount(boardId);
+        return ResponseEntity.ok(bookmarkCount);
     }
 }
