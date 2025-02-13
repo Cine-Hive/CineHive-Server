@@ -35,5 +35,11 @@ public class BoardController {
         Board updateBoard = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent());
         return ResponseEntity.ok(updateBoard);
     }
+
+    @DeleteMapping("/boards/delete/{id}")
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long id){
+        boardService.deleteBoard(id);
+        return ResponseEntity.noContent().build();
+    }
 }
 
