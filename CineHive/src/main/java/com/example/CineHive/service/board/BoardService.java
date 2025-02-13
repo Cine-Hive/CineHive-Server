@@ -3,6 +3,7 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 
@@ -33,16 +34,19 @@ public class BoardService {
 
     public BoardDto getBoardPostId(Long postId) {
         Optional<Board> boardOptional = boardRepository.findById(postId);
-        return boardOptional.map(this::convertToDto).orElse(null);
+        return boardOptional.map(BoardMapper::convertToDto).orElse(null);
     }
-    private BoardDto convertToDto(Board board) {
-        BoardDto dto = new BoardDto();
-        dto.setId(board.getId());
-        dto.setBrdTitle(board.getBrdTitle());
-        dto.setBrdContent(board.getBrdContent());
-        dto.setNickname(board.getUser().getMemNickname());
-        dto.setEmail(board.getUser().getMemEmail());
-        dto.setBrgRedDate(board.getBrdRegDate());
-        return dto;
+
+    public Board updateBoard(Long id, String brdTitle, String brdContent) {
+        Optional<Board> optionalBoard = boardRepository.findById(id);
+        if (optionalBoard.isPresent()) {
+            Board board = optionalBoard.get();
+            board.setBrdTitle(brdTitle);
+            board.setBrdContent(brdContent);
+            return boardRepository.save(board);
+        } else {
+            throw new RuntimeException("게시글을 찾을 수 없습니다.");
+        }
     }
+
 }
