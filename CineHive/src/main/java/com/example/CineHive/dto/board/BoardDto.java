@@ -23,4 +23,5 @@ public class BoardDto {
     private LocalDateTime brgRedDate;
     private int bookmarkcount;
     private int likecount;
+    private int dislikecount;
 }

@@ -19,6 +19,7 @@ public class BoardMapper {
         dto.setBrgRedDate(board.getBrdRegDate());
         dto.setBookmarkcount(board.getBookmarkCount());
         dto.setLikecount(board.getLikeCount());
+        dto.setDislikecount(board.getDisLikeCount());
         return dto;
     }
 

@@ -33,7 +33,8 @@ public class SecurityConfig {
                                 "/topmovies/**", "/now_playing_movies"
                         ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
                         , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
-                                "/like/{boardId}/users/{memEmail}","/like/{boardId}/count").permitAll()
+                                "/like/{boardId}/users/{memEmail}","/like/{boardId}/count",
+                                "/dislike/{boardId}/users/{memEmail}","/dislike/{boardId}/count").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
                                 "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능

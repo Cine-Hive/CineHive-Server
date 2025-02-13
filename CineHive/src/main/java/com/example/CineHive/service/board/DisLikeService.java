@@ -2,10 +2,10 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.BoardLike;
+import com.example.CineHive.entity.board.BoardDisLike;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.LikeRepository;
+import com.example.CineHive.repository.board.DisLikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,55 +13,58 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
+public class DisLikeService {
 
-public class LikeService {
     @Autowired
-    private  LikeRepository likeRepository;
-    @Autowired
-    private  UserRepository userRepository;
-    @Autowired
-    private  BoardRepository boardRepository;
+    private DisLikeRepository disLikeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BoardRepository boardRepository;
+
+    // 싫어요 추가
     @Transactional
-    public boolean addLike(String memEmail, Long boardId) {
+    public boolean addDisLike(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Board not found"));
 
-
-        Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
-        if (existingLike.isPresent()) {
+        Optional<BoardDisLike> existingDisLike = disLikeRepository.findByUserAndBoard(user, board);
+        if (existingDisLike.isPresent()) {
             return false;
         } else {
-            BoardLike likes = new BoardLike();
-            likes.setUser(user);
-            likes.setBoard(board);
-            likeRepository.save(likes);
-            likeRepository.flush();
-            // 좋아요 개수 갱신
-            board.updateLikeCount();
+            BoardDisLike disLike = new BoardDisLike();
+            disLike.setUser(user);
+            disLike.setBoard(board);
+            disLikeRepository.save(disLike);
+
+            // 싫어요 개수 갱신
+            board.updateDisLikeCount();
             boardRepository.save(board);
 
             return true;
         }
     }
 
+    // 싫어요 삭제
     @Transactional
-    public boolean removeLike(String memEmail, Long boardId) {
+    public boolean removeDisLike(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Board not found"));
 
-        Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
-        if (existingLike.isPresent()) {
-            BoardLike likes = existingLike.get();
-            likeRepository.delete(likes);
+        Optional<BoardDisLike> existingDisLike = disLikeRepository.findByUserAndBoard(user, board);
+        if (existingDisLike.isPresent()) {
+            BoardDisLike disLike = existingDisLike.get();
+            disLikeRepository.delete(disLike);
 
-            likeRepository.flush();
+            disLikeRepository.flush(); // DB에 즉시 반영
 
-            board.updateLikeCount();
+            board.updateDisLikeCount();
             boardRepository.save(board);
 
             return true;
@@ -69,10 +72,11 @@ public class LikeService {
             return false;
         }
     }
-    public int getLikeCount(Long boardId) {
+
+    // 특정 게시글의 싫어요 개수 조회
+    public int getDisLikeCount(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Board not found"));
-        return board.getBookmarkCount();
+        return board.getDisLikeCount();
     }
-
 }
