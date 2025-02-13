@@ -22,4 +22,5 @@ public class BoardDto {
     private String email;
     private LocalDateTime brgRedDate;
     private int bookmarkcount;
+    private int likecount;
 }

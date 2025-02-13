@@ -32,7 +32,7 @@ public class Board {
     private int views;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likes;
+    private List<LikeEntity> likes;
 
     @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
     private int likeCount;
@@ -71,5 +71,9 @@ public class Board {
 
     public void updateLikeCount() {
         this.likeCount = this.likes != null ? this.likes.size() : 0;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
     }
 }
