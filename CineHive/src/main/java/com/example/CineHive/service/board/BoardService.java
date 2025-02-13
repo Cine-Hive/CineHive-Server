@@ -7,10 +7,9 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.Optional;
 
 @Service
 public class BoardService {
@@ -30,5 +29,20 @@ public class BoardService {
             board.setUser(user);
 
             return boardRepository.save(board);
+    }
+
+    public BoardDto getBoardPostId(Long postId) {
+        Optional<Board> boardOptional = boardRepository.findById(postId);
+        return boardOptional.map(this::convertToDto).orElse(null);
+    }
+    private BoardDto convertToDto(Board board) {
+        BoardDto dto = new BoardDto();
+        dto.setId(board.getId());
+        dto.setBrdTitle(board.getBrdTitle());
+        dto.setBrdContent(board.getBrdContent());
+        dto.setNickname(board.getUser().getMemNickname());
+        dto.setEmail(board.getUser().getMemEmail());
+        dto.setBrgRedDate(board.getBrdRegDate());
+        return dto;
     }
 }
