@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /*
 게시판 테이블
@@ -37,10 +38,12 @@ public class Board {
     @JoinColumn(name = "mem_id", referencedColumnName = "mem_id", nullable = false)
     private User user;
 
-    private int BookmarkCount;
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bookmark> bookmarks;
 
-    @Column(name = "like_count")
-    private Integer like;
+    @Column(name = "bookmark_count", nullable = false, columnDefinition = "int default 0")
+    private int bookmarkCount;
+
     @PrePersist
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
@@ -48,14 +51,15 @@ public class Board {
         this.likes = 0;
         this.dislikes = 0;
         this.reports = 0;
+        this.bookmarkCount = 0;  // 초기 북마크 수 설정
     }
 
-    public void incrementFavoriteCount() {
-        this.BookmarkCount++;
+    public int getBookmarkCount() {
+        return bookmarkCount;
     }
 
-    public void decrementFavoriteCount() {
-        this.BookmarkCount--;
+    // 북마크 수 업데이트 메소드
+    public void updateBookmarkCount() {
+        this.bookmarkCount = this.bookmarks != null ? this.bookmarks.size() : 0;
     }
-
 }

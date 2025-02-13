@@ -31,7 +31,8 @@ public class SecurityConfig {
                                 "/animations/**",
                                 "/get_topmovies",
                                 "/topmovies/**", "/now_playing_movies"
-                        ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**").permitAll()
+                        ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
+                        ,"/bookmark/toggle","/board/bookmark/{boardId}/count").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
                                 "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능

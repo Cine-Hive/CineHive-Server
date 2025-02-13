@@ -13,13 +13,16 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bookmark extends Board {
+public class Bookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "mem_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = false)
+    private Board board;
 }
