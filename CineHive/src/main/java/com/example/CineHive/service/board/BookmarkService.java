@@ -30,7 +30,7 @@ public class BookmarkService {
         // 북마크가 이미 존재하지 않으면 새로운 북마크 추가
         Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndBoard(user, board);
         if (existingBookmark.isPresent()) {
-            return false; 
+            return false;
         } else {
             Bookmark bookmark = new Bookmark();
             bookmark.setUser(user);

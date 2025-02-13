@@ -30,7 +30,13 @@ public class Board {
     private LocalDateTime brdRegDate;
 
     private int views;
-    private int likes;
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes;
+
+    @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
+    private int likeCount;
+
     private int dislikes;
     private int reports;
 
@@ -48,10 +54,10 @@ public class Board {
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
         this.views = 0;
-        this.likes = 0;
+        this.likeCount = 0;
         this.dislikes = 0;
         this.reports = 0;
-        this.bookmarkCount = 0;  // 초기 북마크 수 설정
+        this.bookmarkCount = 0;
     }
 
     public int getBookmarkCount() {
@@ -61,5 +67,9 @@ public class Board {
     // 북마크 수 업데이트 메소드
     public void updateBookmarkCount() {
         this.bookmarkCount = this.bookmarks != null ? this.bookmarks.size() : 0;
+    }
+
+    public void updateLikeCount() {
+        this.likeCount = this.likes != null ? this.likes.size() : 0;
     }
 }
