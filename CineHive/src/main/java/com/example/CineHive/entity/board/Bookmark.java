@@ -21,5 +21,5 @@ public class Bookmark extends Board {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "mem_id", nullable = false)
     private User user;
-
+    
 }
