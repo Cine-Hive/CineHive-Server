@@ -89,4 +89,9 @@ public class Board {
     public int getDisLikeCount() {
         return dislikeCount;
     }
+
+    public void increaseViews() {
+        this.views++;
+    }
+
 }

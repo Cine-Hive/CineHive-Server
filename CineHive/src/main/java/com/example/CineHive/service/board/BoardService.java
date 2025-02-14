@@ -36,8 +36,13 @@ public class BoardService {
 
     /*게시글 상세글 조회 */
     public BoardDto getBoardPostId(Long postId) {
-        Optional<Board> boardOptional = boardRepository.findById(postId);
-        return boardOptional.map(BoardMapper::convertToDto).orElse(null);
+        Board board = boardRepository.findById(postId)
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+
+        board.increaseViews();
+        boardRepository.save(board);
+
+        return BoardMapper.convertToDto(board);
     }
 
     /*게시글 수정 */
