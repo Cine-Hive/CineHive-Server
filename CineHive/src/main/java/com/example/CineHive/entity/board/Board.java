@@ -43,7 +43,12 @@ public class Board {
     @Column(name = "dislike_count", nullable = false, columnDefinition = "int default 0")
     private int dislikeCount;
 
-    private int reports;
+    @Column(name = "report_count", nullable = false, columnDefinition = "int default 0")
+    private int reportCount; // 🚨 신고 횟수 추가
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reports; // 🚨 신고 목록 추가
+
 
     @ManyToOne
     @JoinColumn(name = "mem_id", referencedColumnName = "mem_id", nullable = false)
@@ -61,7 +66,7 @@ public class Board {
         this.views = 0;
         this.likeCount = 0;
         this.dislikeCount = 0;
-        this.reports = 0;
+        this.reportCount = 0;
         this.bookmarkCount = 0;
     }
 
@@ -94,4 +99,7 @@ public class Board {
         this.views++;
     }
 
+    public void increaseReportCount() {
+        this.reportCount++;
+    }
 }
