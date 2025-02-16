@@ -10,6 +10,7 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.NaverUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -39,6 +40,7 @@ public class NaverUserController {
 
     @Autowired
     private final NaverUserRepository naverUserRepository;
+    @Operation(summary ="네이버 로그인 리다이렉션", description = "사용자를 네이버 OAuth 로그인 페이지로 리다이렉션하여 네이버 인증을 시작")
     @GetMapping("/naver")
     public void naverLoginRedirect(HttpServletResponse response) throws IOException {
         String redirectUrl = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=" + naverUserService.getClientId() +
@@ -49,6 +51,7 @@ public class NaverUserController {
     }
 
 
+    @Operation(summary = "네이버 OAuth 로그인 및 사용자 등록", description = "네이버 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/naver/callback")
     public void naverCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -89,6 +92,7 @@ public class NaverUserController {
         }
     }
 
+    @Operation(summary = "네이버 로그인 성공 페이지", description = "네이버 로그인 성공 시 사용자 정보를 반환")
     @GetMapping("/naver/success")
     public ResponseEntity<?> naverSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -101,6 +105,7 @@ public class NaverUserController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
+    @Operation(summary = "네이버 사용자 등록", description = "네이버 사용자 정보를 입력받아 회원가입을 진행, 중복 검사 통과 후 naver_user 테이블에 저장")
     @PostMapping("/naver/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
@@ -126,6 +131,7 @@ public class NaverUserController {
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 
+    @Operation(summary = "네이버 사용자 중복 확인", description = "해당 네이버 ID가 이미 등록되어 있는지 확인")
     @GetMapping("/naver/check-user")
     public ResponseEntity<Boolean> checkUser(@RequestParam String naverId) {
         boolean exists = userService.checkUserExistsNaver(naverId);

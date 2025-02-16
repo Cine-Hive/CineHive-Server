@@ -10,6 +10,7 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -38,6 +39,7 @@ public class KakaoUserController {
     @Autowired
     private KakaoUserRepository kakaoUserRepository;
 
+    @Operation(summary = "카카오 로그인", description = "카카오 OAuth 로그인 페이지로 사용자를 리다이렉션하여 카카오 인증을 시작")
     @GetMapping("/kakao")
     public void kakaoLogin(HttpServletResponse response) throws IOException {
         String url = "https://kauth.kakao.com/oauth/authorize?client_id=" + kakaoUserService.getClientId() +
@@ -45,6 +47,7 @@ public class KakaoUserController {
         response.sendRedirect(url);
     }
 
+    @Operation(summary = "카카오 OAuth 로그인 및 사용자 등록", description = "카카오 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/kakao/callback")
     public void kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -85,7 +88,7 @@ public class KakaoUserController {
         }
     }
 
-
+    @Operation(summary = "세션 생성", description = "카카오 로그인 후 인증된 사용자의 정보를 세션에 저장")
     @PostMapping("/session")
     public ResponseEntity<?> createSession(@RequestBody KakaoUserInfo userInfo, HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -93,7 +96,7 @@ public class KakaoUserController {
         return ResponseEntity.ok("Session created successfully");
     }
 
-
+    @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @GetMapping("/kakao/success")
     public ResponseEntity<?> successPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -111,6 +114,7 @@ public class KakaoUserController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
+    @Operation(summary = "카카오 로그아웃", description = "카카오 로그아웃을 위한 URL을 반환, 클라이언트에서 이 URL을 호출하여 로그아웃")
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // 카카오 로그아웃 URL 생성
@@ -119,6 +123,7 @@ public class KakaoUserController {
         return ResponseEntity.ok(logoutUrl);
     }
 
+    @Operation(summary = "로그아웃 후 리다이렉션", description = "로그아웃 후 클라이언트를 로그인 페이지로 리다이렉션")
     @GetMapping("/logout")
     public RedirectView handleLogoutRedirect(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -130,12 +135,14 @@ public class KakaoUserController {
         return redirectView;
     }
 
+    @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
     @GetMapping("/kakao/check-user")
     public ResponseEntity<Boolean> checkUser(@RequestParam String kakaoId) {
         boolean exists = userService.checkUserExists(kakaoId);
         return ResponseEntity.ok(exists);
     }
 
+    @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로  kakao_user 테이블에 저장")
     @PostMapping("/kakao/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();

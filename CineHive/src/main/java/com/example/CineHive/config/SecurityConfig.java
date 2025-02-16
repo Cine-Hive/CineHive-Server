@@ -31,8 +31,13 @@ public class SecurityConfig {
                                 "/animations/**",
                                 "/get_topmovies",
                                 "/topmovies/**", "/now_playing_movies"
-                        ,"/preferredGenres").permitAll()
-                        .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
+                        ,"/preferredGenres",
+                                "/explorer/index/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                 "/checkuserId/**").permitAll()
+                        .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
                                 "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능
                         .requestMatchers(

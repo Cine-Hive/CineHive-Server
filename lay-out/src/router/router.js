@@ -11,7 +11,7 @@ import TopMovieDetail from "@/View/movie/TopMovieDetail.vue";
 import MovieList from "@/View/movie/MovieList.vue";
 import AnimationList from "@/View/animation/AnimationList.vue";
 import DramaList from "@/View/drama/DramaList.vue";
-
+import ReviewPage from '@/View/ReviewPage.vue';
 
 Vue.use(Router);
 
@@ -32,13 +32,13 @@ const routes = [
         name: 'AnimationDetail',
         component: AnimationDetail,
         meta: { hideFooter: true }},
-
-    {
-        path: '/topmovies/:id',
+    {path: '/topmovies/:id',
         name: 'TopMovieDetail',
         component: TopMovieDetail,
-        meta: { hideFooter: true }
-    },
+        meta: { hideFooter: true }},
+    { path: '/movies/:id/reviews',
+        name: 'ReviewPage',
+        component: ReviewPage },
     {
         path: '/movies',
         name: 'MovieList',

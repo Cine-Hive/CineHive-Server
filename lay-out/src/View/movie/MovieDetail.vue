@@ -50,7 +50,7 @@
     </div>
 
     <div class="action-buttons">
-      <button class="action-button" @click="viewReviews">감상평 보기</button>
+      <button class="action-button" @click="goToReviewPage">감상평 보기</button>
       <button class="action-button" @click="viewReview">리뷰 보기</button>
       <button class="action-button" @click="addToFavorites">찜하기</button>
       <button class="action-button" @click="goBack">뒤로 가기</button>
@@ -106,8 +106,16 @@ export default {
     goBack() {
       this.$router.go(-1);
     },
-    viewReviews() {
-      console.log('감상평 보기 클릭됨');
+    goToReviewPage() {
+      this.$router.push({
+        name: 'ReviewPage',
+        query: {
+          id: String(this.movie.id), // 문자열 변환
+          title: this.movie.title || '제목 없음', // undefined 방지
+          posterPath: this.movie.posterPath || '', // 기본값 설정
+          overview: this.movie.overview || '설명 없음' // undefined 방지
+        }
+      });
     },
     viewReview() {
       console.log('리뷰 보기 클릭됨');

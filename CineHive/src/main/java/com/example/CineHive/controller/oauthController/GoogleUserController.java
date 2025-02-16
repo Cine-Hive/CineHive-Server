@@ -9,6 +9,8 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -35,6 +37,8 @@ public class GoogleUserController {
 
     @Autowired
     private GoogleUserRepository googleUserRepository;
+
+    @Operation(summary ="구글 로그인 리다이렉션", description = "사용자를 구글 OAuth 로그인 페이지로 리다이렉션하여 구글 인증을 시작")
     @GetMapping("/google")
     public void googleLoginRedirect(HttpServletResponse response) throws IOException {
         String redirectUrl = "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -47,7 +51,7 @@ public class GoogleUserController {
 
         response.sendRedirect(redirectUrl);
     }
-
+    @Operation(summary = "구글 OAuth 로그린 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
     @GetMapping("/google/callback")
     public void googleCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -89,7 +93,7 @@ public class GoogleUserController {
 
 
 
-
+    @Operation(summary = "구글 인증 성공", description = "구글 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
     @GetMapping("/google/success")
     public ResponseEntity<?> googleSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -102,6 +106,7 @@ public class GoogleUserController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
+    @Operation(summary = "구글 회원가입", description = "사용자가 제공한 정보로 회원가입하고 google_user 테이블에 저장")
     @PostMapping("/google/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
@@ -127,6 +132,7 @@ public class GoogleUserController {
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 
+    @Operation(summary = "구글 사용자 중복 확인", description = "해당 구글 ID가 이미 등록되어 있는지 확인")
     @GetMapping("/google/check-user")
     public ResponseEntity<Boolean> checkUser(@RequestParam String googleId) {
         boolean exists = userService.checkUserExistsGoogle(googleId);
