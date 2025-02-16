@@ -34,7 +34,7 @@ public class ReportService {
         // 이미 신고했는지 확인
         Optional<Report> existingReport = reportRepository.findByUserAndBoard(user, board);
         if (existingReport.isPresent()) {
-            return false; // 이미 신고한 경우 처리 X
+            throw new IllegalStateException("이미 신고한 게시글입니다.");
         }
 
         // 신고 등록
