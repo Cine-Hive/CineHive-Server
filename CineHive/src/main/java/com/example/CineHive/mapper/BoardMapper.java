@@ -20,7 +20,8 @@ public class BoardMapper {
         dto.setBookmarkCount(board.getBookmarkCount());
         dto.setLikeCount(board.getLikeCount());
         dto.setDislikeCount(board.getDisLikeCount());
-        dto.setReportCont(board.getReportCount());
+        dto.setReportCount(board.getReportCount());
+        dto.setCommentCount(board.getCommentCount());
         return dto;
     }
 

@@ -19,10 +19,13 @@ public class CommentService {
 
     @Autowired
     private CommentRepository commentRepository;
+
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private BoardRepository boardRepository;
+
     @Autowired
     private CommentMapper commentMapper;
 
@@ -39,18 +42,22 @@ public class CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
+        // 댓글 수 증가
+        board.setCommentCount(board.getCommentCount() + 1);
+        boardRepository.save(board);
+
         return commentMapper.toDTO(savedComment);
     }
 
-     public List<CommentDto> getCommentsByBoard(Long boardId){
+    public List<CommentDto> getCommentsByBoard(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
-         List<Comment> comments = commentRepository.findByBoard(board);
+        List<Comment> comments = commentRepository.findByBoard(board);
 
-         return comments.stream()
-                 .map(commentMapper::toDTO)
-                 .collect(Collectors.toList());
-     }
+        return comments.stream()
+                .map(commentMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 
     public void deleteComment(Long boardId, Long commentId) {
         Board board = boardRepository.findById(boardId)
@@ -60,6 +67,9 @@ public class CommentService {
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
 
         commentRepository.delete(comment);
-    }
 
+        // 댓글 수 감소
+        board.setCommentCount(board.getCommentCount() - 1);
+        boardRepository.save(board);
+    }
 }

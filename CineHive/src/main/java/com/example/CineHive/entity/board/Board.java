@@ -62,6 +62,10 @@ public class Board {
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments; // 댓글 리스트
+
+    @Column(name = "comment_count", nullable = false, columnDefinition = "int default 0")
+    private int commentCount; // 게시글의 댓글 총 수
+
     @PrePersist
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
@@ -70,11 +74,9 @@ public class Board {
         this.dislikeCount = 0;
         this.reportCount = 0;
         this.bookmarkCount = 0;
+        this.commentCount = 0;
     }
 
-    public int getBookmarkCount() {
-        return bookmarkCount;
-    }
 
     // 북마크 수 업데이트 메소드
     public void updateBookmarkCount() {
@@ -83,10 +85,6 @@ public class Board {
 
     public void updateLikeCount() {
         this.likeCount = this.likes != null ? this.likes.size() : 0;
-    }
-
-    public int getLikeCount() {
-        return likeCount;
     }
 
     public void updateDisLikeCount() {

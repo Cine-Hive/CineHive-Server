@@ -24,5 +24,7 @@ public class BoardDto {
     private int bookmarkCount;
     private int likeCount;
     private int dislikeCount;
-    private int reportCont;
+    private int reportCount;
+
+    private int commentCount;
 }
