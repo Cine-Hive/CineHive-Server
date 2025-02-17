@@ -32,22 +32,22 @@ public class Board {
     private int views;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BoardLike> likes;
+    private List<BoardLike> likes; //좋아요 리스트
 
     @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
-    private int likeCount;
+    private int likeCount; // 특정 게시글의 좋아요 갯수
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BoardDisLike> dislikes;
+    private List<BoardDisLike> dislikes; //싫어요 리스트
 
     @Column(name = "dislike_count", nullable = false, columnDefinition = "int default 0")
-    private int dislikeCount;
+    private int dislikeCount; //특정 게시글의 싫어요 갯수
 
     @Column(name = "report_count", nullable = false, columnDefinition = "int default 0")
-    private int reportCount; // 🚨 신고 횟수 추가
+    private int reportCount; // 특정 게시글의 신고 갯수
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Report> reports; // 🚨 신고 목록 추가
+    private List<Report> reports; // 신고 목록
 
 
     @ManyToOne
@@ -55,13 +55,13 @@ public class Board {
     private User user;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Bookmark> bookmarks;
+    private List<Bookmark> bookmarks; // 즐겨찾기 리스트
 
     @Column(name = "bookmark_count", nullable = false, columnDefinition = "int default 0")
-    private int bookmarkCount;
+    private int bookmarkCount; // 즐겨찾기 총 수
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments; // 댓글 리스트 추가
+    private List<Comment> comments; // 댓글 리스트
     @PrePersist
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
