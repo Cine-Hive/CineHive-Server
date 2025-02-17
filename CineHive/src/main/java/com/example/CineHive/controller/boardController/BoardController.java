@@ -49,5 +49,11 @@ public class BoardController {
         List<BoardDto> boards = boardService.getAllBoard();
         return new ResponseEntity<>(boards, HttpStatus.OK);
     }
+
+    @GetMapping("/boards/search")
+    public ResponseEntity<List<BoardDto>> searchBoards(@RequestParam String keyword) {
+        List<BoardDto> results = boardService.searchBoards(keyword);
+        return ResponseEntity.ok(results);
+    }
 }
 

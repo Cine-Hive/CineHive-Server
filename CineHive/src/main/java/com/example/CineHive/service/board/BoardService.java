@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class  BoardService {
@@ -71,4 +72,11 @@ public class  BoardService {
         return BoardMapper.convertToDtoList(boards);
     }
 
+
+    public List<BoardDto> searchBoards(String keyword) {
+        List<Board> boards = boardRepository.searchByKeyword(keyword);
+        return boards.stream()
+                .map(BoardMapper::convertToDto)
+                .collect(Collectors.toList());
+    }
 }
