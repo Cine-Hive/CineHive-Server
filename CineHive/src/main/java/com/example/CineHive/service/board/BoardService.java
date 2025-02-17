@@ -24,8 +24,8 @@ public class  BoardService {
 
     /*게시글 생성 */
     public Board createBoard(BoardDto boardDto) {
-        User user = userRepository.findByMemEmail(boardDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + boardDto.getEmail()));
+        User user = userRepository.findByMemEmail(boardDto.getMemEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + boardDto.getMemEmail()  ));
 
         Board board = new Board();
         board.setBrdTitle(boardDto.getBrdTitle());

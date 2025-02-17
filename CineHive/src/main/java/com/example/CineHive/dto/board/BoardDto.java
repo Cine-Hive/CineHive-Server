@@ -18,8 +18,8 @@ public class BoardDto {
     private Long id;
     private String brdTitle;
     private String brdContent;
-    private String nickname;
-    private String email;
+    private String memNickname;
+    private String memEmail;
     private LocalDateTime brgRedDate;
     private int bookmarkCount;
     private int likeCount;

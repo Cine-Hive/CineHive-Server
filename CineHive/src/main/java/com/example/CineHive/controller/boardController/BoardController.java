@@ -11,19 +11,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
+@RequestMapping("/boards")
 public class BoardController {
     @Autowired
     private BoardService boardService;
 
-    @PostMapping("/boards/create")
+    @PostMapping("/create")
     public ResponseEntity<Board> createBoard(@RequestBody BoardDto boardDto){
 
         Board createdBoard = boardService.createBoard(boardDto);
         return ResponseEntity.ok(createdBoard);
     }
 
-    @GetMapping("/boards/detail/{id}")
+    @GetMapping("/detail/{id}")
     public ResponseEntity<BoardDto> getDetailBoard(@PathVariable Long id){
         BoardDto boardDto = boardService.getBoardPostId(id);
         if(boardDto != null){
@@ -33,24 +34,24 @@ public class BoardController {
         }
     }
 
-    @PutMapping("/boards/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Board> updateBoard(@PathVariable Long id, @RequestBody Board updatedBoard){
         Board updateBoard = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent());
         return ResponseEntity.ok(updateBoard);
     }
 
-    @DeleteMapping("/boards/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteBoard(@PathVariable Long id){
         boardService.deleteBoard(id);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/boards")
+    @GetMapping
     public ResponseEntity<List<BoardDto>> getBoards() {
         List<BoardDto> boards = boardService.getAllBoard();
         return new ResponseEntity<>(boards, HttpStatus.OK);
     }
 
-    @GetMapping("/boards/search")
+    @GetMapping("/search")
     public ResponseEntity<List<BoardDto>> searchBoards(@RequestParam String keyword) {
         List<BoardDto> results = boardService.searchBoards(keyword);
         return ResponseEntity.ok(results);
