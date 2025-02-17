@@ -11,6 +11,9 @@ import com.example.CineHive.repository.board.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class CommentService {
 
@@ -38,4 +41,14 @@ public class CommentService {
 
         return commentMapper.toDTO(savedComment);
     }
+
+     public List<CommentDto> getCommentsByBoard(Long boardId){
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+         List<Comment> comments = commentRepository.findByBoard(board);
+
+         return comments.stream()
+                 .map(commentMapper::toDTO)
+                 .collect(Collectors.toList());
+     }
 }
