@@ -10,7 +10,9 @@ import java.util.List;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    @Query("SELECT b FROM Board b WHERE LOWER(b.brdTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(b.brdContent) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query("SELECT b FROM Board b JOIN b.user u WHERE " +
+            "(LOWER(b.brdTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(b.brdContent) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(u.memNickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Board> searchByKeyword(@Param("keyword") String keyword);
 }
