@@ -51,4 +51,15 @@ public class CommentService {
                  .map(commentMapper::toDTO)
                  .collect(Collectors.toList());
      }
+
+    public void deleteComment(Long boardId, Long commentId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        commentRepository.delete(comment);
+    }
+
 }
