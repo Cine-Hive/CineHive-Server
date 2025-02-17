@@ -23,10 +23,10 @@ public class CommentService {
     @Autowired
     private CommentMapper commentMapper;
 
-    public CommentDto addComment(Long boardId, Long userId, String content) {
+    public CommentDto addComment(Long boardId, String memEmail, String content) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         Comment comment = new Comment();
