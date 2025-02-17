@@ -60,6 +60,8 @@ public class Board {
     @Column(name = "bookmark_count", nullable = false, columnDefinition = "int default 0")
     private int bookmarkCount;
 
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments; // 댓글 리스트 추가
     @PrePersist
     protected void onCreate() {
         this.brdRegDate = LocalDateTime.now();
