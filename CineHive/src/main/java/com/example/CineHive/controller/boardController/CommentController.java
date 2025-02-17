@@ -38,4 +38,13 @@ public class CommentController {
         commentService.deleteComment(boardId, commentId);
         return ResponseEntity.noContent().build();
     }
+
+    /* 댓글 수정 */
+    @PutMapping("/board/{boardId}/update/{commentId}")
+    public ResponseEntity<CommentDto> updateComment(@PathVariable Long boardId,
+                                                    @PathVariable Long commentId,
+                                                    @RequestBody CommentDto commentDto) {
+        CommentDto updatedComment = commentService.updateComment(boardId, commentId, commentDto);
+        return ResponseEntity.ok(updatedComment);
+    }
 }

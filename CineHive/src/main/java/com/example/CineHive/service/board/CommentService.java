@@ -72,4 +72,20 @@ public class CommentService {
         board.setCommentCount(board.getCommentCount() - 1);
         boardRepository.save(board);
     }
+
+    public CommentDto updateComment(Long boardId, Long commentId, CommentDto commentDto) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        // 댓글 내용 수정
+        comment.setContent(commentDto.getContent());
+
+        Comment updatedComment = commentRepository.save(comment);
+
+        return commentMapper.toDTO(updatedComment);
+    }
+
 }

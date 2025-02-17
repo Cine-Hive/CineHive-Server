@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class BoardMapper {
 
-    /* 게시글 등록 */
+    /* 게시글 CRUD */
     public static BoardDto convertToDto(Board board) {
         BoardDto dto = new BoardDto();
         dto.setId(board.getId());
