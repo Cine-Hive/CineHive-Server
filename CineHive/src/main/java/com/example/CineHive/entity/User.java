@@ -30,13 +30,13 @@ public class User {
     @Column(nullable = false, unique = true)
     private String memEmail;
 
-    @Column
+    @Column(nullable = true)
     private String memName;
 
     @Column(nullable = false)
     private String memNickname;
 
-    @Column
+    @Column(nullable = true)
     private String memSex;
 
     @Column(nullable = false)
