@@ -31,6 +31,13 @@ public class SecurityConfig {
                                 "/animations/**",
                                 "/get_topmovies",
                                 "/topmovies/**", "/now_playing_movies"
+                        ,"/preferredGenres",
+                                "/explorer/index/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                 "/checkuserId/**").permitAll()
+                        .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                         ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
                         , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
                                 "/like/{boardId}/users/{memEmail}","/like/{boardId}/count",
@@ -54,7 +61,8 @@ public class SecurityConfig {
                                 "/api/auth/google/callback",
                                 "/api/auth/google/success",
                                 "/register",
-                                "/login"
+                                "/login",
+                                "api/auth/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

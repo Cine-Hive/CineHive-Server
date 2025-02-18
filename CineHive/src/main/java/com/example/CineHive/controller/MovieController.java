@@ -11,6 +11,8 @@ import com.example.CineHive.service.creditService.drama.DramaService;
 import com.example.CineHive.service.creditService.movie.MovieService;
 import com.example.CineHive.service.creditService.movie.NowPlayingMovieService;
 import com.example.CineHive.service.creditService.movie.TopRatedMovieService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,14 +37,13 @@ public class MovieController {
     @Autowired
     private MovieRepository movieRepository;
 
-    @Autowired
-    private TopMovieRepository topmovieRepository;
 
     @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
 
     @Autowired
     private TopRatedMovieService topRatedMovieService;
+    @Operation(summary = "현재 상영중인 영화 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
     @GetMapping("/now_playing")
     public ResponseEntity<?> getNowPlayingMovies() {
         System.out.println("Request received for now playing movies");
@@ -51,6 +52,7 @@ public class MovieController {
     }
 
     //데이터베이스에 있는 영화를 그냥 다 가져오는 것(homepage.vue 열면 바로 실행)
+    @Operation(summary = "DB에서 영화 받아오기", description = "movie 테이블에 저장된 모든 movie 정보를 리스트 형태로 반환")
     @GetMapping("/movies")
     @ResponseBody
     public List<Movie> getAllMovies() {
@@ -58,6 +60,7 @@ public class MovieController {
     }
 
     //Topmovie 데이블에서 가져오기
+    @Operation(summary = "평점순 영화 받아오기", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
     @GetMapping("/get_topmovies")
     @ResponseBody
     public ResponseEntity<List<TopMovie>> getTopRatedMoviesList() {
@@ -66,6 +69,7 @@ public class MovieController {
         return ResponseEntity.ok(topRatedMovies);
     }
     //TopRated 영화 DB에 넣기
+    @Operation(summary = "Topmovie DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
     @GetMapping("/top_movie")
     public ResponseEntity<?> getTopMovies() {
         System.out.println("Request received for Top movies");
@@ -73,6 +77,7 @@ public class MovieController {
         return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
     }
 
+    @Operation(summary = "클라이언트 검색", description = "검색어를 받아 해당 검색어를 포함하는 Moive(animation 제외), 드라마(애니메이션 제외), 애니메이션을 반환")
     @PostMapping("/search")
     public ResponseEntity<?> searchMovies(@RequestBody Map<String, String> request) {
         String query = request.get("query");
@@ -91,7 +96,7 @@ public class MovieController {
     }
 
 
-
+    @Operation(summary = "Moive 상세 페이지 조회", description = "해당 Moive ID로 영화 상세 정보를 상세 페이지에 반환, 존재하지 않는 경우 404 응답을 반환")
     @GetMapping("/movies/{id}")
     @ResponseBody
     public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
@@ -102,7 +107,8 @@ public class MovieController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
+    @Operation(summary = "DB에 저장된 영화 출력", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
     @GetMapping("/now_playing_movies")
     @ResponseBody
     public ResponseEntity<List<Movie>> getNowPlayingMoviesList() {

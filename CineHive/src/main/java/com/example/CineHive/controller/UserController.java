@@ -5,6 +5,7 @@ import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
-@Controller
+@RestController
 public class UserController {
 
     @Autowired
@@ -26,6 +27,8 @@ public class UserController {
 
     @Autowired
     private final UserRepository userRepository;
+
+    @Operation(summary = "회원가입", description = "사용자 정보를 입력받아 일반 회원가입을 진행, 중복 검사 통과 후 user 테이블에 저장")
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserDto userDto) {
         try {
@@ -54,7 +57,7 @@ public class UserController {
 
 
 
-
+    @Operation(summary = "로그인", description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인")
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
         try {
@@ -83,6 +86,7 @@ public class UserController {
 
 
 
+    @Operation(summary = "아이디 중복 확인", description = "user 테이블에 해당 아이디가 이미 등록되어 있는지 확인")
     @GetMapping("/checkuserId/{memUserid}")
     public ResponseEntity<Boolean> checkUserId(@PathVariable(value="memUserid") String memUserid) {
         Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
@@ -90,6 +94,7 @@ public class UserController {
         return ResponseEntity.ok(isAvailable);
     }
 
+    @Operation(summary = "닉네임 중복 확인", description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인")
     @GetMapping("/checknickname/{memNickname}")
     public ResponseEntity<Boolean> checkmemNickname(@PathVariable(value="memNickname") String memNickname) {
         Optional<User> existingUser = userRepository.findByMemNickname(memNickname);
@@ -97,6 +102,7 @@ public class UserController {
         return ResponseEntity.ok(isAvailable);
     }
 
+    @Operation(summary = "이메일 중복 확인", description = "user 테이블에 해당 이메일이 이미 등록되어 있는지 확인")
     @GetMapping("/checkemail/{memEmail}")
     public ResponseEntity<Boolean> checkmemEmail(@PathVariable(value="memEmail") String memEmail) {
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);

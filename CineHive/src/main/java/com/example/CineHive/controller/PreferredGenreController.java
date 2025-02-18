@@ -8,16 +8,18 @@ import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.videos.animation.AnimationRepository;
 import com.example.CineHive.repository.videos.drama.DramaRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Controller
+@RestController
 public class PreferredGenreController {
 
     @Autowired
@@ -27,6 +29,7 @@ public class PreferredGenreController {
     @Autowired
     private AnimationRepository animationRepository;
 
+    @Operation(summary = "선호 장르 선택",description = "사용자가 드라마,영화,애니메이션 중 선택한 장르에 맞는 영상 반환")
     @PostMapping("/preferredGenres")
     public ResponseEntity<List<Content>> getContentByGenres(@RequestBody PreferredGenereDto preferredGenereDto) {
 

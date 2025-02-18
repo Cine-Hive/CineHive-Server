@@ -50,10 +50,17 @@ public class MovieDirectorService {
                     for (JsonNode crewMember : crewNode) {
                         // 감독 정보를 찾기 위해 "job" 속성이 "Director"인 경우만 필터링
                         if ("Director".equals(crewMember.get("job").asText())) {
-                            Director director = new Director();
-                            director.setName(crewMember.get("name").asText());
-                            director.setGender(crewMember.get("gender").asInt());
-                            director.setJob(crewMember.get("job").asText());
+                            String directorName = crewMember.get("name").asText();
+
+                            Director director = directorRepository.findByName(directorName)
+                                    .orElseGet(() -> {
+                                        // 새로운 감독 객체 생성 및 저장
+                                        Director newDirector = new Director();
+                                        newDirector.setName(directorName);
+                                        newDirector.setGender(crewMember.get("gender").asInt());
+                                        newDirector.setJob(crewMember.get("job").asText());
+                                        return directorRepository.save(newDirector);
+                                    });
 
                             // Movie에 Director 추가
                             movie.setDirector(director);
