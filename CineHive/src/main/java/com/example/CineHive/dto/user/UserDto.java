@@ -18,7 +18,6 @@ public class UserDto {
     private String memPassword;
     private String memName;
     private String memEmail;
-    private String memPhone;
     private String memNickname;
     private String memSex;
     private String memType;
