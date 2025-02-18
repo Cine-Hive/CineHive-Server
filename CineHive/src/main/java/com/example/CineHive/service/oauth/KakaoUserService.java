@@ -111,17 +111,6 @@ public class KakaoUserService {
     public KakaoUser registerNewKakaoUser(KakaoUserInfo userInfo) {
         // 먼저 User 엔티티에 사용자 정보 저장
         User user = new User();
-        user.setMemUserid(userInfo.getEmail());
-        user.setMemEmail(userInfo.getEmail());
-        user.setMemNickname(userInfo.getNickname());
-        user.setMemName(userInfo.getName());
-        user.setMemPhone("");
-        user.setMemSex("");
-        user.setMemRegisterDatetime(LocalDateTime.now());
-        user.setMemType("카카오");
-        user.setGenres(userInfo.getGenres());
-        userRepository.save(user);
-
 
         KakaoUser kakaoUser = new KakaoUser();
         kakaoUser.setKakaoId(userInfo.getKakaoId());

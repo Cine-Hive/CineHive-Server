@@ -27,7 +27,7 @@ public class User {
     @Column
     private String memPw;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String memEmail;
 
     @Column

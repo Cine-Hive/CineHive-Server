@@ -103,22 +103,11 @@ public class NaverUserService {
     public NaverUser registerNewNaverUser(NaverUserInfo userInfo) {
 
         User user = new User();
-        user.setMemUserid(userInfo.getEmail());
-        user.setMemEmail(userInfo.getEmail());
-        user.setMemNickname(userInfo.getNickname());
-        user.setMemName(userInfo.getName());
-        user.setMemPhone("");
-        user.setMemSex("");
-        user.setMemRegisterDatetime(LocalDateTime.now());
-        user.setMemType("네이버");
-        user.setGenres(userInfo.getGenres());
-        userRepository.save(user);
 
 
         NaverUser naverUser = new NaverUser();
         naverUser.setNaverId(userInfo.getNaverId());
         naverUser.setNickname(userInfo.getNickname());
-        naverUser.setMemUserId(user.getMemUserid());
         naverUser.setName(userInfo.getName());
         naverUser.setGenres(userInfo.getGenres());
         naverUserRepository.save(naverUser);  // GoogleUser 테이블에 저장
