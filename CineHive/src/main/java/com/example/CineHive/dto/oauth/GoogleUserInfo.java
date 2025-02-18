@@ -13,8 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 public class GoogleUserInfo {
     private String googleId;
-    private String email;
-    private String nickname;
-    private String name;
+    private String memEmail;
+    private String memNickname;
+    private String memName;
     private List<String> genres;
 }
