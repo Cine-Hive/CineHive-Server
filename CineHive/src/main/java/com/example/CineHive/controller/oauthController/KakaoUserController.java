@@ -63,7 +63,7 @@ public class KakaoUserController {
                 System.out.println("GoogleUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
             }
 
-            userInfo.setName(kakaoUser.getName());
+            userInfo.setMemName(kakaoUser.getName());
             userInfo.setGenres(kakaoUser.getGenres());
 
             response.setContentType("application/json");
@@ -161,7 +161,6 @@ public class KakaoUserController {
 
         KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(userDto.getKakaoId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        kakaoUser.setMemUserId(userDto.getMemEmail());
         kakaoUser.setName(userDto.getMemName());
         kakaoUser.setGenres(userDto.getGenres());
         kakaoUserRepository.save(kakaoUser);
