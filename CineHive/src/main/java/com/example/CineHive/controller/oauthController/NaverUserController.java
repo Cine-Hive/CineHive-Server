@@ -114,7 +114,6 @@ public class NaverUserController {
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
         newUser.setNaverId(userDto.getNaverId()); // 카카오 ID 추가
         newUser.setMemRegisterDatetime(LocalDateTime.now());

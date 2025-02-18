@@ -115,7 +115,6 @@ public class GoogleUserController {
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
         newUser.setGoogleId(userDto.getGoogleId());
         newUser.setMemRegisterDatetime(LocalDateTime.now());

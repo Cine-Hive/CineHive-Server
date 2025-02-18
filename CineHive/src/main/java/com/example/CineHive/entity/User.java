@@ -39,9 +39,6 @@ public class User {
     @Column
     private String memSex;
 
-    @Column
-    private String memPhone;
-
     @Column(nullable = false)
     private LocalDateTime memRegisterDatetime;
 
