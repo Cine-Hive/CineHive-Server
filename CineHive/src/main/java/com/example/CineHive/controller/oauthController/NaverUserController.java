@@ -46,7 +46,7 @@ public class NaverUserController {
         String redirectUrl = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=" + naverUserService.getClientId() +
                 "&redirect_uri=" + URLEncoder.encode("http://localhost:8081/api/auth/naver/callback", "UTF-8") +
                 "&state=" + UUID.randomUUID().toString() +
-                "&scope=name,email,gender,nickname,phone"; // 필요한 스코프 추가
+                "&scope=name,email,nickname"; // 필요한 스코프 추가
         response.sendRedirect(redirectUrl);
     }
 
