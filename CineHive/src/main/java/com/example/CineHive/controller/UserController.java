@@ -61,17 +61,16 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
         try {
-            boolean loginSuccess = userService.loginUser(loginRequest.getMemUserid(), loginRequest.getMemPassword());
+            boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
             if (loginSuccess) {
                 // 사용자 정보를 가져와서 응답 생성
-                User user = userService.getUserInfo(loginRequest.getMemUserid());
+                User user = userService.getUserInfo(loginRequest.getMemEmail());
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "로그인 성공");
                 response.put("user", new HashMap<String, Object>() {{
-                    put("memUserid", user.getMemUserid());
+                    put("email", user.getMemEmail());
                     put("name", user.getMemName());
                     put("nickname", user.getMemNickname());
-                    put("email", user.getMemEmail());
                     put("genres", user.getGenres());
                 }});
 

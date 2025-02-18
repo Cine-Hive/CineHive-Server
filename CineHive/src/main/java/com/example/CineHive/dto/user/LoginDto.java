@@ -6,15 +6,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LoginDto {
-    private String memUserid;
+    private String memEmail;
     private String memPassword;
 
     // 기본 생성자
     public LoginDto() {}
 
     // 생성자
-    public LoginDto(String memUserid, String memPassword) {
-        this.memUserid = memUserid;
+    public LoginDto(String memEmail, String memPassword) {
+        this.memEmail = memEmail;
         this.memPassword = memPassword;
     }
 }
