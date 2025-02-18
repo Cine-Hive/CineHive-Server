@@ -46,7 +46,7 @@ public class NaverUserController {
         String redirectUrl = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=" + naverUserService.getClientId() +
                 "&redirect_uri=" + URLEncoder.encode("http://localhost:8081/api/auth/naver/callback", "UTF-8") +
                 "&state=" + UUID.randomUUID().toString() +
-                "&scope=name,email,gender,nickname,phone"; // 필요한 스코프 추가
+                "&scope=name,email,nickname"; // 필요한 스코프 추가
         response.sendRedirect(redirectUrl);
     }
 
@@ -67,7 +67,7 @@ public class NaverUserController {
                 System.out.println("GoogleUser found: " + naverUser.getName() + ", " + naverUser.getGenres());
             }
 
-            userInfo.setName(naverUser.getName());
+            userInfo.setMemName(naverUser.getName());
             userInfo.setGenres(naverUser.getGenres());
 
             response.setContentType("application/json");
@@ -109,12 +109,10 @@ public class NaverUserController {
     @PostMapping("/naver/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
-        newUser.setMemUserid(userDto.getMemUserid());
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
         newUser.setNaverId(userDto.getNaverId()); // 카카오 ID 추가
         newUser.setMemRegisterDatetime(LocalDateTime.now());
@@ -126,7 +124,6 @@ public class NaverUserController {
 
         NaverUser naverUser = naverUserRepository.findByNaverId(userDto.getNaverId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        naverUser.setMemUserId(userDto.getMemEmail());
         naverUser.setName(userDto.getMemName());
         naverUser.setGenres(userDto.getGenres());
         naverUserRepository.save(naverUser);

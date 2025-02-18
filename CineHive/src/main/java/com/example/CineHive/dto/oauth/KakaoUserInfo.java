@@ -15,8 +15,8 @@ import java.util.List;
 public class KakaoUserInfo {
 
     private String kakaoId;
-    private String email;
-    private String nickname;
-    private String name;
+    private String memEmail;
+    private String memNickname;
+    private String memName;
     private List<String> genres;
 }

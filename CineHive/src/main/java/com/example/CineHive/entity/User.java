@@ -21,26 +21,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mem_id;
 
-    @Column(nullable = true)
-    private String memUserid;
-
     @Column
     private String memPw;
 
     @Column(nullable = false, unique = true)
     private String memEmail;
 
-    @Column
+    @Column(nullable = true)
     private String memName;
 
     @Column(nullable = false)
     private String memNickname;
 
-    @Column
+    @Column(nullable = true)
     private String memSex;
-
-    @Column
-    private String memPhone;
 
     @Column(nullable = false)
     private LocalDateTime memRegisterDatetime;

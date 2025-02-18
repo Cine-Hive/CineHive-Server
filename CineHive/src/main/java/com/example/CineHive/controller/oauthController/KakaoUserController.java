@@ -63,7 +63,7 @@ public class KakaoUserController {
                 System.out.println("GoogleUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
             }
 
-            userInfo.setName(kakaoUser.getName());
+            userInfo.setMemName(kakaoUser.getName());
             userInfo.setGenres(kakaoUser.getGenres());
 
             response.setContentType("application/json");
@@ -146,12 +146,10 @@ public class KakaoUserController {
     @PostMapping("/kakao/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
-        newUser.setMemUserid(userDto.getMemUserid());
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
         newUser.setKakaoId(userDto.getKakaoId());
         newUser.setMemRegisterDatetime(LocalDateTime.now());
@@ -162,7 +160,6 @@ public class KakaoUserController {
 
         KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(userDto.getKakaoId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        kakaoUser.setMemUserId(userDto.getMemEmail());
         kakaoUser.setName(userDto.getMemName());
         kakaoUser.setGenres(userDto.getGenres());
         kakaoUserRepository.save(kakaoUser);

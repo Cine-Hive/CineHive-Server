@@ -68,7 +68,7 @@ public class GoogleUserController {
                 System.out.println("GoogleUser found: " + googleUser.getName() + ", " + googleUser.getGenres());
             }
 
-            userInfo.setName(googleUser.getName());
+            userInfo.setMemName(googleUser.getName());
             userInfo.setGenres(googleUser.getGenres());
 
             response.setContentType("application/json");
@@ -110,12 +110,10 @@ public class GoogleUserController {
     @PostMapping("/google/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
-        newUser.setMemUserid(userDto.getMemUserid());
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
         newUser.setGoogleId(userDto.getGoogleId());
         newUser.setMemRegisterDatetime(LocalDateTime.now());
@@ -125,7 +123,6 @@ public class GoogleUserController {
 
         GoogleUser googleUser = googleUserRepository.findByGoogleId(userDto.getGoogleId())
                 .orElseThrow(() -> new IllegalArgumentException("Google User not found"));
-        googleUser.setMemUserId(userDto.getMemEmail());
         googleUser.setName(userDto.getMemName());  // 이름 업데이트
         googleUser.setGenres(userDto.getGenres());  // 장르 업데이트
         googleUserRepository.save(googleUser);

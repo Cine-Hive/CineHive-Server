@@ -33,12 +33,7 @@ public class UserService{
     }
 
 
-    public void checkDuplicateUserId(String memUserid) {
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다.");
-        }
-    }
+
 
     public void checkDuplicateEmail(String memEmail) {
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
@@ -54,9 +49,9 @@ public class UserService{
         }
     }
 
-    public boolean loginUser(String memUserid, String memPassword) {
+    public boolean loginUser(String memEmail, String memPassword) {
         // 사용자 ID로 사용자 조회
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
+        Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
 
         if (existingUser.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
@@ -83,8 +78,8 @@ public class UserService{
     }
 
 
-    public User getUserInfo(String memUserid) {
-        return userRepository.findByMemUserid(memUserid).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    public User getUserInfo(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }
 
 }

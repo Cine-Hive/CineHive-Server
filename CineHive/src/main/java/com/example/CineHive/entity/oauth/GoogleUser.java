@@ -27,8 +27,8 @@ public class GoogleUser {
     @Column(length = 50)
     private String nickname;
 
-    @Column(name = "mem_userid", nullable = true)
-    private String memUserId;
+    @Column(name = "mem_email", nullable = true)
+    private String memEmail;
 
     @Column(name = "user_id")
     private Long userId; // users 테이블의 외래 키
@@ -47,10 +47,10 @@ public class GoogleUser {
     private List<String> genres;
 
 
-    public GoogleUser(String googleId, String nickname, String memUserId, String name, List<String> genres) {
+    public GoogleUser(String googleId, String nickname, String memEmail, String name, List<String> genres) {
         this.googleId = googleId;
         this.nickname = nickname;
-        this.memUserId = memUserId;
+        this.memEmail = memEmail;
         this.name = name;
         this.genres = genres;
     }
