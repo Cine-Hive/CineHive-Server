@@ -97,7 +97,7 @@ public class GoogleUserService {
         // 먼저 User 엔티티에 사용자 정보 저장
         User user = new User();
 
-        // 이제 GoogleUser 엔티티를 생성하고 memUserId를 설정
+
         GoogleUser googleUser = new GoogleUser();
         googleUser.setGoogleId(userInfo.getGoogleId());
         googleUser.setNickname(userInfo.getMemNickname());

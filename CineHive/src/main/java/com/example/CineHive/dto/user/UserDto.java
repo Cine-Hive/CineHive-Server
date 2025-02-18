@@ -14,7 +14,6 @@ import java.util.List;
 public class UserDto {
     private boolean exists; // 사용자 존재 여부
     private Long mem_id;
-    private String memUserid;
     private String memPassword;
     private String memName;
     private String memEmail;

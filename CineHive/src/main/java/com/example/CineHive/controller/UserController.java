@@ -84,15 +84,6 @@ public class UserController {
     }
 
 
-
-    @Operation(summary = "아이디 중복 확인", description = "user 테이블에 해당 아이디가 이미 등록되어 있는지 확인")
-    @GetMapping("/checkuserId/{memUserid}")
-    public ResponseEntity<Boolean> checkUserId(@PathVariable(value="memUserid") String memUserid) {
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
-        boolean isAvailable = existingUser.isEmpty(); // 사용자 ID가 존재하지 않으면 사용 가능
-        return ResponseEntity.ok(isAvailable);
-    }
-
     @Operation(summary = "닉네임 중복 확인", description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인")
     @GetMapping("/checknickname/{memNickname}")
     public ResponseEntity<Boolean> checkmemNickname(@PathVariable(value="memNickname") String memNickname) {

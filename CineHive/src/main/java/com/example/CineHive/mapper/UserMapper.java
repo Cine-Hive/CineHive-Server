@@ -9,7 +9,6 @@ public class UserMapper {
     public User toEntity(UserDto userDto) {
         User user = new User();
         user.setMemEmail(userDto.getMemEmail());
-        user.setMemUserid(userDto.getMemUserid());
         user.setMemPw(userDto.getMemPassword());
         user.setMemName(userDto.getMemName());
         user.setMemSex(userDto.getMemSex());

@@ -21,9 +21,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mem_id;
 
-    @Column(nullable = true)
-    private String memUserid;
-
     @Column
     private String memPw;
 
