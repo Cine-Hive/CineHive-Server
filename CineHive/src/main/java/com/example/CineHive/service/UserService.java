@@ -2,6 +2,7 @@ package com.example.CineHive.service;
 
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
+import com.example.CineHive.mapper.UserMapper;
 import com.example.CineHive.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +24,14 @@ public class UserService{
 
     @Transactional
     public boolean registerUser(UserDto userDto) {
-        User user= new User();
-        user.setMemEmail(userDto.getMemEmail());
-        user.setMemUserid(userDto.getMemUserid());
-        user.setMemPw(passwordEncoder.encode(userDto.getMemPassword()));
-        user.setMemName(userDto.getMemName());
-        user.setMemSex(userDto.getMemSex());
-        user.setMemPhone(userDto.getMemPhone());
-        user.setMemNickname(userDto.getMemNickname());
-        user.setMemRegisterDatetime(LocalDateTime.now());
-        user.setGenres(userDto.getGenres());
-        user.setMemType("일반");
-        // 사용자 정보 저장
-        userRepository.save(user);
+        UserMapper userMapper = new UserMapper();
+        User user = userMapper.toEntity(userDto);
+        user.setMemPw(passwordEncoder.encode(userDto.getMemPassword())); // 비밀번호 암호화
 
+        userRepository.save(user);
         return true;
     }
+
 
     public void checkDuplicateUserId(String memUserid) {
         Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
