@@ -162,6 +162,7 @@ public class KakaoUserController {
 
         KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(userDto.getKakaoId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
+        kakaoUser.setMemUserId(userDto.getMemEmail());
         kakaoUser.setName(userDto.getMemName());
         kakaoUser.setGenres(userDto.getGenres());
         kakaoUserRepository.save(kakaoUser);

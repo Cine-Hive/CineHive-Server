@@ -27,7 +27,7 @@ public class NaverUser {
     @Column(length = 50)
     private String nickname;
 
-    @Column(name = "mem_userid", nullable = false)
+    @Column(name = "mem_userid", nullable = true)
     private String memUserId; //이메일
 
     @Column(name = "user_id")
@@ -42,7 +42,7 @@ public class NaverUser {
     private String name;
 
     @ElementCollection
-    @CollectionTable(name = "google_user_genres", joinColumns = @JoinColumn(name = "google_user_id"))
+    @CollectionTable(name = "naver_user_genres", joinColumns = @JoinColumn(name = "naver_user_id"))
     @Column(name = "genre")
     private List<String> genres;
 

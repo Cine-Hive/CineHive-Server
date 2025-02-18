@@ -27,7 +27,7 @@ public class GoogleUser {
     @Column(length = 50)
     private String nickname;
 
-    @Column(name = "mem_userid", nullable = false)
+    @Column(name = "mem_userid", nullable = true)
     private String memUserId;
 
     @Column(name = "user_id")

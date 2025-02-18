@@ -1,0 +1,18 @@
+package com.example.CineHive.repository.board;
+
+import com.example.CineHive.entity.board.Board;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface BoardRepository extends JpaRepository<Board, Long> {
+    @Query("SELECT b FROM Board b JOIN b.user u WHERE " +
+            "(LOWER(b.brdTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(b.brdContent) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(u.memNickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<Board> searchByKeyword(@Param("keyword") String keyword);
+}
