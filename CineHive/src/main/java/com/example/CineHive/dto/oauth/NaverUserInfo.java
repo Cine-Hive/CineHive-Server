@@ -15,8 +15,8 @@ import java.util.List;
 public class NaverUserInfo {
 
     private String naverId;
-    private String email;
-    private String nickname;
-    private String name;
+    private String memEmail;
+    private String memNickname;
+    private String memName;
     private List<String> genres;
 }

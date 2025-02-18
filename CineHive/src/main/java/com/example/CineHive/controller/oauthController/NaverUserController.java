@@ -67,7 +67,7 @@ public class NaverUserController {
                 System.out.println("GoogleUser found: " + naverUser.getName() + ", " + naverUser.getGenres());
             }
 
-            userInfo.setName(naverUser.getName());
+            userInfo.setMemName(naverUser.getName());
             userInfo.setGenres(naverUser.getGenres());
 
             response.setContentType("application/json");
@@ -125,7 +125,6 @@ public class NaverUserController {
 
         NaverUser naverUser = naverUserRepository.findByNaverId(userDto.getNaverId())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        naverUser.setMemUserId(userDto.getMemEmail());
         naverUser.setName(userDto.getMemName());
         naverUser.setGenres(userDto.getGenres());
         naverUserRepository.save(naverUser);
