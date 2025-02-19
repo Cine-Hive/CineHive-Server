@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GoogleUserInfo {
-    private String googleId;
     private String memEmail;
     private String memNickname;
     private String memName;

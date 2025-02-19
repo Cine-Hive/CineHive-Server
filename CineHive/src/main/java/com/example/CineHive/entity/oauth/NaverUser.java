@@ -21,9 +21,6 @@ public class NaverUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "naver_id", unique = true)
-    private String naverId; //네이버 고유 아이디
-
     @Column(length = 50)
     private String nickname;
 
@@ -46,8 +43,7 @@ public class NaverUser {
     @Column(name = "genre")
     private List<String> genres;
 
-    public NaverUser(String naverId, String nickname, String memEmail, String name, List<String> genres) {
-        this.naverId = naverId;
+    public NaverUser( String nickname, String memEmail, String name, List<String> genres) {
         this.nickname = nickname;
         this.memEmail = memEmail;
         this.name = name;

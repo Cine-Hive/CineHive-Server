@@ -78,8 +78,7 @@ public class KakaoUserService {
                 System.out.println("Response Body: " + responseBody); // 응답 출력
                 JSONObject jsonObject = new JSONObject(responseBody);
                 KakaoUserInfo userInfo = new KakaoUserInfo();
-                userInfo.setKakaoId(userInfo.getKakaoId());
-                userInfo.setKakaoId(String.valueOf(jsonObject.getLong("id")));
+                userInfo.setMemEmail(String.valueOf(jsonObject.getLong("email")));
                 JSONObject properties = jsonObject.getJSONObject("properties");
                 userInfo.setMemNickname(properties.getString("nickname"));
 
@@ -103,8 +102,8 @@ public class KakaoUserService {
 
 
     public void registerUser(KakaoUserInfo userInfo) {
-        KakaoUser socialUser = kakaouserRepository.findByKakaoId(userInfo.getKakaoId())
-                .orElse(new KakaoUser(userInfo.getKakaoId(), userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
+        KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new KakaoUser(userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
         kakaouserRepository.save(socialUser);
         }
 
@@ -113,7 +112,6 @@ public class KakaoUserService {
         User user = new User();
 
         KakaoUser kakaoUser = new KakaoUser();
-        kakaoUser.setKakaoId(userInfo.getKakaoId());
         kakaoUser.setNickname(userInfo.getMemNickname());
         kakaoUser.setMemEmail(userInfo.getMemEmail());
         kakaoUser.setName(userInfo.getMemName());

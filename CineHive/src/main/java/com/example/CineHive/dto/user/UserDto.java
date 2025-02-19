@@ -22,7 +22,4 @@ public class UserDto {
     private String memType;
     private String memRegisterDatetime;
     private List<String> genres; // 추가된 장르 필드
-    private String kakaoId;
-    private String googleId;
-    private String naverId;
 }

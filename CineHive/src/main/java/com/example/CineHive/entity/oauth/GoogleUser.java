@@ -20,10 +20,6 @@ public class GoogleUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "google_id", unique = true)
-    private String googleId; //구글 고유 아이디
-
-
     @Column(length = 50)
     private String nickname;
 
@@ -47,8 +43,7 @@ public class GoogleUser {
     private List<String> genres;
 
 
-    public GoogleUser(String googleId, String nickname, String memEmail, String name, List<String> genres) {
-        this.googleId = googleId;
+    public GoogleUser(String nickname, String memEmail, String name, List<String> genres) {
         this.nickname = nickname;
         this.memEmail = memEmail;
         this.name = name;

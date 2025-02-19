@@ -14,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class KakaoUserInfo {
 
-    private String kakaoId;
     private String memEmail;
     private String memNickname;
     private String memName;

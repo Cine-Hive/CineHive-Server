@@ -59,10 +59,10 @@ public class GoogleUserController {
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
 
 
-            GoogleUser googleUser = googleUserRepository.findByGoogleId(userInfo.getGoogleId()).orElse(null);
+            GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (googleUser == null) {
-                System.out.println("GoogleUser is null for Google ID: " + userInfo.getGoogleId());
+                System.out.println("GoogleUser is null for Google Email: " + userInfo.getMemEmail());
                 googleUser = googleUserService.registerNewGoogleUser(userInfo);  // 예: 구글 사용자 등록 메서드
             } else {
                 System.out.println("GoogleUser found: " + googleUser.getName() + ", " + googleUser.getGenres());
@@ -74,7 +74,7 @@ public class GoogleUserController {
             response.setContentType("application/json");
             response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
 
-            if (!userService.checkUserExistsGoogle(userInfo.getGoogleId())) {
+            if (!userService.checkUserExistsGoogle(userInfo.getMemEmail())) {
                 googleUserService.registerUser(userInfo);
                 HttpSession session = request.getSession();
                 session.setAttribute("user", userInfo);
@@ -115,13 +115,12 @@ public class GoogleUserController {
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
         newUser.setMemSex(userDto.getMemSex());
-        newUser.setGoogleId(userDto.getGoogleId());
         newUser.setMemRegisterDatetime(LocalDateTime.now());
         newUser.setMemType("구글");
         newUser.setGenres(userDto.getGenres());
         userRepository.save(newUser);
 
-        GoogleUser googleUser = googleUserRepository.findByGoogleId(userDto.getGoogleId())
+        GoogleUser googleUser = googleUserRepository.findByMemEmail(userDto.getMemEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Google User not found"));
         googleUser.setName(userDto.getMemName());  // 이름 업데이트
         googleUser.setGenres(userDto.getGenres());  // 장르 업데이트

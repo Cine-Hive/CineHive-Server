@@ -77,7 +77,6 @@ public class GoogleUserService {
         if (response.getStatusCode().is2xxSuccessful()) {
             JSONObject jsonObject = new JSONObject(response.getBody());
             GoogleUserInfo userInfo = new GoogleUserInfo();
-            userInfo.setGoogleId(jsonObject.getString("id"));
             userInfo.setMemNickname(jsonObject.getString("name"));
             userInfo.setMemEmail(jsonObject.getString("email"));
             return userInfo;
@@ -87,8 +86,8 @@ public class GoogleUserService {
     }
 
     public void registerUser(GoogleUserInfo userInfo) {
-        GoogleUser googleUser = googleUserRepository.findByGoogleId(userInfo.getGoogleId())
-                .orElse(new GoogleUser(userInfo.getGoogleId(), userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
+        GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new GoogleUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
 
         googleUserRepository.save(googleUser);
     }
@@ -99,7 +98,6 @@ public class GoogleUserService {
 
 
         GoogleUser googleUser = new GoogleUser();
-        googleUser.setGoogleId(userInfo.getGoogleId());
         googleUser.setNickname(userInfo.getMemNickname());
         googleUser.setMemEmail(userInfo.getMemEmail());
         googleUser.setName(userInfo.getMemName());

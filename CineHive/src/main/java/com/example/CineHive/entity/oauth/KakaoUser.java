@@ -21,10 +21,6 @@ public class KakaoUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "kakao_id", unique = true)
-    private String kakaoId; //카카오 고유 아이디
-
-
     @Column(length = 50)
     private String nickname;
 
@@ -47,8 +43,7 @@ public class KakaoUser {
     @Column(name = "genre")
     private List<String> genres;
 
-    public KakaoUser(String kakaoId, String nickname, String memEmail,String name, List<String> genres) {
-        this.kakaoId = kakaoId;
+    public KakaoUser( String nickname, String memEmail,String name, List<String> genres) {
         this.nickname = nickname;
         this.memEmail = memEmail;
         this.name = name;

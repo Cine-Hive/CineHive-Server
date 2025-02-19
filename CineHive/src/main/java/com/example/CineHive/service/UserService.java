@@ -33,22 +33,6 @@ public class UserService{
     }
 
 
-
-
-    public void checkDuplicateEmail(String memEmail) {
-        Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
-        }
-    }
-
-    public void checkDuplicateNickname(String memNickname) {
-        Optional<User> existingUser = userRepository.findByMemNickname(memNickname);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
-        }
-    }
-
     public boolean loginUser(String memEmail, String memPassword) {
         // 사용자 ID로 사용자 조회
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
@@ -66,15 +50,15 @@ public class UserService{
 
         return true;
     }
-    public boolean checkUserExists(String kakaoId) {
-        return userRepository.findByKakaoId(kakaoId).isPresent();
+    public boolean checkUserExists(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).isPresent();
     }
-    public boolean checkUserExistsGoogle(String googleId) {
-        return userRepository.findByGoogleId(googleId).isPresent();
+    public boolean checkUserExistsGoogle(String memEmail) {
+        return userRepository.findByGoogleId(memEmail).isPresent();
     }
 
-    public boolean checkUserExistsNaver(String naverId) {
-        return userRepository.findByNaverId(naverId).isPresent();
+    public boolean checkUserExistsNaver(String memEmail) {
+        return userRepository.findByNaverId(memEmail).isPresent();
     }
 
 

@@ -58,10 +58,10 @@ public class NaverUserController {
             String accessToken = naverUserService.getAccessToken(code);
             NaverUserInfo userInfo = naverUserService.getUserInfo(accessToken);
 
-            NaverUser naverUser = naverUserRepository.findByNaverId(userInfo.getNaverId()).orElse(null);
+            NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (naverUser == null) {
-                System.out.println("GoogleUser is null for Google ID: " + userInfo.getNaverId());
+                System.out.println("GoogleUser is null for Naver Email: " + userInfo.getMemEmail());
                 naverUser = naverUserService.registerNewNaverUser(userInfo);
             } else {
                 System.out.println("GoogleUser found: " + naverUser.getName() + ", " + naverUser.getGenres());
@@ -74,7 +74,7 @@ public class NaverUserController {
             response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
 
 
-            if (userService.checkUserExistsNaver(userInfo.getNaverId())) {
+            if (userService.checkUserExistsNaver(userInfo.getMemEmail())) {
                 // 기존 회원인 경우
                 HttpSession session = request.getSession();
                 session.setAttribute("user", userInfo); // 세션에 사용자 정보 저장
@@ -114,7 +114,6 @@ public class NaverUserController {
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
         newUser.setMemSex(userDto.getMemSex());
-        newUser.setNaverId(userDto.getNaverId()); // 카카오 ID 추가
         newUser.setMemRegisterDatetime(LocalDateTime.now());
         newUser.setMemType("네이버"); // 가입 유형 설정
         newUser.setGenres(userDto.getGenres());
@@ -122,7 +121,7 @@ public class NaverUserController {
 
         userRepository.save(newUser);
 
-        NaverUser naverUser = naverUserRepository.findByNaverId(userDto.getNaverId())
+        NaverUser naverUser = naverUserRepository.findByMemEmail(userDto.getMemEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
         naverUser.setName(userDto.getMemName());
         naverUser.setGenres(userDto.getGenres());

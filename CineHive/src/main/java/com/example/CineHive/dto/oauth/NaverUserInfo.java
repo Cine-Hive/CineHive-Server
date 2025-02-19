@@ -14,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class NaverUserInfo {
 
-    private String naverId;
     private String memEmail;
     private String memNickname;
     private String memName;

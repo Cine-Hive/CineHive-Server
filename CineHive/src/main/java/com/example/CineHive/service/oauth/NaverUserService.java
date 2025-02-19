@@ -83,7 +83,6 @@ public class NaverUserService {
             JSONObject responseObject = jsonObject.getJSONObject("response");
 
             NaverUserInfo userInfo = new NaverUserInfo();
-            userInfo.setNaverId(responseObject.getString("id"));
             userInfo.setMemEmail(responseObject.getString("email"));
             userInfo.setMemNickname(responseObject.getString("nickname"));
 
@@ -94,8 +93,8 @@ public class NaverUserService {
     }
 
     public void registerUser(NaverUserInfo userInfo) {
-        NaverUser naverUser = naverUserRepository.findByNaverId(userInfo.getNaverId())
-                .orElse(new NaverUser(userInfo.getNaverId(), userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
+        NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new NaverUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
 
         naverUserRepository.save(naverUser);
     }
@@ -106,7 +105,6 @@ public class NaverUserService {
 
 
         NaverUser naverUser = new NaverUser();
-        naverUser.setNaverId(userInfo.getNaverId());
         naverUser.setNickname(userInfo.getMemNickname());
         naverUser.setMemEmail(userInfo.getMemEmail());
         naverUser.setName(userInfo.getMemName());
