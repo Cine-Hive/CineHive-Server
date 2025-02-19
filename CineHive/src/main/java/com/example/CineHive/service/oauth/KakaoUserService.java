@@ -14,8 +14,8 @@ import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Service
 public class KakaoUserService {
@@ -78,11 +78,8 @@ public class KakaoUserService {
                 System.out.println("Response Body: " + responseBody); // 응답 출력
                 JSONObject jsonObject = new JSONObject(responseBody);
                 KakaoUserInfo userInfo = new KakaoUserInfo();
-                JSONObject properties = jsonObject.getJSONObject("properties");
-                userInfo.setMemEmail(properties.getString(("email")));
-                userInfo.setMemNickname(properties.getString("nickname"));
 
-                // 이메일 필드가 있는지 확인
+
                 if (jsonObject.has("kakao_account")) {
                     JSONObject kakaoAccount = jsonObject.getJSONObject("kakao_account");
                     if (kakaoAccount.has("email")) {
@@ -93,6 +90,11 @@ public class KakaoUserService {
                 } else {
                     userInfo.setMemEmail("이메일 미제공");
                 }
+
+
+                JSONObject properties = jsonObject.getJSONObject("properties");
+                userInfo.setMemNickname(properties.getString("nickname"));
+
                 return userInfo;
             } else {
                 throw new RuntimeException("Failed to get user info: " + response.message());
@@ -100,24 +102,19 @@ public class KakaoUserService {
         }
     }
 
-
     public void registerUser(KakaoUserInfo userInfo) {
         KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
                 .orElse(new KakaoUser(userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
         kakaouserRepository.save(socialUser);
-        }
+    }
 
     public KakaoUser registerNewKakaoUser(KakaoUserInfo userInfo) {
-        // 먼저 User 엔티티에 사용자 정보 저장
-        User user = new User();
-
         KakaoUser kakaoUser = new KakaoUser();
         kakaoUser.setNickname(userInfo.getMemNickname());
         kakaoUser.setMemEmail(userInfo.getMemEmail());
         kakaoUser.setName(userInfo.getMemName());
         kakaoUser.setGenres(userInfo.getGenres());
         kakaouserRepository.save(kakaoUser);
-
         return kakaoUser;
     }
 }
