@@ -78,8 +78,8 @@ public class KakaoUserService {
                 System.out.println("Response Body: " + responseBody); // 응답 출력
                 JSONObject jsonObject = new JSONObject(responseBody);
                 KakaoUserInfo userInfo = new KakaoUserInfo();
-                userInfo.setMemEmail(String.valueOf(jsonObject.getLong("email")));
                 JSONObject properties = jsonObject.getJSONObject("properties");
+                userInfo.setMemEmail(properties.getString(("email")));
                 userInfo.setMemNickname(properties.getString("nickname"));
 
                 // 이메일 필드가 있는지 확인
