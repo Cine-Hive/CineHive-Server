@@ -21,14 +21,11 @@ public class NaverUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "naver_id", unique = true)
-    private String naverId; //네이버 고유 아이디
-
     @Column(length = 50)
     private String nickname;
 
-    @Column(name = "mem_userid", nullable = true)
-    private String memUserId; //이메일
+    @Column(name = "mem_email", nullable = true)
+    private String memEmail; //이메일
 
     @Column(name = "user_id")
     private Long userId;
@@ -46,10 +43,9 @@ public class NaverUser {
     @Column(name = "genre")
     private List<String> genres;
 
-    public NaverUser(String naverId, String nickname, String memUserId, String name, List<String> genres) {
-        this.naverId = naverId;
+    public NaverUser( String nickname, String memEmail, String name, List<String> genres) {
         this.nickname = nickname;
-        this.memUserId = memUserId;
+        this.memEmail = memEmail;
         this.name = name;
         this.genres = genres;
     }

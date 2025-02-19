@@ -54,23 +54,23 @@ public class KakaoUserController {
             String accessToken = kakaoUserService.getAccessToken(code);
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
-            KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(userInfo.getKakaoId()).orElse(null);
+            KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (kakaoUser == null) {
-                System.out.println("GoogleUser is null for Google ID: " + userInfo.getKakaoId());
+                System.out.println("GoogleUser is null for Google ID: " + userInfo.getMemEmail());
                 kakaoUser = kakaoUserService.registerNewKakaoUser(userInfo);
             } else {
                 System.out.println("GoogleUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
             }
 
-            userInfo.setName(kakaoUser.getName());
+            userInfo.setMemName(kakaoUser.getName());
             userInfo.setGenres(kakaoUser.getGenres());
 
             response.setContentType("application/json");
             response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
 
             // 사용자 존재 여부 확인
-            if (userService.checkUserExists(userInfo.getKakaoId())) {
+            if (userService.checkUserExists(userInfo.getMemEmail())) {
                 // 기존 회원인 경우
                 HttpSession session = request.getSession();
                 session.setAttribute("user", userInfo);
@@ -146,23 +146,19 @@ public class KakaoUserController {
     @PostMapping("/kakao/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
-        newUser.setMemUserid(userDto.getMemUserid());
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
-        newUser.setKakaoId(userDto.getKakaoId());
         newUser.setMemRegisterDatetime(LocalDateTime.now());
         newUser.setMemType("카카오");
         newUser.setGenres(userDto.getGenres());
 
         userRepository.save(newUser);
 
-        KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(userDto.getKakaoId())
+        KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userDto.getMemEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        kakaoUser.setMemUserId(userDto.getMemEmail());
         kakaoUser.setName(userDto.getMemName());
         kakaoUser.setGenres(userDto.getGenres());
         kakaoUserRepository.save(kakaoUser);

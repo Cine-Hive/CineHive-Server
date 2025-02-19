@@ -83,9 +83,8 @@ public class NaverUserService {
             JSONObject responseObject = jsonObject.getJSONObject("response");
 
             NaverUserInfo userInfo = new NaverUserInfo();
-            userInfo.setNaverId(responseObject.getString("id"));
-            userInfo.setEmail(responseObject.getString("email"));
-            userInfo.setNickname(responseObject.getString("nickname"));
+            userInfo.setMemEmail(responseObject.getString("email"));
+            userInfo.setMemNickname(responseObject.getString("nickname"));
 
             return userInfo;
         } else {
@@ -94,8 +93,8 @@ public class NaverUserService {
     }
 
     public void registerUser(NaverUserInfo userInfo) {
-        NaverUser naverUser = naverUserRepository.findByNaverId(userInfo.getNaverId())
-                .orElse(new NaverUser(userInfo.getNaverId(), userInfo.getNickname(), userInfo.getEmail(), null, null));
+        NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new NaverUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
 
         naverUserRepository.save(naverUser);
     }
@@ -106,9 +105,9 @@ public class NaverUserService {
 
 
         NaverUser naverUser = new NaverUser();
-        naverUser.setNaverId(userInfo.getNaverId());
-        naverUser.setNickname(userInfo.getNickname());
-        naverUser.setName(userInfo.getName());
+        naverUser.setNickname(userInfo.getMemNickname());
+        naverUser.setMemEmail(userInfo.getMemEmail());
+        naverUser.setName(userInfo.getMemName());
         naverUser.setGenres(userInfo.getGenres());
         naverUserRepository.save(naverUser);  // GoogleUser 테이블에 저장
 
