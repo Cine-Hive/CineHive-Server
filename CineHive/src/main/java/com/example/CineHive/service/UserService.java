@@ -54,11 +54,11 @@ public class UserService{
         return userRepository.findByMemEmail(memEmail).isPresent();
     }
     public boolean checkUserExistsGoogle(String memEmail) {
-        return userRepository.findByGoogleId(memEmail).isPresent();
+        return userRepository.findByMemEmail(memEmail).isPresent();
     }
 
     public boolean checkUserExistsNaver(String memEmail) {
-        return userRepository.findByNaverId(memEmail).isPresent();
+        return userRepository.findByMemEmail(memEmail).isPresent();
     }
 
 
