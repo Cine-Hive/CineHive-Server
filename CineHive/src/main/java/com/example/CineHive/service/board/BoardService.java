@@ -1,6 +1,7 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
@@ -67,10 +68,23 @@ public class  BoardService {
     }
 
     /*게시글 전체 목록 조회 */
-    public List<BoardDto> getAllBoard() {
+    public List<GetListBoardDto> getAllBoard() {
         List<Board> boards = boardRepository.findAll();
-        return BoardMapper.convertToDtoList(boards);
+        return boards.stream()
+                .map(board -> {
+                    GetListBoardDto dto = new GetListBoardDto();
+                    dto.setId(board.getId());
+                    dto.setBrdTitle(board.getBrdTitle());
+                    dto.setBrdContent(board.getBrdContent());
+                    dto.setMemNickname(board.getUser().getMemNickname());
+                    dto.setBrgRegDate(board.getBrdRegDate());
+                    dto.setLikeCount(board.getLikeCount());
+                    dto.setViews(board.getViews());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
+
 
 
     public List<BoardDto> searchBoards(String keyword) {
