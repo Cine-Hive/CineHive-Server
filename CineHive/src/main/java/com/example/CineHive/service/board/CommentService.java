@@ -1,6 +1,6 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.board.CommentDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;

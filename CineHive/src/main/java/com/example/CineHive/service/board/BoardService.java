@@ -43,6 +43,7 @@ public class  BoardService {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
 
+
         board.increaseViews();
         boardRepository.save(board);
 

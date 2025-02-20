@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.board;
+package com.example.CineHive.dto.comment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,5 +16,4 @@ public class CommentDto {
     private String content;
     private String memNickname;
     private String memEmail;
-    private LocalDateTime createdAt;
 }
