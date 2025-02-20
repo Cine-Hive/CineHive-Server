@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
 
+@Tag(name = "Google User Controller", description = "구글 로그인 API 관련 기능을 제공하는 API")
 @RestController
 @RequestMapping("/api/auth")
 public class GoogleUserController {

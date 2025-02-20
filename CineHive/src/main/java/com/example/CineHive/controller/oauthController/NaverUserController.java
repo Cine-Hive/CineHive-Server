@@ -11,6 +11,7 @@ import com.example.CineHive.service.oauth.NaverUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -24,6 +25,7 @@ import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Tag(name = "Naver User Controller", description = "네이버 로그인 API 관련 기능을 제공하는 API")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
