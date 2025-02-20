@@ -1,6 +1,7 @@
 package com.example.CineHive.controller.boardController;
 
 import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.BoardSearchDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.dto.board.UpdateBoardRequest;
@@ -63,8 +64,8 @@ public class BoardController {
 
     @Operation(summary = "게시글 검색", description = "제목, 내용 및 닉네임을 포함하여 등록한 게시글을 모두 검색")
     @GetMapping("/search")
-    public ResponseEntity<List<BoardDto>> searchBoards(@RequestParam String keyword) {
-        List<BoardDto> results = boardService.searchBoards(keyword);
+    public ResponseEntity<List<BoardSearchDto>> searchBoards(@RequestParam String keyword) {
+        List<BoardSearchDto> results = boardService.searchBoards(keyword);
         return ResponseEntity.ok(results);
     }
 }

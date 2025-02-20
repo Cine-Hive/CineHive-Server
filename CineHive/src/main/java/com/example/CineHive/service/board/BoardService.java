@@ -1,6 +1,7 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.BoardSearchDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
@@ -87,10 +88,10 @@ public class  BoardService {
 
 
 
-    public List<BoardDto> searchBoards(String keyword) {
+    public List<BoardSearchDto> searchBoards(String keyword) {
         List<Board> boards = boardRepository.searchByKeyword(keyword);
         return boards.stream()
-                .map(BoardMapper::convertToDto)
+                .map(BoardMapper::convertToSearchDto)
                 .collect(Collectors.toList());
     }
 }
