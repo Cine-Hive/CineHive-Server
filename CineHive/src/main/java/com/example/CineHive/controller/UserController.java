@@ -6,6 +6,7 @@ import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class UserController {
 
     @Operation(summary = "로그인", description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인")
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest, HttpSession session) {
         try {
             boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
             if (loginSuccess) {
@@ -73,6 +74,9 @@ public class UserController {
                     put("nickname", user.getMemNickname());
                     put("genres", user.getGenres());
                 }});
+
+
+                session.setAttribute("user", user);  
 
                 return ResponseEntity.ok(response);
             } else {
