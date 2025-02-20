@@ -9,6 +9,7 @@ import com.example.CineHive.repository.videos.animation.AnimationRepository;
 import com.example.CineHive.repository.videos.drama.DramaRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+@Tag(name = "Preferred Genre Controller", description = "선호하는 장르 정보 관련 기능을 제공하는 API")
 @RestController
 public class PreferredGenreController {
 
