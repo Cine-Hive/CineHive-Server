@@ -2,6 +2,7 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.dto.board.BoardSearchDto;
+import com.example.CineHive.dto.board.CreateBoardDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
@@ -25,13 +26,13 @@ public class  BoardService {
     private UserRepository userRepository;
 
     /*게시글 생성 */
-    public Board createBoard(BoardDto boardDto) {
-        User user = userRepository.findByMemEmail(boardDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + boardDto.getMemEmail()  ));
+    public Board createBoard(CreateBoardDto createBoardDto) {
+        User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + createBoardDto.getMemEmail()));
 
         Board board = new Board();
-        board.setBrdTitle(boardDto.getBrdTitle());
-        board.setBrdContent(boardDto.getBrdContent());
+        board.setBrdTitle(createBoardDto.getBrdTitle());
+        board.setBrdContent(createBoardDto.getBrdContent());
         board.setUser(user);
 
         return boardRepository.save(board);

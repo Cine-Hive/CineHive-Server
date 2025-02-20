@@ -1,10 +1,7 @@
 package com.example.CineHive.controller.boardController;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.BoardSearchDto;
-import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.board.*;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.dto.board.UpdateBoardRequest;
 import com.example.CineHive.service.board.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,9 +21,9 @@ public class BoardController {
 
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
     @PostMapping("/create")
-    public ResponseEntity<Board> createBoard(@RequestBody BoardDto boardDto){
+    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto){
 
-        Board createdBoard = boardService.createBoard(boardDto);
+        Board createdBoard = boardService.createBoard(createBoardDto);
         return ResponseEntity.ok(createdBoard);
     }
 
