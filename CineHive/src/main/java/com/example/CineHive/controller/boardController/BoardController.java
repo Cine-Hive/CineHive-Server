@@ -40,9 +40,10 @@ public class BoardController {
     @Operation(summary = "게시글 글 수정", description = "사용자가 등록한 게시글에 대한 글을 수정")
     @PutMapping("/{id}")
     public ResponseEntity<Board> updateBoard(@PathVariable Long id, @RequestBody UpdateBoardRequest updatedBoard) {
-        Board updateBoard = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent());
-        return ResponseEntity.ok(updateBoard);
+        Board updatedBoardEntity = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent(), updatedBoard.getMemEmail());
+        return ResponseEntity.ok(updatedBoardEntity);
     }
+
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
     @DeleteMapping("/delete/{id}")

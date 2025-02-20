@@ -64,10 +64,16 @@ public class  BoardService {
 
 
     /*게시글 수정 */
-    public Board updateBoard(Long id, String brdTitle, String brdContent) {
+    public Board updateBoard(Long id, String brdTitle, String brdContent, String memEmail) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
         if (optionalBoard.isPresent()) {
             Board board = optionalBoard.get();
+
+            // 권한 확인: 사용자가 게시글 작성자인지 확인
+            if (!board.getUser().getMemEmail().equals(memEmail)) {
+                throw new RuntimeException("사용자가 이 게시글을 수정할 권한이 없습니다.");
+            }
+
             board.setBrdTitle(brdTitle);
             board.setBrdContent(brdContent);
             return boardRepository.save(board);
@@ -75,6 +81,7 @@ public class  BoardService {
             throw new RuntimeException("게시글을 찾을 수 없습니다.");
         }
     }
+
 
     /*게시글 삭제 */
     public void deleteBoard(Long id) {
