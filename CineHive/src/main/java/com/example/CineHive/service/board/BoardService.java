@@ -4,10 +4,12 @@ import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.dto.board.BoardSearchDto;
 import com.example.CineHive.dto.board.CreateBoardDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
+import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,12 +45,23 @@ public class  BoardService {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
 
-
+        // 조회수 증가
         board.increaseViews();
         boardRepository.save(board);
 
-        return BoardMapper.convertToDto(board);
+        // BoardDto로 변환
+        BoardDto boardDto = BoardMapper.convertToDto(board);
+
+        // 댓글 리스트 변환
+        CommentMapper commentMapper = new CommentMapper(); // 인스턴스 생성
+        List<CommentDto> commentDtos = board.getComments().stream()
+                .map(commentMapper::toDTO) // 인스턴스 메서드 호출
+                .collect(Collectors.toList());
+        boardDto.setComments(commentDtos); // 댓글 리스트 설정
+
+        return boardDto;
     }
+
 
     /*게시글 수정 */
     public Board updateBoard(Long id, String brdTitle, String brdContent) {
