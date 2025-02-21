@@ -33,11 +33,8 @@ public class MovieController {
     private DramaService dramaService;
     @Autowired
     private AnimationService animationService;
-
     @Autowired
     private MovieRepository movieRepository;
-
-
     @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
 
@@ -69,6 +66,7 @@ public class MovieController {
         List<TopMovie> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
         return ResponseEntity.ok(topRatedMovies);
     }
+
     //TopRated 영화 DB에 넣기 (수동으로 저장)
     @Operation(summary = "Top rated 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
     @PostMapping("/update_top_movie")
