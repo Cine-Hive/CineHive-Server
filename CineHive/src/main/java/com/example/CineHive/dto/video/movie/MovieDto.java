@@ -14,17 +14,18 @@ import java.util.List;
 public class MovieDto {
     private List<MovieDTO> results;
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MovieDTO {
         private long id;
         private String title;
         private String overview;
         private String posterPath;
-        private String backdropPath;
         private String releaseDate;
         private List<Integer> genreIds;
         private double voteAverage;
-        private int voteCount;
         private double popularity;
-        private boolean adult;
     }
 }

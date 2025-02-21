@@ -95,12 +95,9 @@ public class MovieService {
                         String overviewText = movieNode.get("overview").asText();
                         movie.setOverview(overviewText);
                         movie.setPosterPath(movieNode.get("poster_path").asText());
-                        movie.setBackdropPath(movieNode.get("backdrop_path").asText());
                         movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                         movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        movie.setVoteCount(movieNode.get("vote_count").asInt());
                         movie.setPopularity(movieNode.get("popularity").asDouble());
-                        movie.setAdult(movieNode.get("adult").asBoolean());
                         String releaseDateString = movieNode.get("release_date").asText();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
@@ -173,9 +170,7 @@ public class MovieService {
                         movie.setTitle(topmovie.getTitle());
                         movie.setOverview(topmovie.getOverview());
                         movie.setPosterPath(topmovie.getPosterPath());
-                        movie.setBackdropPath(topmovie.getBackdropPath());
                         movie.setVoteAverage(topmovie.getVoteAverage());
-                        movie.setVoteCount(topmovie.getVoteCount());
                         movie.setPopularity(topmovie.getPopularity());
                         movie.setReleaseDate(topmovie.getReleaseDate());
 
@@ -224,12 +219,9 @@ public class MovieService {
                     movie.setOverview(movieNode.get("overview").asText());
                     movie.setPosterPath(posterPath);
 
-                    movie.setBackdropPath(movieNode.get("backdrop_path").asText());
                     movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                     movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                    movie.setVoteCount(movieNode.get("vote_count").asInt());
                     movie.setPopularity(movieNode.get("popularity").asDouble());
-                    movie.setAdult(movieNode.get("adult").asBoolean());
                     String releaseDateString = movieNode.get("release_date").asText();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
