@@ -173,6 +173,10 @@ public class MovieService {
 
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
+
+                        movieActorService.saveMovieCredits(movieId);
+
+                        movieDirectorService.saveMovieDirectors(movieId);
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }
