@@ -73,7 +73,7 @@ public class MovieController {
 
 
     //TopRated 영화 DB에 넣기 (수동으로 저장)
-    @Operation(summary = "Top rated 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
+    @Operation(summary = "평점 순위 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
     @PostMapping("/update_top_movie")
     public ResponseEntity<?> getTopMovies() {
         System.out.println("Request received for Top movies");
@@ -100,7 +100,7 @@ public class MovieController {
     }
 
 
-    @Operation(summary = "Moive 상세 페이지 조회", description = "해당 Moive ID로 영화 상세 정보를 상세 페이지에 반환, 존재하지 않는 경우 404 응답을 반환")
+    @Operation(summary = "영화 상세 페이지 조회", description = "해당 Moive ID로 영화 상세 정보를 상세 페이지에 반환, 존재하지 않는 경우 404 응답을 반환")
     @GetMapping("/movies/{id}")
     @ResponseBody
     public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
