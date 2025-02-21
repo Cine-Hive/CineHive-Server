@@ -77,9 +77,8 @@ public class GoogleUserService {
         if (response.getStatusCode().is2xxSuccessful()) {
             JSONObject jsonObject = new JSONObject(response.getBody());
             GoogleUserInfo userInfo = new GoogleUserInfo();
-            userInfo.setGoogleId(jsonObject.getString("id"));
-            userInfo.setNickname(jsonObject.getString("name"));
-            userInfo.setEmail(jsonObject.getString("email"));
+            userInfo.setMemNickname(jsonObject.getString("name"));
+            userInfo.setMemEmail(jsonObject.getString("email"));
             return userInfo;
         } else {
             throw new IOException("Failed to get user info: " + response.getStatusCode());
@@ -87,8 +86,8 @@ public class GoogleUserService {
     }
 
     public void registerUser(GoogleUserInfo userInfo) {
-        GoogleUser googleUser = googleUserRepository.findByGoogleId(userInfo.getGoogleId())
-                .orElse(new GoogleUser(userInfo.getGoogleId(), userInfo.getNickname(), userInfo.getEmail(), null, null));
+        GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new GoogleUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
 
         googleUserRepository.save(googleUser);
     }
@@ -97,12 +96,11 @@ public class GoogleUserService {
         // 먼저 User 엔티티에 사용자 정보 저장
         User user = new User();
 
-        // 이제 GoogleUser 엔티티를 생성하고 memUserId를 설정
+
         GoogleUser googleUser = new GoogleUser();
-        googleUser.setGoogleId(userInfo.getGoogleId());
-        googleUser.setNickname(userInfo.getNickname());
-        googleUser.setMemUserId(user.getMemUserid());
-        googleUser.setName(userInfo.getName());
+        googleUser.setNickname(userInfo.getMemNickname());
+        googleUser.setMemEmail(userInfo.getMemEmail());
+        googleUser.setName(userInfo.getMemName());
         googleUser.setGenres(userInfo.getGenres());
         googleUserRepository.save(googleUser);
 

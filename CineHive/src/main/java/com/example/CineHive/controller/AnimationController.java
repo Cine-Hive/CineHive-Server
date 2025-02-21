@@ -3,6 +3,7 @@ package com.example.CineHive.controller;
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.repository.videos.animation.AnimationRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.List;
 import java.util.Optional;
 
+@Tag(name = "Animation Controller", description = "애니메이션 정보 관련 기능을 제공하는 API")
 @Controller
 public class  AnimationController {
 

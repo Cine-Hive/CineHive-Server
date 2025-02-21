@@ -21,41 +21,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mem_id;
 
-    @Column(nullable = true)
-    private String memUserid;
-
     @Column
     private String memPw;
 
     @Column(nullable = false, unique = true)
     private String memEmail;
 
-    @Column
+    @Column(nullable = true)
     private String memName;
 
     @Column(nullable = false)
     private String memNickname;
 
-    @Column
+    @Column(nullable = true)
     private String memSex;
-
-    @Column
-    private String memPhone;
 
     @Column(nullable = false)
     private LocalDateTime memRegisterDatetime;
 
     @Column(nullable = false)
     private String memType;
-
-    @Column(name = "kakao_id", nullable = true)
-    private String kakaoId; // 카카오 ID
-
-    @Column(name = "naver_id", nullable = true)
-    private String naverId; // 네이버 ID
-
-    @Column(name = "google_id", nullable = true)
-    private String googleId; // 카카오 ID
+    
 
     @ElementCollection // 여러 개의 장르를 저장하기 위해 사용
     @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))

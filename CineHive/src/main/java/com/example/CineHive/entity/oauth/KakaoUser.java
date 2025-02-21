@@ -21,15 +21,11 @@ public class KakaoUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "kakao_id", unique = true)
-    private String kakaoId; //카카오 고유 아이디
-
-
     @Column(length = 50)
     private String nickname;
 
-    @Column(name = "mem_userid", nullable = true)
-    private String memUserId;
+    @Column(name = "mem_email", nullable = true)
+    private String memEmail;
 
     @Column(name = "user_id")
     private Long userId; // users 테이블의 외래 키
@@ -47,10 +43,9 @@ public class KakaoUser {
     @Column(name = "genre")
     private List<String> genres;
 
-    public KakaoUser(String kakaoId, String nickname, String memUserId,String name, List<String> genres) {
-        this.kakaoId = kakaoId;
+    public KakaoUser( String nickname, String memEmail,String name, List<String> genres) {
         this.nickname = nickname;
-        this.memUserId = memUserId;
+        this.memEmail = memEmail;
         this.name = name;
         this.genres = genres;
     }

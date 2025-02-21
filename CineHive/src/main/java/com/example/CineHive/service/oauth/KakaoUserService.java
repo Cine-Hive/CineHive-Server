@@ -14,8 +14,8 @@ import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Service
 public class KakaoUserService {
@@ -78,22 +78,23 @@ public class KakaoUserService {
                 System.out.println("Response Body: " + responseBody); // 응답 출력
                 JSONObject jsonObject = new JSONObject(responseBody);
                 KakaoUserInfo userInfo = new KakaoUserInfo();
-                userInfo.setKakaoId(userInfo.getKakaoId());
-                userInfo.setKakaoId(String.valueOf(jsonObject.getLong("id")));
-                JSONObject properties = jsonObject.getJSONObject("properties");
-                userInfo.setNickname(properties.getString("nickname"));
 
-                // 이메일 필드가 있는지 확인
+
                 if (jsonObject.has("kakao_account")) {
                     JSONObject kakaoAccount = jsonObject.getJSONObject("kakao_account");
                     if (kakaoAccount.has("email")) {
-                        userInfo.setEmail(kakaoAccount.getString("email"));
+                        userInfo.setMemEmail(kakaoAccount.getString("email"));
                     } else {
-                        userInfo.setEmail("이메일 미제공"); // 기본값 설정
+                        userInfo.setMemEmail("이메일 미제공"); // 기본값 설정
                     }
                 } else {
-                    userInfo.setEmail("이메일 미제공");
+                    userInfo.setMemEmail("이메일 미제공");
                 }
+
+
+                JSONObject properties = jsonObject.getJSONObject("properties");
+                userInfo.setMemNickname(properties.getString("nickname"));
+
                 return userInfo;
             } else {
                 throw new RuntimeException("Failed to get user info: " + response.message());
@@ -101,25 +102,19 @@ public class KakaoUserService {
         }
     }
 
-
     public void registerUser(KakaoUserInfo userInfo) {
-        KakaoUser socialUser = kakaouserRepository.findByKakaoId(userInfo.getKakaoId())
-                .orElse(new KakaoUser(userInfo.getKakaoId(), userInfo.getNickname(), userInfo.getEmail(), null, null));
+        KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
+                .orElse(new KakaoUser(userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
         kakaouserRepository.save(socialUser);
-        }
+    }
 
     public KakaoUser registerNewKakaoUser(KakaoUserInfo userInfo) {
-        // 먼저 User 엔티티에 사용자 정보 저장
-        User user = new User();
-
         KakaoUser kakaoUser = new KakaoUser();
-        kakaoUser.setKakaoId(userInfo.getKakaoId());
-        kakaoUser.setNickname(userInfo.getNickname());
-        kakaoUser.setMemUserId(user.getMemUserid());
-        kakaoUser.setName(userInfo.getName());
+        kakaoUser.setNickname(userInfo.getMemNickname());
+        kakaoUser.setMemEmail(userInfo.getMemEmail());
+        kakaoUser.setName(userInfo.getMemName());
         kakaoUser.setGenres(userInfo.getGenres());
         kakaouserRepository.save(kakaoUser);
-
         return kakaoUser;
     }
 }

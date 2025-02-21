@@ -6,6 +6,7 @@ import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+@Tag(name = "User Controller", description = "사용자 관련 기능을 제공하는 API")
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -61,17 +64,16 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
         try {
-            boolean loginSuccess = userService.loginUser(loginRequest.getMemUserid(), loginRequest.getMemPassword());
+            boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
             if (loginSuccess) {
                 // 사용자 정보를 가져와서 응답 생성
-                User user = userService.getUserInfo(loginRequest.getMemUserid());
+                User user = userService.getUserInfo(loginRequest.getMemEmail());
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "로그인 성공");
                 response.put("user", new HashMap<String, Object>() {{
-                    put("memUserid", user.getMemUserid());
+                    put("email", user.getMemEmail());
                     put("name", user.getMemName());
                     put("nickname", user.getMemNickname());
-                    put("email", user.getMemEmail());
                     put("genres", user.getGenres());
                 }});
 
@@ -84,15 +86,6 @@ public class UserController {
         }
     }
 
-
-
-    @Operation(summary = "아이디 중복 확인", description = "user 테이블에 해당 아이디가 이미 등록되어 있는지 확인")
-    @GetMapping("/checkuserId/{memUserid}")
-    public ResponseEntity<Boolean> checkUserId(@PathVariable(value="memUserid") String memUserid) {
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
-        boolean isAvailable = existingUser.isEmpty(); // 사용자 ID가 존재하지 않으면 사용 가능
-        return ResponseEntity.ok(isAvailable);
-    }
 
     @Operation(summary = "닉네임 중복 확인", description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인")
     @GetMapping("/checknickname/{memNickname}")

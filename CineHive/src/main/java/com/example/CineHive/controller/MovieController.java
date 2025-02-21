@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@Tag(name = "Movie Controller", description = "영화 정보 관련 기능을 제공하는 API")
+
 public class MovieController {
     @Autowired
     private MovieService movieService;

@@ -11,6 +11,7 @@ import com.example.CineHive.service.oauth.NaverUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -24,6 +25,7 @@ import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Tag(name = "Naver User Controller", description = "네이버 로그인 API 관련 기능을 제공하는 API")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -46,7 +48,7 @@ public class NaverUserController {
         String redirectUrl = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=" + naverUserService.getClientId() +
                 "&redirect_uri=" + URLEncoder.encode("http://localhost:8081/api/auth/naver/callback", "UTF-8") +
                 "&state=" + UUID.randomUUID().toString() +
-                "&scope=name,email,gender,nickname,phone"; // 필요한 스코프 추가
+                "&scope=name,email,nickname"; // 필요한 스코프 추가
         response.sendRedirect(redirectUrl);
     }
 
@@ -58,23 +60,23 @@ public class NaverUserController {
             String accessToken = naverUserService.getAccessToken(code);
             NaverUserInfo userInfo = naverUserService.getUserInfo(accessToken);
 
-            NaverUser naverUser = naverUserRepository.findByNaverId(userInfo.getNaverId()).orElse(null);
+            NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (naverUser == null) {
-                System.out.println("GoogleUser is null for Google ID: " + userInfo.getNaverId());
+                System.out.println("GoogleUser is null for Naver Email: " + userInfo.getMemEmail());
                 naverUser = naverUserService.registerNewNaverUser(userInfo);
             } else {
                 System.out.println("GoogleUser found: " + naverUser.getName() + ", " + naverUser.getGenres());
             }
 
-            userInfo.setName(naverUser.getName());
+            userInfo.setMemName(naverUser.getName());
             userInfo.setGenres(naverUser.getGenres());
 
             response.setContentType("application/json");
             response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
 
 
-            if (userService.checkUserExistsNaver(userInfo.getNaverId())) {
+            if (userService.checkUserExistsNaver(userInfo.getMemEmail())) {
                 // 기존 회원인 경우
                 HttpSession session = request.getSession();
                 session.setAttribute("user", userInfo); // 세션에 사용자 정보 저장
@@ -109,14 +111,11 @@ public class NaverUserController {
     @PostMapping("/naver/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         User newUser = new User();
-        newUser.setMemUserid(userDto.getMemUserid());
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw(userDto.getMemPassword());
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
-        newUser.setMemPhone(userDto.getMemPhone());
         newUser.setMemSex(userDto.getMemSex());
-        newUser.setNaverId(userDto.getNaverId()); // 카카오 ID 추가
         newUser.setMemRegisterDatetime(LocalDateTime.now());
         newUser.setMemType("네이버"); // 가입 유형 설정
         newUser.setGenres(userDto.getGenres());
@@ -124,9 +123,8 @@ public class NaverUserController {
 
         userRepository.save(newUser);
 
-        NaverUser naverUser = naverUserRepository.findByNaverId(userDto.getNaverId())
+        NaverUser naverUser = naverUserRepository.findByMemEmail(userDto.getMemEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        naverUser.setMemUserId(userDto.getMemEmail());
         naverUser.setName(userDto.getMemName());
         naverUser.setGenres(userDto.getGenres());
         naverUserRepository.save(naverUser);

@@ -2,6 +2,7 @@ package com.example.CineHive.service;
 
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
+import com.example.CineHive.mapper.UserMapper;
 import com.example.CineHive.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,47 +24,18 @@ public class UserService{
 
     @Transactional
     public boolean registerUser(UserDto userDto) {
-        User user= new User();
-        user.setMemEmail(userDto.getMemEmail());
-        user.setMemUserid(userDto.getMemUserid());
-        user.setMemPw(passwordEncoder.encode(userDto.getMemPassword()));
-        user.setMemName(userDto.getMemName());
-        user.setMemSex(userDto.getMemSex());
-        user.setMemPhone(userDto.getMemPhone());
-        user.setMemNickname(userDto.getMemNickname());
-        user.setMemRegisterDatetime(LocalDateTime.now());
-        user.setGenres(userDto.getGenres());
-        user.setMemType("일반");
-        // 사용자 정보 저장
-        userRepository.save(user);
+        UserMapper userMapper = new UserMapper();
+        User user = userMapper.toEntity(userDto);
+        user.setMemPw(passwordEncoder.encode(userDto.getMemPassword())); // 비밀번호 암호화
 
+        userRepository.save(user);
         return true;
     }
 
-    public void checkDuplicateUserId(String memUserid) {
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다.");
-        }
-    }
 
-    public void checkDuplicateEmail(String memEmail) {
-        Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
-        }
-    }
-
-    public void checkDuplicateNickname(String memNickname) {
-        Optional<User> existingUser = userRepository.findByMemNickname(memNickname);
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
-        }
-    }
-
-    public boolean loginUser(String memUserid, String memPassword) {
+    public boolean loginUser(String memEmail, String memPassword) {
         // 사용자 ID로 사용자 조회
-        Optional<User> existingUser = userRepository.findByMemUserid(memUserid);
+        Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
 
         if (existingUser.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
@@ -78,20 +50,20 @@ public class UserService{
 
         return true;
     }
-    public boolean checkUserExists(String kakaoId) {
-        return userRepository.findByKakaoId(kakaoId).isPresent();
+    public boolean checkUserExists(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).isPresent();
     }
-    public boolean checkUserExistsGoogle(String googleId) {
-        return userRepository.findByGoogleId(googleId).isPresent();
-    }
-
-    public boolean checkUserExistsNaver(String naverId) {
-        return userRepository.findByNaverId(naverId).isPresent();
+    public boolean checkUserExistsGoogle(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).isPresent();
     }
 
+    public boolean checkUserExistsNaver(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).isPresent();
+    }
 
-    public User getUserInfo(String memUserid) {
-        return userRepository.findByMemUserid(memUserid).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+    public User getUserInfo(String memEmail) {
+        return userRepository.findByMemEmail(memEmail).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }
 
 }
