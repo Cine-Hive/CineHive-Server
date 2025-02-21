@@ -62,7 +62,7 @@ public class MovieController {
     }
 
     //Topmovie 데이블에서 가져오기
-    @Operation(summary = "평점순 영화 받아오기", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
+    @Operation(summary = "평점순 영화 조회", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
     @GetMapping("/get_topmovies")
     @ResponseBody
     public ResponseEntity<List<TopRatedMovieDto>> getTopRatedMoviesList() {
@@ -112,7 +112,7 @@ public class MovieController {
         }
     }
 
-    @Operation(summary = "DB에 저장된 영화 출력", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
+    @Operation(summary = "현재 상영중인 영화 조회", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
     @GetMapping("/now_playing")
     @ResponseBody
     public ResponseEntity<List<NowPlayingMovieDto>> getNowPlayingMoviesList() {
