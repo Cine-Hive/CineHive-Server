@@ -12,13 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriUtils;
-
-
 import org.springframework.stereotype.Service;
-
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +34,6 @@ public class MovieService {
     private TopMovieRepository topmovieRepository;
     private final ObjectMapper objectMapper;
 
-
-
     @Autowired
     private MovieActorService movieActorService;
     @Autowired
@@ -44,20 +41,41 @@ public class MovieService {
     @Autowired
     private MovieDirectorService movieDirectorService;
     @Autowired
-
-
-
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
     }
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    
+    // 현재 상영영화 자동저장 (매일 자정)
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void updateNowPlayingMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
+    }
+
+    // Top Rated 영화 자동저장 (매일 새벽 3시)
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updateTopRatedMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
+    }
+
+
 
     @Transactional
     public void saveMoviesToDatabase() {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/now_playing?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
-                .retrieve()
+                .retrieve() 
                 .bodyToMono(String.class)
                 .block();  // block()을 사용하여 응답을 기다립니다.
 
