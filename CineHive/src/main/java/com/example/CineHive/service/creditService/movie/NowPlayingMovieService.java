@@ -1,19 +1,12 @@
 package com.example.CineHive.service.creditService.movie;
 
 import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
-import com.example.CineHive.entity.credit.movie.Video;
-import com.example.CineHive.entity.videotype.Movie;
-import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
