@@ -47,16 +47,7 @@ public class MovieService {
     }
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    // 자동저장 테스트 10초마다 실행
-    @Scheduled(fixedRate = 10000)
-    public void testUpdateNowPlayingMovies() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트 테스트] 현재 상영 영화 업데이트 시작...");
-        saveMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트 테스트] 현재 상영 영화 업데이트 완료!");
-    }
-
+    
     // 현재 상영영화 자동저장 (매일 자정)
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
