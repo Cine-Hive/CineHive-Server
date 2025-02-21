@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.video;
+package com.example.CineHive.dto.video.movie;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,9 +21,5 @@ public class MovieVideoDto {
     public static class VideoResult {
         private String key;
         private String name;
-        private String site;
-        private String type;
-
-        // Getters and Setters
     }
 }
