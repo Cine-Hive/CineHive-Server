@@ -49,7 +49,7 @@ public class MovieActorService {
 
                 Movie movie = movieRepository.findById(movieId).orElse(null);
                 if (movie != null) {
-                    int mainActorCount = 3; // 필요한 주연 배우 수 설정
+                    int mainActorCount = 10; // 필요한 주연 배우 수 설정
                     for (int i = 0; i < Math.min(castNode.size(), mainActorCount); i++) {
                         JsonNode castMember = castNode.get(i);
                         Actor actor = new Actor();
