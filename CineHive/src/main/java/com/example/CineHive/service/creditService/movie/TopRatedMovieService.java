@@ -27,16 +27,6 @@ public class TopRatedMovieService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    private MovieDirectorService movieDirectorService;
-    @Autowired
-    private MovieActorService movieActorService;
-    @Autowired
-    private MovieVideoService movieVideoService;
-    @Autowired
-    private TopMovieRepository topMovieRepository;
-    @Autowired
-    private MovieRepository movieRepository;
 
     public TopRatedMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -59,7 +49,6 @@ public class TopRatedMovieService {
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
-                    String title = movieNode.get("title").asText();
                     String posterPath = movieNode.get("poster_path").asText();
 
                     // DTO 객체를 생성하여 리스트에 추가

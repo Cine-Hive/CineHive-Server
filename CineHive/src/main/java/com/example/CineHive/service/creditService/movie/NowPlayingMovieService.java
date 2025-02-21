@@ -26,14 +26,6 @@ public class NowPlayingMovieService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
-    @Autowired
-    private MovieRepository movieRepository;
-    @Autowired
-    private MovieDirectorService movieDirectorService;
-    @Autowired
-    private MovieActorService movieActorService;
-    @Autowired
-    private MovieVideoService movieVideoService;
 
     public NowPlayingMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
