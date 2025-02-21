@@ -42,9 +42,10 @@ public class MovieController {
     private NowPlayingMovieService nowPlayingMovieService;
 
     @Autowired
+    //현재 상영중인 영화 DB에 넣기 (수동으로 저장)
     private TopRatedMovieService topRatedMovieService;
-    @Operation(summary = "현재 상영중인 영화 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
-    @GetMapping("/now_playing")
+    @Operation(summary = "현재 상영중인 영화 수동으로 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
+    @PostMapping("/update_now_playing")
     public ResponseEntity<?> getNowPlayingMovies() {
         System.out.println("Request received for now playing movies");
         movieService.saveMoviesToDatabase();  // 매개변수로 language와 page 전달
@@ -68,9 +69,9 @@ public class MovieController {
         List<TopMovie> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
         return ResponseEntity.ok(topRatedMovies);
     }
-    //TopRated 영화 DB에 넣기
-    @Operation(summary = "Topmovie DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
-    @GetMapping("/top_movie")
+    //TopRated 영화 DB에 넣기 (수동으로 저장)
+    @Operation(summary = "Top rated 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
+    @PostMapping("/update_top_movie")
     public ResponseEntity<?> getTopMovies() {
         System.out.println("Request received for Top movies");
         movieService.saveTopRatedMoviesToDatabase();
@@ -109,7 +110,7 @@ public class MovieController {
     }
 
     @Operation(summary = "DB에 저장된 영화 출력", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
-    @GetMapping("/now_playing_movies")
+    @GetMapping("/now_playing")
     @ResponseBody
     public ResponseEntity<List<Movie>> getNowPlayingMoviesList() {
         Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기

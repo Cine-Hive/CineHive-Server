@@ -35,8 +35,6 @@ public class MovieService {
     private TopMovieRepository topmovieRepository;
     private final ObjectMapper objectMapper;
 
-
-
     @Autowired
     private MovieActorService movieActorService;
     @Autowired
@@ -44,20 +42,37 @@ public class MovieService {
     @Autowired
     private MovieDirectorService movieDirectorService;
     @Autowired
-
-
-
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
     }
+
+    // 현재 상영영화 자동저장 (매일 자정)
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void updateNowPlayingMoviesDaily() {
+        System.out.println("[자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[자동 업데이트] 현재 상영 영화 업데이트 완료!");
+    }
+
+    // Top Rated 영화 자동저장 (매일 새벽 3시)
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updateTopRatedMoviesDaily() {
+        System.out.println("[자동 업데이트] Top Rated 영화 업데이트 시작...");
+        saveTopRatedMoviesToDatabase();
+        System.out.println("[자동 업데이트] Top Rated 영화 업데이트 완료!");
+    }
+
+
 
     @Transactional
     public void saveMoviesToDatabase() {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/now_playing?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
-                .retrieve()
+                .retrieve() 
                 .bodyToMono(String.class)
                 .block();  // block()을 사용하여 응답을 기다립니다.
 
