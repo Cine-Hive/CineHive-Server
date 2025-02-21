@@ -12,13 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriUtils;
-
-
 import org.springframework.stereotype.Service;
-
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,22 +46,35 @@ public class MovieService {
         this.objectMapper = objectMapper;
     }
 
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    // 자동저장 테스트 10초마다 실행
+    @Scheduled(fixedRate = 10000)
+    public void testUpdateNowPlayingMovies() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트 테스트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트 테스트] 현재 상영 영화 업데이트 완료!");
+    }
+
     // 현재 상영영화 자동저장 (매일 자정)
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateNowPlayingMoviesDaily() {
-        System.out.println("[자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
         saveMoviesToDatabase();
-        System.out.println("[자동 업데이트] 현재 상영 영화 업데이트 완료!");
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
     }
 
     // Top Rated 영화 자동저장 (매일 새벽 3시)
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void updateTopRatedMoviesDaily() {
-        System.out.println("[자동 업데이트] Top Rated 영화 업데이트 시작...");
-        saveTopRatedMoviesToDatabase();
-        System.out.println("[자동 업데이트] Top Rated 영화 업데이트 완료!");
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
     }
 
 
