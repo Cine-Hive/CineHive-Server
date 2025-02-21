@@ -58,19 +58,9 @@ public class NowPlayingMovieService {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
 
+
                     NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath);
                     moviePosters.add(nowPlayingMovieDto);
-
-                    // 데이터베이스에 저장 (포스터 데이터만 저장)
-                    if (!movieRepository.existsById(movieId)) {
-                        Movie movie = new Movie();
-                        movie.setId(movieId);
-                        movie.setPosterPath(posterPath);
-                        movieRepository.save(movie);  // 영화 저장
-                        System.out.println("Saved movie poster: " + movieId);
-                    } else {
-                        System.out.println("Movie poster already exists: " + movieId);
-                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -80,5 +70,6 @@ public class NowPlayingMovieService {
         }
         return moviePosters;
     }
+
 
 }
