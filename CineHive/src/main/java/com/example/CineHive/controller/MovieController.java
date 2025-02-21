@@ -1,5 +1,6 @@
 package com.example.CineHive.controller;
 
+import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.entity.videotype.Drama;
 import com.example.CineHive.entity.videotype.Movie;
@@ -112,9 +113,9 @@ public class MovieController {
     @Operation(summary = "DB에 저장된 영화 출력", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
     @GetMapping("/now_playing")
     @ResponseBody
-    public ResponseEntity<List<Movie>> getNowPlayingMoviesList() {
+    public ResponseEntity<List<NowPlayingMovieDto>> getNowPlayingMoviesList() {
         Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
-        List<Movie> nowPlayingMovies = nowPlayingMovieService.getNowPlayingMovies(pageable);
+        List<NowPlayingMovieDto> nowPlayingMovies = nowPlayingMovieService.getNowPlayingMovies(pageable);
         return ResponseEntity.ok(nowPlayingMovies);
     }
 }

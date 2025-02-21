@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.video;
+package com.example.CineHive.dto.video.movie;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
