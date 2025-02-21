@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.boardController;
 
-import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.*;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.service.board.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,9 +21,9 @@ public class BoardController {
 
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
     @PostMapping("/create")
-    public ResponseEntity<Board> createBoard(@RequestBody BoardDto boardDto){
+    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto){
 
-        Board createdBoard = boardService.createBoard(boardDto);
+        Board createdBoard = boardService.createBoard(createBoardDto);
         return ResponseEntity.ok(createdBoard);
     }
 
@@ -40,10 +39,11 @@ public class BoardController {
     }
     @Operation(summary = "게시글 글 수정", description = "사용자가 등록한 게시글에 대한 글을 수정")
     @PutMapping("/{id}")
-    public ResponseEntity<Board> updateBoard(@PathVariable Long id, @RequestBody Board updatedBoard){
-        Board updateBoard = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent());
-        return ResponseEntity.ok(updateBoard);
+    public ResponseEntity<Board> updateBoard(@PathVariable Long id, @RequestBody UpdateBoardRequest updatedBoard) {
+        Board updatedBoardEntity = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent(), updatedBoard.getMemEmail());
+        return ResponseEntity.ok(updatedBoardEntity);
     }
+
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
     @DeleteMapping("/delete/{id}")
@@ -54,15 +54,16 @@ public class BoardController {
 
     @Operation(summary = "게시글 리스트 조회", description = "사용자들이 등록한 게시글들의 전체 목록을 조회")
     @GetMapping
-    public ResponseEntity<List<BoardDto>> getBoards() {
-        List<BoardDto> boards = boardService.getAllBoard();
+    public ResponseEntity<List<GetListBoardDto>> getBoards() {
+        List<GetListBoardDto> boards = boardService.getAllBoard();
         return new ResponseEntity<>(boards, HttpStatus.OK);
     }
 
+
     @Operation(summary = "게시글 검색", description = "제목, 내용 및 닉네임을 포함하여 등록한 게시글을 모두 검색")
     @GetMapping("/search")
-    public ResponseEntity<List<BoardDto>> searchBoards(@RequestParam String keyword) {
-        List<BoardDto> results = boardService.searchBoards(keyword);
+    public ResponseEntity<List<BoardSearchDto>> searchBoards(@RequestParam String keyword) {
+        List<BoardSearchDto> results = boardService.searchBoards(keyword);
         return ResponseEntity.ok(results);
     }
 }

@@ -1,10 +1,15 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.BoardSearchDto;
+import com.example.CineHive.dto.board.CreateBoardDto;
+import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
+import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +28,13 @@ public class  BoardService {
     private UserRepository userRepository;
 
     /*게시글 생성 */
-    public Board createBoard(BoardDto boardDto) {
-        User user = userRepository.findByMemEmail(boardDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + boardDto.getMemEmail()  ));
+    public Board createBoard(CreateBoardDto createBoardDto) {
+        User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + createBoardDto.getMemEmail()));
 
         Board board = new Board();
-        board.setBrdTitle(boardDto.getBrdTitle());
-        board.setBrdContent(boardDto.getBrdContent());
+        board.setBrdTitle(createBoardDto.getBrdTitle());
+        board.setBrdContent(createBoardDto.getBrdContent());
         board.setUser(user);
 
         return boardRepository.save(board);
@@ -40,17 +45,35 @@ public class  BoardService {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
 
+        // 조회수 증가
         board.increaseViews();
         boardRepository.save(board);
 
-        return BoardMapper.convertToDto(board);
+        // BoardDto로 변환
+        BoardDto boardDto = BoardMapper.convertToDto(board);
+
+        // 댓글 리스트 변환
+        CommentMapper commentMapper = new CommentMapper(); // 인스턴스 생성
+        List<CommentDto> commentDtos = board.getComments().stream()
+                .map(commentMapper::toDTO) // 인스턴스 메서드 호출
+                .collect(Collectors.toList());
+        boardDto.setComments(commentDtos); // 댓글 리스트 설정
+
+        return boardDto;
     }
 
+
     /*게시글 수정 */
-    public Board updateBoard(Long id, String brdTitle, String brdContent) {
+    public Board updateBoard(Long id, String brdTitle, String brdContent, String memEmail) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
         if (optionalBoard.isPresent()) {
             Board board = optionalBoard.get();
+
+            // 권한 확인: 사용자가 게시글 작성자인지 확인
+            if (!board.getUser().getMemEmail().equals(memEmail)) {
+                throw new RuntimeException("사용자가 이 게시글을 수정할 권한이 없습니다.");
+            }
+
             board.setBrdTitle(brdTitle);
             board.setBrdContent(brdContent);
             return boardRepository.save(board);
@@ -58,6 +81,7 @@ public class  BoardService {
             throw new RuntimeException("게시글을 찾을 수 없습니다.");
         }
     }
+
 
     /*게시글 삭제 */
     public void deleteBoard(Long id) {
@@ -67,16 +91,29 @@ public class  BoardService {
     }
 
     /*게시글 전체 목록 조회 */
-    public List<BoardDto> getAllBoard() {
+    public List<GetListBoardDto> getAllBoard() {
         List<Board> boards = boardRepository.findAll();
-        return BoardMapper.convertToDtoList(boards);
+        return boards.stream()
+                .map(board -> {
+                    GetListBoardDto dto = new GetListBoardDto();
+                    dto.setId(board.getId());
+                    dto.setBrdTitle(board.getBrdTitle());
+                    dto.setBrdContent(board.getBrdContent());
+                    dto.setMemNickname(board.getUser().getMemNickname());
+                    dto.setBrgRegDate(board.getBrdRegDate());
+                    dto.setLikeCount(board.getLikeCount());
+                    dto.setViews(board.getViews());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
 
-    public List<BoardDto> searchBoards(String keyword) {
+
+    public List<BoardSearchDto> searchBoards(String keyword) {
         List<Board> boards = boardRepository.searchByKeyword(keyword);
         return boards.stream()
-                .map(BoardMapper::convertToDto)
+                .map(BoardMapper::convertToSearchDto)
                 .collect(Collectors.toList());
     }
 }

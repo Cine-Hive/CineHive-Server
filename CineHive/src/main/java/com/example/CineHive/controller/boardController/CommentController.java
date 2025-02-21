@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.boardController;
 
-import com.example.CineHive.dto.board.CommentDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.service.board.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +28,7 @@ public class CommentController {
         CommentDto createdComment = commentService.addComment(boardId, memEmail, commentDto.getContent());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
     }
+
 
     /* 댓글 조회 */
     @Operation(summary = "댓글 조회", description = "특정 게시글의 전채 댓글 수 조회")

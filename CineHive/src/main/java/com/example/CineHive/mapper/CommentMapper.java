@@ -1,6 +1,6 @@
 package com.example.CineHive.mapper;
 
-import com.example.CineHive.dto.board.CommentDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.board.Comment;
 import com.example.CineHive.exception.MappingException;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class CommentMapper {
                 comment.getContent(),
                 comment.getUser().getMemNickname(),
                 comment.getUser().getMemEmail(),
-                comment.getCreatedAt()
+                comment.getUser().getMemRegisterDatetime()
         );
     }
 
