@@ -22,9 +22,6 @@ public class Actor {
     private Long id;
 
     private String name;
-    private String originalName;
-    private String role;
-    private Integer gender;
 
     @JsonIgnore
     @ManyToOne
