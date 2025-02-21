@@ -13,7 +13,6 @@ public class UserMapper {
         user.setMemName(userDto.getMemName());
         user.setMemSex(userDto.getMemSex());
         user.setMemNickname(userDto.getMemNickname());
-        user.setMemRegisterDatetime(LocalDateTime.now());
         user.setGenres(userDto.getGenres());
         user.setMemType("일반");
         return user;

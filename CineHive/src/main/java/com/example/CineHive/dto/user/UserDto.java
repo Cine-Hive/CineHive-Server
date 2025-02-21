@@ -19,7 +19,5 @@ public class UserDto {
     private String memEmail;
     private String memNickname;
     private String memSex;
-    private String memType;
-    private String memRegisterDatetime;
     private List<String> genres; // 추가된 장르 필드
 }
