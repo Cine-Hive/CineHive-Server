@@ -1,6 +1,7 @@
 package com.example.CineHive.controller;
 
 import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
+import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.entity.videotype.Drama;
 import com.example.CineHive.entity.videotype.Movie;
@@ -64,11 +65,12 @@ public class MovieController {
     @Operation(summary = "평점순 영화 받아오기", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
     @GetMapping("/get_topmovies")
     @ResponseBody
-    public ResponseEntity<List<TopMovie>> getTopRatedMoviesList() {
+    public ResponseEntity<List<TopRatedMovieDto>> getTopRatedMoviesList() {
         Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
-        List<TopMovie> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
+        List<TopRatedMovieDto> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
         return ResponseEntity.ok(topRatedMovies);
     }
+
 
     //TopRated 영화 DB에 넣기 (수동으로 저장)
     @Operation(summary = "Top rated 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")

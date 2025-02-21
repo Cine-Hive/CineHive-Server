@@ -130,18 +130,18 @@ public class MovieService {
 
     @Transactional
     public void saveTopRatedMoviesToDatabase() {
+        // API를 호출하여 데이터를 가져옵니다.
         String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/top_rated?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
+                .uri("https://api.themoviedb.org/3/movie/top_rated?language=ko&page=1&api_key=" + apiKey)
                 .header("Accept", "application/json")
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();  // block()을 사용하여 응답을 기다립니다.
+                .block();
 
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
                 JsonNode moviesNode = rootNode.path("results");
-
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
@@ -151,11 +151,9 @@ public class MovieService {
                         TopMovie topmovie = new TopMovie();
                         topmovie.setId(movieId);
                         topmovie.setTitle(movieNode.get("title").asText());
-                        String overviewText = movieNode.get("overview").asText();
-                        topmovie.setOverview(overviewText);
+                        topmovie.setOverview(movieNode.get("overview").asText());
                         topmovie.setPosterPath(movieNode.get("poster_path").asText());
                         topmovie.setBackdropPath(movieNode.get("backdrop_path").asText());
-                        topmovie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                         topmovie.setVoteAverage(movieNode.get("vote_average").asDouble());
                         topmovie.setVoteCount(movieNode.get("vote_count").asInt());
                         topmovie.setPopularity(movieNode.get("popularity").asDouble());
@@ -165,10 +163,25 @@ public class MovieService {
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         topmovie.setReleaseDate(releaseDate);
 
-                        // 데이터베이스에 저장
+                        // TopMovie 데이터베이스에 저장
                         topmovieRepository.save(topmovie);
                         System.out.println("Saved movie: " + topmovie.getTitle());
 
+                        // Movie 객체 생성 및 저장
+                        Movie movie = new Movie();
+                        movie.setId(movieId);
+                        movie.setTitle(topmovie.getTitle());
+                        movie.setOverview(topmovie.getOverview());
+                        movie.setPosterPath(topmovie.getPosterPath());
+                        movie.setBackdropPath(topmovie.getBackdropPath());
+                        movie.setVoteAverage(topmovie.getVoteAverage());
+                        movie.setVoteCount(topmovie.getVoteCount());
+                        movie.setPopularity(topmovie.getPopularity());
+                        movie.setReleaseDate(topmovie.getReleaseDate());
+
+                        // Movie 데이터베이스에 저장
+                        movieRepository.save(movie);
+                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }
             } catch (Exception e) {
@@ -178,6 +191,7 @@ public class MovieService {
             System.out.println("응답이 없습니다.");
         }
     }
+
 
 
     public List<Movie> searchMovies(String query) {
