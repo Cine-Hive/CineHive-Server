@@ -150,11 +150,8 @@ public class MovieService {
                         topmovie.setTitle(movieNode.get("title").asText());
                         topmovie.setOverview(movieNode.get("overview").asText());
                         topmovie.setPosterPath(movieNode.get("poster_path").asText());
-                        topmovie.setBackdropPath(movieNode.get("backdrop_path").asText());
                         topmovie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        topmovie.setVoteCount(movieNode.get("vote_count").asInt());
                         topmovie.setPopularity(movieNode.get("popularity").asDouble());
-                        topmovie.setAdult(movieNode.get("adult").asBoolean());
                         String releaseDateString = movieNode.get("release_date").asText();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
