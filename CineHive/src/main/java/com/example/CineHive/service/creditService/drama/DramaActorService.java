@@ -48,9 +48,6 @@ public class DramaActorService {
                         JsonNode castMember = castNode.get(i);
                         Actor actor = new Actor();
                         actor.setName(castMember.get("name").asText());
-                        actor.setOriginalName(castMember.get("original_name").asText());
-                        actor.setRole(castMember.get("character").asText());
-                        actor.setGender(castMember.get("gender").asInt());
 
                         // 중복 확인
                         boolean alreadyExists = drama.getActors().stream()

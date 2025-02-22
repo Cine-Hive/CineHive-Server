@@ -21,9 +21,6 @@ public class Actor {
     private Long id;
 
     private String name;
-    private String originalName;
-    private String role;
-    private Integer gender;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drama_id", nullable = false)
