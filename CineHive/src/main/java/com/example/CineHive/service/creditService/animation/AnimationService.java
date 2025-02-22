@@ -76,10 +76,8 @@ public class AnimationService {
                     animation.setName(animationNode.get("title").asText());
                     animation.setOverview(animationNode.get("overview").asText());
                     animation.setPosterPath(posterPath);
-                    animation.setBackdropPath(animationNode.get("backdrop_path").asText());
                     animation.setGenreIds(objectMapper.convertValue(animationNode.get("genre_ids"), List.class));
                     animation.setVoteAverage(animationNode.get("vote_average").asDouble());
-                    animation.setVoteCount(animationNode.get("vote_count").asInt());
                     animation.setPopularity(animationNode.get("popularity").asDouble());
                     String releaseDateString = animationNode.get("release_date").asText();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
