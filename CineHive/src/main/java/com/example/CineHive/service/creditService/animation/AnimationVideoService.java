@@ -45,8 +45,6 @@ public class AnimationVideoService {
                 Video video = new Video();
                 video.setVideoKey(firstVideoNode.path("key").asText());
                 video.setName(firstVideoNode.path("name").asText());
-                video.setSite(firstVideoNode.path("site").asText());
-                video.setType(firstVideoNode.path("type").asText());
 
                 // Animation과 관계 설정
                 Animation animation = animationRepository.findById(animationId).orElse(null);

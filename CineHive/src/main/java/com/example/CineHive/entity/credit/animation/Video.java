@@ -21,8 +21,6 @@ public class Video {
 
     private String videoKey; // 유튜브 비디오 키
     private String name;
-    private String site;
-    private String type;
 
     @ManyToOne
     @JoinColumn(name = "animation_id")
