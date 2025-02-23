@@ -28,18 +28,14 @@ public class Movie {
     private String overview;
 
     private String posterPath;
-    private String backdropPath;
     @Column(name = "release_date")
     private LocalDate releaseDate;
     @ElementCollection
     private List<Integer> genreIds;
     private double voteAverage;
-    private int voteCount;
     private double popularity;
-    private boolean adult;
 
-
-    //출연진 정보
+    // 출연진 정보
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Actor> actors = new ArrayList<>();
 
@@ -53,12 +49,8 @@ public class Movie {
     @JoinColumn(name = "movie_id")
     private List<Video> videos;
 
-
     // 감독 정보
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "director_id")
     private Director director;
-
-
-
 }

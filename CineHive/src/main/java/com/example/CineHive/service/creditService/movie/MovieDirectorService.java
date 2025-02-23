@@ -1,5 +1,7 @@
 package com.example.CineHive.service.creditService.movie;
 
+
+import com.example.CineHive.dto.video.movie.DirectorDto;
 import com.example.CineHive.entity.credit.movie.Director;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.videos.movie.MovieDirectorRepository;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Optional;
 
 @Service
 public class MovieDirectorService {
@@ -33,7 +37,7 @@ public class MovieDirectorService {
     }
 
     @Transactional
-    public void saveMovieDirectors(Long movieId) {
+    public Optional<DirectorDto> saveMovieDirectors(Long movieId) {
         String response = webClient.get()
                 .uri("/movie/" + movieId + "/credits?api_key=" + apiKey + "&language=ko")
                 .retrieve()
@@ -57,17 +61,17 @@ public class MovieDirectorService {
                                         // 새로운 감독 객체 생성 및 저장
                                         Director newDirector = new Director();
                                         newDirector.setName(directorName);
-                                        newDirector.setGender(crewMember.get("gender").asInt());
-                                        newDirector.setJob(crewMember.get("job").asText());
                                         return directorRepository.save(newDirector);
                                     });
 
                             // Movie에 Director 추가
                             movie.setDirector(director);
-                            break; // 감독은 한 명만 있으므로 루프 탈출
+                            movieRepository.save(movie);
+
+                            // DTO로 변환하여 반환
+                            return Optional.of(new DirectorDto(director.getId(), director.getName()));
                         }
                     }
-                    movieRepository.save(movie);
                 }
             } catch (Exception e) {
                 System.out.println("JSON 처리 중 오류 발생: " + e.getMessage());
@@ -76,6 +80,6 @@ public class MovieDirectorService {
         } else {
             System.out.println("응답이 없습니다.");
         }
+        return Optional.empty(); // 감독이 없거나 응답이 없을 경우 빈 Optional 반환
     }
-
 }

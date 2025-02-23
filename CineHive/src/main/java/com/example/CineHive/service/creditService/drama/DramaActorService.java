@@ -1,5 +1,6 @@
 package com.example.CineHive.service.creditService.drama;
 
+import com.example.CineHive.dto.video.drama.ActorDto;
 import com.example.CineHive.entity.credit.drama.Actor;
 import com.example.CineHive.entity.videotype.Drama;
 import com.example.CineHive.repository.videos.drama.DramaRepository;
@@ -10,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DramaActorService {
@@ -29,12 +33,14 @@ public class DramaActorService {
     }
 
     @Transactional
-    public void saveDramaCredits(Long dramaId) {
+    public List<ActorDto> saveDramaCredits(Long dramaId) {
         String response = webClient.get()
                 .uri("/tv/" + dramaId + "/credits?api_key=" + apiKey + "&language=ko")
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+
+        List<ActorDto> actorDTOs = new ArrayList<>();
 
         if (response != null) {
             try {
@@ -43,24 +49,31 @@ public class DramaActorService {
 
                 Drama drama = dramaRepository.findById(dramaId).orElse(null);
                 if (drama != null) {
-                    int mainActorCount = 3; // 필요한 주연 배우 수 설정
-                    for (int i = 0; i < Math.min(castNode.size(), mainActorCount); i++) {
-                        JsonNode castMember = castNode.get(i);
+                    for (JsonNode castMember : castNode) {
                         Actor actor = new Actor();
+                        //배우 이름
                         actor.setName(castMember.get("name").asText());
-                        actor.setOriginalName(castMember.get("original_name").asText());
-                        actor.setRole(castMember.get("character").asText());
-                        actor.setGender(castMember.get("gender").asInt());
 
-                        // 중복 확인
+                        // 배우의 이미지 URL
+                        String profilePath = castMember.path("profile_path").asText();
+                        if (!profilePath.isEmpty()) {
+                            String posterUrl = "https://image.tmdb.org/t/p/w500" + profilePath;
+                            actor.setPosterUrl(posterUrl);
+                        }
+
                         boolean alreadyExists = drama.getActors().stream()
                                 .anyMatch(existingActor -> existingActor.getName().equals(actor.getName()));
 
                         if (!alreadyExists) {
-                            // Drama에 Actor 추가
                             drama.getActors().add(actor);
-                            actor.setDrama(drama); // Actor에 Drama 설정
+                            actor.setDrama(drama);
                         }
+
+                        ActorDto actorDto = new ActorDto();
+                        actorDto.setId(actor.getId());
+                        actorDto.setName(actor.getName());
+                        actorDto.setPosterUrl(actor.getPosterUrl());
+                        actorDTOs.add(actorDto);
                     }
                     dramaRepository.save(drama);
                 }
@@ -71,5 +84,6 @@ public class DramaActorService {
         } else {
             System.out.println("응답이 없습니다.");
         }
+        return actorDTOs;
     }
 }

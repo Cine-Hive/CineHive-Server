@@ -1,5 +1,6 @@
 package com.example.CineHive.service.creditService.movie;
 
+import com.example.CineHive.dto.video.movie.ActorDto;
 import com.example.CineHive.entity.credit.movie.Actor;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
@@ -10,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class MovieActorService {
@@ -29,12 +33,14 @@ public class MovieActorService {
     }
 
     @Transactional
-    public void saveMovieCredits(Long movieId) {
+    public List<ActorDto> saveMovieCredits(Long movieId) {
         String response = webClient.get()
-                .uri("/movie/" + movieId + "/credits?api_key=" + apiKey +"&language=ko")
+                .uri("/movie/" + movieId + "/credits?api_key=" + apiKey + "&language=ko")
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+
+        List<ActorDto> actorDTOs = new ArrayList<>();
 
         if (response != null) {
             try {
@@ -43,22 +49,20 @@ public class MovieActorService {
 
                 Movie movie = movieRepository.findById(movieId).orElse(null);
                 if (movie != null) {
-                    int mainActorCount = 3; // 필요한 주연 배우 수 설정
+                    int mainActorCount = 10; // 필요한 주연 배우 수 설정
                     for (int i = 0; i < Math.min(castNode.size(), mainActorCount); i++) {
                         JsonNode castMember = castNode.get(i);
                         Actor actor = new Actor();
                         actor.setName(castMember.get("name").asText());
-                        actor.setOriginalName(castMember.get("original_name").asText());
-                        actor.setRole(castMember.get("character").asText());
-                        actor.setGender(castMember.get("gender").asInt());
+                        actor.setPosterUrl("https://image.tmdb.org/t/p/w500" + castMember.get("profile_path").asText()); // 포스터 URL 설정
 
                         // 중복 확인
                         boolean alreadyExists = movie.getActors().stream()
                                 .anyMatch(existingActor -> existingActor.getName().equals(actor.getName()));
 
                         if (!alreadyExists) {
-                            // Movie에 Actor 추가
                             movie.addActor(actor);
+                            actorDTOs.add(new ActorDto(actor.getId(), actor.getName(),actor.getPosterUrl()));
                         }
                     }
                     movieRepository.save(movie);
@@ -70,5 +74,7 @@ public class MovieActorService {
         } else {
             System.out.println("응답이 없습니다.");
         }
+        return actorDTOs;
     }
+
 }

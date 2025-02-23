@@ -18,7 +18,5 @@ public class Video {
 
     private String videoKey; // 유튜브 비디오 키
     private String name;
-    private String site;
-    private String type; // type은 트레일러 부분
 
 }

@@ -1,6 +1,6 @@
 package com.example.CineHive.service.creditService.movie;
 
-import com.example.CineHive.dto.video.MovieVideoDto;
+import com.example.CineHive.dto.video.movie.MovieVideoDto;
 import com.example.CineHive.entity.credit.movie.Video;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,8 +28,6 @@ public class MovieVideoService {
             Video video = new Video();
             video.setVideoKey(videoResponse.getResults().get(0).getKey());
             video.setName(videoResponse.getResults().get(0).getName());
-            video.setSite(videoResponse.getResults().get(0).getSite());
-            video.setType(videoResponse.getResults().get(0).getType());
             return video;
         }
         return null; // 비디오가 없으면 null 반환

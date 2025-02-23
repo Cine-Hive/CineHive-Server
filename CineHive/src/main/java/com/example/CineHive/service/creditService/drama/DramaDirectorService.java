@@ -1,8 +1,8 @@
 package com.example.CineHive.service.creditService.drama;
 
+import com.example.CineHive.dto.video.drama.DirectorDto;
 import com.example.CineHive.entity.credit.drama.Director;
 import com.example.CineHive.entity.videotype.Drama;
-import com.example.CineHive.repository.videos.drama.DramaDirectorRepository;
 import com.example.CineHive.repository.videos.drama.DramaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DramaDirectorService {
@@ -27,19 +28,19 @@ public class DramaDirectorService {
     @Autowired
     private ObjectMapper objectMapper;
 
-
-
     public DramaDirectorService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
     }
 
     @Transactional
-    public void saveDramaDirectors(Long dramaId) {
+    public List<DirectorDto> saveDramaDirectors(Long dramaId) {
         String response = webClient.get()
                 .uri("/tv/" + dramaId + "/credits?api_key=" + apiKey + "&language=en-US")
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+
+        List<DirectorDto> directorDTOs = new ArrayList<>();
 
         if (response != null) {
             try {
@@ -59,9 +60,11 @@ public class DramaDirectorService {
                             Director director = new Director();
                             director.setName(crewMember.get("name").asText());
 
-                            // Drama에 Director 추가
+
                             drama.getDirectors().add(director);
-                            break; // 감독은 한 명만 있으므로 루프 탈출
+                            directorDTOs.add(new DirectorDto(director.getId(), director.getName()));
+
+                            break;
                         }
                     }
                     dramaRepository.save(drama);
@@ -73,6 +76,6 @@ public class DramaDirectorService {
         } else {
             System.out.println("응답이 없습니다.");
         }
+        return directorDTOs;
     }
-
 }
