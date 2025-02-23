@@ -12,13 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriUtils;
-
-
 import org.springframework.stereotype.Service;
-
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +34,6 @@ public class MovieService {
     private TopMovieRepository topmovieRepository;
     private final ObjectMapper objectMapper;
 
-
-
     @Autowired
     private MovieActorService movieActorService;
     @Autowired
@@ -44,20 +41,41 @@ public class MovieService {
     @Autowired
     private MovieDirectorService movieDirectorService;
     @Autowired
-
-
-
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
     }
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    
+    // 현재 상영영화 자동저장 (매일 자정)
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void updateNowPlayingMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
+    }
+
+    // Top Rated 영화 자동저장 (매일 새벽 3시)
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updateTopRatedMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
+        saveMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
+    }
+
+
 
     @Transactional
     public void saveMoviesToDatabase() {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/now_playing?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
-                .retrieve()
+                .retrieve() 
                 .bodyToMono(String.class)
                 .block();  // block()을 사용하여 응답을 기다립니다.
 
@@ -77,12 +95,9 @@ public class MovieService {
                         String overviewText = movieNode.get("overview").asText();
                         movie.setOverview(overviewText);
                         movie.setPosterPath(movieNode.get("poster_path").asText());
-                        movie.setBackdropPath(movieNode.get("backdrop_path").asText());
                         movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                         movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        movie.setVoteCount(movieNode.get("vote_count").asInt());
                         movie.setPopularity(movieNode.get("popularity").asDouble());
-                        movie.setAdult(movieNode.get("adult").asBoolean());
                         String releaseDateString = movieNode.get("release_date").asText();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
@@ -112,18 +127,18 @@ public class MovieService {
 
     @Transactional
     public void saveTopRatedMoviesToDatabase() {
+        // API를 호출하여 데이터를 가져옵니다.
         String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/top_rated?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
+                .uri("https://api.themoviedb.org/3/movie/top_rated?language=ko&page=1&api_key=" + apiKey)
                 .header("Accept", "application/json")
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();  // block()을 사용하여 응답을 기다립니다.
+                .block();
 
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
                 JsonNode moviesNode = rootNode.path("results");
-
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
@@ -133,24 +148,36 @@ public class MovieService {
                         TopMovie topmovie = new TopMovie();
                         topmovie.setId(movieId);
                         topmovie.setTitle(movieNode.get("title").asText());
-                        String overviewText = movieNode.get("overview").asText();
-                        topmovie.setOverview(overviewText);
+                        topmovie.setOverview(movieNode.get("overview").asText());
                         topmovie.setPosterPath(movieNode.get("poster_path").asText());
-                        topmovie.setBackdropPath(movieNode.get("backdrop_path").asText());
-                        topmovie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                         topmovie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        topmovie.setVoteCount(movieNode.get("vote_count").asInt());
                         topmovie.setPopularity(movieNode.get("popularity").asDouble());
-                        topmovie.setAdult(movieNode.get("adult").asBoolean());
                         String releaseDateString = movieNode.get("release_date").asText();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         topmovie.setReleaseDate(releaseDate);
 
-                        // 데이터베이스에 저장
+                        // TopMovie 데이터베이스에 저장
                         topmovieRepository.save(topmovie);
                         System.out.println("Saved movie: " + topmovie.getTitle());
 
+                        // Movie 객체 생성 및 저장
+                        Movie movie = new Movie();
+                        movie.setId(movieId);
+                        movie.setTitle(topmovie.getTitle());
+                        movie.setOverview(topmovie.getOverview());
+                        movie.setPosterPath(topmovie.getPosterPath());
+                        movie.setVoteAverage(topmovie.getVoteAverage());
+                        movie.setPopularity(topmovie.getPopularity());
+                        movie.setReleaseDate(topmovie.getReleaseDate());
+
+                        // Movie 데이터베이스에 저장
+                        movieRepository.save(movie);
+
+                        movieActorService.saveMovieCredits(movieId);
+
+                        movieDirectorService.saveMovieDirectors(movieId);
+                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }
             } catch (Exception e) {
@@ -160,6 +187,7 @@ public class MovieService {
             System.out.println("응답이 없습니다.");
         }
     }
+
 
 
     public List<Movie> searchMovies(String query) {
@@ -192,12 +220,9 @@ public class MovieService {
                     movie.setOverview(movieNode.get("overview").asText());
                     movie.setPosterPath(posterPath);
 
-                    movie.setBackdropPath(movieNode.get("backdrop_path").asText());
                     movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
                     movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                    movie.setVoteCount(movieNode.get("vote_count").asInt());
                     movie.setPopularity(movieNode.get("popularity").asDouble());
-                    movie.setAdult(movieNode.get("adult").asBoolean());
                     String releaseDateString = movieNode.get("release_date").asText();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
@@ -240,7 +265,4 @@ public class MovieService {
         }
         return movies;
     }
-
-
-
 }

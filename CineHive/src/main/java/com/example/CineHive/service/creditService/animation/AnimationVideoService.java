@@ -1,5 +1,6 @@
 package com.example.CineHive.service.creditService.animation;
 
+import com.example.CineHive.dto.video.animation.VideoDto; // DTO 임포트
 import com.example.CineHive.entity.credit.animation.Video;
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.repository.videos.animation.AnimationRepository;
@@ -28,7 +29,7 @@ public class AnimationVideoService {
         this.objectMapper = objectMapper;
     }
 
-    public Video getFirstVideoForAnimation(Long animationId) {
+    public VideoDto getFirstVideoForAnimation(Long animationId) {
         String url = BASE_URL + animationId + "/videos?api_key=" + apiKey;
         try {
             String response = restTemplate.getForObject(url, String.class);
@@ -42,20 +43,21 @@ public class AnimationVideoService {
             if (resultsNode.isArray() && resultsNode.size() > 0) {
                 JsonNode firstVideoNode = resultsNode.get(0); // 첫 번째 비디오 가져오기
 
-                Video video = new Video();
-                video.setVideoKey(firstVideoNode.path("key").asText());
-                video.setName(firstVideoNode.path("name").asText());
-                video.setSite(firstVideoNode.path("site").asText());
-                video.setType(firstVideoNode.path("type").asText());
+                VideoDto videoDto = new VideoDto();
+                videoDto.setVideoKey(firstVideoNode.path("key").asText());
+                videoDto.setName(firstVideoNode.path("name").asText());
 
-                // Animation과 관계 설정
+
                 Animation animation = animationRepository.findById(animationId).orElse(null);
                 if (animation != null) {
+                    Video video = new Video();
+                    video.setVideoKey(videoDto.getVideoKey());
+                    video.setName(videoDto.getName());
                     video.setAnimation(animation);
                     animation.getVideos().add(video);
                 }
 
-                return video;
+                return videoDto;
             }
         } catch (Exception e) {
             System.out.println("Error fetching video: " + e.getMessage());

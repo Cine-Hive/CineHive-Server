@@ -6,6 +6,7 @@ import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+@Tag(name = "User Controller", description = "사용자 관련 기능을 제공하는 API")
 @Slf4j
 @RequiredArgsConstructor
 @RestController

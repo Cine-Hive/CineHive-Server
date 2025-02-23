@@ -11,6 +11,7 @@ import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+@Tag(name = "Kakao User Controller", description = "카카오 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")

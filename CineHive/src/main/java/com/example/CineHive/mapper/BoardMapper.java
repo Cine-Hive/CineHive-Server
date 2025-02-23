@@ -1,6 +1,7 @@
 package com.example.CineHive.mapper;
 
 import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.BoardSearchDto;
 import com.example.CineHive.entity.board.Board;
 
 import java.util.List;
@@ -32,4 +33,11 @@ public class BoardMapper {
                 .collect(Collectors.toList());
     }
 
+    public static BoardSearchDto convertToSearchDto(Board board) {
+        BoardSearchDto dto = new BoardSearchDto();
+        dto.setBrdTitle(board.getBrdTitle());
+        dto.setBrdContent(board.getBrdContent());
+        dto.setMemNickname(board.getUser().getMemNickname());
+        return dto;
+    }
 }

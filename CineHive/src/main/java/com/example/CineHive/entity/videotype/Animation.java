@@ -28,11 +28,9 @@ public class Animation {
     @Lob
     private String overview;
     private String posterPath;
-    private String backdropPath;
     @Column(name = "release_date")
     private LocalDate releaseDate;
     private double voteAverage;
-    private int voteCount;
     private double popularity;
 
     @ElementCollection

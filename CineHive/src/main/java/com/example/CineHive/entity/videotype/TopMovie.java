@@ -25,7 +25,6 @@ public class TopMovie {
 
     private String posterPath;
 
-    private String backdropPath;
 
     @Column(name = "release_date")
     private LocalDate releaseDate;
@@ -35,10 +34,8 @@ public class TopMovie {
 
     private double voteAverage;
 
-    private int voteCount;
 
     private double popularity;
 
-    private boolean adult;
 
 }

@@ -22,19 +22,14 @@ public class Drama {
     @Id
     private Long id;
     private String name;
-    private String originalName;
 
     @Lob
     private String overview;
     private String posterPath;
-    private String backdropPath;
     @Column(name = "first_air_date")
     private String firstAirDate;
     private double voteAverage;
-    private int voteCount;
     private double popularity;
-    private boolean adult;
-    private String originalLanguage;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "drama_id")

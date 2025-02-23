@@ -70,12 +70,9 @@ public class DramaService {
                     }
                     drama.setPosterPath(posterPath);
 
-                    drama.setBackdropPath(dramaNode.get("backdrop_path").asText());
                     drama.setGenreIds(objectMapper.convertValue(dramaNode.get("genre_ids"), List.class));  // List로 변환
                     drama.setVoteAverage(dramaNode.get("vote_average").asDouble());
-                    drama.setVoteCount(dramaNode.get("vote_count").asInt());
                     drama.setPopularity(dramaNode.get("popularity").asDouble());
-                    drama.setAdult(dramaNode.get("adult").asBoolean());
 
                     String releaseDateString = dramaNode.get("first_air_date").asText();
                     if (!releaseDateString.isEmpty()) {

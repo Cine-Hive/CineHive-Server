@@ -1,1 +1,57 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Eclipse/IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# Maven
+target/
+.mvn/
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Spring Boot
+spring.log
+
+# Logs
+logs/
+*.log
+**/log/
+**/logs/
+**/logging/
+
+# IDE-specific files
 .idea/
+.vscode/
+
+# Temporary files
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Node Modules (in case of frontend integration)
+node_modules/
+
+# Ignore environment files
+.env
+.env.*
+
+# SQL
+cinehive_dumpfile.sql
