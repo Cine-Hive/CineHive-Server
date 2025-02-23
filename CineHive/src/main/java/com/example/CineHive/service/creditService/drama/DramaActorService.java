@@ -49,26 +49,30 @@ public class DramaActorService {
 
                 Drama drama = dramaRepository.findById(dramaId).orElse(null);
                 if (drama != null) {
-                    int mainActorCount = 3; // 필요한 주연 배우 수 설정
-                    for (int i = 0; i < Math.min(castNode.size(), mainActorCount); i++) {
-                        JsonNode castMember = castNode.get(i);
+                    for (JsonNode castMember : castNode) {
                         Actor actor = new Actor();
+                        //배우 이름
                         actor.setName(castMember.get("name").asText());
 
+                        // 배우의 이미지 URL
+                        String profilePath = castMember.path("profile_path").asText();
+                        if (!profilePath.isEmpty()) {
+                            String posterUrl = "https://image.tmdb.org/t/p/w500" + profilePath;
+                            actor.setPosterUrl(posterUrl);
+                        }
 
                         boolean alreadyExists = drama.getActors().stream()
                                 .anyMatch(existingActor -> existingActor.getName().equals(actor.getName()));
 
                         if (!alreadyExists) {
-
                             drama.getActors().add(actor);
                             actor.setDrama(drama);
                         }
 
-
                         ActorDto actorDto = new ActorDto();
                         actorDto.setId(actor.getId());
                         actorDto.setName(actor.getName());
+                        actorDto.setPosterUrl(actor.getPosterUrl());
                         actorDTOs.add(actorDto);
                     }
                     dramaRepository.save(drama);

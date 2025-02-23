@@ -15,16 +15,16 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "drama_actors")
 public class Actor {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
 
+    private String posterUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drama_id", nullable = false)
     @JsonIgnore
     private Drama drama;
-
 }
