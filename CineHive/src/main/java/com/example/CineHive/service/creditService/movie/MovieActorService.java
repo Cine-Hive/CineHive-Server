@@ -54,15 +54,15 @@ public class MovieActorService {
                         JsonNode castMember = castNode.get(i);
                         Actor actor = new Actor();
                         actor.setName(castMember.get("name").asText());
+                        actor.setPosterUrl("https://image.tmdb.org/t/p/w500" + castMember.get("profile_path").asText()); // 포스터 URL 설정
 
                         // 중복 확인
                         boolean alreadyExists = movie.getActors().stream()
                                 .anyMatch(existingActor -> existingActor.getName().equals(actor.getName()));
 
                         if (!alreadyExists) {
-
                             movie.addActor(actor);
-                            actorDTOs.add(new ActorDto(actor.getId(), actor.getName()));
+                            actorDTOs.add(new ActorDto(actor.getId(), actor.getName(),actor.getPosterUrl()));
                         }
                     }
                     movieRepository.save(movie);
@@ -76,4 +76,5 @@ public class MovieActorService {
         }
         return actorDTOs;
     }
+
 }

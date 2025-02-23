@@ -16,12 +16,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Actor {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
+
+    private String posterUrl; // 포스터 이미지 URL 추가
 
     @JsonIgnore
     @ManyToOne
