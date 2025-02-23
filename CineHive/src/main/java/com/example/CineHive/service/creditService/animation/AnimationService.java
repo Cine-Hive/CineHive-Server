@@ -1,5 +1,6 @@
 package com.example.CineHive.service.creditService.animation;
 
+import com.example.CineHive.dto.video.animation.VideoDto;
 import com.example.CineHive.entity.credit.animation.Video;
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.repository.videos.animation.AnimationRepository;
@@ -84,21 +85,22 @@ public class AnimationService {
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                     animation.setReleaseDate(releaseDate);
 
+                    // 비디오 정보를 가져옴
+                    VideoDto videoDto = animationVideoService.getFirstVideoForAnimation(animationId);
+                    if (videoDto != null) {
 
-                    Video video = animationVideoService.getFirstVideoForAnimation(animationId);
-                    if (video != null) {
+                        Video video = new Video();
+                        video.setVideoKey(videoDto.getVideoKey());
+                        video.setName(videoDto.getName());
                         video.setAnimation(animation);
                         animation.getVideos().add(video);
                         System.out.println("Added video: " + video.getName());
                     }
 
-
                     animationRepository.save(animation);
                     System.out.println("Saved animation: " + animation.getName());
 
-
                     animationDirectorService.saveAnimationDirectors(animationId);
-
 
                     animations.add(animation);
                 }
