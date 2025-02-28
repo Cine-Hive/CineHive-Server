@@ -169,6 +169,7 @@ public class MovieService {
                         movie.setTitle(topmovie.getTitle());
                         movie.setOverview(topmovie.getOverview());
                         movie.setPosterPath(topmovie.getPosterPath());
+                        movie.setBackDropPath(topmovie.getBackDropPath());
                         movie.setVoteAverage(topmovie.getVoteAverage());
                         movie.setPopularity(topmovie.getPopularity());
                         movie.setReleaseDate(topmovie.getReleaseDate());
