@@ -29,4 +29,5 @@ public class BoardDto {
     private int reportCount;
     private int commentCount;
     private List<CommentDto> comments; // 댓글 리스트
+    private int views;
 }
