@@ -23,6 +23,7 @@ public class BoardMapper {
         dto.setDislikeCount(board.getDisLikeCount());
         dto.setReportCount(board.getReportCount());
         dto.setCommentCount(board.getCommentCount());
+        dto.setViews(board.getViews());
         return dto;
     }
 
