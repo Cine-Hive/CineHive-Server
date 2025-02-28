@@ -66,6 +66,7 @@ public class AnimationService {
                     }
                     Long animationId = animationNode.get("id").asLong();
                     String posterPath = animationNode.get("poster_path").asText();
+                    String backDropPath = animationNode.get("backdrop_path").asText();
 
                     // 포스터 없는 경우 제외
                     if (posterPath == null || posterPath.isEmpty()) {
@@ -77,6 +78,7 @@ public class AnimationService {
                     animation.setName(animationNode.get("title").asText());
                     animation.setOverview(animationNode.get("overview").asText());
                     animation.setPosterPath(posterPath);
+                    animation.setBackDropPath(backDropPath); // 추가된 부분
                     animation.setGenreIds(objectMapper.convertValue(animationNode.get("genre_ids"), List.class));
                     animation.setVoteAverage(animationNode.get("vote_average").asDouble());
                     animation.setPopularity(animationNode.get("popularity").asDouble());
@@ -88,7 +90,6 @@ public class AnimationService {
                     // 비디오 정보를 가져옴
                     VideoDto videoDto = animationVideoService.getFirstVideoForAnimation(animationId);
                     if (videoDto != null) {
-
                         Video video = new Video();
                         video.setVideoKey(videoDto.getVideoKey());
                         video.setName(videoDto.getName());
@@ -112,4 +113,5 @@ public class AnimationService {
         }
         return animations;
     }
+
 }

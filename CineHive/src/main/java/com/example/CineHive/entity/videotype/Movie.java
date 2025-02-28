@@ -28,13 +28,13 @@ public class Movie {
     private String overview;
 
     private String posterPath;
+    private String backDropPath;
     @Column(name = "release_date")
     private LocalDate releaseDate;
     @ElementCollection
     private List<Integer> genreIds;
     private double voteAverage;
     private double popularity;
-
     // 출연진 정보
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Actor> actors = new ArrayList<>();

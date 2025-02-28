@@ -26,6 +26,7 @@ public class Drama {
     @Lob
     private String overview;
     private String posterPath;
+    private String backDropPath;
     @Column(name = "first_air_date")
     private String firstAirDate;
     private double voteAverage;

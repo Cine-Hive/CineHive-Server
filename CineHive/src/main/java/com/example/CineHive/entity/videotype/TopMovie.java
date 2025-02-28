@@ -25,6 +25,7 @@ public class TopMovie {
 
     private String posterPath;
 
+    private String backDropPath;
 
     @Column(name = "release_date")
     private LocalDate releaseDate;

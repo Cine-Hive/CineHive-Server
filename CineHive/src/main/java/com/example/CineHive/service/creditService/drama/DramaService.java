@@ -59,6 +59,7 @@ public class DramaService {
                 for (JsonNode dramaNode : dramasNode) {
                     Long dramaId = dramaNode.get("id").asLong();
                     String posterPath = dramaNode.get("poster_path").asText();
+                    String backDropPath = dramaNode.get("backdrop_path").asText(); // 추가된 부분
                     Drama drama = new Drama();
                     drama.setId(dramaId);
                     drama.setName(dramaNode.get("name").asText());
@@ -69,6 +70,7 @@ public class DramaService {
                         continue;
                     }
                     drama.setPosterPath(posterPath);
+                    drama.setBackDropPath(backDropPath); // 추가된 부분
 
                     drama.setGenreIds(objectMapper.convertValue(dramaNode.get("genre_ids"), List.class));  // List로 변환
                     drama.setVoteAverage(dramaNode.get("vote_average").asDouble());
@@ -81,8 +83,6 @@ public class DramaService {
                         drama.setFirstAirDate(String.valueOf(releaseDate));
                     }
 
-
-
                     if (drama.getGenreIds().contains(16)) {
                         continue;
                     }
@@ -93,6 +93,7 @@ public class DramaService {
                     } else {
                         System.out.println("Drama already exists: " + drama.getName());
                     }
+
                     // 배우
                     dramaActorService.saveDramaCredits(dramaId);
                     // 감독 정보 저장

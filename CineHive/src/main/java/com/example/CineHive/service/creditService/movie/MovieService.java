@@ -95,7 +95,8 @@ public class MovieService {
                         String overviewText = movieNode.get("overview").asText();
                         movie.setOverview(overviewText);
                         movie.setPosterPath(movieNode.get("poster_path").asText());
-                        movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
+                        movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));
+                        movie.setBackDropPath(movieNode.get("backdrop_path").asText());
                         movie.setVoteAverage(movieNode.get("vote_average").asDouble());
                         movie.setPopularity(movieNode.get("popularity").asDouble());
                         String releaseDateString = movieNode.get("release_date").asText();
@@ -150,6 +151,7 @@ public class MovieService {
                         topmovie.setTitle(movieNode.get("title").asText());
                         topmovie.setOverview(movieNode.get("overview").asText());
                         topmovie.setPosterPath(movieNode.get("poster_path").asText());
+                        topmovie.setBackDropPath(movieNode.get("backdrop_path").asText());
                         topmovie.setVoteAverage(movieNode.get("vote_average").asDouble());
                         topmovie.setPopularity(movieNode.get("popularity").asDouble());
                         String releaseDateString = movieNode.get("release_date").asText();
