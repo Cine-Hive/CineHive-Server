@@ -72,7 +72,7 @@ public class LikeService {
     public int getLikeCount(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Board not found"));
-        return board.getBookmarkCount();
+        return board.getLikeCount();
     }
 
 }
