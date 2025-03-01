@@ -21,7 +21,7 @@ public class ReportController {
     public ResponseEntity<String> reportBoard(
             @PathVariable Long boardId,
             @PathVariable String memEmail,
-            @RequestParam String reason) {
+            @RequestBody String reason) {
 
         boolean isReported = reportService.reportBoard(memEmail, boardId, reason);
         return isReported ? ResponseEntity.ok("Reported")
