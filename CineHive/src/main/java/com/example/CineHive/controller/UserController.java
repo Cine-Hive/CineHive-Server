@@ -82,6 +82,7 @@ public class UserController {
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "로그인 성공");
                 response.put("user", new HashMap<String, Object>() {{
+                    put("gender",user.getMemSex());
                     put("email", user.getMemEmail());
                     put("name", user.getMemName());
                     put("nickname", user.getMemNickname());
