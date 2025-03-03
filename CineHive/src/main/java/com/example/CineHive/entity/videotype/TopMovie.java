@@ -38,5 +38,7 @@ public class TopMovie {
 
     private double popularity;
 
+    private int runtime;
+
 
 }

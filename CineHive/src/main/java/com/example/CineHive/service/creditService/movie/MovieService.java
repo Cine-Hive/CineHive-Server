@@ -70,12 +70,13 @@ public class MovieService {
 
 
 
+
     @Transactional
     public void saveMoviesToDatabase() {
         String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/now_playing?language=" + "ko" + "&page=" + "1" + "&api_key=" + apiKey)
+                .uri("https://api.themoviedb.org/3/movie/now_playing?language=ko&page=1&api_key=" + apiKey)
                 .header("Accept", "application/json")
-                .retrieve() 
+                .retrieve()
                 .bodyToMono(String.class)
                 .block();  // block()을 사용하여 응답을 기다립니다.
 
@@ -103,6 +104,22 @@ public class MovieService {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         movie.setReleaseDate(releaseDate);
+
+
+                        String movieDetailsResponse = webClient.get()
+                                .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .block();
+
+                        JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
+                        JsonNode runtimeNode = movieDetailsNode.get("runtime");
+                        if (runtimeNode != null && !runtimeNode.isNull()) {
+                            movie.setRuntime(runtimeNode.asInt());
+                        } else {
+                            movie.setRuntime(0);
+                        }
+
                         // 비디오 정보 가져오기 (첫 번째 비디오만)
                         Video video = movieVideoService.getFirstVideoForMovie(movieId);
                         if (video != null) {
@@ -113,9 +130,8 @@ public class MovieService {
                         System.out.println("Saved movie: " + movie.getTitle());
                         // 배우 정보 저장
                         movieActorService.saveMovieCredits(movieId);
-                        //감독 정보 저장
+                        // 감독 정보 저장
                         movieDirectorService.saveMovieDirectors(movieId);
-
                     }
                 }
             } catch (Exception e) {
@@ -125,6 +141,7 @@ public class MovieService {
             System.out.println("응답이 없습니다.");
         }
     }
+
 
     @Transactional
     public void saveTopRatedMoviesToDatabase() {
@@ -159,6 +176,21 @@ public class MovieService {
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         topmovie.setReleaseDate(releaseDate);
 
+
+                        String movieDetailsResponse = webClient.get()
+                                .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .block();
+
+                        JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
+                        JsonNode runtimeNode = movieDetailsNode.get("runtime");
+                        if (runtimeNode != null && !runtimeNode.isNull()) {
+                            topmovie.setRuntime(runtimeNode.asInt());
+                        } else {
+                            topmovie.setRuntime(0);
+                        }
+
                         // TopMovie 데이터베이스에 저장
                         topmovieRepository.save(topmovie);
                         System.out.println("Saved movie: " + topmovie.getTitle());
@@ -173,12 +205,12 @@ public class MovieService {
                         movie.setVoteAverage(topmovie.getVoteAverage());
                         movie.setPopularity(topmovie.getPopularity());
                         movie.setReleaseDate(topmovie.getReleaseDate());
+                        movie.setRuntime(topmovie.getRuntime());
 
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
 
                         movieActorService.saveMovieCredits(movieId);
-
                         movieDirectorService.saveMovieDirectors(movieId);
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
@@ -190,6 +222,7 @@ public class MovieService {
             System.out.println("응답이 없습니다.");
         }
     }
+
 
 
 
@@ -214,9 +247,10 @@ public class MovieService {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
 
-                    if(posterPath==null || posterPath.isEmpty()){
+                    if (posterPath == null || posterPath.isEmpty()) {
                         continue;
                     }
+
                     Movie movie = new Movie();
                     movie.setId(movieId);
                     movie.setTitle(movieNode.get("title").asText());
@@ -229,11 +263,26 @@ public class MovieService {
                     String releaseDateString = movieNode.get("release_date").asText();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-
                     movie.setReleaseDate(releaseDate);
-                    //애니메이션 장르 제외
-                    if(movie.getGenreIds().contains(16)){
+
+                    // 애니메이션 장르 제외
+                    if (movie.getGenreIds().contains(16)) {
                         continue;
+                    }
+
+
+                    String movieDetailsResponse = webClient.get()
+                            .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
+                            .retrieve()
+                            .bodyToMono(String.class)
+                            .block();
+
+                    JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
+                    JsonNode runtimeNode = movieDetailsNode.get("runtime");
+                    if (runtimeNode != null && !runtimeNode.isNull()) {
+                        movie.setRuntime(runtimeNode.asInt());
+                    } else {
+                        movie.setRuntime(0);
                     }
 
                     // 비디오 정보 가져오기 (첫 번째 비디오만)
@@ -248,11 +297,10 @@ public class MovieService {
                     if (!movieRepository.existsById(movieId)) {
                         movieRepository.save(movie);
                         System.out.println("Saved new movie: " + movie.getTitle());
-                        //배우 정보
+                        // 배우 정보
                         movieActorService.saveMovieCredits(movieId);
-                        //감독 정보
+                        // 감독 정보
                         movieDirectorService.saveMovieDirectors(movieId);
-
                     } else {
                         System.out.println("Movie already exists: " + movie.getTitle());
                     }

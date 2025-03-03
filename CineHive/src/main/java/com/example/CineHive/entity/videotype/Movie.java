@@ -54,9 +54,9 @@ public class Movie {
     @JoinColumn(name = "director_id")
     private Director director;
 
+    private int runtime;
     // genres → 현재 영화의 장르정보 추가 필요
     // homepage → OTT 연동 추가 필요
-    // runtime → 상영시간 추가 필요
     // production_companies → 배급사 정보와 배급사 로고 추가 필요
 
     // 현재 MovieDetail에서 불러와지는 Actor(배우) 이미지의 변수명이 영화와 통일성없이 PosterUrl로 넘어옴

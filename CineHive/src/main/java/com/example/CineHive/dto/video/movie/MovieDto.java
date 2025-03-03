@@ -28,5 +28,6 @@ public class MovieDto {
         private List<Integer> genreIds;
         private double voteAverage;
         private double popularity;
+        private int runtime;
     }
 }
