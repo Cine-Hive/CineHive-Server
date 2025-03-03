@@ -301,6 +301,11 @@ public class MovieService {
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                     movie.setReleaseDate(releaseDate);
 
+                    // 애니메이션 장르 제외
+                    if (movie.getGenres().stream().anyMatch(g -> g.getId() == 16)) {
+                        continue;
+                    }
+
                     String movieDetailsResponse = webClient.get()
                             .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                             .retrieve()

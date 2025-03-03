@@ -93,7 +93,7 @@ public class AnimationService {
 
 
                     List<Genre> genres = new ArrayList<>();
-                    for (JsonNode genreNode : animationsNode.get("genre_ids")) {
+                    for (JsonNode genreNode : animationNode.get("genre_ids")) {
                         Genre genre = new Genre();
                         genre.setId(genreNode.asInt());
                         genre.setName(animationGenreService.getGenreNameById(genre.getId()));
