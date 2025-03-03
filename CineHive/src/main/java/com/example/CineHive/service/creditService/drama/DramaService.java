@@ -1,6 +1,7 @@
 package com.example.CineHive.service.creditService.drama;
 
 import com.example.CineHive.entity.videotype.Drama;
+import com.example.CineHive.entity.credit.drama.Genre;
 import com.example.CineHive.repository.videos.drama.DramaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,9 @@ public class DramaService {
 
     @Autowired
     private DramaActorService dramaActorService;
+
+    @Autowired
+    private DramaGenreService dramaGenreService; // 변경된 부분
 
     public DramaService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -72,7 +76,28 @@ public class DramaService {
                     drama.setPosterPath(posterPath);
                     drama.setBackDropPath(backDropPath);
 
-                    drama.setGenreIds(objectMapper.convertValue(dramaNode.get("genre_ids"), List.class));  // List로 변환
+                    // 장르 정보 설정
+                    List<Genre> genres = new ArrayList<>();
+                    boolean isAnimationGenre = false;
+                    for (JsonNode genreIdNode : dramaNode.get("genre_ids")) {
+                        Genre genre = new Genre();
+                        genre.setId(genreIdNode.asInt());
+                        genre.setName(dramaGenreService.getGenreNameById(genreIdNode.asInt()));
+                        genres.add(genre);
+
+
+                        if (genreIdNode.asInt() == 16) {
+                            isAnimationGenre = true;
+                        }
+                    }
+                    drama.setGenres(genres);
+
+
+                    if (isAnimationGenre) {
+                        System.out.println("드라마 '" + drama.getName() + "'은 애니메이션 장르로 제외됩니다.");
+                        continue;
+                    }
+
                     drama.setVoteAverage(dramaNode.get("vote_average").asDouble());
                     drama.setPopularity(dramaNode.get("popularity").asDouble());
 
@@ -80,13 +105,10 @@ public class DramaService {
                     if (!releaseDateString.isEmpty()) {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-                        drama.setFirstAirDate(String.valueOf(releaseDate));
+                        drama.setFirstAirDate(releaseDate.toString());
                     }
 
-                    if (drama.getGenreIds().contains(16)) {
-                        continue;
-                    }
-
+                    // 드라마가 이미 존재하는지 확인
                     if (!dramaRepository.existsById(dramaId)) {
                         dramaRepository.save(drama);
                         System.out.println("Saved new drama: " + drama.getName());
@@ -94,7 +116,7 @@ public class DramaService {
                         System.out.println("Drama already exists: " + drama.getName());
                     }
 
-                    // 배우
+                    // 배우 정보 저장
                     dramaActorService.saveDramaCredits(dramaId);
                     // 감독 정보 저장
                     dramaDirectorService.saveDramaDirectors(dramaId);

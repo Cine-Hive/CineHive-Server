@@ -1,6 +1,6 @@
-package com.example.CineHive.entity.credit.movie;
+package com.example.CineHive.entity.credit.animation;
 
-import com.example.CineHive.entity.videotype.Movie;
+import com.example.CineHive.entity.videotype.Animation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,12 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity(name = "MovieGenre") // 엔티티 이름을 명시적으로 지정
+@Entity(name = "AnimationGenre") // 엔티티 이름을 명시적으로 지정
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "movie_genres")
+@Table(name="animation_genres")
 public class Genre {
     @Id
     private Integer id;
@@ -21,7 +21,7 @@ public class Genre {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "movie_id")
+    @JoinColumn(name = "animation_id")
     @JsonIgnore
-    private Movie movie;
+    private Animation animation;
 }

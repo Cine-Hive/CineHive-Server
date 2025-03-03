@@ -1,7 +1,9 @@
 package com.example.CineHive.entity.videotype;
 
 import com.example.CineHive.entity.credit.animation.Director;
+import com.example.CineHive.entity.credit.animation.Genre;
 import com.example.CineHive.entity.credit.animation.Video;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,8 +36,10 @@ public class Animation {
     private double voteAverage;
     private double popularity;
 
-    @ElementCollection
-    private List<Integer> genreIds;
+    // @ElementCollection을 @OneToMany로 변경
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "animation_id")
+    private List<Genre> genres = new ArrayList<>();
 
     @OneToMany(mappedBy = "animation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Director> directors = new ArrayList<>();
