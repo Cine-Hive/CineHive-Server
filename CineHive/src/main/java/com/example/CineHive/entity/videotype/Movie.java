@@ -33,7 +33,7 @@ public class Movie {
     @Column(name = "release_date")
     private LocalDate releaseDate;
 
-    // @ElementCollection을 @OneToMany로 변경
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id")
     private List<Genre> genres = new ArrayList<>();

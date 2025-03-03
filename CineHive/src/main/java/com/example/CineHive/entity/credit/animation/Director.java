@@ -22,6 +22,6 @@ public class Director {
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "animation_id") // 외래 키 설정
-    private Animation animation; // Animation과의 관계 추가
+    @JoinColumn(name = "animation_id")
+    private Animation animation;
 }

@@ -7,6 +7,7 @@ import com.example.CineHive.entity.credit.animation.Genre;
 import com.example.CineHive.repository.videos.animation.AnimationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class AnimationService {
     public AnimationService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
+        this.objectMapper.registerModule(new JavaTimeModule());  // 추가: LocalDate 변환 지원
     }
 
     public List<Animation> searchAnimations(String query) {
@@ -97,9 +99,13 @@ public class AnimationService {
                         Genre genre = new Genre();
                         genre.setId(genreNode.asInt());
                         genre.setName(animationGenreService.getGenreNameById(genre.getId()));
+
+                        genre.setAnimation(animation);
+
                         genres.add(genre);
                     }
                     animation.setGenres(genres);
+
 
                     // 비디오 정보를 가져옴
                     VideoDto videoDto = animationVideoService.getFirstVideoForAnimation(animationId);

@@ -37,7 +37,7 @@ public class Drama {
     @JoinColumn(name = "drama_id")
     private List<Director> directors;
 
-    // @ElementCollection을 @OneToMany로 변경
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "drama_id")
     private List<Genre> genres = new ArrayList<>();
