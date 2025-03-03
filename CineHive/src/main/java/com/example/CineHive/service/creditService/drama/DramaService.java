@@ -59,7 +59,7 @@ public class DramaService {
                 for (JsonNode dramaNode : dramasNode) {
                     Long dramaId = dramaNode.get("id").asLong();
                     String posterPath = dramaNode.get("poster_path").asText();
-                    String backDropPath = dramaNode.get("backdrop_path").asText(); // 추가된 부분
+                    String backDropPath = dramaNode.get("backdrop_path").asText();
                     Drama drama = new Drama();
                     drama.setId(dramaId);
                     drama.setName(dramaNode.get("name").asText());
@@ -70,7 +70,7 @@ public class DramaService {
                         continue;
                     }
                     drama.setPosterPath(posterPath);
-                    drama.setBackDropPath(backDropPath); // 추가된 부분
+                    drama.setBackDropPath(backDropPath);
 
                     drama.setGenreIds(objectMapper.convertValue(dramaNode.get("genre_ids"), List.class));  // List로 변환
                     drama.setVoteAverage(dramaNode.get("vote_average").asDouble());

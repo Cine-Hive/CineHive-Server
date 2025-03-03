@@ -49,12 +49,18 @@ public class DramaActorService {
 
                 Drama drama = dramaRepository.findById(dramaId).orElse(null);
                 if (drama != null) {
+                    int actorCount = 0;
+
                     for (JsonNode castMember : castNode) {
+                        if (actorCount >= 10) {
+                            break;
+                        }
+
                         Actor actor = new Actor();
-                        //배우 이름
+
                         actor.setName(castMember.get("name").asText());
 
-                        // 배우의 이미지 URL
+
                         String profilePath = castMember.path("profile_path").asText();
                         if (!profilePath.isEmpty()) {
                             String posterUrl = "https://image.tmdb.org/t/p/w500" + profilePath;
@@ -67,13 +73,14 @@ public class DramaActorService {
                         if (!alreadyExists) {
                             drama.getActors().add(actor);
                             actor.setDrama(drama);
-                        }
+                            actorCount++;
 
-                        ActorDto actorDto = new ActorDto();
-                        actorDto.setId(actor.getId());
-                        actorDto.setName(actor.getName());
-                        actorDto.setPosterPath(actor.getPosterPath());
-                        actorDTOs.add(actorDto);
+                            ActorDto actorDto = new ActorDto();
+                            actorDto.setId(actor.getId());
+                            actorDto.setName(actor.getName());
+                            actorDto.setPosterPath(actor.getPosterPath());
+                            actorDTOs.add(actorDto);
+                        }
                     }
                     dramaRepository.save(drama);
                 }
@@ -86,4 +93,5 @@ public class DramaActorService {
         }
         return actorDTOs;
     }
+
 }
