@@ -2,6 +2,7 @@ package com.example.CineHive.entity.videotype;
 
 import com.example.CineHive.entity.credit.movie.Actor;
 import com.example.CineHive.entity.credit.movie.Director;
+import com.example.CineHive.entity.credit.movie.Genre;
 import com.example.CineHive.entity.credit.movie.Video;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,8 +32,12 @@ public class Movie {
     private String backDropPath;
     @Column(name = "release_date")
     private LocalDate releaseDate;
-    @ElementCollection
-    private List<Integer> genreIds;
+
+    // @ElementCollection을 @OneToMany로 변경
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "movie_id")
+    private List<Genre> genres = new ArrayList<>();
+
     private double voteAverage;
     private double popularity;
     // 출연진 정보
@@ -55,6 +60,7 @@ public class Movie {
     private Director director;
 
     private int runtime;
+
     // genres → 현재 영화의 장르정보 추가 필요
     // homepage → OTT 연동 추가 필요
     // production_companies → 배급사 정보와 배급사 로고 추가 필요

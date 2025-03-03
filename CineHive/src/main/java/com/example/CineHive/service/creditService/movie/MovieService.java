@@ -1,5 +1,7 @@
 package com.example.CineHive.service.creditService.movie;
 
+import com.example.CineHive.entity.credit.movie.Genre;
+import com.example.CineHive.entity.credit.movie.topMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.entity.videotype.TopMovie;
 import com.example.CineHive.entity.credit.movie.Video;
@@ -40,6 +42,10 @@ public class MovieService {
     private MovieVideoService movieVideoService;
     @Autowired
     private MovieDirectorService movieDirectorService;
+
+    @Autowired
+
+    private MovieGenreService movieGenreService;
     @Autowired
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -47,7 +53,7 @@ public class MovieService {
     }
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    
+
     // 현재 상영영화 자동저장 (매일 자정)
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
@@ -93,10 +99,8 @@ public class MovieService {
                         Movie movie = new Movie();
                         movie.setId(movieId);
                         movie.setTitle(movieNode.get("title").asText());
-                        String overviewText = movieNode.get("overview").asText();
-                        movie.setOverview(overviewText);
+                        movie.setOverview(movieNode.get("overview").asText());
                         movie.setPosterPath(movieNode.get("poster_path").asText());
-                        movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));
                         movie.setBackDropPath(movieNode.get("backdrop_path").asText());
                         movie.setVoteAverage(movieNode.get("vote_average").asDouble());
                         movie.setPopularity(movieNode.get("popularity").asDouble());
@@ -106,6 +110,18 @@ public class MovieService {
                         movie.setReleaseDate(releaseDate);
 
 
+                        // 장르 정보 설정
+                        List<Genre> genres = new ArrayList<>();
+                        for (JsonNode genreNode : movieNode.get("genre_ids")) {
+                            Genre genre = new Genre();
+                            genre.setId(genreNode.asInt());
+                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
+                            genres.add(genre);
+                        }
+                        movie.setGenres(genres); // 변경된 부분
+
+
+                        // 영화 상세 정보 가져오기
                         String movieDetailsResponse = webClient.get()
                                 .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                                 .retrieve()
@@ -125,6 +141,7 @@ public class MovieService {
                         if (video != null) {
                             movie.setVideos(List.of(video)); // 비디오 정보를 리스트로 설정
                         }
+
                         // 데이터베이스에 저장
                         movieRepository.save(movie);
                         System.out.println("Saved movie: " + movie.getTitle());
@@ -176,7 +193,7 @@ public class MovieService {
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         topmovie.setReleaseDate(releaseDate);
 
-
+                        // 영화 상세 정보 가져오기
                         String movieDetailsResponse = webClient.get()
                                 .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                                 .retrieve()
@@ -190,6 +207,15 @@ public class MovieService {
                         } else {
                             topmovie.setRuntime(0);
                         }
+
+                        List<topMovieGenre> genres = new ArrayList<>();
+                        for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
+                            topMovieGenre genre = new topMovieGenre();
+                            genre.setId(genreIdNode.asInt());
+                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
+                            genres.add(genre);
+                        }
+                        topmovie.setGenres(genres);
 
                         // TopMovie 데이터베이스에 저장
                         topmovieRepository.save(topmovie);
@@ -226,6 +252,7 @@ public class MovieService {
 
 
 
+
     public List<Movie> searchMovies(String query) {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/search/movie?query="
@@ -257,7 +284,16 @@ public class MovieService {
                     movie.setOverview(movieNode.get("overview").asText());
                     movie.setPosterPath(posterPath);
 
-                    movie.setGenreIds(objectMapper.convertValue(movieNode.get("genre_ids"), List.class));  // List로 변환
+
+                    List<Genre> genres = new ArrayList<>();
+                    for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
+                        Genre genre = new Genre();
+                        genre.setId(genreIdNode.asInt());
+                        genre.setName(movieGenreService.getGenreNameById(genre.getId()));
+                        genres.add(genre);
+                    }
+                    movie.setGenres(genres);
+
                     movie.setVoteAverage(movieNode.get("vote_average").asDouble());
                     movie.setPopularity(movieNode.get("popularity").asDouble());
                     String releaseDateString = movieNode.get("release_date").asText();
@@ -266,10 +302,9 @@ public class MovieService {
                     movie.setReleaseDate(releaseDate);
 
                     // 애니메이션 장르 제외
-                    if (movie.getGenreIds().contains(16)) {
+                    if (movie.getGenres().stream().anyMatch(g -> g.getId() == 16)) {
                         continue;
                     }
-
 
                     String movieDetailsResponse = webClient.get()
                             .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
@@ -316,4 +351,5 @@ public class MovieService {
         }
         return movies;
     }
+
 }
