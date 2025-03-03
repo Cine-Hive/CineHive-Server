@@ -43,12 +43,12 @@ public class AnimationService {
     public AnimationService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
-        this.objectMapper.registerModule(new JavaTimeModule());  // 추가: LocalDate 변환 지원
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
     public List<Animation> searchAnimations(String query) {
         String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/search/movie?query=" // TV에서 영화로 변경
+                .uri("https://api.themoviedb.org/3/search/movie?query="
                         + UriUtils.encode(query, StandardCharsets.UTF_8)
                         + "&api_key=" + apiKey
                         + "&include_adult=true&language=ko&page=1")

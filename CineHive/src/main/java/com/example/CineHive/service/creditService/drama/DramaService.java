@@ -36,7 +36,7 @@ public class DramaService {
     private DramaActorService dramaActorService;
 
     @Autowired
-    private DramaGenreService dramaGenreService; // 변경된 부분
+    private DramaGenreService dramaGenreService;
 
     public DramaService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();

@@ -4,7 +4,6 @@ import com.example.CineHive.entity.credit.animation.Director;
 import com.example.CineHive.entity.credit.animation.Genre;
 import com.example.CineHive.entity.credit.animation.Video;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,11 +32,9 @@ public class Animation {
     private String posterPath;
     private String backDropPath;
     @Column(name = "release_date")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate releaseDate;
     private double voteAverage;
     private double popularity;
-
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "animation_id")
