@@ -22,7 +22,7 @@ public class Actor {
 
     private String name;
 
-    private String posterUrl; // 포스터 이미지 URL 추가
+    private String posterPath; // 포스터 이미지 URL 추가
 
     @JsonIgnore
     @ManyToOne

@@ -21,7 +21,7 @@ public class Actor {
 
     private String name;
 
-    private String posterUrl;
+    private String posterPath;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drama_id", nullable = false)

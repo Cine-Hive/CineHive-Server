@@ -58,7 +58,7 @@ public class DramaActorService {
                         String profilePath = castMember.path("profile_path").asText();
                         if (!profilePath.isEmpty()) {
                             String posterUrl = "https://image.tmdb.org/t/p/w500" + profilePath;
-                            actor.setPosterUrl(posterUrl);
+                            actor.setPosterPath(posterUrl);
                         }
 
                         boolean alreadyExists = drama.getActors().stream()
@@ -72,7 +72,7 @@ public class DramaActorService {
                         ActorDto actorDto = new ActorDto();
                         actorDto.setId(actor.getId());
                         actorDto.setName(actor.getName());
-                        actorDto.setPosterUrl(actor.getPosterUrl());
+                        actorDto.setPosterPath(actor.getPosterPath());
                         actorDTOs.add(actorDto);
                     }
                     dramaRepository.save(drama);
