@@ -20,15 +20,14 @@ import java.util.List;
 @RestController
 public class NowPlayingMovieController {
     @Autowired
-    private MovieService movieService;
-    @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
+
 
     @Operation(summary = "현재 상영중인 영화 수동으로 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
     @PostMapping("/update_now_playing")
     public ResponseEntity<?> getNowPlayingMovies() {
         System.out.println("Request received for now playing movies");
-        movieService.saveNowPlayingMoviesToDatabase();  // 매개변수로 language와 page 전달
+        nowPlayingMovieService.saveNowPlayingMoviesToDatabase();  // 매개변수로 language와 page 전달
         return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
     }
 
