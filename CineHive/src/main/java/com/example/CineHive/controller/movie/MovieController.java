@@ -46,26 +46,6 @@ public class MovieController {
         return movieRepository.findAll();
     }
 
-    //Topmovie 데이블에서 가져오기
-    @Operation(summary = "평점순 영화 조회", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
-    @GetMapping("/get_topmovies")
-    @ResponseBody
-    public ResponseEntity<List<TopRatedMovieDto>> getTopRatedMoviesList() {
-        Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
-        List<TopRatedMovieDto> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
-        return ResponseEntity.ok(topRatedMovies);
-    }
-
-
-    //TopRated 영화 DB에 넣기 (수동으로 저장)
-    @Operation(summary = "평점 순위 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
-    @PostMapping("/update_top_movie")
-    public ResponseEntity<?> getTopMovies() {
-        System.out.println("Request received for Top movies");
-        movieService.saveTopRatedMoviesToDatabase();
-        return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
-    }
-
     @Operation(summary = "클라이언트 검색", description = "검색어를 받아 해당 검색어를 포함하는 Moive(animation 제외), 드라마(애니메이션 제외), 애니메이션을 반환")
     @PostMapping("/search")
     public ResponseEntity<?> searchMovies(@RequestBody Map<String, String> request) {

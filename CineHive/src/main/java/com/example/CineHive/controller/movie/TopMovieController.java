@@ -1,0 +1,46 @@
+package com.example.CineHive.controller.movie;
+
+import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
+import com.example.CineHive.service.credit.movie.MovieService;
+import com.example.CineHive.service.credit.movie.TopRatedMovieService;
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+public class TopMovieController {
+
+    @Autowired
+    private TopRatedMovieService topRatedMovieService;
+    @Autowired
+    private MovieService movieService;
+
+    //Topmovie 데이블에서 가져오기
+    @Operation(summary = "평점순 영화 조회", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
+    @GetMapping("/get_topmovies")
+    @ResponseBody
+    public ResponseEntity<List<TopRatedMovieDto>> getTopRatedMoviesList() {
+        Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
+        List<TopRatedMovieDto> topRatedMovies = topRatedMovieService.getTopRatedMovies(pageable);
+        return ResponseEntity.ok(topRatedMovies);
+    }
+
+
+    //TopRated 영화 DB에 넣기 (수동으로 저장)
+    @Operation(summary = "평점 순위 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
+    @PostMapping("/update_top_movie")
+    public ResponseEntity<?> getTopMovies() {
+        System.out.println("Request received for Top movies");
+        movieService.saveTopRatedMoviesToDatabase();
+        return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
+    }
+
+}
