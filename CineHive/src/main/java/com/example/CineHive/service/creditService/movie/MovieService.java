@@ -1,7 +1,7 @@
 package com.example.CineHive.service.creditService.movie;
 
 import com.example.CineHive.entity.credit.movie.Genre;
-import com.example.CineHive.entity.credit.movie.topMovieGenre;
+import com.example.CineHive.entity.credit.movie.toprated.topMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.entity.videotype.TopMovie;
 import com.example.CineHive.entity.credit.movie.Video;

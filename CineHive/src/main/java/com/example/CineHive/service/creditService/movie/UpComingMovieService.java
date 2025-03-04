@@ -1,11 +1,8 @@
 package com.example.CineHive.service.creditService.movie;
 
-import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
 import com.example.CineHive.dto.video.movie.UpComingMovieDto;
-import com.example.CineHive.entity.credit.movie.UpComingGenre;
-import com.example.CineHive.entity.credit.movie.topMovieGenre;
+import com.example.CineHive.entity.credit.movie.upcoming.UpComingMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
-import com.example.CineHive.entity.videotype.TopMovie;
 import com.example.CineHive.entity.videotype.UpComingMovie;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.repository.videos.movie.UpComingRepository;
@@ -94,9 +91,9 @@ public class UpComingMovieService {
                             upComingMovie.setRuntime(0);
                         }
 
-                        List<UpComingGenre> genres = new ArrayList<>();
+                        List<UpComingMovieGenre> genres = new ArrayList<>();
                         for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
-                            UpComingGenre genre = new UpComingGenre();
+                            UpComingMovieGenre genre = new UpComingMovieGenre();
                             genre.setId(genreIdNode.asInt());
                             genre.setName(movieGenreService.getGenreNameById(genre.getId()));
                             genres.add(genre);

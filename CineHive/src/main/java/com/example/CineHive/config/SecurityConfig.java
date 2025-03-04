@@ -57,7 +57,7 @@ public class SecurityConfig {
                                 "/api/auth/naver",
                                 "/api/auth/naver/callback",
                                 "/api/auth/naver/success",
-                                "/api/auth/google",
+                                "/api/auth/google", 
                                 "/api/auth/google/callback",
                                 "/api/auth/google/success",
                                 "/register",
