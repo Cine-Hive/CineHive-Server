@@ -4,6 +4,7 @@ import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
 import com.example.CineHive.service.credit.movie.MovieService;
 import com.example.CineHive.service.credit.movie.NowPlayingMovieService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "NowPlaying Controller", description = "현재 상영중인 영화 기능을 제공하는 API")
 @RestController
 public class NowPlayingMovieController {
     @Autowired

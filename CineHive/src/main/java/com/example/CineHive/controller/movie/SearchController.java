@@ -7,6 +7,7 @@ import com.example.CineHive.service.credit.animation.AnimationService;
 import com.example.CineHive.service.credit.drama.DramaService;
 import com.example.CineHive.service.credit.movie.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Search Controller", description = "드라마 & 영화 & 애니메이션 검색 기능을 제공하는 API")
 @RestController
 public class SearchController {
 

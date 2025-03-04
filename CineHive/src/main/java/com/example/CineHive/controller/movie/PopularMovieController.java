@@ -3,6 +3,7 @@ package com.example.CineHive.controller.movie;
 import com.example.CineHive.dto.video.movie.PopularMovieDto;
 import com.example.CineHive.service.credit.movie.PopularMovieService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Popular Movie Controller", description = "인기 영화 기능을 제공하는 API")
 @RestController
 public class PopularMovieController {
 
@@ -22,7 +24,7 @@ public class PopularMovieController {
 
 
         @Operation(summary = "인기 영화 수동으로 DB에 저장", description = "API로 받아온 인기 영화 목록을 popular 테이블에 저장")
-        @PostMapping("/update_popular")
+        @PostMapping("/update_popular_movie")
         public ResponseEntity<?> getPopularMovies() {
             System.out.println("Request received for popular movies");
             popularMovieService.savePopularMoviesToDatabase();

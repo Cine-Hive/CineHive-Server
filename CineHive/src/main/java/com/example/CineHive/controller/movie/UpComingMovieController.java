@@ -3,6 +3,7 @@ package com.example.CineHive.controller.movie;
 import com.example.CineHive.dto.video.movie.UpComingMovieDto;
 import com.example.CineHive.service.credit.movie.UpComingMovieService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-
+@Tag(name = "UpComing Movie Controller", description = "개봉 예정인 영화 기능을 제공하는 API")
 @RestController
 public class UpComingMovieController {
 
@@ -21,8 +22,8 @@ public class UpComingMovieController {
     private UpComingMovieService upComingMovieService;
 
 
-    @Operation(summary = "개봉 예정중인 영화 수동으로 DB에 저장", description = "API로 받아온 upcoming 목록을 upcoming 테이블에 저장")
-    @PostMapping("/update_upcoming")
+    @Operation(summary = "개봉 예정중인 영화 수동으로 DB에 저장", description = "API로 받아온 개봉 예정인 영화 목록을 upcoming 테이블에 저장")
+    @PostMapping("/update_upcoming_movie")
     public ResponseEntity<?> getUpComingMovies() {
         System.out.println("Request received for upComing movies");
         upComingMovieService.saveUpComingMoviesToDatabase();

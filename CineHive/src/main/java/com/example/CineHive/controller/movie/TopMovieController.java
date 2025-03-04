@@ -4,6 +4,7 @@ import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
 import com.example.CineHive.service.credit.movie.MovieService;
 import com.example.CineHive.service.credit.movie.TopRatedMovieService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+
+@Tag(name = "TopMovie Controller", description = "평점 순위 영화 기능을 제공하는 API")
 
 @RestController
 public class TopMovieController {
@@ -35,7 +38,7 @@ public class TopMovieController {
 
 
     //TopRated 영화 DB에 넣기 (수동으로 저장)
-    @Operation(summary = "평점 순위 영화 수동으로 DB에 저장", description = "api로 받아온 topmovie 목록을 topmovie 테이블에 저장")
+    @Operation(summary = "평점 순위 영화 수동으로 DB에 저장", description = "api로 받아온 평점 순위 영화 목록을 topmovie 테이블에 저장")
     @PostMapping("/update_top_movie")
     public ResponseEntity<?> getTopMovies() {
         System.out.println("Request received for Top movies");
