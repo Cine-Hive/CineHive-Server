@@ -33,29 +33,40 @@ public class UserController {
 
     @Operation(summary = "회원가입", description = "사용자 정보를 입력받아 일반 회원가입을 진행, 중복 검사 통과 후 user 테이블에 저장")
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserDto userDto) {
         try {
 
-            // 사용자 등록 서비스 호출
+            if (!userRepository.findByMemEmail(userDto.getMemEmail()).isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "error", "message", "이미 등록된 이메일입니다."));
+            }
+
+
+            if (!userRepository.findByMemNickname(userDto.getMemNickname()).isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "error", "message", "이미 등록된 닉네임입니다."));
+            }
+
             boolean isRegistered = userService.registerUser(userDto);
 
             if (isRegistered) {
-                // 사용자 등록 성공 시 HTTP 201 Created 응답
-                return ResponseEntity.status(201).body("성공적으로 회원가입했습니다!");
+                Map<String, Object> response = new HashMap<>();
+                response.put("status", "success");
+                response.put("message", "성공적으로 회원가입했습니다!");
+                return ResponseEntity.status(201).body(response);
             } else {
-                // 실패 시 HTTP 400 Bad Request 응답
-                return ResponseEntity.badRequest().body("회원가입 실패. 다시 시도해 주세요!");
+                Map<String, Object> response = new HashMap<>();
+                response.put("status", "error");
+                response.put("message", "회원가입 실패. 다시 시도해 주세요!");
+                return ResponseEntity.badRequest().body(response);
             }
         } catch (IllegalArgumentException e) {
-            // 중복된 값이 있을 경우 오류 메시지 반환 및 로그 출력
             log.error("회원가입 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("status", "error", "message", e.getMessage()));
         } catch (Exception e) {
-            // 일반적인 예외 처리 (선택 사항)
             log.error("예기치 않은 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(Map.of("status", "error", "message", "서버 오류가 발생했습니다."));
         }
     }
+
 
 
 
@@ -66,11 +77,12 @@ public class UserController {
         try {
             boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
             if (loginSuccess) {
-                // 사용자 정보를 가져와서 응답 생성
+
                 User user = userService.getUserInfo(loginRequest.getMemEmail());
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "로그인 성공");
                 response.put("user", new HashMap<String, Object>() {{
+                    put("gender",user.getMemSex());
                     put("email", user.getMemEmail());
                     put("name", user.getMemName());
                     put("nickname", user.getMemNickname());

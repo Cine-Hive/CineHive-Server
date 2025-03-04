@@ -23,6 +23,7 @@ public class BoardMapper {
         dto.setDislikeCount(board.getDisLikeCount());
         dto.setReportCount(board.getReportCount());
         dto.setCommentCount(board.getCommentCount());
+        dto.setViews(board.getViews());
         return dto;
     }
 
@@ -38,6 +39,10 @@ public class BoardMapper {
         dto.setBrdTitle(board.getBrdTitle());
         dto.setBrdContent(board.getBrdContent());
         dto.setMemNickname(board.getUser().getMemNickname());
+        dto.setId(board.getId());
+        dto.setViews(board.getViews());
+        dto.setBrgRedDate(board.getBrdRegDate());
+        dto.setLikeCount(board.getLikeCount());
         return dto;
     }
 }
