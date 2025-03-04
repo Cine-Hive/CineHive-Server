@@ -44,10 +44,10 @@ public class SecurityConfig {
                                 "/dislike/{boardId}/users/{memEmail}","/dislike/{boardId}/count",
                                 "/report/{boardId}/users/{memEmail}",
                                 "/comment/{boardId}/{memEmail}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
-                        ,"/boards/search","/update_now_playing","/update_top_movie").permitAll()
+                        ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
-                                "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능
+                                "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register","/update_upcoming").permitAll() // 로그인과 회원가입은 누구나 접근 가능
                         .requestMatchers(
                                 "/api/auth/kakao",
                                 "/api/auth/logout",
