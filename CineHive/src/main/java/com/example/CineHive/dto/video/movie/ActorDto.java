@@ -12,5 +12,5 @@ import lombok.Setter;
 public class ActorDto {
     private Long id;
     private String name;
-    private String posterUrl;
+    private String posterPath;
 }

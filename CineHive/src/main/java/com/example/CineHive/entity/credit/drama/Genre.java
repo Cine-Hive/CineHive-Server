@@ -8,23 +8,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity(name = "DramaActor")
+@Entity(name = "DramaGenre") // 엔티티 이름을 명시적으로 지정
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "drama_actors")
-public class Actor {
+@Table(name="drama_genres")
+public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String name;
 
-    private String posterPath;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "drama_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "drama_id")
     @JsonIgnore
     private Drama drama;
+
 }

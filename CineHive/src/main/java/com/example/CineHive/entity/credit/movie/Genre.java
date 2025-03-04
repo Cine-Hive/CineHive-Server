@@ -8,24 +8,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
-@Entity
-@Table(name = "movie_actors")
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity(name = "MovieGenre") // 엔티티 이름을 명시적으로 지정
 @Getter
 @Setter
-public class Actor {
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "movie_genres")
+public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String name;
 
-    private String posterPath; // 포스터 이미지 URL 추가
-
-    @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "movie_id", nullable = false)
+    @JoinColumn(name = "movie_id")
+    @JsonIgnore
     private Movie movie;
 }

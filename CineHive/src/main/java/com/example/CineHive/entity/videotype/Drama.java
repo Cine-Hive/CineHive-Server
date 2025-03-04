@@ -2,6 +2,7 @@ package com.example.CineHive.entity.videotype;
 
 import com.example.CineHive.entity.credit.drama.Actor;
 import com.example.CineHive.entity.credit.drama.Director;
+import com.example.CineHive.entity.credit.drama.Genre;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +27,7 @@ public class Drama {
     @Lob
     private String overview;
     private String posterPath;
+    private String backDropPath;
     @Column(name = "first_air_date")
     private String firstAirDate;
     private double voteAverage;
@@ -35,8 +37,11 @@ public class Drama {
     @JoinColumn(name = "drama_id")
     private List<Director> directors;
 
-    @ElementCollection
-    private List<Integer> genreIds;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "drama_id")
+    private List<Genre> genres = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "drama", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Actor> actors = new ArrayList<>();

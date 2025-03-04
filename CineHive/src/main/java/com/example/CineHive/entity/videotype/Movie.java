@@ -2,6 +2,7 @@ package com.example.CineHive.entity.videotype;
 
 import com.example.CineHive.entity.credit.movie.Actor;
 import com.example.CineHive.entity.credit.movie.Director;
+import com.example.CineHive.entity.credit.movie.Genre;
 import com.example.CineHive.entity.credit.movie.Video;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,13 +29,17 @@ public class Movie {
     private String overview;
 
     private String posterPath;
+    private String backDropPath;
     @Column(name = "release_date")
     private LocalDate releaseDate;
-    @ElementCollection
-    private List<Integer> genreIds;
+
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "movie_id")
+    private List<Genre> genres = new ArrayList<>();
+
     private double voteAverage;
     private double popularity;
-
     // 출연진 정보
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Actor> actors = new ArrayList<>();
@@ -53,4 +58,6 @@ public class Movie {
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "director_id")
     private Director director;
+
+    private int runtime;
 }

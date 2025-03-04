@@ -8,20 +8,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity(name = "AnimationGenre") // 엔티티 이름을 명시적으로 지정
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "animation_directors")
-@Entity(name = "AnimationDirector")
-public class Director {
+@Table(name="animation_genres")
+public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
+
     private String name;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "animation_id")
+    @JsonIgnore
     private Animation animation;
 }

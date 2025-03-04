@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.video.drama;
+package com.example.CineHive.dto.video.movie;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActorDto {
+public class UpComingMovieDto {
     private Long id;
-    private String name;
     private String posterPath;
 }

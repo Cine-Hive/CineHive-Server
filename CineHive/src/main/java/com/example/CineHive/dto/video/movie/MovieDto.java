@@ -23,9 +23,11 @@ public class MovieDto {
         private String title;
         private String overview;
         private String posterPath;
+        private String backDropPath;
         private String releaseDate;
         private List<Integer> genreIds;
         private double voteAverage;
         private double popularity;
+        private int runtime;
     }
 }

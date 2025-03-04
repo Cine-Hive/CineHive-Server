@@ -1,7 +1,6 @@
 package com.example.CineHive.entity.videotype;
 
-
-import com.example.CineHive.entity.credit.movie.toprated.topMovieGenre;
+import com.example.CineHive.entity.credit.movie.popular.PopularMovieGenre;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,14 +11,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Topmovie")
-public class TopMovie {
+@Table(name="popular_movie")
+public class PoPularMovie {
     @Id
     private Long id;
 
@@ -36,7 +34,7 @@ public class TopMovie {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id")
-    private List<topMovieGenre> genres = new ArrayList<>();
+    private List<PopularMovieGenre> genres = new ArrayList<>();
 
     private double voteAverage;
 
