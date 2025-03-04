@@ -70,7 +70,7 @@ public class MovieService {
     public void updateTopRatedMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
         System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
-        saveMoviesToDatabase();
+        saveTopRatedMoviesToDatabase();
         System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
     }
 
