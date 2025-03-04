@@ -37,20 +37,8 @@ public class MovieController {
     @Autowired
     private MovieRepository movieRepository;
     @Autowired
-    private NowPlayingMovieService nowPlayingMovieService;
-
-    @Autowired
-    //현재 상영중인 영화 DB에 넣기 (수동으로 저장)
     private TopRatedMovieService topRatedMovieService;
-    @Operation(summary = "현재 상영중인 영화 수동으로 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
-    @PostMapping("/update_now_playing")
-    public ResponseEntity<?> getNowPlayingMovies() {
-        System.out.println("Request received for now playing movies");
-        movieService.saveMoviesToDatabase();  // 매개변수로 language와 page 전달
-        return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
-    }
 
-    //데이터베이스에 있는 영화를 그냥 다 가져오는 것(homepage.vue 열면 바로 실행)
     @Operation(summary = "DB에서 영화 받아오기", description = "movie 테이블에 저장된 모든 movie 정보를 리스트 형태로 반환")
     @GetMapping("/movies")
     @ResponseBody
@@ -109,12 +97,4 @@ public class MovieController {
         }
     }
 
-    @Operation(summary = "현재 상영중인 영화 조회", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
-    @GetMapping("/now_playing")
-    @ResponseBody
-    public ResponseEntity<List<NowPlayingMovieDto>> getNowPlayingMoviesList() {
-        Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
-        List<NowPlayingMovieDto> nowPlayingMovies = nowPlayingMovieService.getNowPlayingMovies(pageable);
-        return ResponseEntity.ok(nowPlayingMovies);
-    }
 }
