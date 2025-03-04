@@ -23,8 +23,8 @@ public class PopularMovieController {
         private PopularMovieService popularMovieService;
 
 
-        @Operation(summary = "인기 영화 수동으로 DB에 저장", description = "API로 받아온 인기 영화 목록을 upcoming 테이블에 저장")
-        @PostMapping("/update_popluar")
+        @Operation(summary = "인기 영화 수동으로 DB에 저장", description = "API로 받아온 인기 영화 목록을 popular 테이블에 저장")
+        @PostMapping("/update_popular")
         public ResponseEntity<?> getPopularMovies() {
             System.out.println("Request received for popular movies");
             popularMovieService.savePopularMoviesToDatabase();
