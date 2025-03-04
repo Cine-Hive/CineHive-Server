@@ -10,12 +10,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,18 @@ public class UpComingMovieService {
 
     @Autowired
     private MovieGenreService movieGenreService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updateUpcomingMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 개봉 예정 영화 업데이트 시작...");
+        saveUpComingMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트]개봉 예정 영화 업데이트 완료!");
+    }
+
 
     @Transactional
     public void saveUpComingMoviesToDatabase() {

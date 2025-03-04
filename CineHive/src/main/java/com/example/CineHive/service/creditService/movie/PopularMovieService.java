@@ -11,11 +11,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +50,17 @@ public class PopularMovieService {
         this.objectMapper = objectMapper;
     }
 
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updatePopularMoviesDaily() {
+        String currentTime = LocalDateTime.now().format(formatter);
+        System.out.println("[" + currentTime + "] [자동 업데이트] 인기 영화 업데이트 시작...");
+        savePopularMoviesToDatabase();
+        System.out.println("[" + currentTime + "] [자동 업데이트] 인기 영화 업데이트 완료!");
+    }
 
     @Transactional
     public void savePopularMoviesToDatabase() {
