@@ -1,6 +1,7 @@
 package com.example.CineHive.service.credit.movie;
 
 import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
+import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.toprated.topMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.entity.videotype.TopMovie;
@@ -40,6 +41,8 @@ public class TopRatedMovieService {
     private MovieDirectorService movieDirectorService;
     @Autowired
     private MovieGenreService movieGenreService;
+    @Autowired
+    private MovieVideoService movieVideoService;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -130,6 +133,13 @@ public class TopRatedMovieService {
                         movie.setPopularity(topmovie.getPopularity());
                         movie.setReleaseDate(topmovie.getReleaseDate());
                         movie.setRuntime(topmovie.getRuntime());
+
+                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
+                        if (video != null) {
+                            movie.setVideos(List.of(video));
+                        } else {
+                            movie.setVideos(new ArrayList<>());
+                        }
 
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);

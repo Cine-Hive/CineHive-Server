@@ -1,6 +1,7 @@
 package com.example.CineHive.service.credit.movie;
 
 import com.example.CineHive.dto.video.movie.PopularMovieDto;
+import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.popular.PopularMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.entity.videotype.PoPularMovie;
@@ -44,6 +45,9 @@ public class PopularMovieService {
 
     @Autowired
     private MovieGenreService movieGenreService;
+
+    @Autowired
+    private MovieVideoService movieVideoService;
 
     public PopularMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -135,6 +139,12 @@ public class PopularMovieService {
                         movie.setReleaseDate(popularMovie.getReleaseDate());
                         movie.setRuntime(popularMovie.getRuntime());
 
+                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
+                        if (video != null) {
+                            movie.setVideos(List.of(video));
+                        } else {
+                            movie.setVideos(new ArrayList<>());
+                        }
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
 

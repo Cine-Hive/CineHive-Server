@@ -138,7 +138,12 @@ public class MovieService {
                         movie.setReleaseDate(nowPlayingMovie.getReleaseDate());
                         movie.setRuntime(nowPlayingMovie.getRuntime());
 
-
+                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
+                        if (video != null) {
+                            movie.setVideos(List.of(video));
+                        } else {
+                            movie.setVideos(new ArrayList<>());
+                        }
                         movieRepository.save(movie);
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
 

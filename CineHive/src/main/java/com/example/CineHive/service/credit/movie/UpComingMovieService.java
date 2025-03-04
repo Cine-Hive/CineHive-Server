@@ -1,6 +1,7 @@
 package com.example.CineHive.service.credit.movie;
 
 import com.example.CineHive.dto.video.movie.UpComingMovieDto;
+import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.upcoming.UpComingMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.entity.videotype.UpComingMovie;
@@ -44,6 +45,8 @@ public class UpComingMovieService {
 
     @Autowired
     private MovieGenreService movieGenreService;
+    @Autowired
+    private MovieVideoService movieVideoService;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -129,6 +132,13 @@ public class UpComingMovieService {
                         movie.setPopularity(upComingMovie.getPopularity());
                         movie.setReleaseDate(upComingMovie.getReleaseDate());
                         movie.setRuntime(upComingMovie.getRuntime());
+
+                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
+                        if (video != null) {
+                            movie.setVideos(List.of(video));
+                        } else {
+                            movie.setVideos(new ArrayList<>());
+                        }
 
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
