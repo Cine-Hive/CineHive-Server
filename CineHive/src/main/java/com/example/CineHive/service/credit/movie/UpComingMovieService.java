@@ -114,7 +114,7 @@ public class UpComingMovieService {
                         }
                         upComingMovie.setGenres(genres);
 
-                        // TopMovie 데이터베이스에 저장
+
                         upComingRepository.save(upComingMovie);
                         System.out.println("Saved movie: " + upComingMovie.getTitle());
 

@@ -23,8 +23,7 @@ public class TopMovieController {
 
     @Autowired
     private TopRatedMovieService topRatedMovieService;
-    @Autowired
-    private MovieService movieService;
+
 
     //Topmovie 데이블에서 가져오기
     @Operation(summary = "평점순 영화 조회", description = "topmovie 테이블에 저장된 topmovie 정보를 리스트 형태로 반환")
@@ -42,7 +41,7 @@ public class TopMovieController {
     @PostMapping("/update_top_movie")
     public ResponseEntity<?> getTopMovies() {
         System.out.println("Request received for Top movies");
-        movieService.saveTopRatedMoviesToDatabase();
+        topRatedMovieService.saveTopRatedMoviesToDatabase();
         return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
     }
 

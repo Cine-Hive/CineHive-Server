@@ -119,7 +119,7 @@ public class PopularMovieService {
                         }
                         popularMovie.setGenres(genres);
 
-                        // TopMovie 데이터베이스에 저장
+
                         popularRepository.save(popularMovie);
                         System.out.println("Saved movie: " + popularMovie.getTitle());
 

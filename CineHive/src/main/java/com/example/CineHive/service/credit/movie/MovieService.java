@@ -1,12 +1,12 @@
 package com.example.CineHive.service.credit.movie;
 
 import com.example.CineHive.entity.credit.movie.Genre;
-import com.example.CineHive.entity.credit.movie.toprated.topMovieGenre;
+import com.example.CineHive.entity.credit.movie.nowplaying.NowPlayingMovieGenre;
 import com.example.CineHive.entity.videotype.Movie;
-import com.example.CineHive.entity.videotype.TopMovie;
 import com.example.CineHive.entity.credit.movie.Video;
+import com.example.CineHive.entity.videotype.NowPlayingMovie;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
-import com.example.CineHive.repository.videos.movie.TopMovieRepository;
+import com.example.CineHive.repository.videos.movie.NowPlayingRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +31,7 @@ public class MovieService {
 
     private final WebClient webClient;
     @Autowired
-    private MovieRepository movieRepository;
-    @Autowired
-    private TopMovieRepository topmovieRepository;
+    private NowPlayingRepository nowPlayingRepository;
     private final ObjectMapper objectMapper;
 
     @Autowired
@@ -44,7 +42,9 @@ public class MovieService {
     private MovieDirectorService movieDirectorService;
 
     @Autowired
+    private MovieRepository movieRepository;
 
+    @Autowired
     private MovieGenreService movieGenreService;
     @Autowired
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
@@ -60,111 +60,15 @@ public class MovieService {
     public void updateNowPlayingMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
         System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
-        saveMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
-    }
-
-    // Top Rated 영화 자동저장 (매일 새벽 3시)
-    @Scheduled(cron = "0 0 3 * * *")
-    @Transactional
-    public void updateTopRatedMoviesDaily() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
-        saveTopRatedMoviesToDatabase();
+        saveNowPlayingMoviesToDatabase();
         System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
     }
 
 
-
-
     @Transactional
-    public void saveMoviesToDatabase() {
+    public void saveNowPlayingMoviesToDatabase() {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/now_playing?language=ko&page=1&api_key=" + apiKey)
-                .header("Accept", "application/json")
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();  // block()을 사용하여 응답을 기다립니다.
-
-        if (response != null) {
-            try {
-                JsonNode rootNode = objectMapper.readTree(response);
-                JsonNode moviesNode = rootNode.path("results");
-
-                for (JsonNode movieNode : moviesNode) {
-                    Long movieId = movieNode.get("id").asLong();
-
-                    // 영화가 이미 존재하는지 확인
-                    if (!movieRepository.existsById(movieId)) {
-                        Movie movie = new Movie();
-                        movie.setId(movieId);
-                        movie.setTitle(movieNode.get("title").asText());
-                        movie.setOverview(movieNode.get("overview").asText());
-                        movie.setPosterPath(movieNode.get("poster_path").asText());
-                        movie.setBackDropPath(movieNode.get("backdrop_path").asText());
-                        movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        movie.setPopularity(movieNode.get("popularity").asDouble());
-                        String releaseDateString = movieNode.get("release_date").asText();
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-                        movie.setReleaseDate(releaseDate);
-
-
-                        // 장르 정보 설정
-                        List<Genre> genres = new ArrayList<>();
-                        for (JsonNode genreNode : movieNode.get("genre_ids")) {
-                            Genre genre = new Genre();
-                            genre.setId(genreNode.asInt());
-                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
-                            genres.add(genre);
-                        }
-                        movie.setGenres(genres); // 변경된 부분
-
-
-                        // 영화 상세 정보 가져오기
-                        String movieDetailsResponse = webClient.get()
-                                .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
-                                .retrieve()
-                                .bodyToMono(String.class)
-                                .block();
-
-                        JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
-                        JsonNode runtimeNode = movieDetailsNode.get("runtime");
-                        if (runtimeNode != null && !runtimeNode.isNull()) {
-                            movie.setRuntime(runtimeNode.asInt());
-                        } else {
-                            movie.setRuntime(0);
-                        }
-
-                        // 비디오 정보 가져오기 (첫 번째 비디오만)
-                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
-                        if (video != null) {
-                            movie.setVideos(List.of(video)); // 비디오 정보를 리스트로 설정
-                        }
-
-                        // 데이터베이스에 저장
-                        movieRepository.save(movie);
-                        System.out.println("Saved movie: " + movie.getTitle());
-                        // 배우 정보 저장
-                        movieActorService.saveMovieCredits(movieId);
-                        // 감독 정보 저장
-                        movieDirectorService.saveMovieDirectors(movieId);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("응답이 없습니다.");
-        }
-    }
-
-
-    @Transactional
-    public void saveTopRatedMoviesToDatabase() {
-        // API를 호출하여 데이터를 가져옵니다.
-        String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/top_rated?language=ko&page=1&api_key=" + apiKey)
                 .header("Accept", "application/json")
                 .retrieve()
                 .bodyToMono(String.class)
@@ -179,21 +83,31 @@ public class MovieService {
                     Long movieId = movieNode.get("id").asLong();
 
                     // 영화가 이미 존재하는지 확인
-                    if (!topmovieRepository.existsById(movieId)) {
-                        TopMovie topmovie = new TopMovie();
-                        topmovie.setId(movieId);
-                        topmovie.setTitle(movieNode.get("title").asText());
-                        topmovie.setOverview(movieNode.get("overview").asText());
-                        topmovie.setPosterPath(movieNode.get("poster_path").asText());
-                        topmovie.setBackDropPath(movieNode.get("backdrop_path").asText());
-                        topmovie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        topmovie.setPopularity(movieNode.get("popularity").asDouble());
+                    if (!nowPlayingRepository.existsById(movieId)) {
+                        NowPlayingMovie nowPlayingMovie = new NowPlayingMovie();
+                        nowPlayingMovie.setId(movieId);
+                        nowPlayingMovie.setTitle(movieNode.get("title").asText());
+                        nowPlayingMovie.setOverview(movieNode.get("overview").asText());
+                        nowPlayingMovie.setPosterPath(movieNode.get("poster_path").asText());
+                        nowPlayingMovie.setBackDropPath(movieNode.get("backdrop_path").asText());
+                        nowPlayingMovie.setVoteAverage(movieNode.get("vote_average").asDouble());
+                        nowPlayingMovie.setPopularity(movieNode.get("popularity").asDouble());
                         String releaseDateString = movieNode.get("release_date").asText();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-                        topmovie.setReleaseDate(releaseDate);
+                        nowPlayingMovie.setReleaseDate(releaseDate);
 
-                        // 영화 상세 정보 가져오기
+
+                        List<NowPlayingMovieGenre> genres = new ArrayList<>();
+                        for (JsonNode genreNode : movieNode.get("genre_ids")) {
+                            NowPlayingMovieGenre genre = new NowPlayingMovieGenre();
+                            genre.setId(genreNode.asInt());
+                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
+                            genres.add(genre);
+                        }
+                        nowPlayingMovie.setGenres(genres);
+
+
                         String movieDetailsResponse = webClient.get()
                                 .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                                 .retrieve()
@@ -203,42 +117,35 @@ public class MovieService {
                         JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
                         JsonNode runtimeNode = movieDetailsNode.get("runtime");
                         if (runtimeNode != null && !runtimeNode.isNull()) {
-                            topmovie.setRuntime(runtimeNode.asInt());
+                            nowPlayingMovie.setRuntime(runtimeNode.asInt());
                         } else {
-                            topmovie.setRuntime(0);
+                            nowPlayingMovie.setRuntime(0);
                         }
 
-                        List<topMovieGenre> genres = new ArrayList<>();
-                        for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
-                            topMovieGenre genre = new topMovieGenre();
-                            genre.setId(genreIdNode.asInt());
-                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
-                            genres.add(genre);
-                        }
-                        topmovie.setGenres(genres);
 
-                        // TopMovie 데이터베이스에 저장
-                        topmovieRepository.save(topmovie);
-                        System.out.println("Saved movie: " + topmovie.getTitle());
+                        nowPlayingRepository.save(nowPlayingMovie);
+                        System.out.println("Saved now playing movie: " + nowPlayingMovie.getTitle());
 
-                        // Movie 객체 생성 및 저장
+
                         Movie movie = new Movie();
                         movie.setId(movieId);
-                        movie.setTitle(topmovie.getTitle());
-                        movie.setOverview(topmovie.getOverview());
-                        movie.setPosterPath(topmovie.getPosterPath());
-                        movie.setBackDropPath(topmovie.getBackDropPath());
-                        movie.setVoteAverage(topmovie.getVoteAverage());
-                        movie.setPopularity(topmovie.getPopularity());
-                        movie.setReleaseDate(topmovie.getReleaseDate());
-                        movie.setRuntime(topmovie.getRuntime());
+                        movie.setTitle(nowPlayingMovie.getTitle());
+                        movie.setOverview(nowPlayingMovie.getOverview());
+                        movie.setPosterPath(nowPlayingMovie.getPosterPath());
+                        movie.setBackDropPath(nowPlayingMovie.getBackDropPath());
+                        movie.setVoteAverage(nowPlayingMovie.getVoteAverage());
+                        movie.setPopularity(nowPlayingMovie.getPopularity());
+                        movie.setReleaseDate(nowPlayingMovie.getReleaseDate());
+                        movie.setRuntime(nowPlayingMovie.getRuntime());
 
-                        // Movie 데이터베이스에 저장
+
                         movieRepository.save(movie);
+                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
+
 
                         movieActorService.saveMovieCredits(movieId);
+
                         movieDirectorService.saveMovieDirectors(movieId);
-                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }
             } catch (Exception e) {
@@ -248,10 +155,6 @@ public class MovieService {
             System.out.println("응답이 없습니다.");
         }
     }
-
-
-
-
 
     public List<Movie> searchMovies(String query) {
         String response = webClient.get()
