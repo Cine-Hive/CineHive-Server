@@ -13,7 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtRequestFilter extends OncePerRequestFilter { // OncePerRequestFilter로 변경
+public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -34,10 +34,10 @@ public class JwtRequestFilter extends OncePerRequestFilter { // OncePerRequestFi
         // 검증 로직 추가
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt, email)) {
-                // 인증 설정 (Authentication 객체를 생성하여 SecurityContext에 설정)
+
             }
         }
 
-        chain.doFilter(request, response); // 다음 필터로 요청을 전달
+        chain.doFilter(request, response);
     }
 }
