@@ -55,40 +55,17 @@ public class KakaoUserController {
             String accessToken = kakaoUserService.getAccessToken(code);
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
-            KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
+            // 카카오 사용자 정보를 세션에 저장
+            HttpSession session = request.getSession();
+            session.setAttribute("user", userInfo);
 
-            if (kakaoUser == null) {
-                System.out.println("GoogleUser is null for Google ID: " + userInfo.getMemEmail());
-                kakaoUser = kakaoUserService.registerNewKakaoUser(userInfo);
-            } else {
-                System.out.println("GoogleUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
-            }
-
-            userInfo.setMemName(kakaoUser.getName());
-            userInfo.setGenres(kakaoUser.getGenres());
-
-            response.setContentType("application/json");
-            response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
-
-            // 사용자 존재 여부 확인
-            if (userService.checkUserExists(userInfo.getMemEmail())) {
-                // 기존 회원인 경우
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-                response.sendRedirect("http://localhost:8080/");
-            } else {
-
-                kakaoUserService.registerUser(userInfo);
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-                response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
-            }
+            // json 데이터 화면으로
+            response.sendRedirect("http://localhost:8081/api/auth/kakao/success");
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during Kakao login process");
         }
     }
-
     @Operation(summary = "세션 생성", description = "카카오 로그인 후 인증된 사용자의 정보를 세션에 저장")
     @PostMapping("/session")
     public ResponseEntity<?> createSession(@RequestBody KakaoUserInfo userInfo, HttpServletRequest request) {
