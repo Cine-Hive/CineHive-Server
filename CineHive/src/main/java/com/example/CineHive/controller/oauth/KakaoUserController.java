@@ -166,5 +166,19 @@ public class KakaoUserController {
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 
+    @Operation(summary = "카카오 OAuth 로그인 후 인증 처리", description = "카카오 로그인 후 클라이언트에서 보낸 access_token을 통해 사용자를 인증")
+    @PostMapping("/kakao/authenticate")
+    public ResponseEntity<?> authenticateUser(@RequestBody String accessToken, HttpServletRequest request) throws IOException {
+        KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
+
+        if (userInfo != null) {
+            HttpSession session = request.getSession();
+            session.setAttribute("user", userInfo);
+            return ResponseEntity.ok(userInfo);
+        }
+
+        return ResponseEntity.status(401).body("Unauthorized");
+    }
+
 
 }
