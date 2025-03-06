@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -71,17 +70,16 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "로그인", description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인")
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
         try {
             boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
             if (loginSuccess) {
                 User user = userService.getUserInfo(loginRequest.getMemEmail());
-                String token = jwtUtil.generateToken(user.getMemEmail()); // JWT 생성
+                String token = jwtUtil.generateToken(user.getMemEmail());
 
                 Map<String, Object> response = new HashMap<>();
-                response.put("token", token); // JWT 포함
+                response.put("token", token);
                 response.put("message", "로그인 성공");
                 response.put("user", new HashMap<String, Object>() {{
                     put("gender", user.getMemSex());
@@ -95,12 +93,10 @@ public class UserController {
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인 실패"));
             }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
         }
     }
-
-
 
     @Operation(summary = "닉네임 중복 확인", description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인")
     @GetMapping("/checknickname/{memNickname}")

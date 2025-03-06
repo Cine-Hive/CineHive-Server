@@ -3,8 +3,12 @@ package com.example.CineHive.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,27 +28,36 @@ import java.util.Map;
     (4)Base64Url 인코딩: JJWT 라이브러리에서 자동 처리.
  */
 @Component
+@Slf4j
 public class JwtUtil {
 
-    //시크릿 키
-    private final String SECRET_KEY = "your_secret_key";
-
-    //JWT 만료 시간 1시간으로 설정
+    private final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    
     private final long EXPIRATION_TIME = 1000 * 60 * 60;
 
     public String generateToken(String email) {
+        log.info("Generating token for email: {}", email);
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, email);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
-                .compact();
+        try {
+
+            String token = Jwts.builder()
+                    .setClaims(claims)
+                    .setSubject(subject)
+                    .setIssuedAt(new Date(System.currentTimeMillis()))
+                    .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                    .signWith(SECRET_KEY)
+                    .compact();
+
+            log.info("Generated JWT: {}", token);
+            return token;
+        } catch (Exception e) {
+            log.error("Error generating JWT: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     public String extractUsername(String token) {
@@ -52,7 +65,11 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public boolean isTokenExpired(String token) {
