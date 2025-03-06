@@ -8,7 +8,7 @@ import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +22,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Tag(name = "Kakao User Controller", description = "카카오 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
@@ -39,6 +40,8 @@ public class KakaoUserController {
     private UserRepository userRepository;
     @Autowired
     private KakaoUserRepository kakaoUserRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Operation(summary = "카카오 로그인", description = "카카오 OAuth 로그인 페이지로 사용자를 리다이렉션하여 카카오 인증을 시작")
     @GetMapping("/kakao")
@@ -50,21 +53,27 @@ public class KakaoUserController {
 
     @Operation(summary = "카카오 OAuth 로그인 및 사용자 등록", description = "카카오 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/kakao/callback")
-    public void kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<Map<String, Object>> kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = kakaoUserService.getAccessToken(code);
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
+
+            KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             // 카카오 사용자 정보를 세션에 저장
             HttpSession session = request.getSession();
             session.setAttribute("user", userInfo);
 
-            // json 데이터 화면으로
-            response.sendRedirect("http://localhost:8081/api/auth/kakao/success");
+            String token = jwtUtil.generateToken(kakaoUser.getMemEmail());
+
+
+
+            return ResponseEntity.ok(Map.of( "userInfo", userInfo, "token",token));
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during Kakao login process");
         }
+        return null;
     }
     @Operation(summary = "세션 생성", description = "카카오 로그인 후 인증된 사용자의 정보를 세션에 저장")
     @PostMapping("/session")
@@ -142,20 +151,5 @@ public class KakaoUserController {
         kakaoUserRepository.save(kakaoUser);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
-
-    @Operation(summary = "카카오 OAuth 로그인 후 인증 처리", description = "카카오 로그인 후 클라이언트에서 보낸 access_token을 통해 사용자를 인증")
-    @PostMapping("/kakao/authenticate")
-    public ResponseEntity<?> authenticateUser(@RequestBody String accessToken, HttpServletRequest request) throws IOException {
-        KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
-
-        if (userInfo != null) {
-            HttpSession session = request.getSession();
-            session.setAttribute("user", userInfo);
-            return ResponseEntity.ok(userInfo);
-        }
-
-        return ResponseEntity.status(401).body("Unauthorized");
-    }
-
-
+    
 }
