@@ -1,5 +1,7 @@
 package com.example.CineHive.config;
 
+import com.example.CineHive.filter.JwtRequestFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -23,28 +26,28 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/movies",
-                                         "/now_playing",
-                                         "/search",
-                                         "/top_movie","/movies/**",
+                                "/now_playing",
+                                "/search",
+                                "/top_movie","/movies/**",
                                 "/api/auth/undefined/success",
                                 "/dramas/**",
                                 "/animations/**",
                                 "/get_topmovies",
                                 "/topmovies/**", "/now_playing_movies"
-                        ,"/preferredGenres",
+                                ,"/preferredGenres",
                                 "/explorer/index/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                 "/checkuserId/**").permitAll()
+                                "/checkuserId/**").permitAll()
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
-                        ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
-                        , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
+                                ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
+                                , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
                                 "/like/{boardId}/users/{memEmail}","/like/{boardId}/count",
                                 "/dislike/{boardId}/users/{memEmail}","/dislike/{boardId}/count",
                                 "/report/{boardId}/users/{memEmail}",
                                 "/comment/{boardId}/{memEmail}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
-                        ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
+                                ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
                                 "/update_popular_movie","/get_popular_movies").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
@@ -58,7 +61,7 @@ public class SecurityConfig {
                                 "/api/auth/naver",
                                 "/api/auth/naver/callback",
                                 "/api/auth/naver/success",
-                                "/api/auth/google", 
+                                "/api/auth/google",
                                 "/api/auth/google/callback",
                                 "/api/auth/google/success",
                                 "/register",
@@ -72,12 +75,18 @@ public class SecurityConfig {
                         .maximumSessions(1).maxSessionsPreventsLogin(true)
                 );
 
+        http.addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
 
     @Bean
     public BCryptPasswordEncoder bCrpytPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtRequestFilter jwtRequestFilter() {
+        return new JwtRequestFilter();
     }
 }
