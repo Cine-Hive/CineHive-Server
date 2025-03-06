@@ -66,7 +66,8 @@ public class SecurityConfig {
                                 "/api/auth/google/success",
                                 "/register",
                                 "/login",
-                                "api/auth/**"
+                                "api/auth/**",
+                                "/api/auth/kakao/authenticate"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
