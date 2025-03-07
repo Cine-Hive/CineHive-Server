@@ -101,16 +101,6 @@ public class KakaoUserController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @Operation(summary = "카카오 로그아웃", description = "카카오 로그아웃을 위한 URL을 반환, 클라이언트에서 이 URL을 호출하여 로그아웃")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // 카카오 로그아웃 URL 생성
-        String logoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + kakaoUserService.getClientId() + "&logout_redirect_uri=" + kakaoUserService.getLogoutRedirectUri();
-
-        return ResponseEntity.ok(logoutUrl);
-    }
-    
-
     @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
     @GetMapping("/kakao/check-user")
     public ResponseEntity<Boolean> checkUser(@RequestParam String kakaoId) {
