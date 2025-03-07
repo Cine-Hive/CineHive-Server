@@ -8,6 +8,7 @@ import com.example.CineHive.service.UserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,29 +71,27 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "로그인", description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인")
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest, HttpServletRequest request) {
         try {
-            boolean loginSuccess = userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword());
-            if (loginSuccess) {
-                User user = userService.getUserInfo(loginRequest.getMemEmail());
-                String token = jwtUtil.generateToken(user.getMemEmail());
+            userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword(), request); // 로그인 기록은 저장되지만 반환 X
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("token", token);
-                response.put("message", "로그인 성공");
-                response.put("user", new HashMap<String, Object>() {{
-                    put("gender", user.getMemSex());
-                    put("email", user.getMemEmail());
-                    put("name", user.getMemName());
-                    put("nickname", user.getMemNickname());
-                    put("genres", user.getGenres());
-                }});
+            User user = userService.getUserInfo(loginRequest.getMemEmail());
+            String token = jwtUtil.generateToken(user.getMemEmail());
 
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인 실패"));
-            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("message", "로그인 성공");
+            response.put("user", new HashMap<String, Object>() {{
+                put("gender", user.getMemSex());
+                put("email", user.getMemEmail());
+                put("name", user.getMemName());
+                put("nickname", user.getMemNickname());
+                put("genres", user.getGenres());
+            }});
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
         }

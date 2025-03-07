@@ -48,10 +48,15 @@ public class User {
     @Column(name = "genre")
     private List<String> genres; // 사용자가 선택한 장르
 
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LoginHistory> loginHistories; // 로그인 히스토리 리스트
+
     @PrePersist //필드를 자동으로 현재 시간으로 설정
     public void prePersist() {
         this.memRegisterDatetime = LocalDateTime.now();
     }
+
 
 
 }
