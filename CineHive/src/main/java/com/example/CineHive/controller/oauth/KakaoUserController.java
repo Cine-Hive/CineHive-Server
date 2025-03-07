@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -92,7 +91,7 @@ public class KakaoUserController {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", userInfo);
 
-
+                log.info("Response Data: {}", response);
                 response.setContentType("application/json");
                 response.getWriter().write(new ObjectMapper().writeValueAsString(new JwtResponse(token, userInfo)));
                 response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
@@ -101,16 +100,6 @@ public class KakaoUserController {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "카카오 로그인 과정 중 오류 발생");
         }
-    }
-
-
-
-    @Operation(summary = "세션 생성", description = "카카오 로그인 후 인증된 사용자의 정보를 세션에 저장")
-    @PostMapping("/session")
-    public ResponseEntity<?> createSession(@RequestBody KakaoUserInfo userInfo, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        session.setAttribute("user", userInfo);
-        return ResponseEntity.ok("Session created successfully");
     }
 
     @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
@@ -140,27 +129,6 @@ public class KakaoUserController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-
-    @Operation(summary = "카카오 로그아웃", description = "카카오 로그아웃을 위한 URL을 반환, 클라이언트에서 이 URL을 호출하여 로그아웃")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // 카카오 로그아웃 URL 생성
-        String logoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + kakaoUserService.getClientId() + "&logout_redirect_uri=" + kakaoUserService.getLogoutRedirectUri();
-
-        return ResponseEntity.ok(logoutUrl);
-    }
-
-    @Operation(summary = "로그아웃 후 리다이렉션", description = "로그아웃 후 클라이언트를 로그인 페이지로 리다이렉션")
-    @GetMapping("/logout")
-    public RedirectView handleLogoutRedirect(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        RedirectView redirectView = new RedirectView();
-        redirectView.setUrl("http://localhost:8080/login");
-        return redirectView;
-    }
 
     @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
     @GetMapping("/kakao/check-user")
