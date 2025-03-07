@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,7 +61,7 @@ public class NaverUserController {
 
     @Operation(summary = "네이버 OAuth 로그인 및 사용자 등록", description = "네이버 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/naver/callback")
-    public ResponseEntity<Map<String, Object>> naverCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void naverCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = naverUserService.getAccessToken(code);
             NaverUserInfo userInfo = naverUserService.getUserInfo(accessToken);
@@ -79,15 +80,26 @@ public class NaverUserController {
 
             String token = jwtUtil.generateToken(naverUser.getMemEmail());
 
-            Map<String, Object> responseBody = Map.of("userInfo", userInfo, "token", token);
-            return ResponseEntity.ok(responseBody); // 성공적으로 응답 반환
+            if (userService.checkUserExists(userInfo.getMemEmail())) {
+                HttpSession session = request.getSession();
+                session.setAttribute("user", userInfo);
+
+                response.setContentType("application/json");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(Map.of("token", token, "userInfo", userInfo)));
+                response.sendRedirect("http://localhost:8080/");
+            } else {
+                HttpSession session = request.getSession();
+                session.setAttribute("user", userInfo);
+
+                response.setContentType("application/json");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(Map.of("token", token, "userInfo", userInfo)));
+                response.sendRedirect("http://localhost:8080/additional-info?loginType=naver");
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during naver login process");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during Naver login process");
         }
-        return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal Server Error"));
     }
-
 
     @Operation(summary = "네이버 로그인 성공 페이지", description = "네이버 로그인 성공 시 사용자 정보를 반환")
     @GetMapping("/naver/success")
@@ -96,7 +108,13 @@ public class NaverUserController {
         if (session != null) {
             NaverUserInfo userInfo = (NaverUserInfo) session.getAttribute("user");
             if (userInfo != null) {
-                return ResponseEntity.ok(userInfo);
+                String token = jwtUtil.generateToken(userInfo.getMemEmail());
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("userInfo", userInfo);
+                response.put("token", token);
+
+                return ResponseEntity.ok(response);
             }
         }
         return ResponseEntity.status(401).body("Unauthorized");
