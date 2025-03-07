@@ -1,5 +1,6 @@
 package com.example.CineHive.controller.oauth;
 
+import com.example.CineHive.dto.oauth.JwtResponse;
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
@@ -9,6 +10,7 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.service.UserService;
 import com.example.CineHive.util.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @Tag(name = "Kakao User Controller", description = "카카오 로그인 API 관련 기능을 제공하는 API")
@@ -53,28 +56,55 @@ public class KakaoUserController {
 
     @Operation(summary = "카카오 OAuth 로그인 및 사용자 등록", description = "카카오 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/kakao/callback")
-    public ResponseEntity<Map<String, Object>> kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = kakaoUserService.getAccessToken(code);
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
             KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
-            // 카카오 사용자 정보를 세션에 저장
-            HttpSession session = request.getSession();
-            session.setAttribute("user", userInfo);
+            if (kakaoUser == null) {
+                System.out.println("KakaoUser is null for email: " + userInfo.getMemEmail());
+                kakaoUser = kakaoUserService.registerNewKakaoUser(userInfo);
+            } else {
+                System.out.println("KakaoUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
+            }
 
-            String token = jwtUtil.generateToken(kakaoUser.getMemEmail());
+            userInfo.setMemName(kakaoUser.getName());
+            userInfo.setGenres(kakaoUser.getGenres());
 
 
+            String token = jwtUtil.generateToken(userInfo.getMemEmail());
 
-            return ResponseEntity.ok(Map.of( "userInfo", userInfo, "token",token));
+
+            if (userService.checkUserExists(userInfo.getMemEmail())) {
+
+                HttpSession session = request.getSession();
+                session.setAttribute("user", userInfo);
+
+
+                response.setContentType("application/json");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(new JwtResponse(token, userInfo)));
+                response.sendRedirect("http://localhost:8080/");
+            } else {
+
+                kakaoUserService.registerUser(userInfo);
+                HttpSession session = request.getSession();
+                session.setAttribute("user", userInfo);
+
+
+                response.setContentType("application/json");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(new JwtResponse(token, userInfo)));
+                response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during Kakao login process");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "카카오 로그인 과정 중 오류 발생");
         }
-        return null;
     }
+
+
+
     @Operation(summary = "세션 생성", description = "카카오 로그인 후 인증된 사용자의 정보를 세션에 저장")
     @PostMapping("/session")
     public ResponseEntity<?> createSession(@RequestBody KakaoUserInfo userInfo, HttpServletRequest request) {
@@ -94,11 +124,42 @@ public class KakaoUserController {
             log.info("User info in session: {}", userInfo);
 
             if (userInfo != null) {
-                return ResponseEntity.ok(userInfo);
+
+                String token = jwtUtil.generateToken(userInfo.getMemEmail());
+
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("userInfo", userInfo);
+                response.put("token", token);
+
+                log.info("Response Data: {}", response);
+                return ResponseEntity.ok(response);
             }
         }
-        log.warn("Unauthorized access attempt"); // 인증 실패 로그
+        log.warn("Unauthorized access attempt");
         return ResponseEntity.status(401).body("Unauthorized");
+    }
+
+
+    @Operation(summary = "카카오 로그아웃", description = "카카오 로그아웃을 위한 URL을 반환, 클라이언트에서 이 URL을 호출하여 로그아웃")
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // 카카오 로그아웃 URL 생성
+        String logoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + kakaoUserService.getClientId() + "&logout_redirect_uri=" + kakaoUserService.getLogoutRedirectUri();
+
+        return ResponseEntity.ok(logoutUrl);
+    }
+
+    @Operation(summary = "로그아웃 후 리다이렉션", description = "로그아웃 후 클라이언트를 로그인 페이지로 리다이렉션")
+    @GetMapping("/logout")
+    public RedirectView handleLogoutRedirect(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl("http://localhost:8080/login");
+        return redirectView;
     }
 
     @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
@@ -130,5 +191,6 @@ public class KakaoUserController {
         kakaoUserRepository.save(kakaoUser);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
+
 
 }

@@ -1,7 +1,6 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
-import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.oauth.KakaoUser;
 import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
@@ -101,6 +100,7 @@ public class KakaoUserService {
             }
         }
     }
+
 
     public void registerUser(KakaoUserInfo userInfo) {
         KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
