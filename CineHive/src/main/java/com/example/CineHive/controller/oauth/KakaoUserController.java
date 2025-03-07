@@ -109,18 +109,7 @@ public class KakaoUserController {
 
         return ResponseEntity.ok(logoutUrl);
     }
-
-    @Operation(summary = "로그아웃 후 리다이렉션", description = "로그아웃 후 클라이언트를 로그인 페이지로 리다이렉션")
-    @GetMapping("/logout")
-    public RedirectView handleLogoutRedirect(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        RedirectView redirectView = new RedirectView();
-        redirectView.setUrl("http://localhost:8080/login");
-        return redirectView;
-    }
+    
 
     @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
     @GetMapping("/kakao/check-user")
