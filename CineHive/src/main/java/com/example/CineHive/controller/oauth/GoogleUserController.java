@@ -8,6 +8,7 @@ import com.example.CineHive.repository.GoogleUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
 import com.example.CineHive.service.UserService;
+import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Tag(name = "Google User Controller", description = "구글 로그인 API 관련 기능을 제공하는 API")
 @RestController
@@ -39,6 +41,9 @@ public class GoogleUserController {
     @Autowired
     private GoogleUserRepository googleUserRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Operation(summary ="구글 로그인 리다이렉션", description = "사용자를 구글 OAuth 로그인 페이지로 리다이렉션하여 구글 인증을 시작")
     @GetMapping("/google")
     public void googleLoginRedirect(HttpServletResponse response) throws IOException {
@@ -52,19 +57,18 @@ public class GoogleUserController {
 
         response.sendRedirect(redirectUrl);
     }
-    @Operation(summary = "구글 OAuth 로그린 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
+    @Operation(summary = "구글 OAuth 로그인 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
     @GetMapping("/google/callback")
-    public void googleCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ResponseEntity<Map<String, Object>> googleCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = googleUserService.getAccessToken(code);
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
-
 
             GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (googleUser == null) {
                 System.out.println("GoogleUser is null for Google Email: " + userInfo.getMemEmail());
-                googleUser = googleUserService.registerNewGoogleUser(userInfo);  // 예: 구글 사용자 등록 메서드
+                googleUser = googleUserService.registerNewGoogleUser(userInfo);
             } else {
                 System.out.println("GoogleUser found: " + googleUser.getName() + ", " + googleUser.getGenres());
             }
@@ -72,24 +76,15 @@ public class GoogleUserController {
             userInfo.setMemName(googleUser.getName());
             userInfo.setGenres(googleUser.getGenres());
 
-            response.setContentType("application/json");
-            response.getWriter().write(new ObjectMapper().writeValueAsString(userInfo));
+            String token = jwtUtil.generateToken(googleUser.getMemEmail());
 
-            if (!userService.checkUserExistsGoogle(userInfo.getMemEmail())) {
-                googleUserService.registerUser(userInfo);
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-                response.sendRedirect("http://localhost:8080/additional-info?loginType=google");
-            } else {
-
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-                response.sendRedirect("http://localhost:8080/");
-            }
+            Map<String, Object> responseBody = Map.of("userInfo", userInfo, "token", token);
+            return ResponseEntity.ok(responseBody); // 성공적으로 응답 반환
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during google login process");
         }
+        return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal Server Error"));
     }
 
 
