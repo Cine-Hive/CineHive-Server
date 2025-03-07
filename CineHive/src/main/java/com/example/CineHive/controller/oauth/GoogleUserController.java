@@ -111,15 +111,26 @@ public class GoogleUserController {
     @GetMapping("/google/success")
     public ResponseEntity<?> googleSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+        log.info("Session exists: {}", session != null);
+
         if (session != null) {
             GoogleUserInfo userInfo = (GoogleUserInfo) session.getAttribute("user");
+            log.info("User info in session: {}", userInfo);
+
             if (userInfo != null) {
-                return ResponseEntity.ok(userInfo);
+                String token = jwtUtil.generateToken(userInfo.getMemEmail());
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("userInfo", userInfo);
+                response.put("token", token);
+
+                log.info("Response Data: {}", response);
+                return ResponseEntity.ok(response);
             }
         }
+        log.warn("Unauthorized access attempt");
         return ResponseEntity.status(401).body("Unauthorized");
     }
-
     @Operation(summary = "구글 회원가입", description = "사용자가 제공한 정보로 회원가입하고 google_user 테이블에 저장")
     @PostMapping("/google/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
