@@ -9,7 +9,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class JwtResponse {
+public class GoogleJwtResponse {
     private String jwtToken;
-    private KakaoUserInfo userInfo;
+    private GoogleUserInfo userInfo;
 }
+

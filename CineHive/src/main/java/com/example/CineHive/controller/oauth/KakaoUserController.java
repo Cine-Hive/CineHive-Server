@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.oauth;
 
-import com.example.CineHive.dto.oauth.JwtResponse;
+import com.example.CineHive.dto.oauth.KakaoJwtResponse;
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
@@ -83,7 +83,7 @@ public class KakaoUserController {
 
 
                 response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new JwtResponse(token, userInfo)));
+                response.getWriter().write(new ObjectMapper().writeValueAsString(new KakaoJwtResponse(token, userInfo)));
                 response.sendRedirect("http://localhost:8080/");
             } else {
 
@@ -93,7 +93,7 @@ public class KakaoUserController {
 
                 log.info("Response Data: {}", response);
                 response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new JwtResponse(token, userInfo)));
+                response.getWriter().write(new ObjectMapper().writeValueAsString(new KakaoJwtResponse(token, userInfo)));
                 response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
             }
         } catch (Exception e) {
