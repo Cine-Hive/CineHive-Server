@@ -93,6 +93,15 @@ public class AnimationService {
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                     animation.setReleaseDate(releaseDate);
 
+                    String movieDetailsResponse = webClient.get()
+                            .uri("https://api.themoviedb.org/3/movie/" + animationId + "?api_key=" + apiKey + "&language=ko")
+                            .retrieve()
+                            .bodyToMono(String.class)
+                            .block();
+
+                    JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
+                    int runtime = movieDetailsNode.get("runtime").asInt();
+                    animation.setRuntime(runtime);
 
                     List<Genre> genres = new ArrayList<>();
                     for (JsonNode genreNode : animationNode.get("genre_ids")) {
