@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,28 +102,21 @@ public class SimilarMovieService {
                             .block();
 
                     JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
-
-
                     JsonNode runtimeNode = movieDetailsNode.get("runtime");
-                    if (runtimeNode != null && !runtimeNode.isNull()) {
-                        movie.setRuntime(runtimeNode.asInt());
-                    } else {
-                        movie.setRuntime(0);
-                    }
+                    movie.setRuntime(runtimeNode != null && !runtimeNode.isNull() ? runtimeNode.asInt() : 0);
 
                     movieDirectorService.saveMovieDirectors(movieId);
                     movieActorService.saveMovieCredits(movieId);
 
                     // 비디오 정보 추가
                     Video video = movieVideoService.getFirstVideoForMovie(movie.getId());
-                    if (video != null) {
-                        movie.setVideos(List.of(video)); // 비디오 정보 리스트로 설정
-                    } else {
-                        movie.setVideos(new ArrayList<>());
-                    }
+                    movie.setVideos(video != null ? List.of(video) : new ArrayList<>());
 
                     similarMovies.add(movie);
                 }
+
+                similarMovies.sort(Comparator.comparingDouble(Movie::getPopularity).reversed());
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
