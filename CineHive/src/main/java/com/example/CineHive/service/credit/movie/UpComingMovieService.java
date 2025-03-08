@@ -48,6 +48,9 @@ public class UpComingMovieService {
     @Autowired
     private MovieVideoService movieVideoService;
 
+    @Autowired
+    private SimilarMovieService similarMovieService;
+
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Scheduled(cron = "0 0 3 * * *")
@@ -143,6 +146,16 @@ public class UpComingMovieService {
                         // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
 
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+
+                        // 추천 영화 저장
+                        for (Movie similarMovie : similarMovies) {
+                            if (!movieRepository.existsById(similarMovie.getId())) {
+                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
+                                movieRepository.save(similarMovie);
+                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+                            }
+                        }
                         movieActorService.saveMovieCredits(movieId);
                         movieDirectorService.saveMovieDirectors(movieId);
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());

@@ -42,6 +42,10 @@ public class MovieService {
 
     @Autowired
     private MovieGenreService movieGenreService;
+
+    @Autowired
+    private SimilarMovieService similarMovieService;
+
     @Autowired
     public MovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -130,6 +134,19 @@ public class MovieService {
                     if (!movieRepository.existsById(movieId)) {
                         movieRepository.save(movie);
                         System.out.println("Saved new movie: " + movie.getTitle());
+
+                        // 추천 영화 가져오기
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+
+                        // 추천 영화 저장
+                        for (Movie similarMovie : similarMovies) {
+                            if (!movieRepository.existsById(similarMovie.getId())) {
+                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
+                                movieRepository.save(similarMovie);
+                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+                            }
+                        }
+
                         // 배우 정보
                         movieActorService.saveMovieCredits(movieId);
                         // 감독 정보
