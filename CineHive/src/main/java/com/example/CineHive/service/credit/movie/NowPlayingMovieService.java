@@ -147,8 +147,6 @@ public class NowPlayingMovieService {
                             movie.setVideos(new ArrayList<>());
                         }
                         movieRepository.save(movie);
-                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
-
 
                         List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
 
@@ -158,12 +156,14 @@ public class NowPlayingMovieService {
                                 similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
                                 movieRepository.save(similarMovie);
                                 System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+
+                                movieActorService.saveMovieCredits(similarMovie.getId());
+                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
                             }
                         }
 
-                        movieActorService.saveMovieCredits(movieId);
 
-                        movieDirectorService.saveMovieDirectors(movieId);
                     }
                 }
             } catch (Exception e) {

@@ -144,18 +144,18 @@ public class MovieService {
                                 similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
                                 movieRepository.save(similarMovie);
                                 System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+                                // 배우 정보
+                                movieActorService.saveMovieCredits(movieId);
+                                // 감독 정보
+                                movieDirectorService.saveMovieDirectors(movieId);
                             }
                         }
 
-                        // 배우 정보
-                        movieActorService.saveMovieCredits(movieId);
-                        // 감독 정보
-                        movieDirectorService.saveMovieDirectors(movieId);
                     } else {
                         System.out.println("Movie already exists: " + movie.getTitle());
                     }
 
-                    // 데이터베이스와 상관없이 항상 리스트에 추가
                     movies.add(movie);
                 }
             } catch (Exception e) {

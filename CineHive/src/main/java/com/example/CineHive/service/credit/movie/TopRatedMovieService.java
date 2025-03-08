@@ -81,7 +81,6 @@ public class TopRatedMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
 
-                    // 영화가 이미 존재하는지 확인
                     if (!topMovieRepository.existsById(movieId)) {
                         TopMovie topmovie = new TopMovie();
                         topmovie.setId(movieId);
@@ -96,7 +95,6 @@ public class TopRatedMovieService {
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         topmovie.setReleaseDate(releaseDate);
 
-                        // 영화 상세 정보 가져오기
                         String movieDetailsResponse = webClient.get()
                                 .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                                 .retrieve()
@@ -120,11 +118,9 @@ public class TopRatedMovieService {
                         }
                         topmovie.setGenres(genres);
 
-
                         topMovieRepository.save(topmovie);
                         System.out.println("Saved movie: " + topmovie.getTitle());
 
-                        // Movie 객체 생성 및 저장
                         Movie movie = new Movie();
                         movie.setId(movieId);
                         movie.setTitle(topmovie.getTitle());
@@ -143,8 +139,6 @@ public class TopRatedMovieService {
                             movie.setVideos(new ArrayList<>());
                         }
 
-
-                        // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
 
                         List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
@@ -155,10 +149,12 @@ public class TopRatedMovieService {
                                 similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
                                 movieRepository.save(similarMovie);
                                 System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+                                movieActorService.saveMovieCredits(movieId);
+                                movieDirectorService.saveMovieDirectors(movieId);
                             }
                         }
-                        movieActorService.saveMovieCredits(movieId);
-                        movieDirectorService.saveMovieDirectors(movieId);
+
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }
