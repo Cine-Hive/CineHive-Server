@@ -69,6 +69,7 @@ public class MovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
+                    String backdropPath = movieNode.get("backdrop_path").asText(); // 추가
 
                     if (posterPath == null || posterPath.isEmpty()) {
                         continue;
@@ -79,7 +80,7 @@ public class MovieService {
                     movie.setTitle(movieNode.get("title").asText());
                     movie.setOverview(movieNode.get("overview").asText());
                     movie.setPosterPath(posterPath);
-
+                    movie.setBackDropPath(backdropPath); // 추가
 
                     List<Genre> genres = new ArrayList<>();
                     for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
@@ -97,10 +98,11 @@ public class MovieService {
                     LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                     movie.setReleaseDate(releaseDate);
 
-                    // 애니메이션 장르 제외
+
                     if (movie.getGenres().stream().anyMatch(g -> g.getId() == 16)) {
                         continue;
                     }
+
 
                     String movieDetailsResponse = webClient.get()
                             .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
@@ -116,7 +118,7 @@ public class MovieService {
                         movie.setRuntime(0);
                     }
 
-                    // 비디오 정보 가져오기 (첫 번째 비디오만)
+
                     Video video = movieVideoService.getFirstVideoForMovie(movieId);
                     if (video != null) {
                         movie.setVideos(List.of(video)); // 비디오 정보를 리스트로 설정
@@ -147,5 +149,6 @@ public class MovieService {
         }
         return movies;
     }
+
 
 }
