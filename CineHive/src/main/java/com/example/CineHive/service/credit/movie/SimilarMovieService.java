@@ -115,7 +115,9 @@ public class SimilarMovieService {
                     similarMovies.add(movie);
                 }
 
-                similarMovies.sort(Comparator.comparingDouble(Movie::getPopularity).reversed());
+                similarMovies.sort(Comparator.comparingDouble(Movie::getPopularity).reversed()
+                        .thenComparing(Comparator.comparingDouble(Movie::getVoteAverage).reversed())
+                        .thenComparing(Comparator.comparing(Movie::getReleaseDate).reversed()));
 
             } catch (Exception e) {
                 e.printStackTrace();
