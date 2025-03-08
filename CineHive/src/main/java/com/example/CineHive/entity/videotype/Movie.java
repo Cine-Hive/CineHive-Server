@@ -61,9 +61,7 @@ public class Movie {
 
     private int runtime;
 
-    @ElementCollection
-    @CollectionTable(name = "recommended_movies", joinColumns = @JoinColumn(name = "movie_id"))
-    @Column(name = "recommended_movie_id")
-    private List<Long> recommendedMovieIds;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RecommendationMovie> recommendedMovies;
 
 }
