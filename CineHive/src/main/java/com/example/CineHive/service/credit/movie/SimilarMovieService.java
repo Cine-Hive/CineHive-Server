@@ -67,7 +67,8 @@ public class SimilarMovieService {
                 JsonNode rootNode = objectMapper.readTree(response);
                 JsonNode moviesNode = rootNode.path("results");
 
-                for (JsonNode movieNode : moviesNode) {
+                for (int i = 0; i < Math.min(10, moviesNode.size()); i++) {
+                    JsonNode movieNode = moviesNode.get(i);
                     Movie movie = new Movie();
                     movie.setId(movieNode.get("id").asLong());
                     movie.setTitle(movieNode.get("title").asText());
@@ -82,11 +83,11 @@ public class SimilarMovieService {
                 e.printStackTrace();
             }
 
-
             saveRecommendedMovies(movieId, similarMovies);
         }
 
         return similarMovies;
     }
+
 
 }
