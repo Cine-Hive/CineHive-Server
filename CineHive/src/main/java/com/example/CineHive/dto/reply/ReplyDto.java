@@ -5,14 +5,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ReviewDto {
+public class ReplyDto {
     private Long id;
-    private String reviewContent;
-    private Long movieId;
-    private String memNickname;
     private String memEmail;
+    private Long movieId;
+    private String replyContent;
+    private String memNickname;
+    private LocalDateTime replyRegDate;
 }
