@@ -48,6 +48,8 @@ public class PopularMovieService {
 
     @Autowired
     private MovieVideoService movieVideoService;
+    @Autowired
+    private SimilarMovieService similarMovieService;
 
     public PopularMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
@@ -127,7 +129,7 @@ public class PopularMovieService {
                         popularRepository.save(popularMovie);
                         System.out.println("Saved movie: " + popularMovie.getTitle());
 
-                        // Movie 객체 생성 및 저장
+
                         Movie movie = new Movie();
                         movie.setId(movieId);
                         movie.setTitle(popularMovie.getTitle());
@@ -145,11 +147,23 @@ public class PopularMovieService {
                         } else {
                             movie.setVideos(new ArrayList<>());
                         }
-                        // Movie 데이터베이스에 저장
+
                         movieRepository.save(movie);
 
-                        movieActorService.saveMovieCredits(movieId);
-                        movieDirectorService.saveMovieDirectors(movieId);
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+
+
+                        for (Movie similarMovie : similarMovies) {
+                            if (!movieRepository.existsById(similarMovie.getId())) {
+                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
+                                movieRepository.save(similarMovie);
+                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+                                movieActorService.saveMovieCredits(similarMovie.getId());
+                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
+                            }
+                        }
+
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }

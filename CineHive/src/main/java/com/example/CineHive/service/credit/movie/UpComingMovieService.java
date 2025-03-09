@@ -48,6 +48,9 @@ public class UpComingMovieService {
     @Autowired
     private MovieVideoService movieVideoService;
 
+    @Autowired
+    private SimilarMovieService similarMovieService;
+
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Scheduled(cron = "0 0 3 * * *")
@@ -58,7 +61,6 @@ public class UpComingMovieService {
         saveUpComingMoviesToDatabase();
         System.out.println("[" + currentTime + "] [자동 업데이트]개봉 예정 영화 업데이트 완료!");
     }
-
 
     @Transactional
     public void saveUpComingMoviesToDatabase() {
@@ -78,7 +80,6 @@ public class UpComingMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
 
-                    // 영화가 이미 존재하는지 확인
                     if (!upComingRepository.existsById(movieId)) {
                         UpComingMovie upComingMovie = new UpComingMovie();
                         upComingMovie.setId(movieId);
@@ -93,7 +94,6 @@ public class UpComingMovieService {
                         LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
                         upComingMovie.setReleaseDate(releaseDate);
 
-                        // 영화 상세 정보 가져오기
                         String movieDetailsResponse = webClient.get()
                                 .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                                 .retrieve()
@@ -121,7 +121,6 @@ public class UpComingMovieService {
                         upComingRepository.save(upComingMovie);
                         System.out.println("Saved movie: " + upComingMovie.getTitle());
 
-                        // Movie 객체 생성 및 저장
                         Movie movie = new Movie();
                         movie.setId(movieId);
                         movie.setTitle(upComingMovie.getTitle());
@@ -140,11 +139,21 @@ public class UpComingMovieService {
                             movie.setVideos(new ArrayList<>());
                         }
 
-                        // Movie 데이터베이스에 저장
                         movieRepository.save(movie);
 
-                        movieActorService.saveMovieCredits(movieId);
-                        movieDirectorService.saveMovieDirectors(movieId);
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+
+                        for (Movie similarMovie : similarMovies) {
+                            if (!movieRepository.existsById(similarMovie.getId())) {
+                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
+                                movieRepository.save(similarMovie);
+                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+                                movieActorService.saveMovieCredits(similarMovie.getId());
+                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
+                            }
+                        }
+
                         System.out.println("Saved movie to Movie table: " + movie.getTitle());
                     }
                 }

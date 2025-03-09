@@ -35,7 +35,7 @@ public class Animation {
     private LocalDate releaseDate;
     private double voteAverage;
     private double popularity;
-
+    private int runtime;
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "animation_id")
     private List<Genre> genres = new ArrayList<>();
@@ -47,4 +47,10 @@ public class Animation {
     @OneToMany(mappedBy = "animation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Video> videos = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "recommended_animations", joinColumns = @JoinColumn(name = "animation_id"))
+    @Column(name = "recommended_animation_id")
+    private List<Long> recommendedAnimationIds = new ArrayList<>();
+
 }

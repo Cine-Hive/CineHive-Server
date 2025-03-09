@@ -60,4 +60,10 @@ public class Movie {
     private Director director;
 
     private int runtime;
+
+    @ElementCollection
+    @CollectionTable(name = "recommended_movies", joinColumns = @JoinColumn(name = "movie_id"))
+    @Column(name = "recommended_movie_id")
+    private List<Long> recommendedMovieIds;
+
 }
