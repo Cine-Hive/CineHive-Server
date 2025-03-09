@@ -40,6 +40,9 @@ public class AnimationService {
     @Autowired
     private AnimationGenreService animationGenreService;
 
+    @Autowired
+    private SimilarAnimationService similarAnimationService;
+
     public AnimationService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
@@ -115,7 +118,6 @@ public class AnimationService {
                     }
                     animation.setGenres(genres);
 
-
                     // 비디오 정보를 가져옴
                     VideoDto videoDto = animationVideoService.getFirstVideoForAnimation(animationId);
                     if (videoDto != null) {
@@ -130,8 +132,19 @@ public class AnimationService {
                     animationRepository.save(animation);
                     System.out.println("Saved animation: " + animation.getName());
 
-                    animationDirectorService.saveAnimationDirectors(animationId);
 
+
+
+                    List<Animation> similarAnimations = similarAnimationService.getSimilarAnimations(animationId);
+
+                    for (Animation similarAnimation : similarAnimations) {
+                        if (!animationRepository.existsById(similarAnimation.getId())) {
+                            similarAnimation.setBackDropPath(similarAnimation.getBackDropPath());
+                            animationRepository.save(similarAnimation);
+                            System.out.println("Saved recommended animation: " + similarAnimation.getName());
+                        }
+                        animationDirectorService.saveAnimationDirectors(animationId);
+                    }
                     animations.add(animation);
                 }
             } catch (Exception e) {

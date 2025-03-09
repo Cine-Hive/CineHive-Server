@@ -48,5 +48,9 @@ public class Animation {
     @JsonManagedReference
     private List<Video> videos = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "recommended_animations", joinColumns = @JoinColumn(name = "animation_id"))
+    @Column(name = "recommended_animation_id")
+    private List<Long> recommendedAnimationIds = new ArrayList<>();
 
 }
