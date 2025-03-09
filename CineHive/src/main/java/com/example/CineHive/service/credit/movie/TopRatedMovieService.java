@@ -150,8 +150,8 @@ public class TopRatedMovieService {
                                 movieRepository.save(similarMovie);
                                 System.out.println("Saved recommended movie: " + similarMovie.getTitle());
 
-                                movieActorService.saveMovieCredits(movieId);
-                                movieDirectorService.saveMovieDirectors(movieId);
+                                movieActorService.saveMovieCredits(similarMovie.getId());
+                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
                             }
                         }
 

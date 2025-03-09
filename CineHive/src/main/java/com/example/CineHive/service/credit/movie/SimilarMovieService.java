@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -31,12 +32,12 @@ public class SimilarMovieService {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    private MovieRecommendationRepository movieRecommendationRepository;
-
+    private MovieDirectorService movieDirectorService;
     @Autowired
     private MovieActorService movieActorService;
+
     @Autowired
-    private MovieDirectorService movieDirectorService;
+    private MovieRecommendationRepository movieRecommendationRepository;
 
     @Autowired
     private MovieVideoService movieVideoService;
@@ -47,6 +48,11 @@ public class SimilarMovieService {
     }
 
     public void saveRecommendedMovies(Long movieId, List<Movie> similarMovies) {
+        Optional<Movie> existingMovie = movieRepository.findById(movieId);
+        if (existingMovie.isEmpty()) {
+            System.out.println("Movie with ID " + movieId + " not found in the Movie table.");
+        }
+
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new RuntimeException("Movie not found"));
 
         for (Movie similarMovie : similarMovies) {
@@ -62,6 +68,7 @@ public class SimilarMovieService {
     }
 
     public List<Movie> getSimilarMovies(Long movieId) {
+
         String url = "https://api.themoviedb.org/3/movie/" + movieId + "/similar?api_key=" + apiKey + "&language=ko&page=1";
 
         String response = webClient.get()
@@ -88,12 +95,20 @@ public class SimilarMovieService {
                     movie.setPopularity(movieNode.get("popularity").asDouble());
 
                     String releaseDateString = movieNode.get("release_date").asText();
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
+                    LocalDate releaseDate = null;
+                    if (releaseDateString != null && !releaseDateString.isEmpty()) {
+                        try {
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                            releaseDate = LocalDate.parse(releaseDateString, formatter);
+                        } catch (DateTimeParseException e) {
+                            e.printStackTrace();
+                            releaseDate = null;
+                        }
+                    }
                     movie.setReleaseDate(releaseDate);
-
                     String backdropPath = movieNode.get("backdrop_path").asText();
                     movie.setBackDropPath(backdropPath);
+
 
                     String movieDetailsResponse = webClient.get()
                             .uri("https://api.themoviedb.org/3/movie/" + movie.getId() + "?api_key=" + apiKey + "&language=ko")
@@ -115,6 +130,7 @@ public class SimilarMovieService {
                     similarMovies.add(movie);
                 }
 
+
                 similarMovies.sort(Comparator.comparingDouble(Movie::getPopularity).reversed()
                         .thenComparing(Comparator.comparingDouble(Movie::getVoteAverage).reversed())
                         .thenComparing(Comparator.comparing(Movie::getReleaseDate).reversed()));
@@ -128,4 +144,5 @@ public class SimilarMovieService {
 
         return similarMovies;
     }
+
 }
