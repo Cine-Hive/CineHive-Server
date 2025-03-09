@@ -1,6 +1,7 @@
 package com.example.CineHive.service.credit.animation;
 
 import com.example.CineHive.dto.video.animation.VideoDto;
+
 import com.example.CineHive.entity.videotype.Animation;
 import com.example.CineHive.entity.videotype.RecommendationAnimation;
 import com.example.CineHive.repository.videos.animation.AnimationRecommendationRepository;
