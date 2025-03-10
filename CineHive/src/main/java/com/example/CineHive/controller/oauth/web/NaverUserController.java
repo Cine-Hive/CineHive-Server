@@ -1,4 +1,4 @@
-package com.example.CineHive.controller.oauth;
+package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.NaverUserInfo;
 import com.example.CineHive.dto.user.UserDto;

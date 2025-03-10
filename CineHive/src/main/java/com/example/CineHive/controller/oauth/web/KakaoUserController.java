@@ -1,4 +1,4 @@
-package com.example.CineHive.controller.oauth;
+package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.KakaoJwtResponse;
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
@@ -159,6 +159,5 @@ public class KakaoUserController {
         kakaoUserRepository.save(kakaoUser);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
-
 
 }
