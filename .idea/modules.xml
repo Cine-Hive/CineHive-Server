@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-<<<<<<< Updated upstream
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CineHive.main.iml" filepath="$PROJECT_DIR$/.idea/modules/CineHive.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.CineHive.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.CineHive.main.iml" />
-=======
-      <module fileurl="file://$PROJECT_DIR$/.idea/CineHive.iml" filepath="$PROJECT_DIR$/.idea/CineHive.iml" />
->>>>>>> Stashed changes
     </modules>
   </component>
 </project>

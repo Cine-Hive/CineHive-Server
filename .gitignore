@@ -38,3 +38,4 @@ out/
 
 # Ignore application.properties
 application.properties
+appiication-test.properties
