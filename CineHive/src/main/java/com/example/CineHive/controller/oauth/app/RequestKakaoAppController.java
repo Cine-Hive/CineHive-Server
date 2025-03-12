@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 
-public class KakaoUserAppController {
+public class RequestKakaoAppController {
     @Autowired
     private KakaoUserService kakaoUserService;
     @Autowired
@@ -33,7 +33,7 @@ public class KakaoUserAppController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Operation(summary = "카카오 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인 화면이 성공되면 앱에서 Access Token을 포함하여 서버에게 보내야 할 요청코드 ")
+    @Operation(summary = "카카오 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청코드 ")
     @PostMapping("/kakao/app-login")
     public ResponseEntity<?> kakaoAppLogin(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         try {
