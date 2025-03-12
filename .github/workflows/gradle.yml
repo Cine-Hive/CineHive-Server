@@ -12,6 +12,16 @@ jobs:
     permissions:
       contents: read
 
+    services:
+      mariadb:
+        image: mariadb:latest
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: 12341234
+          MYSQL_DATABASE: cinehive_test
+        options: --health-cmd="mysqladmin ping --silent" --health-timeout=5s --health-retries=3
+
     steps:
     - uses: actions/checkout@v4
 
