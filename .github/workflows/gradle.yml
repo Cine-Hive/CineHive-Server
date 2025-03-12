@@ -12,16 +12,6 @@ jobs:
     permissions:
       contents: read
 
-    services:
-      mariadb:
-        image: mariadb:latest
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: 12341234
-          MYSQL_DATABASE: cinehive_test
-        options: --health-cmd="mysqladmin ping --silent" --health-timeout=5s --health-retries=3
-
     steps:
     - uses: actions/checkout@v3
 
@@ -47,6 +37,17 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
+
+    - name: Run tests
+      run: ./gradlew test
+      env:
+        SPRING_DATASOURCE_URL: jdbc:mariadb://<YOUR_MARIADB_HOST>:3306/cinehive_test?useUnicode=true&characterEncoding=utf8mb4
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: 12341234
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        SPRING_JPA_SHOW_SQL: true
+        SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MariaDBDialect
 
   dependency-submission:
     runs-on: ubuntu-latest
