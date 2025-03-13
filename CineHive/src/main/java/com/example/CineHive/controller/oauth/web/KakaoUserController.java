@@ -1,9 +1,9 @@
 package com.example.CineHive.controller.oauth.web;
 
-import com.example.CineHive.dto.oauth.KakaoJwtResponse;
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.oauth.GoogleUser;
 import com.example.CineHive.entity.oauth.KakaoUser;
 import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
@@ -12,7 +12,6 @@ import com.example.CineHive.service.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -20,13 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Tag(name = "Kakao User Controller", description = "카카오 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -63,7 +62,7 @@ public class KakaoUserController {
             KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
             if (kakaoUser == null) {
-                System.out.println("KakaoUser is null for email: " + userInfo.getMemEmail());
+                System.out.println("KakaoUser is null for Kakao ID: " + userInfo.getMemEmail());
                 kakaoUser = kakaoUserService.registerNewKakaoUser(userInfo);
             } else {
                 System.out.println("KakaoUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
@@ -72,28 +71,27 @@ public class KakaoUserController {
             userInfo.setMemName(kakaoUser.getName());
             userInfo.setGenres(kakaoUser.getGenres());
 
+            HttpSession session = request.getSession();
+            session.setAttribute("user", userInfo);
 
-            String token = jwtUtil.generateToken(userInfo.getMemEmail());
-
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
 
             if (userService.checkUserExists(userInfo.getMemEmail())) {
+                String jwtToken = userService.generateJwtToken(userInfo.getMemEmail());
+                session.setAttribute("jwtToken", jwtToken);
 
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("jwt", jwtToken);
+                responseData.put("user", userInfo);
 
-
-                response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new KakaoJwtResponse(token, userInfo)));
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write(new ObjectMapper().writeValueAsString(responseData));
                 response.sendRedirect("http://localhost:8080/");
-            } else {
+            }else {
 
                 kakaoUserService.registerUser(userInfo);
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-
-                log.info("Response Data: {}", response);
-                response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new KakaoJwtResponse(token, userInfo)));
+                response.setStatus(HttpServletResponse.SC_CREATED);
                 response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
             }
         } catch (Exception e) {
@@ -101,10 +99,27 @@ public class KakaoUserController {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "카카오 로그인 과정 중 오류 발생");
         }
     }
-
     @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @GetMapping("/kakao/success")
     public ResponseEntity<?> successPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        log.info("Session exists: {}", session != null);
+
+        if (session != null) {
+            KakaoUserInfo userInfo = (KakaoUserInfo) session.getAttribute("user");
+            log.info("User info in session: {}", userInfo);
+
+            if (userInfo != null) {
+                return ResponseEntity.ok(userInfo);
+            }
+        }
+        log.warn("Unauthorized access attempt");
+        return ResponseEntity.status(401).body("Unauthorized");
+    }
+
+    @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
+    @GetMapping("/kakao/login/success")
+    public ResponseEntity<?> loginSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         log.info("Session exists: {}", session != null);
 
@@ -127,14 +142,6 @@ public class KakaoUserController {
         }
         log.warn("Unauthorized access attempt");
         return ResponseEntity.status(401).body("Unauthorized");
-    }
-
-
-    @Operation(summary = "카카오 사용자 중복 확인", description = "카카오 사용자 ID를 이용하여 사용자가 이미 존재하는지 확인")
-    @GetMapping("/kakao/check-user")
-    public ResponseEntity<Boolean> checkUser(@RequestParam String kakaoId) {
-        boolean exists = userService.checkUserExists(kakaoId);
-        return ResponseEntity.ok(exists);
     }
 
     @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로  kakao_user 테이블에 저장")

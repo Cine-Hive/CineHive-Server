@@ -8,6 +8,7 @@ import com.example.CineHive.mapper.LoginHistoryMapper;
 import com.example.CineHive.mapper.UserMapper;
 import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.util.JwtUtil;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,12 @@ public class UserService{
     @Autowired
     private LoginHistoryRepository loginHistoryRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public String generateJwtToken(String email) {
+        return jwtUtil.generateToken(email);
+    }
 
     private String getBrowserInfo(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
