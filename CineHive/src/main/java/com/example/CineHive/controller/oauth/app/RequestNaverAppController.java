@@ -41,10 +41,13 @@ public class RequestNaverAppController {
             NaverUserInfo userInfo = naverUserService.getUserInfo(accessToken);
 
             NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
+            boolean isNewUser = false;
 
             if (naverUser == null) {
-                // Naver 사용자가 처음 로그인하는 경우 새로운 사용자를 등록
                 naverUser = naverUserService.registerNewNaverUser(userInfo);
+                isNewUser = true;
+            } else {
+                log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
             }
 
             // 세션에 사용자 정보 저장
@@ -59,7 +62,12 @@ public class RequestNaverAppController {
             response.put("userInfo", userInfo);
             response.put("jwtToken", jwtToken);
 
-            return ResponseEntity.ok(response);
+            if (isNewUser) {
+                return ResponseEntity.status(201).body(response);
+            } else {
+                return ResponseEntity.ok(response);
+            }
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Naver login failed");
         }

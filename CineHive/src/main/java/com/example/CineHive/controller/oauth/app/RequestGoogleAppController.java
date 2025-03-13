@@ -44,10 +44,13 @@ public class RequestGoogleAppController {
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
 
             GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
+            boolean isNewUser = false;
 
             if (googleUser == null) {
-
                 googleUser = googleUserService.registerNewGoogleUser(userInfo);
+                isNewUser = true;
+            } else {
+                log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
             }
 
 
@@ -62,7 +65,13 @@ public class RequestGoogleAppController {
             response.put("userInfo", userInfo);
             response.put("jwtToken", jwtToken);
 
-            return ResponseEntity.ok(response);
+
+            if (isNewUser) {
+                return ResponseEntity.status(201).body(response);
+            } else {
+                return ResponseEntity.ok(response);
+            }
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Kakao login failed");
         }
