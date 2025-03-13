@@ -2,7 +2,6 @@ package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.GoogleJwtResponse;
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
-import com.example.CineHive.dto.oauth.KakaoJwtResponse;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.oauth.GoogleUser;
