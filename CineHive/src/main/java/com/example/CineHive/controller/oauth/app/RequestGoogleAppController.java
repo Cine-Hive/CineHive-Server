@@ -53,11 +53,6 @@ public class RequestGoogleAppController {
                 log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
             }
 
-
-            HttpSession session = request.getSession();
-            session.setAttribute("user", userInfo);
-
-
             String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
 
             // 클라이언트한테 json 데이터로 userInfo, jwtToken 값을 반환 이 때 구조는 { userInfo : {}, jwtToken } 형태로 반환이 되어야 정상

@@ -50,10 +50,6 @@ public class RequestNaverAppController {
                 log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
             }
 
-            // 세션에 사용자 정보 저장
-            HttpSession session = request.getSession();
-            session.setAttribute("user", userInfo);
-
             // JWT 토큰 생성
             String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
 

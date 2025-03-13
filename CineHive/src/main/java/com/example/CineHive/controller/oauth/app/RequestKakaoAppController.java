@@ -54,9 +54,6 @@ public class RequestKakaoAppController {
                 log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
             }
 
-            HttpSession session = request.getSession();
-            session.setAttribute("user", userInfo);
-
             String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
 
             Map<String, Object> response = new HashMap<>();
