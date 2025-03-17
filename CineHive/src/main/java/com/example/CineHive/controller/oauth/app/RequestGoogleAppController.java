@@ -1,18 +1,13 @@
 package com.example.CineHive.controller.oauth.app;
 
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
-import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.entity.oauth.GoogleUser;
-import com.example.CineHive.entity.oauth.KakaoUser;
 import com.example.CineHive.repository.GoogleUserRepository;
-import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
-import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

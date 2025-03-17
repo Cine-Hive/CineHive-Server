@@ -1,8 +1,6 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
-import com.example.CineHive.entity.oauth.KakaoUser;
-import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -31,11 +29,6 @@ public class KakaoUserService {
     @Value("${kakao.logout.redirect.uri}")
     private String logoutRedirectUri;
 
-    @Autowired
-    private KakaoUserRepository kakaouserRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     private final OkHttpClient client = new OkHttpClient();
 
@@ -98,22 +91,5 @@ public class KakaoUserService {
                 throw new RuntimeException("Failed to get user info: " + response.message());
             }
         }
-    }
-
-
-    public void registerUser(KakaoUserInfo userInfo) {
-        KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
-                .orElse(new KakaoUser(userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
-        kakaouserRepository.save(socialUser);
-    }
-
-    public KakaoUser registerNewKakaoUser(KakaoUserInfo userInfo) {
-        KakaoUser kakaoUser = new KakaoUser();
-        kakaoUser.setNickname(userInfo.getMemNickname());
-        kakaoUser.setMemEmail(userInfo.getMemEmail());
-        kakaoUser.setName(userInfo.getMemName());
-        kakaoUser.setGenres(userInfo.getGenres());
-        kakaouserRepository.save(kakaoUser);
-        return kakaoUser;
     }
 }

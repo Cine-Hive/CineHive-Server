@@ -3,9 +3,6 @@ package com.example.CineHive.controller.oauth.web;
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.GoogleUser;
-import com.example.CineHive.entity.oauth.KakaoUser;
-import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.service.UserService;
@@ -19,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -39,8 +35,7 @@ public class KakaoUserController {
 
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private KakaoUserRepository kakaoUserRepository;
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -59,17 +54,8 @@ public class KakaoUserController {
             String accessToken = kakaoUserService.getAccessToken(code);
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
-            KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
+            User user = userRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
-            if (kakaoUser == null) {
-                System.out.println("KakaoUser is null for Kakao ID: " + userInfo.getMemEmail());
-                kakaoUser = kakaoUserService.registerNewKakaoUser(userInfo);
-            } else {
-                System.out.println("KakaoUser found: " + kakaoUser.getName() + ", " + kakaoUser.getGenres());
-            }
-
-            userInfo.setMemName(kakaoUser.getName());
-            userInfo.setGenres(kakaoUser.getGenres());
 
             HttpSession session = request.getSession();
             session.setAttribute("user", userInfo);
@@ -89,9 +75,8 @@ public class KakaoUserController {
                 response.getWriter().write(new ObjectMapper().writeValueAsString(responseData));
                 response.sendRedirect("http://localhost:8080/");
             }else {
-
-                kakaoUserService.registerUser(userInfo);
-                response.setStatus(HttpServletResponse.SC_CREATED);
+                session.setAttribute("memEmail", userInfo.getMemEmail());
+                session.setAttribute("nickname", userInfo.getMemNickname());
                 response.sendRedirect("http://localhost:8080/additional-info?loginType=kakao");
             }
         } catch (Exception e) {
@@ -159,11 +144,11 @@ public class KakaoUserController {
 
         userRepository.save(newUser);
 
-        KakaoUser kakaoUser = kakaoUserRepository.findByMemEmail(userDto.getMemEmail())
+        User user = userRepository.findByMemEmail(userDto.getMemEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        kakaoUser.setName(userDto.getMemName());
-        kakaoUser.setGenres(userDto.getGenres());
-        kakaoUserRepository.save(kakaoUser);
+        user.setMemName(userDto.getMemName());
+        user.setGenres(userDto.getGenres());
+        userRepository.save(user);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 
