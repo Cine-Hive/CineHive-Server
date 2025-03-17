@@ -101,7 +101,7 @@ public class KakaoUserService {
     public void registerUser(UserDto userDto) {
         User newUser = new User();
         newUser.setMemEmail(userDto.getMemEmail());
-        newUser.setMemPw(userDto.getMemPassword());
+        newUser.setMemPw("0");
         newUser.setMemNickname(userDto.getMemNickname());
         newUser.setMemName(userDto.getMemName());
         newUser.setMemSex(userDto.getMemSex());

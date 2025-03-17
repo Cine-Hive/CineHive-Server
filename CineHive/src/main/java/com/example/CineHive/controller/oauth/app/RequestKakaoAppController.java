@@ -64,7 +64,7 @@ public class RequestKakaoAppController {
     @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
     @PostMapping("/kakao/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
-        userService.registerUser(userDto);
+        kakaoUserService.registerUser(userDto);
 
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
