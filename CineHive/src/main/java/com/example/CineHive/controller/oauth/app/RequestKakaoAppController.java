@@ -25,5 +25,5 @@ public class RequestKakaoAppController {
 
     @Autowired
     private JwtUtil jwtUtil;
-    
+
 }

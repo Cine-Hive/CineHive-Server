@@ -31,7 +31,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class NaverUserController {
+public class RequestNaverWebController {
 
     @Autowired
     private final NaverUserService naverUserService;

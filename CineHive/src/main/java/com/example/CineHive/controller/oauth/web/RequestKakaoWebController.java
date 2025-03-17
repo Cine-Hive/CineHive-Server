@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-public class KakaoUserController {
+public class RequestKakaoWebController {
 
     @Autowired
     private KakaoUserService kakaoUserService;
