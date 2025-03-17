@@ -1,6 +1,8 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
+import com.example.CineHive.dto.user.UserDto;
+import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Service
 public class KakaoUserService {
@@ -29,6 +32,9 @@ public class KakaoUserService {
     @Value("${kakao.logout.redirect.uri}")
     private String logoutRedirectUri;
 
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final OkHttpClient client = new OkHttpClient();
 
@@ -91,5 +97,18 @@ public class KakaoUserService {
                 throw new RuntimeException("Failed to get user info: " + response.message());
             }
         }
+    }
+    public void registerUser(UserDto userDto) {
+        User newUser = new User();
+        newUser.setMemEmail(userDto.getMemEmail());
+        newUser.setMemPw(userDto.getMemPassword());
+        newUser.setMemNickname(userDto.getMemNickname());
+        newUser.setMemName(userDto.getMemName());
+        newUser.setMemSex(userDto.getMemSex());
+        newUser.setMemRegisterDatetime(LocalDateTime.now());
+        newUser.setMemType("카카오");
+        newUser.setGenres(userDto.getGenres());
+
+        userRepository.save(newUser); // 사용자 정보 저장
     }
 }

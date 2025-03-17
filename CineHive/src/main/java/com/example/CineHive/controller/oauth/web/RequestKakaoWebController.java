@@ -129,27 +129,4 @@ public class RequestKakaoWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로  kakao_user 테이블에 저장")
-    @PostMapping("/kakao/register")
-    public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
-        User newUser = new User();
-        newUser.setMemEmail(userDto.getMemEmail());
-        newUser.setMemPw(userDto.getMemPassword());
-        newUser.setMemNickname(userDto.getMemNickname());
-        newUser.setMemName(userDto.getMemName());
-        newUser.setMemSex(userDto.getMemSex());
-        newUser.setMemRegisterDatetime(LocalDateTime.now());
-        newUser.setMemType("카카오");
-        newUser.setGenres(userDto.getGenres());
-
-        userRepository.save(newUser);
-
-        User user = userRepository.findByMemEmail(userDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Kakao User not found"));
-        user.setMemName(userDto.getMemName());
-        user.setGenres(userDto.getGenres());
-        userRepository.save(user);
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    }
-
 }
