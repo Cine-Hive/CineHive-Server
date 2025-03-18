@@ -1,59 +1,40 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Java
-*.class
-*.jar
-*.war
-*.ear
-
-# Eclipse/IntelliJ IDEA
-*.iml
-*.ipr
-*.iws
-.classpath
-.project
-.settings/
-
-# Maven
-target/
-.mvn/
-
-# Gradle
-.gradle/
+HELP.md
+.gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# Spring Boot
-spring.log
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
-# Logs
-logs/
-*.log
-**/log/
-**/logs/
-**/logging/
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
 
-# IDE-specific files
-.idea/
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
 .vscode/
 
-# Temporary files
-*.swp
-*.swo
-*.bak
-*.tmp
-
-# Node Modules (in case of frontend integration)
-node_modules/
-
-# Ignore environment files
-.env
-.env.*
-
-# SQL
-cinehive_dumpfile.sql
-
+# Ignore application.properties
 application.properties
