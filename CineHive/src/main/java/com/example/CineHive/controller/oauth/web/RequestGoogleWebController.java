@@ -1,6 +1,7 @@
 package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
+import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
@@ -96,6 +97,23 @@ public class RequestGoogleWebController {
     @GetMapping("/google/success")
     public ResponseEntity<?> googleSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            GoogleUserInfo userInfo = (GoogleUserInfo) session.getAttribute("user");
+            log.info("User info in session: {}", userInfo);
+
+            if (userInfo != null) {
+                return ResponseEntity.ok(userInfo);
+            }
+        }
+        log.warn("Unauthorized access attempt");
+        return ResponseEntity.status(401).body("Unauthorized");
+    }
+
+    @Operation(summary = "구글 로그인 성공 정보 반환", description = "세션에서 구글 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
+    @GetMapping("/google/login/success")
+    public ResponseEntity<?> loginSuccessPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
         log.info("Session exists: {}", session != null);
 
         if (session != null) {
@@ -103,7 +121,9 @@ public class RequestGoogleWebController {
             log.info("User info in session: {}", userInfo);
 
             if (userInfo != null) {
+
                 String token = jwtUtil.generateToken(userInfo.getMemEmail());
+
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("userInfo", userInfo);
