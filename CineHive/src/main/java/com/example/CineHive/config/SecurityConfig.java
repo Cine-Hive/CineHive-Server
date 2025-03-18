@@ -36,7 +36,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                 "/checkuserId/**").permitAll()
+                                 "/checkuserId/**",
+                                "/reply/**",
+                                "/reply/judge/**",
+                                "/reply/judge/count/**").permitAll()
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                         ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
                         , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
