@@ -8,9 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface ReplyDisLikeRepository extends JpaRepository<ReplyDisLike, Long> {
-    boolean existsByMemEmailAndReplyId(String memEmail, Long replyId);  // ✅ 중복 검사
-    void deleteByMemEmailAndReplyId(String memEmail, Long replyId);  // ✅ 중복 싫어요 삭제
-    long countByReplyId(Long movieId);
-
-
+    boolean existsByMemEmailAndReplyId(String memEmail, Long replyId);
+    void deleteByMemEmailAndReplyId(String memEmail, Long replyId);
+    long countByReplyId(Long replyId);
 }

@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "reply_likes",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"memEmail", "reply_id"})})
+@Table(name = "reply_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"memEmail", "reply_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

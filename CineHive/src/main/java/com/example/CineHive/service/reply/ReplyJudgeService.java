@@ -22,13 +22,16 @@ public class ReplyJudgeService {
 
     @Transactional
     public boolean toggleLike(String memEmail, Long movieId, Long replyId) {
-        // 🔍 중복 좋아요 검사 (`existsByMemEmailAndReplyId()` 사용)
         if (replyLikeRepository.existsByMemEmailAndReplyId(memEmail, replyId)) {
             replyLikeRepository.deleteByMemEmailAndReplyId(memEmail, replyId);
             return false;
         }
 
-        // 존재하지 않으면 추가
+        // 싫어요 누른 경우 해제 (좋아요와 싫어요는 동시 불가능)
+        if(replyDisLikeRepository.existsByMemEmailAndReplyId(memEmail, replyId)){
+            replyDisLikeRepository.deleteByMemEmailAndReplyId(memEmail, replyId);
+        }
+
         ReplyLike newLike = new ReplyLike(null, memEmail, movieId, replyId);
         replyLikeRepository.save(newLike);
         return true;
@@ -36,25 +39,29 @@ public class ReplyJudgeService {
 
     @Transactional
     public boolean toggleDislike(String memEmail, Long movieId, Long replyId) {
-        // 🔍 중복 싫어요 검사 (`existsByMemEmailAndReplyId()` 사용)
         if (replyDisLikeRepository.existsByMemEmailAndReplyId(memEmail, replyId)) {
             replyDisLikeRepository.deleteByMemEmailAndReplyId(memEmail, replyId);
             return false;
         }
 
-        // 존재하지 않으면 추가
+        // 좋아요 누른 경우 해제 (좋아요와 싫어요는 동시 불가능)
+        if(replyLikeRepository.existsByMemEmailAndReplyId(memEmail, replyId)){
+            replyLikeRepository.deleteByMemEmailAndReplyId(memEmail, replyId);
+        }
+
         ReplyDisLike newDislike = new ReplyDisLike(null, memEmail, movieId, replyId);
         replyDisLikeRepository.save(newDislike);
         return true;
     }
 
-
-    public long getLikeCount(Long replyId) {  // ✅ replyId 기준으로 변경
+    // 각 댓글의 좋아요 수 조회
+    public long getLikeCount(Long replyId) {
         return replyLikeRepository.countByReplyId(replyId);
     }
 
-    public long getDisLikeCount(Long movieId) {  // ✅ replyId 기준으로 변경
-        return replyDisLikeRepository.countByReplyId(movieId);
+    // 각 댓글의 싫어요 수 조회
+    public long getDisLikeCount(Long replyId) {
+        return replyDisLikeRepository.countByReplyId(replyId);
     }
 
 }
