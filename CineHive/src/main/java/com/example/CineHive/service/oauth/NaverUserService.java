@@ -4,8 +4,6 @@ package com.example.CineHive.service.oauth;
 import com.example.CineHive.dto.oauth.NaverUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.NaverUser;
-import com.example.CineHive.repository.NaverUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -30,14 +28,12 @@ public class NaverUserService {
     @Value("${naver.client.secret}")
     private String clientSecret;
 
-    private final NaverUserRepository naverUserRepository;
-
     private final UserRepository userRepository;
 
 
 
-    public NaverUserService(NaverUserRepository naverUserRepository, UserRepository userRepository) {
-        this.naverUserRepository = naverUserRepository;
+    public NaverUserService(UserRepository userRepository) {
+
         this.userRepository = userRepository;
     }
 

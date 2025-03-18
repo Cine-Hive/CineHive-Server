@@ -3,8 +3,6 @@ package com.example.CineHive.controller.oauth.web;
 import com.example.CineHive.dto.oauth.NaverUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.NaverUser;
-import com.example.CineHive.repository.NaverUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.NaverUserService;
 import com.example.CineHive.service.UserService;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -43,9 +40,6 @@ public class RequestNaverWebController {
 
     @Autowired
     private final UserRepository userRepository;
-
-    @Autowired
-    private final NaverUserRepository naverUserRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
