@@ -106,22 +106,11 @@ public class UserService{
         return LoginHistoryMapper.toDto(loginHistory);
     }
 
-
     public boolean checkUserExists(String memEmail) {
         return userRepository.findByMemEmail(memEmail).isPresent();
     }
-    public boolean checkUserExistsGoogle(String memEmail) {
-        return userRepository.findByMemEmail(memEmail).isPresent();
-    }
-
-    public boolean checkUserExistsNaver(String memEmail) {
-        return userRepository.findByMemEmail(memEmail).isPresent();
-    }
-
-
     public User getUserInfo(String memEmail) {
         return userRepository.findByMemEmail(memEmail).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }
-
 
 }
