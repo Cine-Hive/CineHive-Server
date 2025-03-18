@@ -54,7 +54,6 @@ public class RequestNaverWebController {
         response.sendRedirect(redirectUrl);
     }
 
-
     @Operation(summary = "네이버 OAuth 로그인 및 사용자 등록", description = "네이버 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @GetMapping("/naver/callback")
     public void naverCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -63,7 +62,6 @@ public class RequestNaverWebController {
             NaverUserInfo userInfo = naverUserService.getUserInfo(accessToken);
 
             User user = userRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
-
 
             HttpSession session = request.getSession();
             session.setAttribute("user", userInfo);
@@ -105,15 +103,6 @@ public class RequestNaverWebController {
         }
         return ResponseEntity.status(401).body("Unauthorized");
     }
-
-    @Operation(summary = "네이버 사용자 등록", description = "네이버 사용자 정보를 입력받아 회원가입을 진행, 중복 검사 통과 후 naver_user 테이블에 저장")
-    @PostMapping("/naver/register")
-    public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
-        naverUserService.registerNaverUser(userDto);
-
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    }
-
     @Operation(summary = "네이버 로그인 성공 정보 반환", description = "세션에서 네이버 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @GetMapping("/naver/login/success")
     public ResponseEntity<?> loginSuccessPage(HttpServletRequest request) {

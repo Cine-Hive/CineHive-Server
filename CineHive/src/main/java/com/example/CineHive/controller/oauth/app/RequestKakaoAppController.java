@@ -32,16 +32,13 @@ public class RequestKakaoAppController {
     private KakaoUserService kakaoUserService;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/kakao/login")
-    public ResponseEntity<?> loginWithKakao(@RequestBody String accessToken) {
+    @PostMapping("/kakao/app-login")
+    public ResponseEntity<?> kakaoAppLogin(@RequestBody String accessToken) {
         try {
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
