@@ -2,6 +2,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.NaverUserInfo;
+import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.oauth.NaverUser;
 import com.example.CineHive.repository.NaverUserRepository;
@@ -30,6 +31,7 @@ public class NaverUserService {
     private String clientSecret;
 
     private final NaverUserRepository naverUserRepository;
+
     private final UserRepository userRepository;
 
 
@@ -92,25 +94,17 @@ public class NaverUserService {
         }
     }
 
-    public void registerUser(NaverUserInfo userInfo) {
-        NaverUser naverUser = naverUserRepository.findByMemEmail(userInfo.getMemEmail())
-                .orElse(new NaverUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
+    public void registerNaverUser(UserDto userDto) {
+        User newUser = new User();
+        newUser.setMemEmail(userDto.getMemEmail());
+        newUser.setMemPw("0");
+        newUser.setMemNickname(userDto.getMemNickname());
+        newUser.setMemName(userDto.getMemName());
+        newUser.setMemSex(userDto.getMemSex());
+        newUser.setMemRegisterDatetime(LocalDateTime.now());
+        newUser.setMemType("네이버");
+        newUser.setGenres(userDto.getGenres());
 
-        naverUserRepository.save(naverUser);
-    }
-
-    public NaverUser registerNewNaverUser(NaverUserInfo userInfo) {
-
-        User user = new User();
-
-
-        NaverUser naverUser = new NaverUser();
-        naverUser.setNickname(userInfo.getMemNickname());
-        naverUser.setMemEmail(userInfo.getMemEmail());
-        naverUser.setName(userInfo.getMemName());
-        naverUser.setGenres(userInfo.getGenres());
-        naverUserRepository.save(naverUser);  // GoogleUser 테이블에 저장
-
-        return naverUser;
+        userRepository.save(newUser); // 사용자 정보 저장
     }
 }

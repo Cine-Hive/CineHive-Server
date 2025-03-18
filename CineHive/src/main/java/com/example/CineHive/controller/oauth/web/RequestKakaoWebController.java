@@ -1,7 +1,6 @@
 package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
-import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,7 +86,6 @@ public class RequestKakaoWebController {
     @GetMapping("/kakao/success")
     public ResponseEntity<?> successPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        log.info("Session exists: {}", session != null);
 
         if (session != null) {
             KakaoUserInfo userInfo = (KakaoUserInfo) session.getAttribute("user");

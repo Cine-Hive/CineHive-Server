@@ -98,7 +98,7 @@ public class KakaoUserService {
             }
         }
     }
-    public void registerUser(UserDto userDto) {
+    public void registerKakaoUser(UserDto userDto) {
         User newUser = new User();
         newUser.setMemEmail(userDto.getMemEmail());
         newUser.setMemPw("0");

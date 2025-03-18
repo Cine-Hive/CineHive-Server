@@ -69,7 +69,8 @@ public class SecurityConfig {
                                 "api/auth/**",
                                 "/api/auth/kakao/authenticate",
                                 "/api/auth/kakao/app-login",
-                                "/api/auth/kakao/login/success"
+                                "/api/auth/kakao/login/success",
+                                "/api/auth/naver/login/success"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

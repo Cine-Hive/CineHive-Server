@@ -44,7 +44,6 @@ public class RequestNaverAppController {
             boolean isNewUser = false;
 
             if (naverUser == null) {
-                naverUser = naverUserService.registerNewNaverUser(userInfo);
                 isNewUser = true;
             } else {
                 log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
