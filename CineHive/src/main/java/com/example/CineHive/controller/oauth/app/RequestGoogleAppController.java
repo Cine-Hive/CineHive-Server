@@ -1,8 +1,7 @@
 package com.example.CineHive.controller.oauth.app;
 
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
-import com.example.CineHive.entity.oauth.GoogleUser;
-import com.example.CineHive.repository.GoogleUserRepository;
+import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.service.oauth.GoogleUserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +25,7 @@ import java.util.Map;
 public class RequestGoogleAppController {
     @Autowired
     private GoogleUserService googleUserService;
-    @Autowired
-    private GoogleUserRepository googleUserRepository;
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -38,15 +36,8 @@ public class RequestGoogleAppController {
             String accessToken = requestBody.get("accessToken");
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
 
-            GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
             boolean isNewUser = false;
 
-            if (googleUser == null) {
-                googleUser = googleUserService.registerNewGoogleUser(userInfo);
-                isNewUser = true;
-            } else {
-                log.info("기존 회원 로그인: {}", userInfo.getMemEmail());
-            }
 
             String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
 
@@ -67,4 +58,11 @@ public class RequestGoogleAppController {
         }
     }
 
+    @Operation(summary = "구글 사용자 회원가입", description = "구글 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
+    @PostMapping("/google/register")
+    public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
+        googleUserService.registerGoogleUser(userDto);
+
+        return ResponseEntity.ok("회원가입이 완료되었습니다.");
+    }
 }

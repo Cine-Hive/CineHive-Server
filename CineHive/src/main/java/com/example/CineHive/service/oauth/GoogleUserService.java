@@ -1,9 +1,8 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
+import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.GoogleUser;
-import com.example.CineHive.repository.GoogleUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import lombok.Getter;
@@ -35,13 +34,11 @@ public class GoogleUserService {
     private String redirectUri;
 
 
-    private final GoogleUserRepository googleUserRepository;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
 
     @Autowired
-    public GoogleUserService(GoogleUserRepository googleUserRepository, UserRepository userRepository, RestTemplate restTemplate) {
-        this.googleUserRepository = googleUserRepository;
+    public GoogleUserService(UserRepository userRepository, RestTemplate restTemplate) {
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
     }
@@ -85,27 +82,17 @@ public class GoogleUserService {
         }
     }
 
-    public void registerUser(GoogleUserInfo userInfo) {
-        GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail())
-                .orElse(new GoogleUser( userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
+    public void registerGoogleUser(UserDto userDto) {
+        User newUser = new User();
+        newUser.setMemEmail(userDto.getMemEmail());
+        newUser.setMemPw("0");
+        newUser.setMemNickname(userDto.getMemNickname());
+        newUser.setMemName(userDto.getMemName());
+        newUser.setMemSex(userDto.getMemSex());
+        newUser.setMemRegisterDatetime(LocalDateTime.now());
+        newUser.setMemType("구글");
+        newUser.setGenres(userDto.getGenres());
 
-        googleUserRepository.save(googleUser);
+        userRepository.save(newUser); // 사용자 정보 저장
     }
-
-    public GoogleUser registerNewGoogleUser(GoogleUserInfo userInfo) {
-        // 먼저 User 엔티티에 사용자 정보 저장
-        User user = new User();
-
-
-        GoogleUser googleUser = new GoogleUser();
-        googleUser.setNickname(userInfo.getMemNickname());
-        googleUser.setMemEmail(userInfo.getMemEmail());
-        googleUser.setName(userInfo.getMemName());
-        googleUser.setGenres(userInfo.getGenres());
-        googleUserRepository.save(googleUser);
-
-        return googleUser;
-    }
-
-
 }

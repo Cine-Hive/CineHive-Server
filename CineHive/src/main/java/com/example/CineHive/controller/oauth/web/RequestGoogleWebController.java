@@ -1,11 +1,7 @@
 package com.example.CineHive.controller.oauth.web;
 
-import com.example.CineHive.dto.oauth.GoogleJwtResponse;
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
-import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.GoogleUser;
-import com.example.CineHive.repository.GoogleUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
 import com.example.CineHive.service.UserService;
@@ -23,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,8 +37,6 @@ public class RequestGoogleWebController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private GoogleUserRepository googleUserRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -69,35 +62,28 @@ public class RequestGoogleWebController {
             String accessToken = googleUserService.getAccessToken(code);
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
 
-            GoogleUser googleUser = googleUserRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
+            User user = userRepository.findByMemEmail(userInfo.getMemEmail()).orElse(null);
 
-            if (googleUser == null) {
-                System.out.println("GoogleUser is null for Google Email: " + userInfo.getMemEmail());
-                googleUser = googleUserService.registerNewGoogleUser(userInfo);
+            HttpSession session = request.getSession();
+            session.setAttribute("user", userInfo);
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            if (userService.checkUserExists(userInfo.getMemEmail())) {
+                String jwtToken = userService.generateJwtToken(userInfo.getMemEmail());
+                session.setAttribute("jwtToken", jwtToken);
+
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("jwt", jwtToken);
+                responseData.put("user", userInfo);
+
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write(new ObjectMapper().writeValueAsString(responseData));
+                response.sendRedirect("http://localhost:8080/");
             } else {
-                System.out.println("GoogleUser found: " + googleUser.getName() + ", " + googleUser.getGenres());
-            }
-
-            userInfo.setMemName(googleUser.getName());
-            userInfo.setGenres(googleUser.getGenres());
-
-            String token = jwtUtil.generateToken(googleUser.getMemEmail());
-
-            if (userService.checkUserExistsGoogle(userInfo.getMemEmail())) {
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-
-                response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new GoogleJwtResponse(token, userInfo)));
-                response.sendRedirect("http://localhost:8080/"); // 로그인 성공 후 리다이렉트
-            } else {
-                googleUserService.registerUser(userInfo);
-                HttpSession session = request.getSession();
-                session.setAttribute("user", userInfo);
-
-                log.info("Response Data: {}", response);
-                response.setContentType("application/json");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(new GoogleJwtResponse(token, userInfo)));
+                session.setAttribute("memEmail", userInfo.getMemEmail());
+                session.setAttribute("nickname", userInfo.getMemNickname());
                 response.sendRedirect("http://localhost:8080/additional-info?loginType=google"); // 신규 사용자 리다이렉트
             }
         } catch (Exception e) {
@@ -129,34 +115,5 @@ public class RequestGoogleWebController {
         }
         log.warn("Unauthorized access attempt");
         return ResponseEntity.status(401).body("Unauthorized");
-    }
-    @Operation(summary = "구글 회원가입", description = "사용자가 제공한 정보로 회원가입하고 google_user 테이블에 저장")
-    @PostMapping("/google/register")
-    public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
-        User newUser = new User();
-        newUser.setMemEmail(userDto.getMemEmail());
-        newUser.setMemPw(userDto.getMemPassword());
-        newUser.setMemNickname(userDto.getMemNickname());
-        newUser.setMemName(userDto.getMemName());
-        newUser.setMemSex(userDto.getMemSex());
-        newUser.setMemRegisterDatetime(LocalDateTime.now());
-        newUser.setMemType("구글");
-        newUser.setGenres(userDto.getGenres());
-        userRepository.save(newUser);
-
-        GoogleUser googleUser = googleUserRepository.findByMemEmail(userDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Google User not found"));
-        googleUser.setName(userDto.getMemName());  // 이름 업데이트
-        googleUser.setGenres(userDto.getGenres());  // 장르 업데이트
-        googleUserRepository.save(googleUser);
-
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    }
-
-    @Operation(summary = "구글 사용자 중복 확인", description = "해당 구글 ID가 이미 등록되어 있는지 확인")
-    @GetMapping("/google/check-user")
-    public ResponseEntity<Boolean> checkUser(@RequestParam String googleId) {
-        boolean exists = userService.checkUserExistsGoogle(googleId);
-        return ResponseEntity.ok(exists);
     }
 }
