@@ -15,11 +15,13 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: 12341234
           MYSQL_DATABASE: cinehive
-          MYSQL_USER: root
-          MYSQL_PASSWORD: 12341234
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping --host=localhost --password=12341234" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -p12341234 || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - uses: actions/checkout@v4
@@ -40,7 +42,7 @@ jobs:
       run: |
         echo "Waiting for MariaDB to be ready..."
         for i in {1..30}; do
-          nc -z localhost 3306 && echo "MariaDB is up!" && exit 0
+          nc -zv 127.0.0.1 3306 && echo "MariaDB is up!" && exit 0
           echo -n "."
           sleep 2
         done
@@ -52,7 +54,7 @@ jobs:
     - name: Run tests
       run: ./gradlew test --stacktrace
       env:
-        SPRING_DATASOURCE_URL: jdbc:mariadb://localhost:3306/cinehive?useUnicode=true&characterEncoding=utf8mb4
+        SPRING_DATASOURCE_URL: jdbc:mariadb://127.0.0.1:3306/cinehive?useUnicode=true&characterEncoding=utf8mb4
         SPRING_DATASOURCE_USERNAME: root
         SPRING_DATASOURCE_PASSWORD: 12341234
         SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
