@@ -1,0 +1,261 @@
+2025-03-19 17:12:58.502629+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT @[*]@character_set_database, @@sql_mode"; expected "identifier"; SQL statement:
+SELECT @@character_set_database, @@sql_mode [42001-232]
+2025-03-19 17:12:59.869600+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table animation (id bigint not null, back_drop_path varchar(255), name varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table animation (id bigint not null, back_drop_path varchar(255), name varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.876599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table animation_directors (id bigint not null auto_increment, name varchar(255), animation_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table animation_directors (id bigint not null auto_increment, name varchar(255), animation_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.876599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table animation_genres (id integer not null, name varchar(255), animation_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table animation_genres (id integer not null, name varchar(255), animation_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.877599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table animation_videos (id bigint not null auto_increment, name varchar(255), video_key varchar(255), animation_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table animation_videos (id bigint not null auto_increment, name varchar(255), video_key varchar(255), animation_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.878598+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table board (id bigint not null auto_increment, bookmark_count int default 0 not null, brd_content varchar(255), created_at datetime(6) not null, brd_title varchar(255), comment_count int default 0 not null, dislike_count int default 0 not null, like_count int default 0 not null, report_count int default 0 not null, views integer not null, mem_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table board (id bigint not null auto_increment, bookmark_count int default 0 not null, brd_content varchar(255), created_at datetime(6) not null, brd_title varchar(255), comment_count int default 0 not null, dislike_count int default 0 not null, like_count int default 0 not null, report_count int default 0 not null, views integer not null, mem_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.879599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table board_dis_like (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table board_dis_like (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.880599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table board_like (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table board_like (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.881599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table bookmark (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table bookmark (id bigint not null auto_increment, board_id bigint not null, user_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.881599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table comment (id bigint not null auto_increment, content varchar(255) not null, created_at datetime(6) not null, board_id bigint not null, user_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table comment (id bigint not null auto_increment, content varchar(255) not null, created_at datetime(6) not null, board_id bigint not null, user_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.882599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table drama (id bigint not null, back_drop_path varchar(255), first_air_date varchar(255), name varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table drama (id bigint not null, back_drop_path varchar(255), first_air_date varchar(255), name varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.883599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table drama_actors (id bigint not null auto_increment, name varchar(255), poster_path varchar(255), drama_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table drama_actors (id bigint not null auto_increment, name varchar(255), poster_path varchar(255), drama_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.884599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table drama_directors (id bigint not null auto_increment, name varchar(255), drama_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table drama_directors (id bigint not null auto_increment, name varchar(255), drama_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.884599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table drama_genres (id integer not null, name varchar(255), drama_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table drama_genres (id integer not null, name varchar(255), drama_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.885599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table google_user_genres (google_user_id bigint not null, genre varchar(255)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table google_user_genres (google_user_id bigint not null, genre varchar(255)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.886599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table google_user (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table google_user (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.886599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table kakao_user_genres (kakao_user_id bigint not null, genre varchar(255)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table kakao_user_genres (kakao_user_id bigint not null, genre varchar(255)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.887599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table kakao_users (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table kakao_users (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.888599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, director_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, director_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.888599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table movie_actors (id bigint not null auto_increment, name varchar(255), poster_path varchar(255), movie_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table movie_actors (id bigint not null auto_increment, name varchar(255), poster_path varchar(255), movie_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.889629+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table movie_directors (id bigint not null auto_increment, name varchar(255), primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table movie_directors (id bigint not null auto_increment, name varchar(255), primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.890599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.891630+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table movie_videos (id bigint not null auto_increment, name varchar(255), video_key varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table movie_videos (id bigint not null auto_increment, name varchar(255), video_key varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.891630+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table naver_user_genres (naver_user_id bigint not null, genre varchar(255)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table naver_user_genres (naver_user_id bigint not null, genre varchar(255)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.892599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table naver_users (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table naver_users (id bigint not null auto_increment, mem_email varchar(255), name varchar(255), nickname varchar(50), user_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.893599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table nowplaying_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table nowplaying_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.893599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table nowplaying_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table nowplaying_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.894599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table popular_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table popular_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.894599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table popular_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table popular_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.895599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table recommendation_animation (id bigint not null auto_increment, animation_id bigint, recommended_animation_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table recommendation_animation (id bigint not null auto_increment, animation_id bigint, recommended_animation_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.896599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table recommendation_movie (id bigint not null auto_increment, movie_id bigint, recommended_movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table recommendation_movie (id bigint not null auto_increment, movie_id bigint, recommended_movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.896599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table recommended_animations (animation_id bigint not null, recommended_animation_id bigint) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table recommended_animations (animation_id bigint not null, recommended_animation_id bigint) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.897599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table recommended_movies (movie_id bigint not null, recommended_movie_id bigint) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table recommended_movies (movie_id bigint not null, recommended_movie_id bigint) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.897599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table reply (id bigint not null auto_increment, mem_email varchar(255) not null, mem_nickname varchar(255) not null, movie_id bigint not null, created_at datetime(6) not null, review_content TEXT not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table reply (id bigint not null auto_increment, mem_email varchar(255) not null, mem_nickname varchar(255) not null, movie_id bigint not null, created_at datetime(6) not null, review_content TEXT not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.898599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table reply_bookmark (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table reply_bookmark (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.899599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table reply_dislikes (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, reply_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table reply_dislikes (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, reply_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.899599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table reply_likes (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, reply_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table reply_likes (id bigint not null auto_increment, mem_email varchar(255) not null, movie_id bigint not null, reply_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.900599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table report (id bigint not null auto_increment, reason varchar(255), reported_at datetime(6) not null, board_id bigint not null, user_id bigint not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table report (id bigint not null auto_increment, reason varchar(255), reported_at datetime(6) not null, board_id bigint not null, user_id bigint not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.900599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table top_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table top_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.901599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table topmovie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table topmovie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.902599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table upcoming_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table upcoming_movie (id bigint not null, back_drop_path varchar(255), overview longtext, popularity float(53) not null, poster_path varchar(255), release_date date, runtime integer not null, title varchar(255), vote_average float(53) not null, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.903599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table upcoming_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table upcoming_movie_genres (id integer not null, name varchar(255), movie_id bigint, primary key (id)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.903599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table user_genres (user_id bigint not null, genre varchar(255)) engine[*]=InnoDB"; expected "identifier"; SQL statement:
+create table user_genres (user_id bigint not null, genre varchar(255)) engine=InnoDB [42001-232]
+2025-03-19 17:12:59.904599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_BOOKMARK" not found (this database is empty); SQL statement:
+alter table reply_bookmark drop index if exists UKns6iukq1pe1whoi10ya2cbbue [42104-232]
+2025-03-19 17:12:59.905599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_BOOKMARK" not found; SQL statement:
+alter table reply_bookmark add constraint UKns6iukq1pe1whoi10ya2cbbue unique (mem_email, movie_id) [42102-232]
+2025-03-19 17:12:59.905599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_DISLIKES" not found (this database is empty); SQL statement:
+alter table reply_dislikes drop index if exists UKm8aiga4o54ccbtjashxxutgg2 [42104-232]
+2025-03-19 17:12:59.905599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_DISLIKES" not found; SQL statement:
+alter table reply_dislikes add constraint UKm8aiga4o54ccbtjashxxutgg2 unique (mem_email, reply_id) [42102-232]
+2025-03-19 17:12:59.905599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_LIKES" not found (this database is empty); SQL statement:
+alter table reply_likes drop index if exists UKqnvx36y6uow0wcew6e20yhsxg [42104-232]
+2025-03-19 17:12:59.905599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPLY_LIKES" not found; SQL statement:
+alter table reply_likes add constraint UKqnvx36y6uow0wcew6e20yhsxg unique (mem_email, reply_id) [42102-232]
+2025-03-19 17:12:59.906598+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "ANIMATION_DIRECTORS" not found; SQL statement:
+alter table animation_directors add constraint FK4g8wc9noq4321ab5o43h64dpo foreign key (animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.906598+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "ANIMATION_GENRES" not found; SQL statement:
+alter table animation_genres add constraint FK7v7p16vpklsdbx61ajwd7bnws foreign key (animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.907599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "ANIMATION_VIDEOS" not found; SQL statement:
+alter table animation_videos add constraint FKqhgm85ciwpcrpib3vhh44a43l foreign key (animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.907599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOARD" not found; SQL statement:
+alter table board add constraint FKegcaiyfnd6d2h82dfqxfy0qh5 foreign key (mem_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.908599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOARD_DIS_LIKE" not found; SQL statement:
+alter table board_dis_like add constraint FKlr7mgsejy9rgchkkra4ndw7pw foreign key (board_id) references board (id) [42102-232]
+2025-03-19 17:12:59.908599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOARD_DIS_LIKE" not found; SQL statement:
+alter table board_dis_like add constraint FK4ta9vv6pyx0tutabcg6xgj915 foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.909599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOARD_LIKE" not found; SQL statement:
+alter table board_like add constraint FKk7rxm8vl1ptqqhwdj2sjmlpvq foreign key (board_id) references board (id) [42102-232]
+2025-03-19 17:12:59.909599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOARD_LIKE" not found; SQL statement:
+alter table board_like add constraint FKbqijkv4rxx65r8ktbui2eb44e foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.910599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOOKMARK" not found; SQL statement:
+alter table bookmark add constraint FK9ok583i44955hw16uacv1v9pv foreign key (board_id) references board (id) [42102-232]
+2025-03-19 17:12:59.911599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOOKMARK" not found; SQL statement:
+alter table bookmark add constraint FKo4vbqvq5trl11d85bqu5kl870 foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.911599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "COMMENT" not found; SQL statement:
+alter table comment add constraint FKlij9oor1nav89jeat35s6kbp1 foreign key (board_id) references board (id) [42102-232]
+2025-03-19 17:12:59.912599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "COMMENT" not found; SQL statement:
+alter table comment add constraint FKqm52p1v3o13hy268he0wcngr5 foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.912599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DRAMA_ACTORS" not found; SQL statement:
+alter table drama_actors add constraint FKlyw62i67u4m5bc39d0n9knhl foreign key (drama_id) references drama (id) [42102-232]
+2025-03-19 17:12:59.913599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DRAMA_DIRECTORS" not found; SQL statement:
+alter table drama_directors add constraint FKsyhcrcn5lv7k2vvic3q3nbwd0 foreign key (drama_id) references drama (id) [42102-232]
+2025-03-19 17:12:59.913599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DRAMA_GENRES" not found; SQL statement:
+alter table drama_genres add constraint FKf7t8dlltfqhba44pex6wwt836 foreign key (drama_id) references drama (id) [42102-232]
+2025-03-19 17:12:59.914598+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "GOOGLE_USER_GENRES" not found; SQL statement:
+alter table google_user_genres add constraint FKg48opeih7sjjfeqlfuytlyg46 foreign key (google_user_id) references google_user (id) [42102-232]
+2025-03-19 17:12:59.914598+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "GOOGLE_USER" not found; SQL statement:
+alter table google_user add constraint FK9v0hsf8df76nhk1f4qxjwedlm foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.915599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "KAKAO_USER_GENRES" not found; SQL statement:
+alter table kakao_user_genres add constraint FKl4904f0keq7cqynjhtjgnxmfc foreign key (kakao_user_id) references kakao_users (id) [42102-232]
+2025-03-19 17:12:59.915599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "KAKAO_USERS" not found; SQL statement:
+alter table kakao_users add constraint FK4rkpr1gxfhm8le2bxcelad3co foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.916599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE" not found; SQL statement:
+alter table movie add constraint FKctqut6lf5jlg8fyr395aofqlj foreign key (director_id) references movie_directors (id) [42102-232]
+2025-03-19 17:12:59.916599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE_ACTORS" not found; SQL statement:
+alter table movie_actors add constraint FKbsto8yef4btokhveihmkg8876 foreign key (movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.917599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE_GENRES" not found; SQL statement:
+alter table movie_genres add constraint FKs2xl3sirbon75mjcongwhrbi3 foreign key (movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.917599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "MOVIE_VIDEOS" not found; SQL statement:
+alter table movie_videos add constraint FKadrow8k20kh0lhol7r27r7e4j foreign key (movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.918599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "NAVER_USER_GENRES" not found; SQL statement:
+alter table naver_user_genres add constraint FKfpprbuns0ty44dpnk2xwtbdw6 foreign key (naver_user_id) references naver_users (id) [42102-232]
+2025-03-19 17:12:59.918599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "NAVER_USERS" not found; SQL statement:
+alter table naver_users add constraint FK2eh1q3n484le05jt0aay3xhxw foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.919599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "NOWPLAYING_MOVIE_GENRES" not found; SQL statement:
+alter table nowplaying_movie_genres add constraint FKt6jaxafiksab3rfqhbxpx34m8 foreign key (movie_id) references nowplaying_movie (id) [42102-232]
+2025-03-19 17:12:59.919599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "POPULAR_MOVIE_GENRES" not found; SQL statement:
+alter table popular_movie_genres add constraint FK7ev01ao6n97f0xj3tkfgwpbpy foreign key (movie_id) references popular_movie (id) [42102-232]
+2025-03-19 17:12:59.920599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDATION_ANIMATION" not found; SQL statement:
+alter table recommendation_animation add constraint FKslf8g5ljauxxmna7399eps2p9 foreign key (animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.920599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDATION_ANIMATION" not found; SQL statement:
+alter table recommendation_animation add constraint FK9vfreikl58brsrk3gsg3om0lu foreign key (recommended_animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.921599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDATION_MOVIE" not found; SQL statement:
+alter table recommendation_movie add constraint FKloyh11uubyp5wav39qmmr83et foreign key (movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.921599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDATION_MOVIE" not found; SQL statement:
+alter table recommendation_movie add constraint FKsf3muit3alnh8ik2qpp4gnucq foreign key (recommended_movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.922599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDED_ANIMATIONS" not found; SQL statement:
+alter table recommended_animations add constraint FKiudwp5fipsdlniaqw2iu2devu foreign key (animation_id) references animation (id) [42102-232]
+2025-03-19 17:12:59.922599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "RECOMMENDED_MOVIES" not found; SQL statement:
+alter table recommended_movies add constraint FKncv2tcdnunm0pqejesnxnada foreign key (movie_id) references movie (id) [42102-232]
+2025-03-19 17:12:59.923599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPORT" not found; SQL statement:
+alter table report add constraint FK2mf8ehoy689ord40esx24n26e foreign key (board_id) references board (id) [42102-232]
+2025-03-19 17:12:59.923599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPORT" not found; SQL statement:
+alter table report add constraint FKq50wsn94sc3mi90gtidk0k34a foreign key (user_id) references users (mem_id) [42102-232]
+2025-03-19 17:12:59.924599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "TOP_MOVIE_GENRES" not found; SQL statement:
+alter table top_movie_genres add constraint FKhfaqvx99505nrw3ybgx4tytsj foreign key (movie_id) references topmovie (id) [42102-232]
+2025-03-19 17:12:59.924599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "UPCOMING_MOVIE_GENRES" not found; SQL statement:
+alter table upcoming_movie_genres add constraint FK7pgsm241gqjxt7brgdo27tr2l foreign key (movie_id) references upcoming_movie (id) [42102-232]
+2025-03-19 17:12:59.925599+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER_GENRES" not found; SQL statement:
+alter table user_genres add constraint FKmwqpompk5ps1c2gi0569f8mle foreign key (user_id) references users (mem_id) [42102-232]
