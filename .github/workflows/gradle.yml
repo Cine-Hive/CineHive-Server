@@ -30,7 +30,7 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
-
+    # test
     - name: Run tests
       run: ./gradlew test
       env:
