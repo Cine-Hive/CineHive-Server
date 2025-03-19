@@ -10,18 +10,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # GitHub Actions는 우분투 환경에서 실행
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. 코드 체크아웃
+
       - name: Checkout code
-        uses: actions/checkout@v2  # GitHub 리포지토리의 코드를 체크아웃
+        uses: actions/checkout@v2
 
 
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: '17' 
+          java-version: '17'
 
 
       - name: Cache Gradle dependencies
@@ -34,10 +34,16 @@ jobs:
 
 
       - name: Build with Gradle
-        run: ./gradlew build 
+        run: ./gradlew build
 
 
       - name: Run tests
         run: ./gradlew test 
         env:
-          SPRING_PROFILES_ACTIVE: test
+          SPRING_PROFILES_ACTIVE: test  
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb 
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver  
+          SPRING_DATASOURCE_USERNAME: sa  
+          SPRING_DATASOURCE_PASSWORD: '' 
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop  
+          SPRING_JPA_SHOW_SQL: true  
