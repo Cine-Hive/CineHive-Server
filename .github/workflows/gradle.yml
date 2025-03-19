@@ -28,13 +28,16 @@ jobs:
     - name: Give gradlew execute permission
       run: chmod +x ./gradlew
 
+    # Build with Gradle Wrapper
     - name: Build with Gradle Wrapper
-      run: ./gradlew build
-    # test
+      run: ./gradlew build --stacktrace
+
+    # Run tests // 
     - name: Run tests
-      run: ./gradlew test
+      run: ./gradlew test --stacktrace
       env:
         SPRING_PROFILES_ACTIVE: test
+        SPRING_CONFIG_NAME: application-test
         SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
         SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
         SPRING_DATASOURCE_USERNAME: sa
