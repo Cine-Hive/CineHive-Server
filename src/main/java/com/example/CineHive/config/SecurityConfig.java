@@ -21,7 +21,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**")) // H2 콘솔 CSRF 설정
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin())) // 프레임 옵션 설정
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/movies",
                                          "/now_playing",
@@ -67,8 +66,7 @@ public class SecurityConfig {
                                 "/api/auth/google/success",
                                 "/register",
                                 "/login",
-                                "api/auth/**",
-                                "/h2-console/**"
+                                "api/auth/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
