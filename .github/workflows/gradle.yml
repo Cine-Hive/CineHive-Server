@@ -21,21 +21,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-    # H2 DB 관련 환경 변수 설정
-    - name: Set environment variables for H2 DB
-      run: echo "Setting up environment variables"
-      env:
-        SPRING_PROFILES_ACTIVE: test  # 'test' 프로파일을 활성화
-        SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb  # H2 인메모리 DB 사용
-        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
-        SPRING_DATASOURCE_USERNAME: sa
-        SPRING_DATASOURCE_PASSWORD: ''
-        SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop  # 테이블 자동 생성 및 삭제
-        SPRING_JPA_SHOW_SQL: true  # SQL 쿼리 출력
+    # gradlew에 실행 권한 부여
+    - name: Give gradlew execute permission
+      run: chmod +x ./gradlew
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
@@ -43,10 +34,10 @@ jobs:
     - name: Run tests
       run: ./gradlew test
       env:
-        SPRING_PROFILES_ACTIVE: test  # 'test' 프로파일 활성화
-        SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb  # H2 인메모리 DB 사용
+        SPRING_PROFILES_ACTIVE: test
+        SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
         SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
         SPRING_DATASOURCE_USERNAME: sa
         SPRING_DATASOURCE_PASSWORD: ''
-        SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop  # 테이블 자동 생성 및 삭제
-        SPRING_JPA_SHOW_SQL: true  # SQL 쿼리 출력
+        SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+        SPRING_JPA_SHOW_SQL: true
