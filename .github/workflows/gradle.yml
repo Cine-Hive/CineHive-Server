@@ -9,8 +9,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    services:
+      mariadb:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: 12341234
+          MYSQL_DATABASE: cinehive
+          MYSQL_USER: root
+          MYSQL_PASSWORD: 12341234
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping --host=localhost --password=12341234" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - uses: actions/checkout@v4
@@ -27,11 +36,26 @@ jobs:
     - name: Give gradlew execute permission
       run: chmod +x ./gradlew
 
+    - name: Wait for MariaDB to be ready
+      run: |
+        echo "Waiting for MariaDB to be ready..."
+        for i in {1..30}; do
+          nc -z localhost 3306 && echo "MariaDB is up!" && exit 0
+          echo -n "."
+          sleep 2
+        done
+        echo "MariaDB did not start in time!" && exit 1
+
     - name: Build with Gradle Wrapper
       run: ./gradlew build --stacktrace
 
-    # TEST
     - name: Run tests
       run: ./gradlew test --stacktrace
       env:
-        SPRING_PROFILES_ACTIVE: test
+        SPRING_DATASOURCE_URL: jdbc:mariadb://localhost:3306/cinehive?useUnicode=true&characterEncoding=utf8mb4
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: 12341234
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        SPRING_JPA_SHOW_SQL: "true"
+        SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MariaDBDialect
