@@ -18,7 +18,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -p12341234 || exit 1"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --protocol=tcp -uroot -p12341234 || exit 1"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -48,11 +48,14 @@ jobs:
         done
         echo "MariaDB did not start in time!" && exit 1
 
+    - name: Debug Environment Variables
+      run: printenv | grep SPRING
+
     - name: Build with Gradle Wrapper
       run: ./gradlew build --stacktrace
 
     - name: Run tests
-      run: ./gradlew test --stacktrace
+      run: ./gradlew clean test --no-daemon --stacktrace --info
       env:
         SPRING_DATASOURCE_URL: jdbc:mariadb://127.0.0.1:3306/cinehive?useUnicode=true&characterEncoding=utf8mb4
         SPRING_DATASOURCE_USERNAME: root
