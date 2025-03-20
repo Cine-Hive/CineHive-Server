@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,4 +15,6 @@ public class NowPlayingMovieDto {
     private Long id;
     private String posterPath;
     private String title;
+    private String releaseDate;
+    private List<String> genres;
 }

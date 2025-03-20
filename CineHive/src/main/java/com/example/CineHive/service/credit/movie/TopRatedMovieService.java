@@ -183,8 +183,18 @@ public class TopRatedMovieService {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
                     String title = movieNode.get("title").asText();
+                    String releaseDate = movieNode.get("release_date").asText();
+
+
+                    List<String> genres = new ArrayList<>();
+                    if (movieNode.has("genre_ids")) {
+                        JsonNode genreIdsNode = movieNode.get("genre_ids");
+                        for (JsonNode genreIdNode : genreIdsNode) {
+                            genres.add(genreIdNode.asText());
+                        }
+                    }
                     // DTO 객체를 생성하여 리스트에 추가
-                    TopRatedMovieDto topMovieDTO = new TopRatedMovieDto(movieId, posterPath, title);
+                    TopRatedMovieDto topMovieDTO = new TopRatedMovieDto(movieId, posterPath, title, releaseDate, genres);
                     topMovies.add(topMovieDTO);
                 }
             } catch (Exception e) {
