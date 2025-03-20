@@ -39,7 +39,11 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/checkuserId/**").permitAll()
+                                 "/checkuserId/**",
+                                "/reply/**",
+                                "/reply/judge/**",
+                                "/reply/judge/count/**").permitAll()
+                                       
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                                 ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
                                 , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
@@ -47,8 +51,8 @@ public class SecurityConfig {
                                 "/dislike/{boardId}/users/{memEmail}","/dislike/{boardId}/count",
                                 "/report/{boardId}/users/{memEmail}",
                                 "/comment/{boardId}/{memEmail}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
-                                ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
-                                "/update_popular_movie","/get_popular_movies").permitAll()
+                        ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
+                                "/update_popular_movie","/get_popular_movies","/movies/{id}/similar").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
                                 "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능

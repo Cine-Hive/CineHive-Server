@@ -3,6 +3,7 @@ package com.example.CineHive.service.credit.animation;
 import com.example.CineHive.dto.video.animation.DirectorDto; // DTO 임포트
 import com.example.CineHive.entity.credit.animation.Director; // 애니메이션 감독 엔티티
 import com.example.CineHive.entity.videotype.Animation; // 애니메이션 엔티티
+import com.example.CineHive.repository.videos.animation.AnimationDirectorRepository;
 import com.example.CineHive.repository.videos.animation.AnimationRepository; // 애니메이션 리포지토리
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +30,9 @@ public class AnimationDirectorService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private AnimationDirectorRepository animationDirectorRepository;
+
     public AnimationDirectorService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
     }
@@ -53,19 +57,30 @@ public class AnimationDirectorService {
                     for (JsonNode crewMember : crewNode) {
                         // 감독 정보를 찾기 위해 "job" 속성이 "Director"인 경우만 필터링
                         if ("Director".equals(crewMember.get("job").asText())) {
-                            Director director = new Director();
-                            director.setName(crewMember.get("name").asText());
-                            director.setAnimation(animation);
+                            String directorName = crewMember.get("name").asText();
 
-                            animation.getDirectors().add(director);
+                            // 감독이 이미 존재하는지 확인
+                            Director existingDirector = animationDirectorRepository.findByName(directorName);
+                            if (existingDirector == null) {
+                                Director director = new Director();
+                                director.setName(directorName);
+                                director.setAnimation(animation);
+                                animation.getDirectors().add(director);
+                                animationDirectorRepository.save(director);
 
+                                DirectorDto directorDto = new DirectorDto();
+                                directorDto.setId(director.getId());
+                                directorDto.setName(director.getName());
+                                directorDTOs.add(directorDto);
+                            } else {
+                                // 기존 감독 추가
+                                animation.getDirectors().add(existingDirector);
 
-                            DirectorDto directorDto = new DirectorDto();
-                            directorDto.setId(director.getId());
-                            directorDto.setName(director.getName());
-                            directorDTOs.add(directorDto);
-
-                            break;
+                                DirectorDto directorDto = new DirectorDto();
+                                directorDto.setId(existingDirector.getId());
+                                directorDto.setName(existingDirector.getName());
+                                directorDTOs.add(directorDto);
+                            }
                         }
                     }
                     animationRepository.save(animation);

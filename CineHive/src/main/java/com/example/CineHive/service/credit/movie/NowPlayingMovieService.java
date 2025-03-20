@@ -44,6 +44,8 @@ public class NowPlayingMovieService {
     private MovieGenreService movieGenreService;
     @Autowired
     private MovieVideoService movieVideoService;
+    @Autowired
+    private SimilarMovieService similarMovieService;
 
 
 
@@ -145,12 +147,23 @@ public class NowPlayingMovieService {
                             movie.setVideos(new ArrayList<>());
                         }
                         movieRepository.save(movie);
-                        System.out.println("Saved movie to Movie table: " + movie.getTitle());
+
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+
+                        // 추천 영화 저장
+                        for (Movie similarMovie : similarMovies) {
+                            if (!movieRepository.existsById(similarMovie.getId())) {
+                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
+                                movieRepository.save(similarMovie);
+                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
 
 
-                        movieActorService.saveMovieCredits(movieId);
+                                movieActorService.saveMovieCredits(similarMovie.getId());
+                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
+                            }
+                        }
 
-                        movieDirectorService.saveMovieDirectors(movieId);
+
                     }
                 }
             } catch (Exception e) {

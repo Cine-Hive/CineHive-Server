@@ -11,9 +11,5 @@
         <module name="com.example.CineHive.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="17">
-      <module name="CineHive.CineHive.main" target="17" />
-      <module name="CineHive.CineHive.test" target="17" />
-    </bytecodeTargetLevel>
   </component>
 </project>
