@@ -187,9 +187,9 @@ public class UpComingMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
-
+                    String title = movieNode.get("title").asText();
                     // DTO 객체를 생성하여 리스트에 추가
-                    UpComingMovieDto upComingMovieDto = new UpComingMovieDto(movieId, posterPath);
+                    UpComingMovieDto upComingMovieDto = new UpComingMovieDto(movieId, posterPath, title);
                     upComingMovies.add(upComingMovieDto);
                 }
             } catch (Exception e) {

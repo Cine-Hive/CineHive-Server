@@ -191,9 +191,10 @@ public class NowPlayingMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
+                    String title = movieNode.get("title").asText();
 
 
-                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath);
+                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath, title);
                     moviePosters.add(nowPlayingMovieDto);
                 }
             } catch (Exception e) {

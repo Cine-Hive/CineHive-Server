@@ -12,4 +12,5 @@ import lombok.Setter;
 public class UpComingMovieDto {
     private Long id;
     private String posterPath;
+    private String title;
 }

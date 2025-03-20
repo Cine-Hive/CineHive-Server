@@ -192,9 +192,9 @@ public class PopularMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
+                    String title = movieNode.get("title").asText();
 
-
-                    PopularMovieDto popularMovieDto = new PopularMovieDto(movieId, posterPath);
+                    PopularMovieDto popularMovieDto = new PopularMovieDto(movieId, posterPath, title);
                     popularMovies.add(popularMovieDto);
                 }
             } catch (Exception e) {

@@ -182,9 +182,9 @@ public class TopRatedMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
-
+                    String title = movieNode.get("title").asText();
                     // DTO 객체를 생성하여 리스트에 추가
-                    TopRatedMovieDto topMovieDTO = new TopRatedMovieDto(movieId, posterPath);
+                    TopRatedMovieDto topMovieDTO = new TopRatedMovieDto(movieId, posterPath, title);
                     topMovies.add(topMovieDTO);
                 }
             } catch (Exception e) {
