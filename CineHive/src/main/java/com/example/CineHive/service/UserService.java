@@ -1,9 +1,16 @@
 package com.example.CineHive.service;
 
+import com.example.CineHive.dto.user.LoginHistoryDto;
 import com.example.CineHive.dto.user.UserDto;
+import com.example.CineHive.entity.LoginHistory;
 import com.example.CineHive.entity.User;
+import com.example.CineHive.mapper.LoginHistoryMapper;
 import com.example.CineHive.mapper.UserMapper;
+import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.util.JwtUtil;
+import io.micrometer.common.util.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,14 +21,42 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 @Service
 public class UserService{
-    private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private  UserRepository userRepository;
+    @Autowired
+    private  BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    private LoginHistoryRepository loginHistoryRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public String generateJwtToken(String email) {
+        return jwtUtil.generateToken(email);
     }
 
+    private String getBrowserInfo(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+
+        if (StringUtils.isEmpty(userAgent)) {
+            return "Unknown";
+        }
+
+        if (userAgent.contains("Chrome") && !userAgent.contains("Edg")) {
+            return "Chrome";
+        } else if (userAgent.contains("Edg")) {
+            return "Edge";
+        } else if (userAgent.contains("Safari") && !userAgent.contains("Chrome")) {
+            return "Safari";
+        } else if (userAgent.contains("Firefox")) {
+            return "Firefox";
+        } else if (userAgent.contains("MSIE") || userAgent.contains("Trident")) {
+            return "Internet Explorer";
+        } else {
+            return "Other";
+        }
+    }
     @Transactional
     public boolean registerUser(UserDto userDto) {
         UserMapper userMapper = new UserMapper();
@@ -33,8 +68,8 @@ public class UserService{
     }
 
 
-    public boolean loginUser(String memEmail, String memPassword) {
-        // 사용자 ID로 사용자 조회
+    @Transactional
+    public LoginHistoryDto loginUser(String memEmail, String memPassword, HttpServletRequest request) {
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
 
         if (existingUser.isEmpty()) {
@@ -43,25 +78,37 @@ public class UserService{
 
         User user = existingUser.get();
 
-        // 비밀번호 비교
         if (!passwordEncoder.matches(memPassword, user.getMemPw())) {
             throw new IllegalArgumentException("비밀번호가 맞지 않습니다.");
         }
 
-        return true;
+        // 브라우저 정보 가져오기
+        String browser = getBrowserInfo(request);
+
+        // 로그인 기록 조회
+        Optional<LoginHistory> loginHistoryOpt = loginHistoryRepository.findByUser(user);
+        LocalDateTime now = LocalDateTime.now();
+        LoginHistory loginHistory;
+
+        if (loginHistoryOpt.isEmpty()) {
+            // 최초 로그인 기록 생성
+            loginHistory = new LoginHistory(null, user, now, now, browser);
+        } else {
+            // 기존 로그인 기록 업데이트
+            loginHistory = loginHistoryOpt.get();
+            loginHistory.setLastLoginDate(now);
+            loginHistory.setBrowser(browser);
+        }
+
+        loginHistoryRepository.save(loginHistory);
+
+        // 엔티티를 DTO로 변환하여 반환
+        return LoginHistoryMapper.toDto(loginHistory);
     }
+
     public boolean checkUserExists(String memEmail) {
         return userRepository.findByMemEmail(memEmail).isPresent();
     }
-    public boolean checkUserExistsGoogle(String memEmail) {
-        return userRepository.findByMemEmail(memEmail).isPresent();
-    }
-
-    public boolean checkUserExistsNaver(String memEmail) {
-        return userRepository.findByMemEmail(memEmail).isPresent();
-    }
-
-
     public User getUserInfo(String memEmail) {
         return userRepository.findByMemEmail(memEmail).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }

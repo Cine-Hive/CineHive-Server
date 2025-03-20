@@ -1,9 +1,8 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
+import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.oauth.KakaoUser;
-import com.example.CineHive.repository.KakaoUserRepository;
 import com.example.CineHive.repository.UserRepository;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Service
 public class KakaoUserService {
@@ -32,8 +32,6 @@ public class KakaoUserService {
     @Value("${kakao.logout.redirect.uri}")
     private String logoutRedirectUri;
 
-    @Autowired
-    private KakaoUserRepository kakaouserRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -75,7 +73,6 @@ public class KakaoUserService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String responseBody = response.body().string();
-                System.out.println("Response Body: " + responseBody); // 응답 출력
                 JSONObject jsonObject = new JSONObject(responseBody);
                 KakaoUserInfo userInfo = new KakaoUserInfo();
 
@@ -101,20 +98,17 @@ public class KakaoUserService {
             }
         }
     }
+    public void registerKakaoUser(UserDto userDto) {
+        User newUser = new User();
+        newUser.setMemEmail(userDto.getMemEmail());
+        newUser.setMemPw("0");
+        newUser.setMemNickname(userDto.getMemNickname());
+        newUser.setMemName(userDto.getMemName());
+        newUser.setMemSex(userDto.getMemSex());
+        newUser.setMemRegisterDatetime(LocalDateTime.now());
+        newUser.setMemType("카카오");
+        newUser.setGenres(userDto.getGenres());
 
-    public void registerUser(KakaoUserInfo userInfo) {
-        KakaoUser socialUser = kakaouserRepository.findByMemEmail(userInfo.getMemEmail())
-                .orElse(new KakaoUser(userInfo.getMemNickname(), userInfo.getMemEmail(), null, null));
-        kakaouserRepository.save(socialUser);
-    }
-
-    public KakaoUser registerNewKakaoUser(KakaoUserInfo userInfo) {
-        KakaoUser kakaoUser = new KakaoUser();
-        kakaoUser.setNickname(userInfo.getMemNickname());
-        kakaoUser.setMemEmail(userInfo.getMemEmail());
-        kakaoUser.setName(userInfo.getMemName());
-        kakaoUser.setGenres(userInfo.getGenres());
-        kakaouserRepository.save(kakaoUser);
-        return kakaoUser;
+        userRepository.save(newUser); // 사용자 정보 저장
     }
 }
