@@ -31,10 +31,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             email = jwtUtil.extractUsername(jwt);
         }
 
-        // 검증 로직 추가
+        // 검증 로직 추가, 관련 설정 로직 추가 필요
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt, email)) {
 
+            } else {
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid or expired token");
+                return;
             }
         }
 
