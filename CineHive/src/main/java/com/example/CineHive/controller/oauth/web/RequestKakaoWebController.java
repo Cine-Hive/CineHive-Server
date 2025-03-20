@@ -58,8 +58,16 @@ public class RequestKakaoWebController {
             HttpSession session = request.getSession();
             session.setAttribute("user", userInfo);
 
+            if (user != null) {
+                userInfo.setGenres(user.getGenres());
+                userInfo.setMemName(user.getMemName());
+            }
+
+            session.setAttribute("user", userInfo);
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
+
 
             if (userService.checkUserExists(userInfo.getMemEmail())) {
                 String jwtToken = userService.generateJwtToken(userInfo.getMemEmail());
