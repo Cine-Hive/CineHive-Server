@@ -3,11 +3,14 @@ package com.example.CineHive.controller.board;
 import com.example.CineHive.dto.board.*;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.service.board.BoardService;
+import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,14 +21,21 @@ import java.util.List;
 public class BoardController {
     @Autowired
     private BoardService boardService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
+    @Operation(summary = "게시글 등록", description = "게시판 기능에서 글 등록")
     @PostMapping("/create")
-    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto){
+    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto,
+                                             @RequestHeader("Authorization") String authHeader) {
 
-        Board createdBoard = boardService.createBoard(createBoardDto);
+        String token = authHeader.substring(7); // "Bearer " 제거
+        String memEmail = jwtUtil.extractUsername(token);
+
+        Board createdBoard = boardService.createBoard(memEmail, createBoardDto);
         return ResponseEntity.ok(createdBoard);
     }
+
 
     @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")
     @GetMapping("/detail/{id}")
