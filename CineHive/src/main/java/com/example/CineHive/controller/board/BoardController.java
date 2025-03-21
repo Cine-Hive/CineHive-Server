@@ -26,15 +26,10 @@ public class BoardController {
     private BoardService boardService;
     @Autowired
     private JwtUtil jwtUtil;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private BoardRepository boardRepository;
 
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
     @PostMapping("/create")
     public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
-        // 요청 헤더에서 Authorization 토큰 추출
         String authorizationHeader = request.getHeader("Authorization");
         String token = null;
 
@@ -45,22 +40,16 @@ public class BoardController {
         }
 
         try {
-            // JWT 토큰에서 사용자 이메일을 추출
             String email = jwtUtil.extractUsername(token);
 
-            // 이메일을 사용하여 게시글을 작성
-            createBoardDto.setMemEmail(email);  // 게시글 등록 시 이메일을 포함시킴
-            Board createdBoard = boardService.createBoard(createBoardDto);  // 수정된 서비스 호출
+            createBoardDto.setMemEmail(email);
+            Board createdBoard = boardService.createBoard(createBoardDto);
 
             return ResponseEntity.ok(createdBoard);
         } catch (Exception e) {
-            // JWT 토큰이 유효하지 않거나 다른 예외 발생 시
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
-
-
-
 
     @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")
     @GetMapping("/detail/{id}")
@@ -74,11 +63,31 @@ public class BoardController {
     }
     @Operation(summary = "게시글 글 수정", description = "사용자가 등록한 게시글에 대한 글을 수정")
     @PutMapping("/{id}")
-    public ResponseEntity<Board> updateBoard(@PathVariable Long id, @RequestBody UpdateBoardRequest updatedBoard) {
-        Board updatedBoardEntity = boardService.updateBoard(id, updatedBoard.getBrdTitle(), updatedBoard.getBrdContent(), updatedBoard.getMemEmail());
-        return ResponseEntity.ok(updatedBoardEntity);
-    }
+    public ResponseEntity<Board> updateBoard(@PathVariable Long id,
+                                             @RequestBody UpdateBoardRequest updatedBoard,
+                                             HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        String token = null;
 
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        try {
+            String email = jwtUtil.extractUsername(token);
+
+            updatedBoard.setMemEmail(email);
+
+            Board updatedBoardEntity = boardService.updateBoard(id, updatedBoard.getBrdTitle(),
+                    updatedBoard.getBrdContent(), updatedBoard.getMemEmail());
+
+            return ResponseEntity.ok(updatedBoardEntity);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
     @DeleteMapping("/delete/{id}")
@@ -86,6 +95,7 @@ public class BoardController {
         boardService.deleteBoard(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @Operation(summary = "게시글 리스트 조회", description = "사용자들이 등록한 게시글들의 전체 목록을 조회")
     @GetMapping
