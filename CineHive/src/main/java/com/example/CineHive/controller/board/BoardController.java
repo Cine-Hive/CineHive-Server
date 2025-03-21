@@ -1,16 +1,19 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.dto.board.*;
+import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.service.board.BoardService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authorization.method.AuthorizeReturnObject;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,18 +26,40 @@ public class BoardController {
     private BoardService boardService;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private BoardRepository boardRepository;
 
-    @Operation(summary = "게시글 등록", description = "게시판 기능에서 글 등록")
+    @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
     @PostMapping("/create")
-    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto,
-                                             @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
+        // 요청 헤더에서 Authorization 토큰 추출
+        String authorizationHeader = request.getHeader("Authorization");
+        String token = null;
 
-        String token = authHeader.substring(7); // "Bearer " 제거
-        String memEmail = jwtUtil.extractUsername(token);
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7); // "Bearer " 이후의 토큰 부분을 추출
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
-        Board createdBoard = boardService.createBoard(memEmail, createBoardDto);
-        return ResponseEntity.ok(createdBoard);
+        try {
+            // JWT 토큰에서 사용자 이메일을 추출
+            String email = jwtUtil.extractUsername(token);
+
+            // 이메일을 사용하여 게시글을 작성
+            createBoardDto.setMemEmail(email);  // 게시글 등록 시 이메일을 포함시킴
+            Board createdBoard = boardService.createBoard(createBoardDto);  // 수정된 서비스 호출
+
+            return ResponseEntity.ok(createdBoard);
+        } catch (Exception e) {
+            // JWT 토큰이 유효하지 않거나 다른 예외 발생 시
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
     }
+
+
 
 
     @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")

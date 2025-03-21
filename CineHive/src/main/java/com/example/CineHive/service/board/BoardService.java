@@ -20,27 +20,25 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class BoardService {
+public class  BoardService {
 
     @Autowired
     private BoardRepository boardRepository;
-
     @Autowired
     private UserRepository userRepository;
 
     /*게시글 생성 */
-    public Board createBoard(String memEmail, CreateBoardDto createBoardDto) {
-        User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    public Board createBoard(CreateBoardDto createBoardDto) {
+        User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + createBoardDto.getMemEmail()));
 
         Board board = new Board();
-        board.setUser(user);  // ✅ user 필드에 값 설정
         board.setBrdTitle(createBoardDto.getBrdTitle());
         board.setBrdContent(createBoardDto.getBrdContent());
+        board.setUser(user);
 
         return boardRepository.save(board);
     }
-
 
     /*게시글 상세글 조회 */
     public BoardDto getBoardPostId(Long postId) {
@@ -109,6 +107,7 @@ public class BoardService {
                 })
                 .collect(Collectors.toList());
     }
+
 
 
     public List<BoardSearchDto> searchBoards(String keyword) {
