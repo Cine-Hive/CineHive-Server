@@ -1,5 +1,6 @@
 package com.example.CineHive.util;
 
+import com.example.CineHive.exception.TokenExpiredException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -73,6 +74,10 @@ public class JwtUtil {
 
     public boolean validateToken(String token, String email) {
         final String username = extractUsername(token);
+        if (isTokenExpired(token)) {
+            throw new TokenExpiredException("Token has expired");
+        }
         return (username.equals(email) && !isTokenExpired(token));
     }
+
 }

@@ -31,18 +31,23 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             email = jwtUtil.extractUsername(jwt);
         }
 
-        // 검증 로직 추가, 관련 설정 로직 추가 필요
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // 토큰이 유효한지 확인
             if (jwtUtil.validateToken(jwt, email)) {
-
             } else {
-
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid or expired token");
+                // 토큰이 만료되었거나 유효하지 않은 경우
+                if (jwtUtil.isTokenExpired(jwt)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+                    response.getWriter().write("Token has expired");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+                    response.getWriter().write("Invalid token");
+                }
                 return;
             }
         }
 
+        // 정상적인 요청 처리
         chain.doFilter(request, response);
     }
 }
