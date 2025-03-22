@@ -46,11 +46,11 @@ public class SecurityConfig {
                                        
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                                 ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
-                                , "/bookmark/{boardId}/users/{memEmail}","/bookmark/{boardId}/count",
-                                "/like/{boardId}/users/{memEmail}","/like/{boardId}/count",
-                                "/dislike/{boardId}/users/{memEmail}","/dislike/{boardId}/count",
-                                "/report/{boardId}/users/{memEmail}",
-                                "/comment/{boardId}/{memEmail}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
+                                , "/bookmark/{boardId}","/bookmark/{boardId}/count",
+                                "/like/{boardId}","/like/{boardId}/count",
+                                "/dislike/{boardId}","/dislike/{boardId}/count",
+                                "/report/{boardId}",
+                                "/comment/{boardId}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
                         ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
                                 "/update_popular_movie","/get_popular_movies","/movies/{id}/similar").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",

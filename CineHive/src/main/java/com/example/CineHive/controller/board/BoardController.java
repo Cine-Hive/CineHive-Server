@@ -91,9 +91,25 @@ public class BoardController {
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id){
-        boardService.deleteBoard(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long id, HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        String token = null;
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        try {
+            String email = jwtUtil.extractUsername(token);
+
+            boardService.deleteBoard(id, email);
+
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
     }
 
 

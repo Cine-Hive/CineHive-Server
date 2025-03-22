@@ -79,10 +79,15 @@ public class BoardService {
     }
 
 
-    /*게시글 삭제 */
-    public Board deleteBoard(Long id) {
+    /* 게시글 삭제 */
+    public Board deleteBoard(Long id, String memEmail) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+
+        if (!board.getUser().getMemEmail().equals(memEmail)) {
+            throw new RuntimeException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
+        }
+
         boardRepository.delete(board);
         return board;
     }
