@@ -2,7 +2,7 @@ package com.example.CineHive.controller.board;
 
 import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.service.board.CommentService;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ public class CommentController {
     private CommentService commentService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     /* 댓글 추가 */
     @Operation(summary = "댓글 등록", description = "특정 게시글에 대한 댓글을 추가")
@@ -31,13 +31,13 @@ public class CommentController {
             @PathVariable Long boardId,
             @RequestBody CommentDto commentDto,
             HttpServletRequest request) {
-        String token = extractTokenFromRequest(request);
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
             CommentDto createdComment = commentService.addComment(boardId, memEmail, commentDto.getContent());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
         } catch (Exception e) {
@@ -58,14 +58,13 @@ public class CommentController {
     @DeleteMapping("/board/{boardId}/delete/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long boardId, @PathVariable Long commentId, HttpServletRequest request) {
         // Authorization 헤더에서 토큰 추출
-        String token = extractTokenFromRequest(request);
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
-            // JWT에서 이메일 추출
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
             commentService.deleteComment(boardId, commentId, memEmail);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
@@ -81,26 +80,17 @@ public class CommentController {
             @PathVariable Long commentId,
             @RequestBody CommentDto commentDto,
             HttpServletRequest request) {
-        String token = extractTokenFromRequest(request);
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         try {
-            // JWT에서 이메일 추출
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
             CommentDto updatedComment = commentService.updateComment(boardId, commentId, commentDto, memEmail);
             return ResponseEntity.ok(updatedComment);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-    }
-
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7); // "Bearer " 뒤의 토큰 부분 추출
-        }
-        return null;
     }
 }

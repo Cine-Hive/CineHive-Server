@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.service.board.LikeService;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenUtil;  // JwtTokenUtil로 변경
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,23 +19,19 @@ public class LikeController {
     private LikeService likeService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     // 좋아요 추가
     @Operation(summary = "좋아요 등록", description = "특정 게시글에 대해 좋아요를 등록")
     @PostMapping("/{boardId}")
     public ResponseEntity<String> addLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7); // "Bearer " 뒤의 토큰 부분 추출
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isLiked = likeService.addLike(memEmail, boardId);
             return ResponseEntity.ok(isLiked ? "Liked" : "Already Liked");
@@ -49,17 +45,13 @@ public class LikeController {
     @Operation(summary = "좋아요 취소", description = "특정 게시글에 대해 등록한 좋아요를 취소")
     @DeleteMapping("/{boardId}")
     public ResponseEntity<String> removeLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7); // "Bearer " 뒤의 토큰 부분 추출
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isRemoved = likeService.removeLike(memEmail, boardId);
             return isRemoved ? ResponseEntity.ok("Unliked") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Like Not Found");

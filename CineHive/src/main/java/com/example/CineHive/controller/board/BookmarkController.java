@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.service.board.BookmarkService;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,23 +19,19 @@ public class BookmarkController {
     private BookmarkService bookmarkService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     // 북마크 추가
     @Operation(summary = "즐겨찾기 등록", description = "특정 게시글의 즐겨찾기를 등록")
     @PostMapping("/{boardId}")
     public ResponseEntity<String> addBookmark(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isBookmarked = bookmarkService.addBookmark(memEmail, boardId);
             return ResponseEntity.ok(isBookmarked ? "Bookmarked" : "Already Exists");
@@ -49,17 +45,13 @@ public class BookmarkController {
     @Operation(summary = "즐겨찾기 취소", description = "특정 게시글에 대해 등록한 즐겨찾기를 삭제")
     @DeleteMapping("/{boardId}")
     public ResponseEntity<String> removeBookmark(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isRemoved = bookmarkService.removeBookmark(memEmail, boardId);
             return isRemoved ? ResponseEntity.ok("Unbookmarked") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bookmark Not Found");

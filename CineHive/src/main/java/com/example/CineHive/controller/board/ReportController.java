@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.service.board.ReportService;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenUtil;  // JwtTokenUtil로 변경
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +19,7 @@ public class ReportController {
     private ReportService reportService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     @Operation(summary = "신고하기 등록", description = "특정 게시글에 대해 사용자가 신고하기를 등록")
     @PostMapping("/{boardId}")
@@ -28,17 +28,13 @@ public class ReportController {
             @RequestBody String reason,
             HttpServletRequest request) {
 
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isReported = reportService.reportBoard(memEmail, boardId, reason);
 

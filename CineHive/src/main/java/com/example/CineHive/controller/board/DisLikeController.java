@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.service.board.DisLikeService;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,23 +19,19 @@ public class DisLikeController {
     private DisLikeService disLikeService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     // 싫어요 등록
     @Operation(summary = "싫어요 등록", description = "특정 게시글에 대한 싫어요를 등록")
     @PostMapping("/{boardId}")
     public ResponseEntity<String> addDisLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7); // "Bearer " 뒤의 토큰 부분 추출
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isDisLiked = disLikeService.addDisLike(memEmail, boardId);
             return ResponseEntity.ok(isDisLiked ? "DisLiked" : "Already DisLiked");
@@ -49,17 +45,13 @@ public class DisLikeController {
     @Operation(summary = "싫어요 취소", description = "특정 게시글에 대해 등록한 싫어요를 취소")
     @DeleteMapping("/{boardId}")
     public ResponseEntity<String> removeDisLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        String token = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7); // "Bearer " 뒤의 토큰 부분 추출
-        } else {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         try {
-            String memEmail = jwtUtil.extractUsername(token);
+            String memEmail = jwtTokenUtil.extractUsername(token);
 
             boolean isRemoved = disLikeService.removeDisLike(memEmail, boardId);
             return isRemoved ? ResponseEntity.ok("Removed DisLike") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("DisLike Not Found");
