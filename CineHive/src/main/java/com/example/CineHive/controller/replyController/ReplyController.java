@@ -2,10 +2,13 @@ package com.example.CineHive.controller.replyController;
 
 import com.example.CineHive.entity.reply.Reply;
 import com.example.CineHive.service.reply.ReplyService;
+import com.example.CineHive.util.JwtTokenUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -13,7 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReplyController {
 
-    private final ReplyService replyService;
+    @Autowired
+    private  ReplyService replyService;
+    @Autowired
+    private  JwtTokenUtil jwtTokenUtil;
 
     // 특정 영화의 모든 리뷰 조회
     @GetMapping("/movie/{movieId}")
@@ -27,24 +33,46 @@ public class ReplyController {
         return ResponseEntity.ok(replyService.getReplysByMemEmail(email));
     }
 
-    // 리뷰 저장 (생성)
     @PostMapping
     public ResponseEntity<?> createReply(@RequestParam String memNickname,
-                                         @RequestParam String memEmail,
                                          @RequestParam Long movieId,
-                                         @RequestParam String content) {
-        if (content.length() > 1000) {  // ✅ 글자 수 제한 (예: 1000자)
-            return ResponseEntity.badRequest().body("감상평은 1000자를 초과할 수 없습니다.");
+                                         @RequestParam String content,
+                                         HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
         }
 
-        Reply reply = new Reply(memNickname, memEmail, movieId, content);
-        return ResponseEntity.ok(replyService.saveReply(reply));
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            if (content.length() > 1000) {
+                return ResponseEntity.badRequest().body("감상평은 1000자를 초과할 수 없습니다.");
+            }
+            Reply reply = new Reply(memNickname, memEmail, movieId, content);
+            return ResponseEntity.ok(replyService.saveReply(reply));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
     }
-
 
     @DeleteMapping("/{movieId}/{replyId}")
-    public ResponseEntity<Void> deleteReply(@PathVariable Long movieId, @PathVariable Long replyId) {
-        replyService.deleteReply(movieId, replyId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteReply(@PathVariable Long movieId,
+                                         @PathVariable Long replyId,
+                                         HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            replyService.deleteReply(movieId, replyId, memEmail);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
     }
+
 }
