@@ -191,9 +191,20 @@ public class NowPlayingMovieService {
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
                     String posterPath = movieNode.get("poster_path").asText();
+                    String title = movieNode.get("title").asText();
+                    String releaseDate = movieNode.get("release_date").asText();
 
 
-                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath);
+                    List<String> genres = new ArrayList<>();
+                    if (movieNode.has("genre_ids")) {
+                        JsonNode genreIdsNode = movieNode.get("genre_ids");
+                        for (JsonNode genreIdNode : genreIdsNode) {
+                            genres.add(genreIdNode.asText());
+                        }
+                    }
+
+
+                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath, title, releaseDate, genres);
                     moviePosters.add(nowPlayingMovieDto);
                 }
             } catch (Exception e) {

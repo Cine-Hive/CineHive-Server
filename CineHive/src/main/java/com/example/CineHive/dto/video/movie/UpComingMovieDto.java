@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,4 +14,7 @@ import lombok.Setter;
 public class UpComingMovieDto {
     private Long id;
     private String posterPath;
+    private String title;
+    private String releaseDate;
+    private List<String> genres;
 }
