@@ -59,12 +59,16 @@ public class CommentService {
                 .collect(Collectors.toList());
     }
 
-    public void deleteComment(Long boardId, Long commentId) {
+    public void deleteComment(Long boardId, Long commentId, String memEmail) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        if (!comment.getUser().getMemEmail().equals(memEmail)) {
+            throw new RuntimeException("댓글을 삭제할 권한이 없습니다.");
+        }
 
         commentRepository.delete(comment);
 
@@ -73,14 +77,18 @@ public class CommentService {
         boardRepository.save(board);
     }
 
-    public CommentDto updateComment(Long boardId, Long commentId, CommentDto commentDto) {
+
+    public CommentDto updateComment(Long boardId, Long commentId, CommentDto commentDto, String memEmail) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
 
-        // 댓글 내용 수정
+        if (!comment.getUser().getMemEmail().equals(memEmail)) {
+            throw new RuntimeException("댓글을 수정할 권한이 없습니다.");
+        }
+
         comment.setContent(commentDto.getContent());
 
         Comment updatedComment = commentRepository.save(comment);

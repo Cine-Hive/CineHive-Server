@@ -32,16 +32,20 @@ public class ReplyService {
 
     // 리뷰 삭제
     @Transactional
-    public void deleteReply(Long movieId, Long replyId) {
+    public void deleteReply(Long movieId, Long replyId, String memEmail) {
         Reply reply = replyRepository.findById(replyId)
                 .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
 
-        // 요청된 movieId와 리뷰가 연결된 movieId가 같은지 확인
         if (!reply.getMovieId().equals(movieId)) {
             throw new RuntimeException("해당 영화의 리뷰가 아닙니다.");
         }
 
+        if (!reply.getMemEmail().equals(memEmail)) {
+            throw new RuntimeException("삭제 권한이 없습니다.");
+        }
+
         replyRepository.delete(reply);
     }
+
 
 }

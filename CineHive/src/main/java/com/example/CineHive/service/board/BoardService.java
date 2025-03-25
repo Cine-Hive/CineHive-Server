@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class  BoardService {
+public class BoardService {
 
     @Autowired
     private BoardRepository boardRepository;
@@ -45,19 +45,16 @@ public class  BoardService {
         Board board = boardRepository.findById(postId)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
 
-        // 조회수 증가
         board.increaseViews();
         boardRepository.save(board);
 
-        // BoardDto로 변환
         BoardDto boardDto = BoardMapper.convertToDto(board);
 
-        // 댓글 리스트 변환
-        CommentMapper commentMapper = new CommentMapper(); // 인스턴스 생성
+        CommentMapper commentMapper = new CommentMapper();
         List<CommentDto> commentDtos = board.getComments().stream()
-                .map(commentMapper::toDTO) // 인스턴스 메서드 호출
+                .map(commentMapper::toDTO)
                 .collect(Collectors.toList());
-        boardDto.setComments(commentDtos); // 댓글 리스트 설정
+        boardDto.setComments(commentDtos);
 
         return boardDto;
     }
@@ -69,7 +66,6 @@ public class  BoardService {
         if (optionalBoard.isPresent()) {
             Board board = optionalBoard.get();
 
-            // 권한 확인: 사용자가 게시글 작성자인지 확인
             if (!board.getUser().getMemEmail().equals(memEmail)) {
                 throw new RuntimeException("사용자가 이 게시글을 수정할 권한이 없습니다.");
             }
@@ -83,11 +79,17 @@ public class  BoardService {
     }
 
 
-    /*게시글 삭제 */
-    public void deleteBoard(Long id) {
+    /* 게시글 삭제 */
+    public Board deleteBoard(Long id, String memEmail) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+
+        if (!board.getUser().getMemEmail().equals(memEmail)) {
+            throw new RuntimeException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
+        }
+
         boardRepository.delete(board);
+        return board;
     }
 
     /*게시글 전체 목록 조회 */
@@ -107,7 +109,6 @@ public class  BoardService {
                 })
                 .collect(Collectors.toList());
     }
-
 
 
     public List<BoardSearchDto> searchBoards(String keyword) {

@@ -23,6 +23,7 @@ public class Board {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String memEmail;
     private String brdTitle;
     private String brdContent;
 
