@@ -2,6 +2,8 @@ package com.example.CineHive.controller.replyController;
 
 import com.example.CineHive.service.reply.ReplyBookmarkService;
 import com.example.CineHive.util.JwtTokenUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reply/bookmark")
+@Tag(name = "ReplyBookMark Controller", description = "영화 즐겨찾기 관련 기능을 제공하는 API")
 public class ReplyBookmarkController {
 
     @Autowired
@@ -17,6 +20,8 @@ public class ReplyBookmarkController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    // 즐겨찾기 추가 요청
+    @Operation(summary = "해당 영화 즐겨찾기 등록", description = "reply_bookmark 테이블에 해당 영화가 즐겨찾기가 있다면 즐겨찾기 취소, 없다면 즐겨찾기 등록")
     @PostMapping("/toggle")
     public ResponseEntity<String> toggleBookmark(@RequestParam Long movieId, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
@@ -32,6 +37,7 @@ public class ReplyBookmarkController {
         }
     }
 
+    @Operation(summary = "해당 영화의 즐겨찾기 수 조회", description = "reply_bookmark 테이블에 해당 영화의 즐겨찾기 수를 movie_id로 조회")
     @GetMapping("/count")
     public ResponseEntity<Long> getBookmarkCount(@RequestParam Long movieId) {
         long count = replyBookmarkService.getBookmarkCount(movieId);
