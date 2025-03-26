@@ -1,6 +1,8 @@
 package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -51,6 +53,7 @@ public class Board {
     private List<Report> reports; // 신고 목록
 
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "mem_id", referencedColumnName = "mem_id", nullable = false)
     private User user;

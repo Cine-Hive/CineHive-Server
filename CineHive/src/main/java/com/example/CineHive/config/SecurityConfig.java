@@ -39,10 +39,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                 "/checkuserId/**",
-                                "/reply/**",
-                                "/reply/judge/**",
-                                "/reply/judge/count/**").permitAll()
+                                 "/checkuserId/**").permitAll()
                                        
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                                 ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
@@ -76,7 +73,11 @@ public class SecurityConfig {
                                 "/api/auth/kakao/login/success",
                                 "/api/auth/naver/login/success",
                                 "/api/auth/naver/app-login",
-                                "/api/auth/google/app-login"
+                                "/api/auth/google/app-login",
+                                "/reply/**",
+                                "/reply/judge/**",
+                                "/reply/judge/count/**",
+                                "/reply/bookmark/**"
 
                         ).permitAll()
                         .anyRequest().authenticated()
