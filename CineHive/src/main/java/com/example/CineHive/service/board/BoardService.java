@@ -102,7 +102,7 @@ public class BoardService {
                     dto.setBrdTitle(board.getBrdTitle());
                     dto.setBrdContent(board.getBrdContent());
                     dto.setMemNickname(board.getUser().getMemNickname());
-                    dto.setBrgRegDate(board.getBrdRegDate());
+                    dto.setBrdRegDate(board.getBrdRegDate());
                     dto.setLikeCount(board.getLikeCount());
                     dto.setViews(board.getViews());
                     return dto;

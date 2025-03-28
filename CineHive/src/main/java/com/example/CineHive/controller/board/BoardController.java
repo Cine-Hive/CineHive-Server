@@ -25,6 +25,7 @@ public class BoardController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    @PostMapping
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
     public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);

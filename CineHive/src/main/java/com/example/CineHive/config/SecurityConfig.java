@@ -42,7 +42,7 @@ public class SecurityConfig {
                                  "/checkuserId/**").permitAll()
                                        
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
-                                ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
+                                ,"/preferredGenres","/boards/**","/boards"
                                 , "/bookmark/{boardId}","/bookmark/{boardId}/count",
                                 "/like/{boardId}","/like/{boardId}/count",
                                 "/dislike/{boardId}","/dislike/{boardId}/count",
