@@ -26,7 +26,6 @@ public class BoardController {
     private JwtTokenUtil jwtTokenUtil;
 
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
-    @PostMapping("/create")
     public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -93,7 +92,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 리스트 조회", description = "사용자들이 등록한 게시글들의 전체 목록을 조회")
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<GetListBoardDto>> getBoards() {
         List<GetListBoardDto> boards = boardService.getAllBoard();
         return new ResponseEntity<>(boards, HttpStatus.OK);
