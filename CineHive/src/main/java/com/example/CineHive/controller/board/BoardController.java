@@ -44,7 +44,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<BoardDto> getDetailBoard(@PathVariable Long id) {
         BoardDto boardDto = boardService.getBoardPostId(id);
         if (boardDto != null) {
@@ -76,7 +76,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBoard(@PathVariable Long id, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
