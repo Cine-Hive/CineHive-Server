@@ -55,7 +55,7 @@ public class CommentController {
 
     /* 댓글 삭제 */
     @Operation(summary = "댓글 삭제", description = "사용자가 등록한 특정 게시글의 댓글을 삭제")
-    @DeleteMapping("/{boardId}/board/delete/{commentId}")
+    @DeleteMapping("/{boardId}/board/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long boardId, @PathVariable Long commentId, HttpServletRequest request) {
         // Authorization 헤더에서 토큰 추출
         String token = jwtTokenUtil.extractTokenFromRequest(request);
@@ -74,7 +74,7 @@ public class CommentController {
 
     /* 댓글 수정 */
     @Operation(summary = "댓글 수정", description = "사용자가 등록한 특정 게시글의 댓글을 수정")
-    @PutMapping("/{boardId}/board/update/{commentId}")
+    @PutMapping("/{boardId}/board/{commentId}")
     public ResponseEntity<CommentDto> updateComment(
             @PathVariable Long boardId,
             @PathVariable Long commentId,
