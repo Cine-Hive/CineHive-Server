@@ -141,6 +141,9 @@ public class TopRatedMovieService {
 
                         movieRepository.save(movie);
 
+                        movieActorService.saveMovieCredits(movieId);
+                        movieDirectorService.saveMovieDirectors(movieId);
+
                         List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
 
                         // 추천 영화 저장

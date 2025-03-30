@@ -150,6 +150,9 @@ public class PopularMovieService {
 
                         movieRepository.save(movie);
 
+                        movieActorService.saveMovieCredits(movieId);
+                        movieDirectorService.saveMovieDirectors(movieId);
+
                         List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
 
 
