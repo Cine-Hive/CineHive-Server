@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +25,6 @@ public class MovieService {
     private String apiKey;
 
     private final WebClient webClient;
-    @Autowired
-    private NowPlayingRepository nowPlayingRepository;
     private final ObjectMapper objectMapper;
 
     @Autowired
@@ -36,13 +33,10 @@ public class MovieService {
     private MovieVideoService movieVideoService;
     @Autowired
     private MovieDirectorService movieDirectorService;
-
     @Autowired
     private MovieRepository movieRepository;
-
     @Autowired
     private MovieGenreService movieGenreService;
-
     @Autowired
     private SimilarMovieService similarMovieService;
 
@@ -52,13 +46,9 @@ public class MovieService {
         this.objectMapper = objectMapper;
     }
 
-
     public List<Movie> searchMovies(String query) {
         String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/search/movie?query="
-                        + UriUtils.encode(query, StandardCharsets.UTF_8)
-                        + "&api_key=" + apiKey
-                        + "&include_adult=true&language=ko&page=1")
+                .uri("/search/movie?query=" + UriUtils.encode(query, StandardCharsets.UTF_8) + "&api_key=" + apiKey + "&include_adult=true&language=ko&page=1")
                 .header("Accept", "application/json")
                 .retrieve()
                 .bodyToMono(String.class)
@@ -72,22 +62,22 @@ public class MovieService {
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
-                    String posterPath = movieNode.get("poster_path").asText();
-                    String backdropPath = movieNode.get("backdrop_path").asText(); // 추가
+                    String posterPath = getValidText(movieNode.get("poster_path"));
+                    String backdropPath = getValidText(movieNode.get("backdrop_path"));
+                    String title = getValidText(movieNode.get("title"));
+                    String overview = getValidText(movieNode.get("overview"));
 
-                    if (posterPath == null || posterPath.isEmpty()) {
-                        continue;
-                    }
+                    if (posterPath == null) continue;
 
                     Movie movie = new Movie();
                     movie.setId(movieId);
-                    movie.setTitle(movieNode.get("title").asText());
-                    movie.setOverview(movieNode.get("overview").asText());
+                    movie.setTitle(title);
+                    movie.setOverview(overview);
                     movie.setPosterPath(posterPath);
-                    movie.setBackDropPath(backdropPath); // 추가
+                    movie.setBackDropPath(backdropPath);
 
                     List<Genre> genres = new ArrayList<>();
-                    for (JsonNode genreIdNode : movieNode.get("genre_ids")) {
+                    for (JsonNode genreIdNode : movieNode.path("genre_ids")) {
                         Genre genre = new Genre();
                         genre.setId(genreIdNode.asInt());
                         genre.setName(movieGenreService.getGenreNameById(genre.getId()));
@@ -95,63 +85,44 @@ public class MovieService {
                     }
                     movie.setGenres(genres);
 
-                    movie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                    movie.setPopularity(movieNode.get("popularity").asDouble());
-                    String releaseDateString = movieNode.get("release_date").asText();
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-                    movie.setReleaseDate(releaseDate);
+                    movie.setVoteAverage(movieNode.path("vote_average").asDouble(0.0));
+                    movie.setPopularity(movieNode.path("popularity").asDouble(0.0));
 
-
-                    if (movie.getGenres().stream().anyMatch(g -> g.getId() == 16)) {
-                        continue;
+                    String releaseDateString = getValidText(movieNode.get("release_date"));
+                    if (releaseDateString != null) {
+                        movie.setReleaseDate(LocalDate.parse(releaseDateString, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                     }
 
+                    if (movie.getGenres().stream().anyMatch(g -> g.getId() == 16)) continue;
 
+                    // 상세 정보 요청
                     String movieDetailsResponse = webClient.get()
-                            .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
+                            .uri("/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
                             .retrieve()
                             .bodyToMono(String.class)
                             .block();
-
                     JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
-                    JsonNode runtimeNode = movieDetailsNode.get("runtime");
-                    if (runtimeNode != null && !runtimeNode.isNull()) {
-                        movie.setRuntime(runtimeNode.asInt());
-                    } else {
-                        movie.setRuntime(0);
-                    }
 
+                    JsonNode runtimeNode = movieDetailsNode.get("runtime");
+                    movie.setRuntime(runtimeNode != null && !runtimeNode.isNull() ? runtimeNode.asInt() : 0);
 
                     Video video = movieVideoService.getFirstVideoForMovie(movieId);
-                    if (video != null) {
-                        movie.setVideos(List.of(video)); // 비디오 정보를 리스트로 설정
-                    } else {
-                        movie.setVideos(new ArrayList<>()); // 비디오가 없으면 빈 리스트 설정
-                    }
+                    movie.setVideos(video != null ? List.of(video) : new ArrayList<>());
 
-                    // 영화가 데이터베이스에 존재하지 않으면 저장
                     if (!movieRepository.existsById(movieId)) {
                         movieRepository.save(movie);
                         System.out.println("Saved new movie: " + movie.getTitle());
 
-                        // 추천 영화 가져오기
-                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+                        movieActorService.saveMovieCredits(movieId);
+                        movieDirectorService.saveMovieDirectors(movieId);
 
-                        // 추천 영화 저장
+                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
                         for (Movie similarMovie : similarMovies) {
                             if (!movieRepository.existsById(similarMovie.getId())) {
-                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
                                 movieRepository.save(similarMovie);
                                 System.out.println("Saved recommended movie: " + similarMovie.getTitle());
-
-                                // 배우 정보
-                                movieActorService.saveMovieCredits(movieId);
-                                // 감독 정보
-                                movieDirectorService.saveMovieDirectors(movieId);
                             }
                         }
-
                     } else {
                         System.out.println("Movie already exists: " + movie.getTitle());
                     }
@@ -167,5 +138,7 @@ public class MovieService {
         return movies;
     }
 
-
+    private String getValidText(JsonNode node) {
+        return (node != null && !node.isNull()) ? node.asText() : null;
+    }
 }

@@ -47,8 +47,6 @@ public class NowPlayingMovieService {
     @Autowired
     private SimilarMovieService similarMovieService;
 
-
-
     public NowPlayingMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
@@ -66,121 +64,102 @@ public class NowPlayingMovieService {
         System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
     }
 
-
     @Transactional
     public void saveNowPlayingMoviesToDatabase() {
-        String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/now_playing?language=ko&page=1&api_key=" + apiKey)
-                .header("Accept", "application/json")
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        String response = fetchFromApi("/movie/now_playing?language=ko&page=1");
 
-        if (response != null) {
-            try {
-                JsonNode rootNode = objectMapper.readTree(response);
-                JsonNode moviesNode = rootNode.path("results");
-
-                for (JsonNode movieNode : moviesNode) {
-                    Long movieId = movieNode.get("id").asLong();
-
-                    // 영화가 이미 존재하는지 확인
-                    if (!nowPlayingRepository.existsById(movieId)) {
-                        NowPlayingMovie nowPlayingMovie = new NowPlayingMovie();
-                        nowPlayingMovie.setId(movieId);
-                        nowPlayingMovie.setTitle(movieNode.get("title").asText());
-                        nowPlayingMovie.setOverview(movieNode.get("overview").asText());
-                        nowPlayingMovie.setPosterPath(movieNode.get("poster_path").asText());
-                        nowPlayingMovie.setBackDropPath(movieNode.get("backdrop_path").asText());
-                        nowPlayingMovie.setVoteAverage(movieNode.get("vote_average").asDouble());
-                        nowPlayingMovie.setPopularity(movieNode.get("popularity").asDouble());
-                        String releaseDateString = movieNode.get("release_date").asText();
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        LocalDate releaseDate = LocalDate.parse(releaseDateString, formatter);
-                        nowPlayingMovie.setReleaseDate(releaseDate);
-
-
-                        List<NowPlayingMovieGenre> genres = new ArrayList<>();
-                        for (JsonNode genreNode : movieNode.get("genre_ids")) {
-                            NowPlayingMovieGenre genre = new NowPlayingMovieGenre();
-                            genre.setId(genreNode.asInt());
-                            genre.setName(movieGenreService.getGenreNameById(genre.getId()));
-                            genres.add(genre);
-                        }
-                        nowPlayingMovie.setGenres(genres);
-
-
-                        String movieDetailsResponse = webClient.get()
-                                .uri("https://api.themoviedb.org/3/movie/" + movieId + "?api_key=" + apiKey + "&language=ko")
-                                .retrieve()
-                                .bodyToMono(String.class)
-                                .block();
-
-                        JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
-                        JsonNode runtimeNode = movieDetailsNode.get("runtime");
-                        if (runtimeNode != null && !runtimeNode.isNull()) {
-                            nowPlayingMovie.setRuntime(runtimeNode.asInt());
-                        } else {
-                            nowPlayingMovie.setRuntime(0);
-                        }
-
-
-                        nowPlayingRepository.save(nowPlayingMovie);
-                        System.out.println("Saved now playing movie: " + nowPlayingMovie.getTitle());
-
-
-                        Movie movie = new Movie();
-                        movie.setId(movieId);
-                        movie.setTitle(nowPlayingMovie.getTitle());
-                        movie.setOverview(nowPlayingMovie.getOverview());
-                        movie.setPosterPath(nowPlayingMovie.getPosterPath());
-                        movie.setBackDropPath(nowPlayingMovie.getBackDropPath());
-                        movie.setVoteAverage(nowPlayingMovie.getVoteAverage());
-                        movie.setPopularity(nowPlayingMovie.getPopularity());
-                        movie.setReleaseDate(nowPlayingMovie.getReleaseDate());
-                        movie.setRuntime(nowPlayingMovie.getRuntime());
-
-                        Video video = movieVideoService.getFirstVideoForMovie(movieId);
-                        if (video != null) {
-                            movie.setVideos(List.of(video));
-                        } else {
-                            movie.setVideos(new ArrayList<>());
-                        }
-                        movieRepository.save(movie);
-
-                        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
-
-                        // 추천 영화 저장
-                        for (Movie similarMovie : similarMovies) {
-                            if (!movieRepository.existsById(similarMovie.getId())) {
-                                similarMovie.setBackDropPath(similarMovie.getBackDropPath()); // 필요 시 추가 정보 설정
-                                movieRepository.save(similarMovie);
-                                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
-
-
-                                movieActorService.saveMovieCredits(similarMovie.getId());
-                                movieDirectorService.saveMovieDirectors(similarMovie.getId());
-                            }
-                        }
-
-
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
+        if (response == null) {
             System.out.println("응답이 없습니다.");
+            return;
+        }
+
+        try {
+            JsonNode rootNode = objectMapper.readTree(response);
+            JsonNode moviesNode = rootNode.path("results");
+
+            for (JsonNode movieNode : moviesNode) {
+                Long movieId = movieNode.get("id").asLong();
+                if (nowPlayingRepository.existsById(movieId)) continue;
+
+                NowPlayingMovie nowPlayingMovie = new NowPlayingMovie();
+                nowPlayingMovie.setId(movieId);
+                nowPlayingMovie.setTitle(getValidText(movieNode.get("title")));
+                nowPlayingMovie.setOverview(getValidText(movieNode.get("overview")));
+                nowPlayingMovie.setPosterPath(getValidText(movieNode.get("poster_path")));
+                nowPlayingMovie.setBackDropPath(getValidText(movieNode.get("backdrop_path")));
+                nowPlayingMovie.setVoteAverage(getValidDouble(movieNode.get("vote_average"), 0.0));
+                nowPlayingMovie.setPopularity(getValidDouble(movieNode.get("popularity"), 0.0));
+
+                String releaseDateString = getValidText(movieNode.get("release_date"));
+                if (!releaseDateString.isEmpty()) {
+                    nowPlayingMovie.setReleaseDate(LocalDate.parse(releaseDateString, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                }
+
+                List<NowPlayingMovieGenre> genres = new ArrayList<>();
+                for (JsonNode genreNode : movieNode.path("genre_ids")) {
+                    NowPlayingMovieGenre genre = new NowPlayingMovieGenre();
+                    genre.setId(genreNode.asInt());
+                    genre.setName(movieGenreService.getGenreNameById(genre.getId()));
+                    genres.add(genre);
+                }
+                nowPlayingMovie.setGenres(genres);
+
+                String movieDetailsResponse = fetchFromApi("/movie/" + movieId + "?language=ko");
+                if (movieDetailsResponse != null) {
+                    JsonNode movieDetailsNode = objectMapper.readTree(movieDetailsResponse);
+                    JsonNode runtimeNode = movieDetailsNode.get("runtime");
+                    nowPlayingMovie.setRuntime(runtimeNode != null && !runtimeNode.isNull() ? runtimeNode.asInt() : 0);
+                }
+
+                nowPlayingRepository.save(nowPlayingMovie);
+                System.out.println("Saved now playing movie: " + nowPlayingMovie.getTitle());
+
+                // 관련 데이터 저장
+                saveMovieWithRecommendations(movieId, nowPlayingMovie);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveMovieWithRecommendations(Long movieId, NowPlayingMovie nowPlayingMovie) {
+        Movie movie = new Movie();
+        movie.setId(movieId);
+        movie.setTitle(nowPlayingMovie.getTitle());
+        movie.setOverview(nowPlayingMovie.getOverview());
+        movie.setPosterPath(nowPlayingMovie.getPosterPath());
+        movie.setBackDropPath(nowPlayingMovie.getBackDropPath());
+        movie.setVoteAverage(nowPlayingMovie.getVoteAverage());
+        movie.setPopularity(nowPlayingMovie.getPopularity());
+        movie.setReleaseDate(nowPlayingMovie.getReleaseDate());
+        movie.setRuntime(nowPlayingMovie.getRuntime());
+
+        Video video = movieVideoService.getFirstVideoForMovie(movieId);
+        movie.setVideos(video != null ? List.of(video) : new ArrayList<>());
+
+
+        movieRepository.save(movie);
+
+
+        movieActorService.saveMovieCredits(movieId);
+        movieDirectorService.saveMovieDirectors(movieId);
+
+
+        List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
+        for (Movie similarMovie : similarMovies) {
+            if (!movieRepository.existsById(similarMovie.getId())) {
+                movieRepository.save(similarMovie);
+                System.out.println("Saved recommended movie: " + similarMovie.getTitle());
+
+
+                movieActorService.saveMovieCredits(similarMovie.getId());
+                movieDirectorService.saveMovieDirectors(similarMovie.getId());
+            }
         }
     }
 
     public List<NowPlayingMovieDto> getNowPlayingMovies(Pageable pageable) {
-        String response = webClient.get()
-                .uri("https://api.themoviedb.org/3/movie/now_playing?language=ko&page=" + (pageable.getPageNumber() + 1) + "&api_key=" + apiKey)
-                .header("Accept", "application/json")
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        String response = fetchFromApi("/movie/now_playing?language=ko&page=" + (pageable.getPageNumber() + 1));
 
         List<NowPlayingMovieDto> moviePosters = new ArrayList<>();
         if (response != null) {
@@ -190,31 +169,35 @@ public class NowPlayingMovieService {
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
-                    String posterPath = movieNode.get("poster_path").asText();
-                    String title = movieNode.get("title").asText();
-                    String releaseDate = movieNode.get("release_date").asText();
-
-
-                    List<String> genres = new ArrayList<>();
-                    if (movieNode.has("genre_ids")) {
-                        JsonNode genreIdsNode = movieNode.get("genre_ids");
-                        for (JsonNode genreIdNode : genreIdsNode) {
-                            genres.add(genreIdNode.asText());
-                        }
-                    }
-
-
-                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(movieId, posterPath, title, releaseDate, genres);
+                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(
+                            movieId,
+                            getValidText(movieNode.get("poster_path")),
+                            getValidText(movieNode.get("title")),
+                            getValidText(movieNode.get("release_date")),
+                            new ArrayList<>()
+                    );
                     moviePosters.add(nowPlayingMovieDto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else {
-            System.out.println("응답이 없습니다.");
         }
         return moviePosters;
     }
 
+    private String fetchFromApi(String uri) {
+        return webClient.get()
+                .uri("https://api.themoviedb.org/3" + uri + "&api_key=" + apiKey)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
 
+    private String getValidText(JsonNode node) {
+        return (node == null || node.isNull() || "null".equals(node.asText())) ? "" : node.asText();
+    }
+
+    private double getValidDouble(JsonNode node, double defaultValue) {
+        return (node == null || node.isNull()) ? defaultValue : node.asDouble();
+    }
 }

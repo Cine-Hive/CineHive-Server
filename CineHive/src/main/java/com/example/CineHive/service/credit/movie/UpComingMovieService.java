@@ -141,6 +141,9 @@ public class UpComingMovieService {
 
                         movieRepository.save(movie);
 
+                        movieActorService.saveMovieCredits(movieId);
+                        movieDirectorService.saveMovieDirectors(movieId);
+
                         List<Movie> similarMovies = similarMovieService.getSimilarMovies(movieId);
 
                         for (Movie similarMovie : similarMovies) {
