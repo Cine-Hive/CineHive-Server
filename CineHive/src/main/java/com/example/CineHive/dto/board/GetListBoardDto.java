@@ -16,7 +16,7 @@ public class GetListBoardDto {
     private String brdTitle;
     private String brdContent;
     private String memNickname;
-    private LocalDateTime brgRegDate; // 등록 날짜
+    private LocalDateTime brdRegDate; // 등록 날짜
     private int likeCount; // 좋아요 수
     private int views;
 

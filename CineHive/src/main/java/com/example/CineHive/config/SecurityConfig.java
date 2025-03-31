@@ -42,12 +42,12 @@ public class SecurityConfig {
                                  "/checkuserId/**").permitAll()
                                        
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
-                                ,"/preferredGenres","/boards/create","/boards/detail/**","/boards/**","/boards/delete/**"
+                                ,"/preferredGenres","/boards/**","/boards"
                                 , "/bookmark/{boardId}","/bookmark/{boardId}/count",
                                 "/like/{boardId}","/like/{boardId}/count",
                                 "/dislike/{boardId}","/dislike/{boardId}/count",
                                 "/report/{boardId}",
-                                "/comment/{boardId}","/comment/all/board/{boardId}","/comment/board/{boardId}/delete/{commentId}","/comment/board/{boardId}/update/{commentId}"
+                                "/comment/{boardId}","/comment/{boardId}/**"
                         ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
                                 "/update_popular_movie","/get_popular_movies","/movies/{id}/similar").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",

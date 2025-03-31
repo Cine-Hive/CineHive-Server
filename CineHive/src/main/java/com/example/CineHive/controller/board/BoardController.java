@@ -25,8 +25,8 @@ public class BoardController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    @PostMapping
     @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
-    @PostMapping("/create")
     public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -44,7 +44,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<BoardDto> getDetailBoard(@PathVariable Long id) {
         BoardDto boardDto = boardService.getBoardPostId(id);
         if (boardDto != null) {
@@ -76,7 +76,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBoard(@PathVariable Long id, HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -93,7 +93,7 @@ public class BoardController {
     }
 
     @Operation(summary = "게시글 리스트 조회", description = "사용자들이 등록한 게시글들의 전체 목록을 조회")
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<GetListBoardDto>> getBoards() {
         List<GetListBoardDto> boards = boardService.getAllBoard();
         return new ResponseEntity<>(boards, HttpStatus.OK);
