@@ -17,7 +17,7 @@ public class BoardMapper {
         dto.setBrdContent(board.getBrdContent());
         dto.setMemNickname(board.getUser().getMemNickname());
         dto.setMemEmail(board.getUser().getMemEmail());
-        dto.setBrgRedDate(board.getBrdRegDate());
+        dto.setBrdRegDate(board.getBrdRegDate());
         dto.setBookmarkCount(board.getBookmarkCount());
         dto.setLikeCount(board.getLikeCount());
         dto.setDislikeCount(board.getDisLikeCount());
@@ -41,7 +41,8 @@ public class BoardMapper {
         dto.setMemNickname(board.getUser().getMemNickname());
         dto.setId(board.getId());
         dto.setViews(board.getViews());
-        dto.setBrgRedDate(board.getBrdRegDate());
+        dto.setBrdRegDate(board.getBrdRegDate());
+        dto.setBrdRegDate(board.getBrdRegDate());
         dto.setLikeCount(board.getLikeCount());
         return dto;
     }

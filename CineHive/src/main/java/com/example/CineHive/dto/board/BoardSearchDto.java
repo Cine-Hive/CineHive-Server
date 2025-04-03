@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 public class BoardSearchDto {
     private Long id;
-    private LocalDateTime brgRedDate;
+    private LocalDateTime brdRegDate;
     private int likeCount;
     private int views;
     private String brdTitle;
