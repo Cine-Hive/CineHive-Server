@@ -24,7 +24,7 @@ public class BoardDto {
     private String brdContent;
     private String memNickname;
     private String memEmail;
-    private LocalDateTime brgRedDate;
+    private LocalDateTime brdRedDate;
     private int bookmarkCount;
     private int likeCount;
     private int dislikeCount;
