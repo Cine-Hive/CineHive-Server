@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/movies",
                                 "/now_playing",
-                                "/search",
+                                "/search","/search/**",
                                 "/top_movie","/movies/**",
                                 "/api/auth/undefined/success",
                                 "/dramas/**",
