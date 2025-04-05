@@ -20,4 +20,3 @@ public class OttDto {
     private LocalDate releaseDate;
     private ProviderDto provider;
 }
-d
