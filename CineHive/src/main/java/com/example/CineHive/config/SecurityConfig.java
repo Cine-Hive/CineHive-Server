@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 "/report/{boardId}",
                                 "/comment/{boardId}","/comment/{boardId}/**"
                         ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
-                                "/update_popular_movie","/get_popular_movies","/movies/{id}/similar").permitAll()
+                                "/update_popular_movie","/get_popular_movies","/movies/{id}/similar",
+                                "api/ott/**").permitAll()
                         .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
                                 "/api/auth/kakao/check-user","/api/auth/kakao/register",
                                 "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능
