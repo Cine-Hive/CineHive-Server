@@ -1,7 +1,6 @@
 package com.example.CineHive.controller.movie;
 
 import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
-import com.example.CineHive.service.credit.movie.MovieService;
 import com.example.CineHive.service.credit.movie.TopRatedMovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

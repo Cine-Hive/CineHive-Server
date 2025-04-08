@@ -1,28 +1,15 @@
 package com.example.CineHive.controller.movie;
 
-import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
-import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
-import com.example.CineHive.entity.videotype.Animation;
-import com.example.CineHive.entity.videotype.Drama;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
-import com.example.CineHive.service.credit.animation.AnimationService;
-import com.example.CineHive.service.credit.drama.DramaService;
-import com.example.CineHive.service.credit.movie.MovieService;
-import com.example.CineHive.service.credit.movie.NowPlayingMovieService;
 import com.example.CineHive.service.credit.movie.SimilarMovieService;
-import com.example.CineHive.service.credit.movie.TopRatedMovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController

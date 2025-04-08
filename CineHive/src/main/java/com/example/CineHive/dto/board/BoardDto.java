@@ -2,14 +2,11 @@ package com.example.CineHive.dto.board;
 
 
 import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.board.Board;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
