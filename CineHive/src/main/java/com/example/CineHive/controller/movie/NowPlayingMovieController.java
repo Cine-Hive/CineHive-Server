@@ -1,7 +1,6 @@
 package com.example.CineHive.controller.movie;
 
-import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
-import com.example.CineHive.service.credit.movie.MovieService;
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.service.credit.movie.NowPlayingMovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,21 +21,20 @@ public class NowPlayingMovieController {
     @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
 
-
     @Operation(summary = "현재 상영중인 영화 수동으로 DB에 저장", description = "현재 상영중인 영화 목록을 movie 테이블에 저장")
-    @PostMapping("/update_now_playing")
-    public ResponseEntity<?> getNowPlayingMovies() {
+    @PostMapping("/movies/now-playing")
+    public ResponseEntity<?> saveNowPlayingMovies() {
         System.out.println("Request received for now playing movies");
         nowPlayingMovieService.saveNowPlayingMoviesToDatabase();  // 매개변수로 language와 page 전달
         return ResponseEntity.ok().body("성공적으로 데이터를 저장했습니다!");
     }
 
     @Operation(summary = "현재 상영중인 영화 조회", description = "movie 테이블에 저장된 movie 정보를 리스트 형태로 반환")
-    @GetMapping("/now_playing")
+    @GetMapping("/movies/now-playing")
     @ResponseBody
-    public ResponseEntity<List<NowPlayingMovieDto>> getNowPlayingMoviesList() {
+    public ResponseEntity<List<VideoDto>> getNowPlayingMoviesList() {
         Pageable pageable = PageRequest.of(0, 22); // 첫 번째 페이지에서 22개 가져오기
-        List<NowPlayingMovieDto> nowPlayingMovies = nowPlayingMovieService.getNowPlayingMovies(pageable);
+        List<VideoDto> nowPlayingMovies = nowPlayingMovieService.getNowPlayingMovies(pageable);
         return ResponseEntity.ok(nowPlayingMovies);
     }
 }

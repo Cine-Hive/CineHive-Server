@@ -1,33 +1,21 @@
 package com.example.CineHive.controller.movie;
 
-import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
-import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
-import com.example.CineHive.entity.videotype.Animation;
-import com.example.CineHive.entity.videotype.Drama;
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
-import com.example.CineHive.service.credit.animation.AnimationService;
-import com.example.CineHive.service.credit.drama.DramaService;
-import com.example.CineHive.service.credit.movie.MovieService;
-import com.example.CineHive.service.credit.movie.NowPlayingMovieService;
 import com.example.CineHive.service.credit.movie.SimilarMovieService;
-import com.example.CineHive.service.credit.movie.TopRatedMovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Movie Controller", description = "영화 정보 관련 기능을 제공하는 API")
-
 public class MovieController {
 
     @Autowired
@@ -39,17 +27,19 @@ public class MovieController {
     @Operation(summary = "DB에서 영화 받아오기", description = "movie 테이블에 저장된 모든 movie 정보를 리스트 형태로 반환")
     @GetMapping("/movies")
     @ResponseBody
-    public List<Movie> getAllMovies() {
-        return movieRepository.findAll();
+    public List<VideoDto> getAllMovies() {
+        return movieRepository.findAll().stream()
+                .map(this::convertToVideoDto)
+                .collect(Collectors.toList());
     }
 
     @Operation(summary = "영화 상세 페이지 조회", description = "해당 Moive ID로 영화 상세 정보를 상세 페이지에 반환, 존재하지 않는 경우 404 응답을 반환")
     @GetMapping("/movies/{id}")
     @ResponseBody
-    public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
+    public ResponseEntity<VideoDto> getMovieById(@PathVariable Long id) {
         Optional<Movie> movieOptional = movieRepository.findById(id);
         if (movieOptional.isPresent()) {
-            return ResponseEntity.ok(movieOptional.get());
+            return ResponseEntity.ok(convertToVideoDto(movieOptional.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -58,8 +48,26 @@ public class MovieController {
     @Operation(summary = "관련 추천 영화 조회", description = "특정 영화 ID로 TMDB의 추천 영화 목록을 가져옴")
     @GetMapping("/movies/{id}/similar")
     @ResponseBody
-    public ResponseEntity<List<Movie>> getSimilarMovies(@PathVariable Long id) {
+    public ResponseEntity<List<VideoDto>> getSimilarMovies(@PathVariable Long id) {
         List<Movie> similarMovies = similarMovieService.getSimilarMovies(id);
-        return ResponseEntity.ok(similarMovies);
+        List<VideoDto> videoDtos = similarMovies.stream()
+                .map(this::convertToVideoDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videoDtos);
+    }
+    
+    // Movie 객체를 VideoDto로 변환하는 헬퍼 메서드
+    private VideoDto convertToVideoDto(Movie movie) {
+        List<String> genreNames = movie.getGenres().stream()
+                .map(genre -> genre.getName())
+                .collect(Collectors.toList());
+                
+        return new VideoDto(
+                movie.getId(),
+                movie.getPosterPath(),
+                movie.getTitle(),
+                movie.getReleaseDate() != null ? movie.getReleaseDate().toString() : null,
+                genreNames
+        );
     }
 }
