@@ -1,5 +1,6 @@
 package com.example.CineHive.service.credit.movie;
 
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.dto.video.movie.NowPlayingMovieDto;
 import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.nowplaying.NowPlayingMovieGenre;
@@ -158,10 +159,10 @@ public class NowPlayingMovieService {
         }
     }
 
-    public List<NowPlayingMovieDto> getNowPlayingMovies(Pageable pageable) {
+    public List<VideoDto> getNowPlayingMovies(Pageable pageable) {
         String response = fetchFromApi("/movie/now_playing?language=ko&page=" + (pageable.getPageNumber() + 1));
 
-        List<NowPlayingMovieDto> moviePosters = new ArrayList<>();
+        List<VideoDto> moviePosters = new ArrayList<>();
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
@@ -169,14 +170,14 @@ public class NowPlayingMovieService {
 
                 for (JsonNode movieNode : moviesNode) {
                     Long movieId = movieNode.get("id").asLong();
-                    NowPlayingMovieDto nowPlayingMovieDto = new NowPlayingMovieDto(
+                    VideoDto videoDto = new VideoDto(
                             movieId,
                             getValidText(movieNode.get("poster_path")),
                             getValidText(movieNode.get("title")),
                             getValidText(movieNode.get("release_date")),
                             new ArrayList<>()
                     );
-                    moviePosters.add(nowPlayingMovieDto);
+                    moviePosters.add(videoDto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

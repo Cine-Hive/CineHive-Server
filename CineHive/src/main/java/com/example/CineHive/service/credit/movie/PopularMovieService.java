@@ -1,5 +1,6 @@
 package com.example.CineHive.service.credit.movie;
 
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.dto.video.movie.PopularMovieDto;
 import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.popular.PopularMovieGenre;
@@ -178,7 +179,7 @@ public class PopularMovieService {
         }
     }
 
-    public List<PopularMovieDto> getPopularMovies(Pageable pageable) {
+    public List<VideoDto> getPopularMovies(Pageable pageable) {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/popular?language=ko&page=" + (pageable.getPageNumber() + 1) + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
@@ -186,7 +187,7 @@ public class PopularMovieService {
                 .bodyToMono(String.class)
                 .block();
 
-        List<PopularMovieDto> popularMovies = new ArrayList<>();
+        List<VideoDto> popularMovies = new ArrayList<>();
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
@@ -198,7 +199,6 @@ public class PopularMovieService {
                     String title = movieNode.get("title").asText();
                     String releaseDate = movieNode.get("release_date").asText();
 
-
                     List<String> genres = new ArrayList<>();
                     if (movieNode.has("genre_ids")) {
                         JsonNode genreIdsNode = movieNode.get("genre_ids");
@@ -206,8 +206,8 @@ public class PopularMovieService {
                             genres.add(genreIdNode.asText());
                         }
                     }
-                    PopularMovieDto popularMovieDto = new PopularMovieDto(movieId, posterPath, title,releaseDate, genres);
-                    popularMovies.add(popularMovieDto);
+                    VideoDto videoDto = new VideoDto(movieId, posterPath, title, releaseDate, genres);
+                    popularMovies.add(videoDto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -1,5 +1,6 @@
 package com.example.CineHive.service.credit.movie;
 
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.dto.video.movie.TopRatedMovieDto;
 import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.toprated.topMovieGenre;
@@ -168,7 +169,7 @@ public class TopRatedMovieService {
             System.out.println("응답이 없습니다.");
         }
     }
-    public List<TopRatedMovieDto> getTopRatedMovies(Pageable pageable) {
+    public List<VideoDto> getTopRatedMovies(Pageable pageable) {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/top_rated?language=ko&page=" + (pageable.getPageNumber() + 1) + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
@@ -176,7 +177,7 @@ public class TopRatedMovieService {
                 .bodyToMono(String.class)
                 .block();
 
-        List<TopRatedMovieDto> topMovies = new ArrayList<>();
+        List<VideoDto> topMovies = new ArrayList<>();
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
@@ -188,7 +189,6 @@ public class TopRatedMovieService {
                     String title = movieNode.get("title").asText();
                     String releaseDate = movieNode.get("release_date").asText();
 
-
                     List<String> genres = new ArrayList<>();
                     if (movieNode.has("genre_ids")) {
                         JsonNode genreIdsNode = movieNode.get("genre_ids");
@@ -197,8 +197,8 @@ public class TopRatedMovieService {
                         }
                     }
                     // DTO 객체를 생성하여 리스트에 추가
-                    TopRatedMovieDto topMovieDTO = new TopRatedMovieDto(movieId, posterPath, title, releaseDate, genres);
-                    topMovies.add(topMovieDTO);
+                    VideoDto videoDto = new VideoDto(movieId, posterPath, title, releaseDate, genres);
+                    topMovies.add(videoDto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -1,5 +1,6 @@
 package com.example.CineHive.service.credit.movie;
 
+import com.example.CineHive.dto.video.common.VideoDto;
 import com.example.CineHive.dto.video.movie.UpComingMovieDto;
 import com.example.CineHive.entity.credit.movie.Video;
 import com.example.CineHive.entity.credit.movie.upcoming.UpComingMovieGenre;
@@ -173,7 +174,7 @@ public class UpComingMovieService {
         this.objectMapper = objectMapper;
     }
 
-    public List<UpComingMovieDto> getUpComingMovies(Pageable pageable) {
+    public List<VideoDto> getUpComingMovies(Pageable pageable) {
         String response = webClient.get()
                 .uri("https://api.themoviedb.org/3/movie/upcoming?language=ko&page=" + (pageable.getPageNumber() + 1) + "&api_key=" + apiKey)
                 .header("Accept", "application/json")
@@ -181,7 +182,7 @@ public class UpComingMovieService {
                 .bodyToMono(String.class)
                 .block();
 
-        List<UpComingMovieDto> upComingMovies = new ArrayList<>();
+        List<VideoDto> upComingMovies = new ArrayList<>();
         if (response != null) {
             try {
                 JsonNode rootNode = objectMapper.readTree(response);
@@ -193,7 +194,6 @@ public class UpComingMovieService {
                     String title = movieNode.get("title").asText();
                     String releaseDate = movieNode.get("release_date").asText();
 
-
                     List<String> genres = new ArrayList<>();
                     if (movieNode.has("genre_ids")) {
                         JsonNode genreIdsNode = movieNode.get("genre_ids");
@@ -202,8 +202,8 @@ public class UpComingMovieService {
                         }
                     }
                     // DTO 객체를 생성하여 리스트에 추가
-                    UpComingMovieDto upComingMovieDto = new UpComingMovieDto(movieId, posterPath, title, releaseDate, genres);
-                    upComingMovies.add(upComingMovieDto);
+                    VideoDto videoDto = new VideoDto(movieId, posterPath, title, releaseDate, genres);
+                    upComingMovies.add(videoDto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -212,5 +212,5 @@ public class UpComingMovieService {
             System.out.println("응답이 없습니다.");
         }
         return upComingMovies;
-        }
     }
+}
