@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.oauth;
+package com.example.CineHive.dto.oauth.kakao;
 
 
 import lombok.AllArgsConstructor;

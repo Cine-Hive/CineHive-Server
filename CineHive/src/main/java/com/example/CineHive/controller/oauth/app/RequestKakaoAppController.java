@@ -1,11 +1,11 @@
 package com.example.CineHive.controller.oauth.app;
 
-import com.example.CineHive.dto.oauth.KakaoUserInfo;
+import com.example.CineHive.dto.oauth.kakao.KakaoTokenRequest;
+import com.example.CineHive.dto.oauth.kakao.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
-import com.example.CineHive.service.UserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,18 +38,18 @@ public class RequestKakaoAppController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/kakao/app-login")
-    public ResponseEntity<?> kakaoAppLogin(@RequestBody String accessToken) {
+    public ResponseEntity<?> kakaoAppLogin(@RequestBody KakaoTokenRequest kakaoTokenRequest) {
         try {
+            String accessToken = kakaoTokenRequest.getAccessToken();
+
             KakaoUserInfo userInfo = kakaoUserService.getUserInfo(accessToken);
 
             Optional<User> user = userRepository.findByMemEmail(userInfo.getMemEmail());
 
-            if (user != null) {
-
+            if (user.isPresent()) {
                 String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
                 return ResponseEntity.ok(Map.of("token", jwtToken, "user", userInfo));
             } else {
-
                 return ResponseEntity.status(201).body(userInfo);
             }
         } catch (Exception e) {
@@ -57,6 +57,7 @@ public class RequestKakaoAppController {
             return ResponseEntity.status(500).body("로그인 처리 중 오류 발생");
         }
     }
+
 
     @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
     @PostMapping("/kakao/register")
