@@ -128,4 +128,15 @@ public class UserService{
     }
 
 
+    @Transactional
+    public boolean changeMemName(String memEmail, String newMemName) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        user.setMemName(newMemName);
+        userRepository.save(user);
+        return true;
+    }
+
+
 }

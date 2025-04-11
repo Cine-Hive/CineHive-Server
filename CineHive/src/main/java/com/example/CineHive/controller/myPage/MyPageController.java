@@ -1,6 +1,7 @@
 package com.example.CineHive.controller.myPage;
 
 import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.user.ChangeMemNameRequest;
 import com.example.CineHive.dto.user.ChangePasswordRequest;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.videotype.Movie;
@@ -59,24 +60,24 @@ public class MyPageController {
         }
     }
 
-    @GetMapping("/boards")
-    @Operation(summary = "사용자가 작성한 게시글 목록 조회", description = "JWT에서 추출한 사용자 email을 기준으로 본인이 작성한 게시글 목록을 조회합니다.")
-    public ResponseEntity<?> getUserBoards(HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
-        }
-
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-            List<Board> boards = boardService.getBoardsByMemEmail(memEmail);
-
-            return ResponseEntity.ok(boards);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
-        }
-    }
+//    @GetMapping("/boards")
+//    @Operation(summary = "사용자가 작성한 게시글 목록 조회", description = "JWT에서 추출한 사용자 email을 기준으로 본인이 작성한 게시글 목록을 조회합니다.")
+//    public ResponseEntity<?> getUserBoards(HttpServletRequest request) {
+//        String token = jwtTokenUtil.extractTokenFromRequest(request);
+//        if (token == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+//        }
+//
+//        try {
+//            String memEmail = jwtTokenUtil.extractUsername(token);
+//            List<Board> boards = boardService.getBoardsByMemEmail(memEmail);
+//
+//            return ResponseEntity.ok(boards);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+//        }
+//    }
 
     @PutMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "기존 비밀번호 확인 후 새 비밀번호로 변경")
@@ -99,5 +100,29 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비밀번호 변경 중 오류 발생");
         }
     }
+
+    @PutMapping("/change-memname")
+    @Operation(summary = "이름 변경", description = "사용자가 입력한 이름으로 변경")
+    public ResponseEntity<?> changeMemName(@RequestBody ChangeMemNameRequest request, HttpServletRequest httpRequest) {
+        String token = jwtTokenUtil.extractTokenFromRequest(httpRequest);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String email = jwtTokenUtil.extractUsername(token);
+            boolean result = userService.changeMemName(email, request.getNewMemName());
+            if (result) {
+                return ResponseEntity.ok("이름이 성공적으로 변경되었습니다.");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("이름 변경 실패");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이름 변경 중 오류 발생");
+        }
+    }
+
+
 
 }
