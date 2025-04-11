@@ -117,4 +117,8 @@ public class BoardService {
                 .map(BoardMapper::convertToSearchDto)
                 .collect(Collectors.toList());
     }
+
+    public List<Board> getBoardsByMemEmail(String email) {
+        return boardRepository.findByMemEmail(email);
+    }
 }

@@ -1,13 +1,15 @@
 package com.example.CineHive.config;
 
-import com.example.CineHive.filter.JwtRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.example.CineHive.filter.JwtRequestFilter;
 
 
 @Configuration
@@ -25,6 +27,8 @@ public class SecurityConfig {
                                 "/top_movie","/movies/**",
                                 "/api/auth/undefined/success",
                                 "/dramas/**",
+                                "/myPage/bookmarks/**",
+                                "/myPage/**",
                                 "/animations/**",
                                 "/get_topmovies",
                                 "/topmovies/**", "/now_playing_movies"
@@ -33,7 +37,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                 "/checkuserId/**").permitAll()
+                                "/checkuserId/**").permitAll()
                                        
                         .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
                                 ,"/preferredGenres","/boards/**","/boards"
