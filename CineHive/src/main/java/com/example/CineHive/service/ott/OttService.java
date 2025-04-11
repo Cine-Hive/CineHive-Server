@@ -43,7 +43,6 @@ public class OttService {
             "disney", 337,
             "watcha", 97,
             "tving", 356,
-            "wavve", 356
     );
 
     @PostConstruct
