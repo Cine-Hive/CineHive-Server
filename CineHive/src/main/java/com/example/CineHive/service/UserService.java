@@ -138,5 +138,21 @@ public class UserService{
         return true;
     }
 
+    @Transactional
+    public boolean changeMemSex(String memEmail, String newMemSex) {
+        if (!newMemSex.equalsIgnoreCase("male") &&
+                !newMemSex.equalsIgnoreCase("female") &&
+                !newMemSex.equalsIgnoreCase("other")) {
+            return false; // 유효하지 않은 값일 경우
+        }
+
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        user.setMemSex(newMemSex.toLowerCase()); // 저장 시 소문자로 통일
+        userRepository.save(user);
+        return true;
+    }
+
 
 }

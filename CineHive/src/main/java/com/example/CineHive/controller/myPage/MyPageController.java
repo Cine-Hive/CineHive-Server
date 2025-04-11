@@ -2,6 +2,7 @@ package com.example.CineHive.controller.myPage;
 
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.dto.user.ChangeMemNameRequest;
+import com.example.CineHive.dto.user.ChangeMemSexRequest;
 import com.example.CineHive.dto.user.ChangePasswordRequest;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.videotype.Movie;
@@ -120,6 +121,28 @@ public class MyPageController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이름 변경 중 오류 발생");
+        }
+    }
+
+    @PutMapping("/change-memsex")
+    @Operation(summary = "성별 변경", description = "사용자가 입력한 성별로 변경 (male, female, other만 허용)")
+    public ResponseEntity<?> changeMemSex(@RequestBody ChangeMemSexRequest request, HttpServletRequest httpRequest) {
+        String token = jwtTokenUtil.extractTokenFromRequest(httpRequest);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String email = jwtTokenUtil.extractUsername(token);
+            boolean result = userService.changeMemSex(email, request.getNewMemSex());
+            if (result) {
+                return ResponseEntity.ok("성별이 성공적으로 변경되었습니다.");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유효한 성별 값은 male, female, other 입니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("성별 변경 중 오류 발생");
         }
     }
 
