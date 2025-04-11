@@ -42,7 +42,7 @@ public class OttService {
             "netflix", 8,
             "disney", 337,
             "watcha", 97,
-            "tving", 356,
+            "tving", 356
     );
 
     @PostConstruct
@@ -59,15 +59,7 @@ public class OttService {
 
         fetchAndSaveAllPlatformsMovies();
     }
-
-    public int getProviderIdByName(String providerName) {
-        return providerRepository.findAll().stream()
-                .filter(provider -> provider.getName().equalsIgnoreCase(providerName))
-                .map(Provider::getId)
-                .findFirst()
-                .orElse(-1);
-    }
-
+    
     public CompletableFuture<List<OttDto>> fetchAndSavePopularMovies(int providerId, String providerName) {
         WebClient webClient = webClientBuilder.baseUrl(TMDB_BASE_URL).build();
 
