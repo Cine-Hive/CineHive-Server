@@ -10,11 +10,13 @@ import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 
+import com.example.CineHive.entity.reply.Reply;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.CommentRepository;
+import com.example.CineHive.repository.reply.ReplyRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.service.UserService;
 import com.example.CineHive.service.board.BoardService;
@@ -42,7 +44,7 @@ public class MyPageController {
     private final ReplyBookmarkService replyBookmarkService;
     private final MovieRepository movieRepository;
     private final BoardRepository boardRepository;
-    private final BoardService boardService;
+    private final ReplyRepository replyRepository;
     private final UserService userService;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
@@ -59,10 +61,9 @@ public class MyPageController {
         try {
             String memEmail = jwtTokenUtil.extractUsername(token);
             System.out.println("토큰에서 추출한 이메일: " + memEmail);
-            // Step 1: 찜한 movieId 리스트 가져오기
+
             List<Long> movieIds = replyBookmarkService.getBookmarkedMovieIdsByEmail(memEmail);
 
-            // Step 2: movieId들로 Movie 객체 조회
             List<Movie> favoriteMovies = movieRepository.findAllById(movieIds);
             return ResponseEntity.ok(favoriteMovies);
         } catch (Exception e) {
@@ -71,9 +72,51 @@ public class MyPageController {
         }
     }
 
+
+    @GetMapping("/replies")
+    @Operation(summary = "내가 작성한 댓글 조회", description = "JWT에서 추출한 사용자 email을 기준으로 댓글 정보를 조회")
+    public ResponseEntity<?> getMyReplies(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            System.out.println("토큰에서 추출한 이메일: " + memEmail);
+
+            List<Reply> myReplies = replyRepository.findByMemEmail(memEmail);
+
+            return ResponseEntity.ok(myReplies);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    @GetMapping("/likes")
+    @Operation(summary = "내가 좋아요한 댓글 조회", description = "JWT에서 추출한 사용자 email을 기준으로 좋아요한 댓글 정보를 조회")
+    public ResponseEntity<?> getMyLikes(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            System.out.println("토큰에서 추출한 이메일: " + memEmail);
+
+            List<Reply> myLikes = replyRepository.findByMemEmail(memEmail);
+
+            return ResponseEntity.ok(myLikes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
+
     @GetMapping("/boards")
     public ResponseEntity<?> getMyBoards(HttpServletRequest request) {
-        // JWT 토큰 추출
         String token = jwtTokenUtil.extractTokenFromRequest(request);
 
         if (token == null) {
@@ -81,7 +124,6 @@ public class MyPageController {
         }
 
         try {
-            // 토큰에서 사용자 이메일 추출
             String memEmail = jwtTokenUtil.extractUsername(token);
             Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
 
@@ -92,7 +134,6 @@ public class MyPageController {
             User user = optionalUser.get();
             Long memId = user.getMem_id();
 
-            // 사용자 mem_id로 게시글 조회
             List<Board> boards = boardRepository.findBoardsByMemId(memId);
 
             // BoardDto 리스트로 변환
@@ -152,7 +193,6 @@ public class MyPageController {
             User user = optionalUser.get();
             Long memId = user.getMem_id();
 
-            // ✅ memId로 댓글 전체 조회
             List<Comment> comments = commentRepository.findCommentsByUserId(memId);
 
             // DTO로 변환
@@ -172,8 +212,6 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
         }
     }
-
-
 
 
     @PutMapping("/change-password")
@@ -198,6 +236,7 @@ public class MyPageController {
         }
     }
 
+
     @PutMapping("/change-memname")
     @Operation(summary = "이름 변경", description = "사용자가 입력한 이름으로 변경")
     public ResponseEntity<?> changeMemName(@RequestBody ChangeMemNameRequest request, HttpServletRequest httpRequest) {
@@ -219,6 +258,7 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이름 변경 중 오류 발생");
         }
     }
+
 
     @PutMapping("/change-memsex")
     @Operation(summary = "성별 변경", description = "사용자가 입력한 성별로 변경 (male, female, other만 허용)")
