@@ -32,13 +32,13 @@ public class ScheduledTasks {
 
     @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateMovies() {
         ottService.fetchAndSaveAllPlatformsMovies();
     }
 
     //개봉 예정 영화 자동 업데이트
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateUpcomingMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
@@ -48,7 +48,7 @@ public class ScheduledTasks {
     }
 
     // 평점 순위 영화 자동 업데이트
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateTopRatedMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
@@ -58,7 +58,7 @@ public class ScheduledTasks {
     }
 
     // 인기 영화 자동 업데이트
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updatePopularMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
