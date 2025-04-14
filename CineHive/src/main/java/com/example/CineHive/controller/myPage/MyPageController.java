@@ -1,13 +1,19 @@
 package com.example.CineHive.controller.myPage;
 
 import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.dto.user.ChangeMemNameRequest;
 import com.example.CineHive.dto.user.ChangeMemSexRequest;
 import com.example.CineHive.dto.user.ChangePasswordRequest;
+import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.board.Comment;
+
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.LoginHistoryRepository;
+import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
+import com.example.CineHive.repository.board.CommentRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.service.UserService;
 import com.example.CineHive.service.board.BoardService;
@@ -22,7 +28,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -36,6 +43,8 @@ public class MyPageController {
     private final BoardRepository boardRepository;
     private final BoardService boardService;
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     @GetMapping("/bookmarks")
     @Operation(summary = "찜한 영화 목록 조회", description = "JWT에서 추출한 사용자 email을 기준으로 찜한 영화 정보를 조회")
@@ -61,24 +70,51 @@ public class MyPageController {
         }
     }
 
-//    @GetMapping("/boards")
-//    @Operation(summary = "사용자가 작성한 게시글 목록 조회", description = "JWT에서 추출한 사용자 email을 기준으로 본인이 작성한 게시글 목록을 조회합니다.")
-//    public ResponseEntity<?> getUserBoards(HttpServletRequest request) {
-//        String token = jwtTokenUtil.extractTokenFromRequest(request);
-//        if (token == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
-//        }
-//
-//        try {
-//            String memEmail = jwtTokenUtil.extractUsername(token);
-//            List<Board> boards = boardService.getBoardsByMemEmail(memEmail);
-//
-//            return ResponseEntity.ok(boards);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
-//        }
-//    }
+
+
+    @GetMapping("/comments")
+    @Operation(summary = "작성한 댓글 조회", description = "JWT를 통해 인증된 사용자의 댓글 목록을 조회합니다.")
+    public ResponseEntity<?> getMyComments(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
+
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+
+            User user = optionalUser.get();
+            Long memId = user.getMem_id();
+
+            // ✅ memId로 댓글 전체 조회
+            List<Comment> comments = commentRepository.findCommentsByUserId(memId);
+
+            // DTO로 변환
+            List<CommentDto> commentDtos = comments.stream()
+                    .map(comment -> new CommentDto(
+                            comment.getId(),
+                            comment.getContent(),
+                            comment.getUser().getMemNickname(),
+                            comment.getUser().getMemEmail(),
+                            comment.getCreatedAt()
+                    ))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(commentDtos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
+
+
+
 
     @PutMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "기존 비밀번호 확인 후 새 비밀번호로 변경")
@@ -145,7 +181,4 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("성별 변경 중 오류 발생");
         }
     }
-
-
-
 }
