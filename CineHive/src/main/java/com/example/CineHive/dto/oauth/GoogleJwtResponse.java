@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GoogleJwtResponse {
+
     private String jwtToken;
     private GoogleUserInfo userInfo;
 }
