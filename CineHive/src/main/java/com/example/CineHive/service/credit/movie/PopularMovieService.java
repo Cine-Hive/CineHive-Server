@@ -57,17 +57,6 @@ public class PopularMovieService {
     }
 
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    @Scheduled(cron = "0 0 3 * * *")
-    @Transactional
-    public void updatePopularMoviesDaily() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트] 인기 영화 업데이트 시작...");
-        savePopularMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트] 인기 영화 업데이트 완료!");
-    }
-
     @Transactional
     public void savePopularMoviesToDatabase() {
         // API를 호출하여 데이터를 가져옵니다.

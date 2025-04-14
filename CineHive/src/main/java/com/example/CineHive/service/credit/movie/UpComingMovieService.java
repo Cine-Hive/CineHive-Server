@@ -51,16 +51,6 @@ public class UpComingMovieService {
     @Autowired
     private SimilarMovieService similarMovieService;
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    @Scheduled(cron = "0 0 3 * * *")
-    @Transactional
-    public void updateUpcomingMoviesDaily() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트] 개봉 예정 영화 업데이트 시작...");
-        saveUpComingMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트]개봉 예정 영화 업데이트 완료!");
-    }
 
     @Transactional
     public void saveUpComingMoviesToDatabase() {
