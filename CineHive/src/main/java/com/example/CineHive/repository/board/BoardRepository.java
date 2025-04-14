@@ -16,4 +16,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             "OR LOWER(u.memNickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Board> searchByKeyword(@Param("keyword") String keyword);
     List<Board> findByMemEmail(String memEmail);
+
+    @Query(value = "SELECT * FROM board WHERE mem_id = :memId", nativeQuery = true)
+    List<Board> findBoardsByMemId(@Param("memId") Long memId);
+
 }

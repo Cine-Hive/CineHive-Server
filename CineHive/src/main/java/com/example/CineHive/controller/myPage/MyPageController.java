@@ -1,5 +1,6 @@
 package com.example.CineHive.controller.myPage;
 
+import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.dto.user.ChangeMemNameRequest;
@@ -70,6 +71,65 @@ public class MyPageController {
         }
     }
 
+    @GetMapping("/boards")
+    public ResponseEntity<?> getMyBoards(HttpServletRequest request) {
+        // JWT 토큰 추출
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            // 토큰에서 사용자 이메일 추출
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
+
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+
+            User user = optionalUser.get();
+            Long memId = user.getMem_id();
+
+            // 사용자 mem_id로 게시글 조회
+            List<Board> boards = boardRepository.findBoardsByMemId(memId);
+
+            // BoardDto 리스트로 변환
+            List<BoardDto> boardDtos = boards.stream().map(board -> {
+                List<CommentDto> commentDtos = board.getComments().stream()
+                        .map(comment -> new CommentDto(
+                                comment.getId(),
+                                comment.getContent(),
+                                comment.getUser().getMemNickname(),
+                                comment.getUser().getMemEmail(),
+                                comment.getCreatedAt()
+                        ))
+                        .collect(Collectors.toList());
+
+                return new BoardDto(
+                        board.getId(),
+                        board.getBrdTitle(),
+                        board.getBrdContent(),
+                        board.getUser().getMemNickname(),
+                        board.getUser().getMemEmail(),
+                        board.getBrdRegDate(),
+                        board.getBookmarkCount(),
+                        board.getLikeCount(),
+                        board.getDisLikeCount(),
+                        board.getReportCount(),
+                        board.getCommentCount(),
+                        commentDtos,
+                        board.getViews()
+                );
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(boardDtos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
 
 
     @GetMapping("/comments")
