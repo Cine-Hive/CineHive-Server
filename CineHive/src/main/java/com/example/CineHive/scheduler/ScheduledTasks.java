@@ -1,5 +1,6 @@
 package com.example.CineHive.scheduler;
 
+import com.example.CineHive.repository.ott.OttRepository;
 import com.example.CineHive.service.credit.movie.NowPlayingMovieService;
 import com.example.CineHive.service.credit.movie.PopularMovieService;
 import com.example.CineHive.service.credit.movie.TopRatedMovieService;
@@ -32,9 +33,14 @@ public class ScheduledTasks {
 
     @Autowired
     private NowPlayingMovieService nowPlayingMovieService;
+
+    @Autowired
+    private OttRepository ottRepository;
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateMovies() {
+        ottRepository.deleteAll();
         ottService.fetchAndSaveAllPlatformsMovies();
+
     }
 
     //개봉 예정 영화 자동 업데이트
