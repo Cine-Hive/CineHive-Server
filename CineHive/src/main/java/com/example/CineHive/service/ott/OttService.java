@@ -48,16 +48,20 @@ public class OttService {
     @PostConstruct
     @Transactional
     public void initializeProviders() {
-        System.out.println("🔹 initializeProviders() 실행됨");
-        DEFAULT_PROVIDERS.forEach((name, id) -> {
-            providerRepository.findById(id).orElseGet(() -> {
-                System.out.println("✅ Provider 저장: " + name + " (ID: " + id + ")");
-                Provider provider = new Provider(id, name, null);
-                return providerRepository.save(provider);
+        System.out.println(" initializeProviders() 실행됨");
+        if (providerRepository.count() == 0) {
+            DEFAULT_PROVIDERS.forEach((name, id) -> {
+                providerRepository.findById(id).orElseGet(() -> {
+                    System.out.println(" Provider 저장: " + name + " (ID: " + id + ")");
+                    Provider provider = new Provider(id, name, null);
+                    return providerRepository.save(provider);
+                });
             });
-        });
 
-        fetchAndSaveAllPlatformsMovies();
+            fetchAndSaveAllPlatformsMovies();
+        } else {
+            System.out.println("데이터 존재하므로 초기화 생략");
+        }
     }
     
     public CompletableFuture<List<OttDto>> fetchAndSavePopularMovies(int providerId, String providerName) {
