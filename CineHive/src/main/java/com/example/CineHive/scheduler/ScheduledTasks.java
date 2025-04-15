@@ -44,7 +44,7 @@ public class ScheduledTasks {
     }
 
     //개봉 예정 영화 자동 업데이트
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void updateUpcomingMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
@@ -54,7 +54,7 @@ public class ScheduledTasks {
     }
 
     // 평점 순위 영화 자동 업데이트
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 1 * * *")
     @Transactional
     public void updateTopRatedMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
@@ -64,7 +64,7 @@ public class ScheduledTasks {
     }
 
     // 인기 영화 자동 업데이트
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void updatePopularMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
@@ -74,7 +74,7 @@ public class ScheduledTasks {
     }
 
     // 현재 상영영화 자동 업데이트 (매일 자정)
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 4 * * *")
     @Transactional
     public void updateNowPlayingMoviesDaily() {
         String currentTime = LocalDateTime.now().format(formatter);
