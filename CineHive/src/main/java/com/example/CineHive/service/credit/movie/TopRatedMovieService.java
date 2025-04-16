@@ -46,22 +46,11 @@ public class TopRatedMovieService {
     @Autowired
     private SimilarMovieService similarMovieService;
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     public TopRatedMovieService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
         this.objectMapper = objectMapper;
     }
 
-    // Top Rated 영화 자동저장 (매일 새벽 3시)
-    @Scheduled(cron = "0 0 3 * * *")
-    @Transactional
-    public void updateTopRatedMoviesDaily() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
-        saveTopRatedMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
-    }
 
     @Transactional
     public void saveTopRatedMoviesToDatabase() {

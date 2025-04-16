@@ -52,17 +52,6 @@ public class NowPlayingMovieService {
         this.objectMapper = objectMapper;
     }
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    // 현재 상영영화 자동저장 (매일 자정)
-    @Scheduled(cron = "0 0 0 * * *")
-    @Transactional
-    public void updateNowPlayingMoviesDaily() {
-        String currentTime = LocalDateTime.now().format(formatter);
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 시작...");
-        saveNowPlayingMoviesToDatabase();
-        System.out.println("[" + currentTime + "] [자동 업데이트] 현재 상영 영화 업데이트 완료!");
-    }
 
     @Transactional
     public void saveNowPlayingMoviesToDatabase() {
