@@ -1,4 +1,4 @@
-package com.example.CineHive.service;
+package com.example.CineHive.service.user;
 
 import com.example.CineHive.dto.user.LoginHistoryDto;
 import com.example.CineHive.dto.user.UserDto;

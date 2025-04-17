@@ -1,4 +1,4 @@
-package com.example.CineHive.controller.replyController;
+package com.example.CineHive.controller.reply;
 
 import com.example.CineHive.entity.reply.Reply;
 import com.example.CineHive.service.reply.ReplyService;

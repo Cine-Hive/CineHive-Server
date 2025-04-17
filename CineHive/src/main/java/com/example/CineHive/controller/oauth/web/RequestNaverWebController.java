@@ -1,11 +1,10 @@
 package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.NaverUserInfo;
-import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.NaverUserService;
-import com.example.CineHive.service.UserService;
+import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;

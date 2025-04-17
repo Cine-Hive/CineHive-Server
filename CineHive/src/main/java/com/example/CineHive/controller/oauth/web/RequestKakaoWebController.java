@@ -4,7 +4,7 @@ import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
-import com.example.CineHive.service.UserService;
+import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
