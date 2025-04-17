@@ -1,4 +1,4 @@
-package com.example.CineHive.dto;
+package com.example.CineHive.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

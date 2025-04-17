@@ -2,7 +2,7 @@ package com.example.CineHive.repository.board;
 
 import com.example.CineHive.entity.board.Bookmark;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

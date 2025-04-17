@@ -1,7 +1,7 @@
 package com.example.CineHive.repository;
 
-import com.example.CineHive.entity.LoginHistory;
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.LoginHistory;
+import com.example.CineHive.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

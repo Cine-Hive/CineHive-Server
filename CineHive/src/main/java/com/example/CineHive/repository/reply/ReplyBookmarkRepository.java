@@ -1,8 +1,5 @@
 package com.example.CineHive.repository.reply;
 
-import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Bookmark;
 import com.example.CineHive.entity.reply.ReplyBookmark;
 import org.springframework.data.jpa.repository.JpaRepository;
 

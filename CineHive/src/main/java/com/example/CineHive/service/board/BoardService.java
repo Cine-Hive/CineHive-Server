@@ -5,7 +5,7 @@ import com.example.CineHive.dto.board.BoardSearchDto;
 import com.example.CineHive.dto.board.CreateBoardDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
 import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;

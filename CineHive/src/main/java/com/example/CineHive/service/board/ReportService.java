@@ -1,6 +1,6 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Report;
 import com.example.CineHive.repository.UserRepository;

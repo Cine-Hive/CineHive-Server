@@ -1,7 +1,7 @@
 package com.example.CineHive.mapper;
 
 import com.example.CineHive.dto.user.UserDto;
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.User;
 
 import java.time.LocalDateTime;
 

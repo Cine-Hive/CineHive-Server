@@ -2,8 +2,8 @@ package com.example.CineHive.service.user;
 
 import com.example.CineHive.dto.user.LoginHistoryDto;
 import com.example.CineHive.dto.user.UserDto;
-import com.example.CineHive.entity.LoginHistory;
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.LoginHistory;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.mapper.LoginHistoryMapper;
 import com.example.CineHive.mapper.UserMapper;
 import com.example.CineHive.repository.LoginHistoryRepository;
