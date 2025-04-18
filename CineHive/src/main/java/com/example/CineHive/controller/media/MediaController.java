@@ -1,6 +1,13 @@
 package com.example.CineHive.controller.media;
 
+import com.example.CineHive.dto.media.CastDto;
+import com.example.CineHive.dto.media.CrewDto;
+import com.example.CineHive.dto.media.GenreDto;
+import com.example.CineHive.dto.media.MediaCreditsDto;
+import com.example.CineHive.dto.media.MediaDetailsDto;
 import com.example.CineHive.dto.media.MediaDto;
+import com.example.CineHive.dto.media.MediaItemDto;
+import com.example.CineHive.dto.media.VideoDto;
 import com.example.CineHive.entity.media.Media;
 import com.example.CineHive.service.media.MediaService;
 import com.example.CineHive.service.media.TmdbMediaService;
@@ -30,19 +37,33 @@ public class MediaController {
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(
-        summary = "영화 상세 정보 조회", 
-        description = "특정 영화의 상세 정보를 제공합니다. 영화의 제목, 설명, 포스터, 개봉일, 장르, 평점 등의 정보를 포함합니다."
+        summary = "영화 정보 조회", 
+        description = "영화의 기본 정보를 제공하거나, 쿼리 파라미터를 통해 상세 정보(출연/제작진, 비디오, 유사 영화)를 함께 제공합니다."
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "영화 정보 조회 성공", 
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MediaDto.MediaItemDto.class))),
+        @ApiResponse(responseCode = "200", description = "영화 정보 조회 성공"),
         @ApiResponse(responseCode = "404", description = "영화를 찾을 수 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/movies/{id}")
-    public ResponseEntity<MediaDto.MediaItemDto> getMovieById(
-            @Parameter(description = "영화 ID (TMDB ID)", example = "550") @PathVariable Long id) {
-        return ResponseEntity.ok(mediaService.getMediaById(Media.MediaType.MOVIE, id));
+    public ResponseEntity<?> getMovie(
+            @Parameter(description = "영화 ID", example = "550") @PathVariable Long id,
+            @Parameter(description = "상세 정보 포함 여부 (true: 출연/제작진, 비디오, 유사 영화 포함)", example = "false") 
+            @RequestParam(required = false, defaultValue = "false") boolean details) {
+        
+        if (details) {
+            MediaDetailsDto detailsDto = mediaService.getMediaDetails(Media.MediaType.MOVIE, id);
+            if (detailsDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(detailsDto);
+        } else {
+            MediaItemDto mediaItemDto = mediaService.getMediaById(Media.MediaType.MOVIE, id);
+            if (mediaItemDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mediaItemDto);
+        }
     }
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
@@ -53,36 +74,72 @@ public class MediaController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "인기 영화 목록 조회 성공",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = MediaDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/movies/popular")
     public ResponseEntity<MediaDto> getPopularMovies(
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.POPULAR, page));
+            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "popularity.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.POPULAR, page, sort));
     }
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(summary = "평점 높은 영화 목록 조회", description = "평점이 높은 영화 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "평점 높은 영화 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/movies/top-rated")
     public ResponseEntity<MediaDto> getTopRatedMovies(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.TOP_RATED, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "vote_average.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.TOP_RATED, page, sort));
     }
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(summary = "현재 상영 중인 영화 목록 조회", description = "현재 상영 중인 영화 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "현재 상영 중인 영화 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/movies/now-playing")
     public ResponseEntity<MediaDto> getNowPlayingMovies(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.NOW_PLAYING, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "release_date.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.NOW_PLAYING, page, sort));
     }
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(summary = "개봉 예정 영화 목록 조회", description = "개봉 예정인 영화 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "개봉 예정 영화 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/movies/upcoming")
     public ResponseEntity<MediaDto> getUpcomingMovies(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.UPCOMING, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "release_date.asc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.MOVIE, Media.MediaCategory.UPCOMING, page, sort));
     }
     
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
@@ -97,7 +154,7 @@ public class MediaController {
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(summary = "영화 출연/제작진 정보 조회", description = "특정 영화의 출연진과 제작진 정보를 제공")
     @GetMapping("/movies/{id}/credits")
-    public ResponseEntity<MediaDto.MediaItemDto> getMovieCredits(
+    public ResponseEntity<MediaCreditsDto> getMovieCredits(
             @Parameter(description = "영화 ID") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaWithCredits(Media.MediaType.MOVIE, id));
     }
@@ -105,7 +162,7 @@ public class MediaController {
     @Tag(name = "Movie Controller", description = "영화 정보를 제공하는 API")
     @Operation(summary = "영화 비디오 정보 조회", description = "특정 영화의 트레일러 등 비디오 정보를 제공")
     @GetMapping("/movies/{id}/videos")
-    public ResponseEntity<List<MediaDto.VideoDto>> getMovieVideos(
+    public ResponseEntity<List<VideoDto>> getMovieVideos(
             @Parameter(description = "영화 ID") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaVideos(Media.MediaType.MOVIE, id));
     }
@@ -122,43 +179,106 @@ public class MediaController {
     // TV 시리즈 API 엔드포인트
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
-    @Operation(summary = "TV 시리즈 상세 정보 조회", description = "특정 TV 시리즈의 상세 정보를 제공")
+    @Operation(
+        summary = "TV 시리즈 정보 조회", 
+        description = "TV 시리즈의 기본 정보를 제공하거나, 쿼리 파라미터를 통해 상세 정보(출연/제작진, 비디오, 유사 TV 시리즈)를 함께 제공합니다."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "TV 시리즈 정보 조회 성공"),
+        @ApiResponse(responseCode = "404", description = "TV 시리즈를 찾을 수 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/tv/{id}")
-    public ResponseEntity<MediaDto.MediaItemDto> getTvById(
-            @Parameter(description = "TV 시리즈 ID") @PathVariable Long id) {
-        return ResponseEntity.ok(mediaService.getMediaById(Media.MediaType.TV, id));
+    public ResponseEntity<?> getTv(
+            @Parameter(description = "TV 시리즈 ID", example = "1396") @PathVariable Long id,
+            @Parameter(description = "상세 정보 포함 여부 (true: 출연/제작진, 비디오, 유사 TV 시리즈 포함)", example = "false") 
+            @RequestParam(required = false, defaultValue = "false") boolean details) {
+        
+        if (details) {
+            MediaDetailsDto detailsDto = mediaService.getMediaDetails(Media.MediaType.TV, id);
+            if (detailsDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(detailsDto);
+        } else {
+            MediaItemDto mediaItemDto = mediaService.getMediaById(Media.MediaType.TV, id);
+            if (mediaItemDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mediaItemDto);
+        }
     }
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "인기 TV 시리즈 목록 조회", description = "인기 있는 TV 시리즈 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "인기 TV 시리즈 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/tv/popular")
     public ResponseEntity<MediaDto> getPopularTvSeries(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.POPULAR, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "popularity.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "first_air_date.desc", "first_air_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.POPULAR, page, sort));
     }
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "평점 높은 TV 시리즈 목록 조회", description = "평점이 높은 TV 시리즈 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "평점 높은 TV 시리즈 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/tv/top-rated")
     public ResponseEntity<MediaDto> getTopRatedTvSeries(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.TOP_RATED, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "vote_average.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "first_air_date.desc", "first_air_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.TOP_RATED, page, sort));
     }
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "방영 중인 TV 시리즈 목록 조회", description = "현재 방영 중인 TV 시리즈 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "방영 중인 TV 시리즈 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/tv/on-the-air")
     public ResponseEntity<MediaDto> getOnTheAirTvSeries(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.ON_THE_AIR, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "first_air_date.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "first_air_date.desc", "first_air_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.ON_THE_AIR, page, sort));
     }
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "오늘 방영하는 TV 시리즈 목록 조회", description = "오늘 방영하는 TV 시리즈 목록을 페이지 단위로 제공")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "오늘 방영하는 TV 시리즈 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/tv/airing-today")
     public ResponseEntity<MediaDto> getAiringTodayTvSeries(
-            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.AIRING_TODAY, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "popularity.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "first_air_date.desc", "first_air_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getMediaByCategory(Media.MediaType.TV, Media.MediaCategory.AIRING_TODAY, page, sort));
     }
     
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
@@ -173,7 +293,7 @@ public class MediaController {
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "TV 시리즈 출연/제작진 정보 조회", description = "특정 TV 시리즈의 출연진과 제작진 정보를 제공")
     @GetMapping("/tv/{id}/credits")
-    public ResponseEntity<MediaDto.MediaItemDto> getTvCredits(
+    public ResponseEntity<MediaCreditsDto> getTvCredits(
             @Parameter(description = "TV 시리즈 ID") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaWithCredits(Media.MediaType.TV, id));
     }
@@ -181,7 +301,7 @@ public class MediaController {
     @Tag(name = "TV Series Controller", description = "TV 시리즈 정보를 제공하는 API")
     @Operation(summary = "TV 시리즈 비디오 정보 조회", description = "특정 TV 시리즈의 트레일러 등 비디오 정보를 제공")
     @GetMapping("/tv/{id}/videos")
-    public ResponseEntity<List<MediaDto.VideoDto>> getTvVideos(
+    public ResponseEntity<List<VideoDto>> getTvVideos(
             @Parameter(description = "TV 시리즈 ID") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaVideos(Media.MediaType.TV, id));
     }
@@ -199,43 +319,69 @@ public class MediaController {
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
     @Operation(
-        summary = "애니메이션 상세 정보 조회", 
-        description = "특정 애니메이션의 상세 정보를 제공합니다. 애니메이션 제목, 설명, 포스터, 제작 스튜디오, 방영일 등의 정보를 포함합니다."
+        summary = "애니메이션 정보 조회", 
+        description = "애니메이션의 기본 정보를 제공하거나, 쿼리 파라미터를 통해 상세 정보(출연/제작진, 비디오, 유사 애니메이션)를 함께 제공합니다."
     )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "애니메이션 정보 조회 성공"),
+        @ApiResponse(responseCode = "404", description = "애니메이션을 찾을 수 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @GetMapping("/animations/{id}")
-    public ResponseEntity<MediaDto.MediaItemDto> getAnimationById(
-            @Parameter(description = "애니메이션 ID") @PathVariable Long id) {
-        return ResponseEntity.ok(mediaService.getMediaById(Media.MediaType.ANIMATION, id));
+    public ResponseEntity<?> getAnimation(
+            @Parameter(description = "애니메이션 ID", example = "129") @PathVariable Long id,
+            @Parameter(description = "상세 정보 포함 여부 (true: 출연/제작진, 비디오, 유사 애니메이션 포함)", example = "false") 
+            @RequestParam(required = false, defaultValue = "false") boolean details) {
+        
+        if (details) {
+            MediaDetailsDto detailsDto = mediaService.getMediaDetails(Media.MediaType.ANIMATION, id);
+            if (detailsDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(detailsDto);
+        } else {
+            MediaItemDto mediaItemDto = mediaService.getMediaById(Media.MediaType.ANIMATION, id);
+            if (mediaItemDto == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mediaItemDto);
+        }
     }
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
-    @Operation(
-        summary = "인기 애니메이션 목록 조회", 
-        description = "인기 있는 애니메이션 목록을 페이지 단위로 제공합니다. 전 세계적으로 인기 있는 애니메이션을 포함합니다."
-    )
+    @Operation(summary = "인기 애니메이션 목록 조회", description = "인기 있는 애니메이션 목록을 페이지 단위로 제공")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "인기 애니메이션 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/popular")
     public ResponseEntity<MediaDto> getPopularAnimations(
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.POPULAR, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "popularity.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.POPULAR, page, sort));
     }
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
-    @Operation(
-        summary = "평점 높은 애니메이션 목록 조회", 
-        description = "평점이 높은 애니메이션 목록을 페이지 단위로 제공합니다. 평점 순으로 정렬됩니다."
-    )
+    @Operation(summary = "평점 높은 애니메이션 목록 조회", description = "평점이 높은 애니메이션 목록을 페이지 단위로 제공")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "평점 높은 애니메이션 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/top-rated")
     public ResponseEntity<MediaDto> getTopRatedAnimations(
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.TOP_RATED, page));
+            @Parameter(description = "페이지 번호 (기본값 1)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "vote_average.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.TOP_RATED, page, sort));
     }
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
@@ -245,12 +391,18 @@ public class MediaController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "상영/방영 중인 애니메이션 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/now-playing")
     public ResponseEntity<MediaDto> getNowPlayingAnimations(
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.NOW_PLAYING, page));
+            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "release_date.desc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.NOW_PLAYING, page, sort));
     }
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
@@ -260,18 +412,22 @@ public class MediaController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "개봉/방영 예정 애니메이션 목록 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "결과 없음"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/upcoming")
     public ResponseEntity<MediaDto> getUpcomingAnimations(
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.UPCOMING, page));
+            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "정렬 방식", example = "release_date.asc", 
+                schema = @Schema(allowableValues = {"popularity.desc", "popularity.asc", "vote_average.desc", "vote_average.asc", 
+                    "release_date.desc", "release_date.asc", "vote_count.desc"})) 
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(mediaService.getAnimationsByCategory(Media.MediaCategory.UPCOMING, page, sort));
     }
     
     @Tag(name = "Animation Controller", description = "애니메이션 정보를 제공하는 API")
-    @Operation(
-        summary = "유사 애니메이션 목록 조회", 
-        description = "특정 애니메이션과 유사한 애니메이션 목록을 페이지 단위로 제공합니다. 유사도는 장르, 키워드, 스튜디오 등을 기준으로 계산됩니다."
+    @Operation(summary = "유사 애니메이션 목록 조회", description = "특정 애니메이션과 유사한 애니메이션 목록을 페이지 단위로 제공합니다. 유사도는 장르, 키워드, 스튜디오 등을 기준으로 계산됩니다."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "유사 애니메이션 목록 조회 성공"),
@@ -296,7 +452,7 @@ public class MediaController {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/{id}/credits")
-    public ResponseEntity<MediaDto.MediaItemDto> getAnimationCredits(
+    public ResponseEntity<MediaCreditsDto> getAnimationCredits(
             @Parameter(description = "애니메이션 ID", example = "129") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaWithCredits(Media.MediaType.ANIMATION, id));
     }
@@ -312,7 +468,7 @@ public class MediaController {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/animations/{id}/videos")
-    public ResponseEntity<List<MediaDto.VideoDto>> getAnimationVideos(
+    public ResponseEntity<List<VideoDto>> getAnimationVideos(
             @Parameter(description = "애니메이션 ID", example = "129") @PathVariable Long id) {
         return ResponseEntity.ok(mediaService.getMediaVideos(Media.MediaType.ANIMATION, id));
     }
