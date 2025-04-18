@@ -1,4 +1,4 @@
-package com.example.CineHive.repository;
+package com.example.CineHive.repository.user;
 
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;

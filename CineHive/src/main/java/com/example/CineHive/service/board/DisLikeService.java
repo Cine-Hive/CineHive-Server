@@ -3,7 +3,7 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardDisLike;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.DisLikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;

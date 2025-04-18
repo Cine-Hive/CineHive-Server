@@ -4,7 +4,7 @@ package com.example.CineHive.service.oauth;
 import com.example.CineHive.dto.oauth.NaverUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.user.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.Getter;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;

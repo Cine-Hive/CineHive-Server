@@ -3,7 +3,7 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Bookmark;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.user.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
 import lombok.RequiredArgsConstructor;

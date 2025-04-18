@@ -3,7 +3,7 @@ package com.example.CineHive.controller.user;
 import com.example.CineHive.dto.user.LoginDto;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.user.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;

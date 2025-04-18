@@ -2,7 +2,7 @@ package com.example.CineHive.controller.oauth.web;
 
 import com.example.CineHive.dto.oauth.NaverUserInfo;
 import com.example.CineHive.entity.user.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.oauth.NaverUserService;
 import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
