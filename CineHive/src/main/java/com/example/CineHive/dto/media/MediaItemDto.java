@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "미디어 아이템 상세 정보")
+@Schema(description = "미디어 아이템 기본 정보")
 public class MediaItemDto {
     @Schema(description = "미디어 ID", example = "550")
     private Long id;
@@ -70,18 +70,6 @@ public class MediaItemDto {
     
     @Schema(description = "마지막 방영일 (TV 시리즈용)", example = "2013-09-29")
     private String lastAirDate;
-    
-    @Schema(description = "비디오 정보 목록")
-    private List<VideoDto> videos;
-    
-    @Schema(description = "출연진 목록")
-    private List<CastDto> cast;
-    
-    @Schema(description = "제작진 목록")
-    private List<CrewDto> crew;
-    
-    @Schema(description = "추천 미디어 목록")
-    private List<MediaItemDto> recommendations;
     
     @Schema(description = "상영 시간 (분)", example = "139")
     private Integer runtime;
