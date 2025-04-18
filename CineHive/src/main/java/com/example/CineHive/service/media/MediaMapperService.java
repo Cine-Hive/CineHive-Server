@@ -1,12 +1,13 @@
 package com.example.CineHive.service.media;
 
-import com.example.CineHive.dto.media.MediaDto;
+import com.example.CineHive.dto.media.*;
 import com.example.CineHive.entity.credit.Cast;
 import com.example.CineHive.entity.credit.Crew;
 import com.example.CineHive.entity.media.Genre;
 import com.example.CineHive.entity.media.Video;
 import com.example.CineHive.entity.media.Animation;
 import com.example.CineHive.entity.media.Media;
+import com.example.CineHive.entity.media.MediaGenre;
 import com.example.CineHive.entity.media.Movie;
 import com.example.CineHive.entity.media.Tv;
 import com.example.CineHive.repository.media.*;
@@ -51,39 +52,40 @@ public class MediaMapperService {
     @Autowired
     private AnimationRepository animationRepository;
 
+    @Autowired
+    private MediaGenreRepository mediaGenreRepository;
+
     /**
      * JSON 노드를 MediaItemDto로 변환
      */
-    public MediaDto.MediaItemDto mapJsonToMediaItemDto(JsonNode mediaNode, Media.MediaType mediaType) {
-        MediaDto.MediaItemDto dto = new MediaDto.MediaItemDto();
+    public MediaItemDto mapJsonToMediaItemDto(JsonNode mediaNode, Media.MediaType mediaType) {
+        MediaItemDto dto = new MediaItemDto();
         
         dto.setId(mediaNode.has("id") ? mediaNode.get("id").asLong() : null);
         
         // 미디어 타입별로 다른 필드 처리
         switch (mediaType) {
-            case MOVIE:
+            case MOVIE -> {
                 dto.setTitle(mediaNode.has("title") ? mediaNode.get("title").asText() : "");
                 dto.setReleaseDate(mediaNode.has("release_date") ? mediaNode.get("release_date").asText() : null);
                 dto.setOriginalTitle(mediaNode.has("original_title") ? mediaNode.get("original_title").asText() : null);
-                break;
-            case TV:
+            }
+            case TV -> {
                 dto.setTitle(mediaNode.has("name") ? mediaNode.get("name").asText() : "");
                 dto.setReleaseDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
                 dto.setOriginalTitle(mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null);
-                
                 if (mediaNode.has("origin_country")) {
                     List<String> countries = StreamSupport.stream(mediaNode.get("origin_country").spliterator(), false)
                             .map(JsonNode::asText)
                             .collect(Collectors.toList());
                     dto.setOriginCountry(countries);
                 }
-                
                 dto.setNumberOfSeasons(mediaNode.has("number_of_seasons") ? mediaNode.get("number_of_seasons").asInt() : null);
                 dto.setNumberOfEpisodes(mediaNode.has("number_of_episodes") ? mediaNode.get("number_of_episodes").asInt() : null);
                 dto.setFirstAirDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
                 dto.setLastAirDate(mediaNode.has("last_air_date") ? mediaNode.get("last_air_date").asText() : null);
-                break;
-            case ANIMATION:
+            }
+            case ANIMATION -> {
                 // 애니메이션은 영화나 TV 형식에 따라 다르게 처리
                 if (mediaNode.has("title")) {
                     dto.setTitle(mediaNode.get("title").asText());
@@ -94,7 +96,7 @@ public class MediaMapperService {
                     dto.setReleaseDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
                     dto.setOriginalTitle(mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null);
                 }
-                break;
+            }
         }
         
         dto.setOverview(mediaNode.has("overview") ? mediaNode.get("overview").asText() : "");
@@ -106,11 +108,11 @@ public class MediaMapperService {
         dto.setOriginalLanguage(mediaNode.has("original_language") ? mediaNode.get("original_language").asText() : null);
         
         // 장르 정보 처리
-        List<MediaDto.GenreDto> genreDtos = new ArrayList<>();
+        List<GenreDto> genreDtos = new ArrayList<>();
         if (mediaNode.has("genres")) {
             JsonNode genresNode = mediaNode.get("genres");
             for (JsonNode genreNode : genresNode) {
-                MediaDto.GenreDto genreDto = new MediaDto.GenreDto();
+                GenreDto genreDto = new GenreDto();
                 genreDto.setId(genreNode.get("id").asInt());
                 genreDto.setName(genreNode.get("name").asText());
                 genreDtos.add(genreDto);
@@ -128,10 +130,10 @@ public class MediaMapperService {
         // 비디오 정보 처리
         if (mediaNode.has("videos") && mediaNode.get("videos").has("results")) {
             JsonNode videosNode = mediaNode.get("videos").get("results");
-            List<MediaDto.VideoDto> videoDtos = new ArrayList<>();
+            List<VideoDto> videoDtos = new ArrayList<>();
             
             for (JsonNode videoNode : videosNode) {
-                MediaDto.VideoDto videoDto = new MediaDto.VideoDto();
+                VideoDto videoDto = new VideoDto();
                 videoDto.setId(videoNode.get("id").asText());
                 videoDto.setName(videoNode.get("name").asText());
                 videoDto.setKey(videoNode.get("key").asText());
@@ -148,11 +150,11 @@ public class MediaMapperService {
             JsonNode creditsNode = mediaNode.get("credits");
             
             if (creditsNode.has("cast")) {
-                List<MediaDto.CastDto> castDtos = new ArrayList<>();
+                List<CastDto> castDtos = new ArrayList<>();
                 JsonNode castNode = creditsNode.get("cast");
                 
                 for (JsonNode actorNode : castNode) {
-                    MediaDto.CastDto castDto = new MediaDto.CastDto();
+                    CastDto castDto = new CastDto();
                     castDto.setId(actorNode.get("id").asLong());
                     castDto.setCastId(actorNode.has("cast_id") ? actorNode.get("cast_id").asLong() : null);
                     castDto.setName(actorNode.get("name").asText());
@@ -166,11 +168,11 @@ public class MediaMapperService {
             }
             
             if (creditsNode.has("crew")) {
-                List<MediaDto.CrewDto> crewDtos = new ArrayList<>();
+                List<CrewDto> crewDtos = new ArrayList<>();
                 JsonNode crewNode = creditsNode.get("crew");
                 
                 for (JsonNode crewMemberNode : crewNode) {
-                    MediaDto.CrewDto crewDto = new MediaDto.CrewDto();
+                    CrewDto crewDto = new CrewDto();
                     crewDto.setId(crewMemberNode.get("id").asLong());
                     crewDto.setName(crewMemberNode.get("name").asText());
                     crewDto.setJob(crewMemberNode.get("job").asText());
@@ -191,8 +193,8 @@ public class MediaMapperService {
     /**
      * Cast 엔티티를 CastDto로 변환
      */
-    public MediaDto.CastDto mapCastToCastDto(Cast cast) {
-        MediaDto.CastDto dto = new MediaDto.CastDto();
+    public CastDto mapCastToCastDto(Cast cast) {
+        CastDto dto = new CastDto();
         dto.setId(cast.getId());
         dto.setCastId(cast.getCastId());
         dto.setName(cast.getName());
@@ -205,8 +207,8 @@ public class MediaMapperService {
     /**
      * Crew 엔티티를 CrewDto로 변환
      */
-    public MediaDto.CrewDto mapCrewToCrewDto(Crew crew) {
-        MediaDto.CrewDto dto = new MediaDto.CrewDto();
+    public CrewDto mapCrewToCrewDto(Crew crew) {
+        CrewDto dto = new CrewDto();
         dto.setId(crew.getId());
         dto.setName(crew.getName());
         dto.setJob(crew.getJob());
@@ -218,8 +220,8 @@ public class MediaMapperService {
     /**
      * Video 엔티티를 VideoDto로 변환
      */
-    public MediaDto.VideoDto mapVideoToVideoDto(Video video) {
-        MediaDto.VideoDto dto = new MediaDto.VideoDto();
+    public VideoDto mapVideoToVideoDto(Video video) {
+        VideoDto dto = new VideoDto();
         dto.setId(video.getId());
         dto.setName(video.getName());
         dto.setKey(video.getVideoKey());
@@ -232,14 +234,14 @@ public class MediaMapperService {
      * MediaItemDto를 MovieEntity로 변환하여 저장
      */
     @Transactional
-    public void saveMovieEntity(MediaDto.MediaItemDto dto, Media.MediaCategory category) {
+    public void saveMovieEntity(MediaItemDto dto, Media.MediaCategory category) {
         Movie movie = movieRepository.findById(dto.getId())
                 .orElse(new Movie(dto.getId()));
         
         movie.setTitle(dto.getTitle());
         movie.setOverview(dto.getOverview());
         movie.setPosterPath(dto.getPosterPath());
-        movie.setBackDropPath(dto.getBackdropPath());
+        movie.setBackdropPath(dto.getBackdropPath());
         movie.setVoteAverage(dto.getVoteAverage());
         movie.setPopularity(dto.getPopularity());
         movie.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
@@ -281,14 +283,14 @@ public class MediaMapperService {
      * MediaItemDto를 TvEntity로 변환하여 저장
      */
     @Transactional
-    public void saveTvEntity(MediaDto.MediaItemDto dto, Media.MediaCategory category) {
+    public void saveTvEntity(MediaItemDto dto, Media.MediaCategory category) {
         Tv tv = tvRepository.findById(dto.getId())
                 .orElse(new Tv(dto.getId()));
         
         tv.setTitle(dto.getTitle());
         tv.setOverview(dto.getOverview());
         tv.setPosterPath(dto.getPosterPath());
-        tv.setBackDropPath(dto.getBackdropPath());
+        tv.setBackdropPath(dto.getBackdropPath());
         tv.setVoteAverage(dto.getVoteAverage());
         tv.setPopularity(dto.getPopularity());
         tv.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
@@ -340,14 +342,14 @@ public class MediaMapperService {
      * MediaItemDto를 AnimationEntity로 변환하여 저장
      */
     @Transactional
-    public void saveAnimationEntity(MediaDto.MediaItemDto dto, Media.MediaCategory category) {
+    public void saveAnimationEntity(MediaItemDto dto, Media.MediaCategory category) {
         Animation animation = animationRepository.findById(dto.getId())
                 .orElse(new Animation(dto.getId()));
         
         animation.setTitle(dto.getTitle());
         animation.setOverview(dto.getOverview());
         animation.setPosterPath(dto.getPosterPath());
-        animation.setBackDropPath(dto.getBackdropPath());
+        animation.setBackdropPath(dto.getBackdropPath());
         animation.setVoteAverage(dto.getVoteAverage());
         animation.setPopularity(dto.getPopularity());
         animation.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
@@ -388,31 +390,61 @@ public class MediaMapperService {
     /**
      * 장르 정보 저장
      */
-    private void saveGenres(MediaDto.MediaItemDto dto, Long mediaId, Media.MediaType mediaType) {
+    private void saveGenres(MediaItemDto dto, Long mediaId, Media.MediaType mediaType) {
+        // 기존 장르 정보 조회 후 삭제 (업데이트를 위해)
+        List<MediaGenre> existingGenres = mediaGenreRepository.findByMediaIdAndMediaType(mediaId, mediaType);
+        mediaGenreRepository.deleteAll(existingGenres);
+        
         if (dto.getGenres() != null) {
-            for (MediaDto.GenreDto genreDto : dto.getGenres()) {
+            for (GenreDto genreDto : dto.getGenres()) {
                 Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(genreDto.getId(), Genre.MediaType.valueOf(mediaType.name()));
                 
+                Genre genre;
                 if (genreOptional.isPresent()) {
-                    Genre genre = genreOptional.get();
-                    // MediaGenre 저장 로직 (생략)
+                    genre = genreOptional.get();
                 } else {
-                    Genre genre = new Genre();
+                    genre = new Genre();
                     genre.setId(genreDto.getId());
                     genre.setName(genreDto.getName());
                     genre.setMediaType(Genre.MediaType.valueOf(mediaType.name()));
                     genreRepository.save(genre);
-                    // MediaGenre 저장 로직 (생략)
                 }
+                
+                // MediaGenre 저장
+                MediaGenre mediaGenre = new MediaGenre();
+                mediaGenre.setMediaId(mediaId);
+                mediaGenre.setMediaType(mediaType);
+                mediaGenre.setGenre(genre);
+                mediaGenreRepository.save(mediaGenre);
             }
         } else if (dto.getGenreIds() != null) {
             for (Integer genreId : dto.getGenreIds()) {
                 Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(genreId, Genre.MediaType.valueOf(mediaType.name()));
                 
                 if (genreOptional.isPresent()) {
-                    // MediaGenre 저장 로직 (생략)
+                    Genre genre = genreOptional.get();
+                    
+                    // MediaGenre 저장
+                    MediaGenre mediaGenre = new MediaGenre();
+                    mediaGenre.setMediaId(mediaId);
+                    mediaGenre.setMediaType(mediaType);
+                    mediaGenre.setGenre(genre);
+                    mediaGenreRepository.save(mediaGenre);
                 } else {
-                    // 장르 정보 없음, TMDB API에서 장르 정보 조회 필요
+                    // 장르 정보 없음, 공통 장르에서 검색
+                    genreOptional = genreRepository.findByIdAndMediaType(genreId, Genre.MediaType.COMMON);
+                    
+                    if (genreOptional.isPresent()) {
+                        Genre genre = genreOptional.get();
+                        
+                        // MediaGenre 저장
+                        MediaGenre mediaGenre = new MediaGenre();
+                        mediaGenre.setMediaId(mediaId);
+                        mediaGenre.setMediaType(mediaType);
+                        mediaGenre.setGenre(genre);
+                        mediaGenreRepository.save(mediaGenre);
+                    }
+                    // 장르 정보를 찾을 수 없는 경우는 무시
                 }
             }
         }
@@ -421,8 +453,8 @@ public class MediaMapperService {
     /**
      * 비디오 정보 저장
      */
-    private void saveVideos(List<MediaDto.VideoDto> videoDtos, Long mediaId, Media.MediaType mediaType) {
-        for (MediaDto.VideoDto videoDto : videoDtos) {
+    public void saveVideos(List<VideoDto> videoDtos, Long mediaId, Media.MediaType mediaType) {
+        for (VideoDto videoDto : videoDtos) {
             Video video = videoRepository.findById(videoDto.getId())
                     .orElse(new Video());
             
@@ -441,8 +473,8 @@ public class MediaMapperService {
     /**
      * 출연진 정보 저장
      */
-    private void saveCast(List<MediaDto.CastDto> castDtos, Long mediaId, Media.MediaType mediaType) {
-        for (MediaDto.CastDto castDto : castDtos) {
+    public void saveCast(List<CastDto> castDtos, Long mediaId, Media.MediaType mediaType) {
+        for (CastDto castDto : castDtos) {
             Cast cast = new Cast();
             cast.setCastId(castDto.getCastId());
             cast.setPersonId(castDto.getId());
@@ -460,8 +492,8 @@ public class MediaMapperService {
     /**
      * 제작진 정보 저장
      */
-    private void saveCrew(List<MediaDto.CrewDto> crewDtos, Long mediaId, Media.MediaType mediaType) {
-        for (MediaDto.CrewDto crewDto : crewDtos) {
+    public void saveCrew(List<CrewDto> crewDtos, Long mediaId, Media.MediaType mediaType) {
+        for (CrewDto crewDto : crewDtos) {
             Crew crew = new Crew();
             crew.setPersonId(crewDto.getId());
             crew.setName(crewDto.getName());
@@ -478,14 +510,14 @@ public class MediaMapperService {
     /**
      * Movie를 MediaItemDto로 변환
      */
-    public MediaDto.MediaItemDto mapMovieToDto(Movie movie) {
-        MediaDto.MediaItemDto dto = new MediaDto.MediaItemDto();
+    public MediaItemDto mapMovieToDto(Movie movie) {
+        MediaItemDto dto = new MediaItemDto();
         
         dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());
-        dto.setBackdropPath(movie.getBackDropPath());
+        dto.setBackdropPath(movie.getBackdropPath());
         dto.setVoteAverage(movie.getVoteAverage());
         dto.setPopularity(movie.getPopularity());
         dto.setRuntime(movie.getRuntime());
@@ -504,14 +536,14 @@ public class MediaMapperService {
     /**
      * Tv를 MediaItemDto로 변환
      */
-    public MediaDto.MediaItemDto mapTvToDto(Tv tv) {
-        MediaDto.MediaItemDto dto = new MediaDto.MediaItemDto();
+    public MediaItemDto mapTvToDto(Tv tv) {
+        MediaItemDto dto = new MediaItemDto();
         
         dto.setId(tv.getId());
         dto.setTitle(tv.getTitle());
         dto.setOverview(tv.getOverview());
         dto.setPosterPath(tv.getPosterPath());
-        dto.setBackdropPath(tv.getBackDropPath());
+        dto.setBackdropPath(tv.getBackdropPath());
         dto.setVoteAverage(tv.getVoteAverage());
         dto.setPopularity(tv.getPopularity());
         dto.setRuntime(tv.getRuntime());
@@ -536,14 +568,14 @@ public class MediaMapperService {
     /**
      * Animation을 MediaItemDto로 변환
      */
-    public MediaDto.MediaItemDto mapAnimationToDto(Animation animation) {
-        MediaDto.MediaItemDto dto = new MediaDto.MediaItemDto();
+    public MediaItemDto mapAnimationToDto(Animation animation) {
+        MediaItemDto dto = new MediaItemDto();
         
         dto.setId(animation.getId());
         dto.setTitle(animation.getTitle());
         dto.setOverview(animation.getOverview());
         dto.setPosterPath(animation.getPosterPath());
-        dto.setBackdropPath(animation.getBackDropPath());
+        dto.setBackdropPath(animation.getBackdropPath());
         dto.setVoteAverage(animation.getVoteAverage());
         dto.setPopularity(animation.getPopularity());
         dto.setRuntime(animation.getRuntime());
