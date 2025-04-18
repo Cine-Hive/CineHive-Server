@@ -1,6 +1,10 @@
 package com.example.CineHive.service.media;
 
+import com.example.CineHive.dto.media.MediaDetailsDto;
 import com.example.CineHive.dto.media.MediaDto;
+import com.example.CineHive.dto.media.MediaItemDto;
+import com.example.CineHive.dto.media.VideoDto;
+import com.example.CineHive.dto.media.MediaCreditsDto;
 import com.example.CineHive.entity.media.Media;
 
 import java.util.List;
@@ -8,7 +12,7 @@ import java.util.Map;
 
 public interface MediaService {
     // 기본 미디어 조회
-    MediaDto.MediaItemDto getMediaById(Media.MediaType mediaType, Long id);
+    MediaItemDto getMediaById(Media.MediaType mediaType, Long id);
     
     // 검색
     MediaDto searchMedia(Media.MediaType mediaType, String query, int page);
@@ -16,17 +20,24 @@ public interface MediaService {
     // 카테고리별 미디어 목록
     MediaDto getMediaByCategory(Media.MediaType mediaType, Media.MediaCategory category, int page);
     
+    // 카테고리별 미디어 목록 (정렬 옵션 포함)
+    MediaDto getMediaByCategory(Media.MediaType mediaType, Media.MediaCategory category, int page, String sortBy);
+    
     // 유사 미디어 조회
     MediaDto getSimilarMedia(Media.MediaType mediaType, Long id, int page);
     
     // 출연/제작진 정보
-    MediaDto.MediaItemDto getMediaWithCredits(Media.MediaType mediaType, Long id);
+    MediaCreditsDto getMediaWithCredits(Media.MediaType mediaType, Long id);
     
     // 비디오 정보
-    List<MediaDto.VideoDto> getMediaVideos(Media.MediaType mediaType, Long id);
+    List<VideoDto> getMediaVideos(Media.MediaType mediaType, Long id);
+    
+    // 미디어 통합 상세 정보 조회 (기본 정보 + 출연/제작진 + 비디오 + 유사 미디어)
+    MediaDetailsDto getMediaDetails(Media.MediaType mediaType, Long id);
     
     // 애니메이션 전용 (장르 필터링)
     MediaDto getAnimationsByCategory(Media.MediaCategory category, int page);
+    MediaDto getAnimationsByCategory(Media.MediaCategory category, int page, String sortBy);
     MediaDto searchAnimations(String query, int page);
     
     // 데이터 동기화 (TMDB API에서 데이터 가져오기)
