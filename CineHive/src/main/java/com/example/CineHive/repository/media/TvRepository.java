@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TvRepository extends MediaRepository<Tv> {
-    // 추가 TV 관련 쿼리 메서드
+    // 추가 메서드가 필요하면 여기에 정의
 } 
