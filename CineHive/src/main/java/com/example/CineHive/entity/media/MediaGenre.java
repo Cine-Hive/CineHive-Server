@@ -17,7 +17,7 @@ public class MediaGenre {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "media_id")
+    @Column(name = "media_id", insertable = false, updatable = false)
     private Long mediaId;
     
     @Column(name = "media_type")

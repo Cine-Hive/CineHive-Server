@@ -28,7 +28,9 @@ public abstract class Media {
     private String overview;
     
     private String posterPath;
-    private String backDropPath;
+
+    @Column(name = "backdrop_path")
+    private String backdropPath;
     
     @Column(name = "release_date")
     private LocalDate releaseDate;

@@ -1,6 +1,6 @@
 package com.example.CineHive.entity.credit;
 
-import com.example.CineHive.entity.media.Movie;
+import com.example.CineHive.entity.media.Media;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,8 +38,12 @@ public class Crew {
     @Schema(description = "프로필 이미지 경로", example = "/path/to/profile.jpg")
     private String profilePath;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", nullable = false)
-    @Schema(description = "연관된 영화")
-    private Movie movie;
+    @Schema(description = "미디어 ID", example = "550")
+    @Column(nullable = false)
+    private Long mediaId;
+    
+    @Schema(description = "미디어 타입", example = "MOVIE")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Media.MediaType mediaType;
 }
