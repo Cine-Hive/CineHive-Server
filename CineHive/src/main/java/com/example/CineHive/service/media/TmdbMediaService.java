@@ -89,94 +89,31 @@ public class TmdbMediaService implements MediaService {
                 Optional<Movie> movieOpt = movieRepository.findById(id);
                 if (movieOpt.isPresent()) {
                     mediaItemDto = mediaMapperService.mapMovieToDto(movieOpt.get());
-
-                    // 장르 정보 추가
-                    addGenreInfoToMedia(mediaItemDto, mediaType, id);
-
-                    // 출연진 정보 추가
-                    List<CastDto> castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCastToCastDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCast(castDtos);
-
-                    // 제작진 정보 추가
-                    List<CrewDto> crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCrewToCrewDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCrew(crewDtos);
-
-                    // 비디오 정보 추가
-                    List<VideoDto> videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapVideoToVideoDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setVideos(videoDtos);
+                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
                 }
             }
             case TV -> {
                 Optional<Tv> tvOpt = tvRepository.findById(id);
                 if (tvOpt.isPresent()) {
                     mediaItemDto = mediaMapperService.mapTvToDto(tvOpt.get());
-
-                    // 장르, 출연진, 제작진, 비디오 정보 추가 (위와 동일한 패턴)
-                    addGenreInfoToMedia(mediaItemDto, mediaType, id);
-
-                    List<CastDto> castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCastToCastDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCast(castDtos);
-
-                    List<CrewDto> crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCrewToCrewDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCrew(crewDtos);
-
-                    List<VideoDto> videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapVideoToVideoDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setVideos(videoDtos);
+                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
                 }
             }
             case ANIMATION -> {
                 Optional<Animation> animationOpt = animationRepository.findById(id);
                 if (animationOpt.isPresent()) {
                     mediaItemDto = mediaMapperService.mapAnimationToDto(animationOpt.get());
-
-                    // 장르, 출연진, 제작진, 비디오 정보 추가 (위와 동일한 패턴)
-                    addGenreInfoToMedia(mediaItemDto, mediaType, id);
-
-                    List<CastDto> castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCastToCastDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCast(castDtos);
-
-                    List<CrewDto> crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapCrewToCrewDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setCrew(crewDtos);
-
-                    List<VideoDto> videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
-                            .stream()
-                            .map(mediaMapperService::mapVideoToVideoDto)
-                            .collect(Collectors.toList());
-                    mediaItemDto.setVideos(videoDtos);
+                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
                 }
             }
         }
 
-        // 2. DB에 없거나 상세 정보가 누락된 경우 TMDB API 호출
-        if (mediaItemDto == null || isDetailsMissing(mediaItemDto)) {
+        // 2. DB에 없는 경우 TMDB API 호출
+        if (mediaItemDto == null) {
             String path = getMediaTypePath(mediaType);
 
             String response = webClient.get()
-                    .uri("/" + path + "/" + id + "?api_key=" + apiKey + "&language=ko-KR&append_to_response=videos,credits")
+                    .uri("/" + path + "/" + id + "?api_key=" + apiKey + "&language=ko-KR")
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
@@ -186,8 +123,8 @@ public class TmdbMediaService implements MediaService {
                     JsonNode rootNode = objectMapper.readTree(response);
                     MediaItemDto apiDto = mediaMapperService.mapJsonToMediaItemDto(rootNode, mediaType);
 
-                    // API에서 받은 정보를 DB에 저장
-                    saveCompleteMediaData(apiDto, mediaType);
+                    // API에서 받은 기본 정보를 DB에 저장
+                    saveMediaEntity(apiDto, mediaType, Media.MediaCategory.DEFAULT);
 
                     return apiDto;
                 } catch (Exception e) {
@@ -201,29 +138,6 @@ public class TmdbMediaService implements MediaService {
         }
 
         return mediaItemDto;
-    }
-
-    // 상세 정보 누락 여부 확인
-    private boolean isDetailsMissing(MediaItemDto dto) {
-        return (dto.getVideos() == null || dto.getVideos().isEmpty()) ||
-                (dto.getCast() == null || dto.getCast().isEmpty()) ||
-                (dto.getCrew() == null || dto.getCrew().isEmpty()) ||
-                (dto.getGenres() == null || dto.getGenres().isEmpty());
-    }
-
-    // 완전한 미디어 데이터 저장 (기본 + 출연진 + 제작진 + 비디오)
-    @Transactional
-    protected void saveCompleteMediaData(MediaItemDto dto, Media.MediaType mediaType) {
-        Media.MediaCategory category = Media.MediaCategory.DEFAULT;
-        if (dto.getCategory() != null && !dto.getCategory().isEmpty()) {
-            try {
-                category = Media.MediaCategory.valueOf(dto.getCategory().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // 기본값 유지
-            }
-        }
-
-        saveMediaEntity(dto, mediaType, category);
     }
 
     @Override
@@ -642,21 +556,27 @@ public class TmdbMediaService implements MediaService {
                     
             if (response != null) {
                 JsonNode rootNode = objectMapper.readTree(response);
-                MediaItemDto detailsDto = mediaMapperService.mapJsonToMediaItemDto(rootNode, mediaType);
                 
-                // 비디오 정보 저장
-                if (detailsDto.getVideos() != null && !detailsDto.getVideos().isEmpty()) {
-                    mediaMapperService.saveVideos(detailsDto.getVideos(), id, mediaType);
+                // 기본 정보 저장
+                MediaItemDto basicDto = mediaMapperService.mapJsonToMediaItemDto(rootNode, mediaType);
+                saveMediaEntity(basicDto, mediaType, Media.MediaCategory.DEFAULT);
+                
+                // 비디오 정보 추출 및 저장
+                List<VideoDto> videoDtos = mediaMapperService.extractVideosFromJson(rootNode);
+                if (!videoDtos.isEmpty()) {
+                    mediaMapperService.saveVideos(videoDtos, id, mediaType);
                 }
                 
-                // 출연진 정보 저장
-                if (detailsDto.getCast() != null && !detailsDto.getCast().isEmpty()) {
-                    mediaMapperService.saveCast(detailsDto.getCast(), id, mediaType);
+                // 출연진 정보 추출 및 저장
+                List<CastDto> castDtos = mediaMapperService.extractCastFromJson(rootNode);
+                if (!castDtos.isEmpty()) {
+                    mediaMapperService.saveCast(castDtos, id, mediaType);
                 }
                 
-                // 제작진 정보 저장
-                if (detailsDto.getCrew() != null && !detailsDto.getCrew().isEmpty()) {
-                    mediaMapperService.saveCrew(detailsDto.getCrew(), id, mediaType);
+                // 제작진 정보 추출 및 저장
+                List<CrewDto> crewDtos = mediaMapperService.extractCrewFromJson(rootNode);
+                if (!crewDtos.isEmpty()) {
+                    mediaMapperService.saveCrew(crewDtos, id, mediaType);
                 }
             }
         } catch (Exception e) {
@@ -1012,23 +932,47 @@ public class TmdbMediaService implements MediaService {
         // 출연진 정보 조회
         List<CastDto> castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
                 .stream()
-                .map(cast -> mediaMapperService.mapCastToCastDto(cast))
+                .map(mediaMapperService::mapCastToCastDto)
                 .collect(Collectors.toList());
         detailsDto.setCredits(castDtos);
         
         // 제작진 정보 조회
         List<CrewDto> crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
                 .stream()
-                .map(crew -> mediaMapperService.mapCrewToCrewDto(crew))
+                .map(mediaMapperService::mapCrewToCrewDto)
                 .collect(Collectors.toList());
         detailsDto.setCrew(crewDtos);
         
         // 비디오 정보 조회
         List<VideoDto> videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
                 .stream()
-                .map(video -> mediaMapperService.mapVideoToVideoDto(video))
+                .map(mediaMapperService::mapVideoToVideoDto)
                 .collect(Collectors.toList());
         detailsDto.setVideos(videoDtos);
+        
+        // DB에 출연진, 제작진, 비디오 정보가 없는 경우 API에서 상세 정보 조회
+        if (castDtos.isEmpty() || crewDtos.isEmpty() || videoDtos.isEmpty()) {
+            fetchAndSaveMediaDetails(id, mediaType);
+            
+            // 다시 DB에서 정보 조회
+            castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
+                    .stream()
+                    .map(mediaMapperService::mapCastToCastDto)
+                    .collect(Collectors.toList());
+            detailsDto.setCredits(castDtos);
+            
+            crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
+                    .stream()
+                    .map(mediaMapperService::mapCrewToCrewDto)
+                    .collect(Collectors.toList());
+            detailsDto.setCrew(crewDtos);
+            
+            videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
+                    .stream()
+                    .map(mediaMapperService::mapVideoToVideoDto)
+                    .collect(Collectors.toList());
+            detailsDto.setVideos(videoDtos);
+        }
         
         // 유사 미디어 조회
         MediaDto similarMedia = getSimilarMedia(mediaType, id, 1);
