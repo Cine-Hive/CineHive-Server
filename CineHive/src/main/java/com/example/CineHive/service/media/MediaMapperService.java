@@ -56,67 +56,80 @@ public class MediaMapperService {
     private MediaGenreRepository mediaGenreRepository;
 
     /**
-     * JSON 노드를 MediaItemDto로 변환
+     * JSON 응답을 MediaItemDto로 변환
      */
     public MediaItemDto mapJsonToMediaItemDto(JsonNode mediaNode, Media.MediaType mediaType) {
         MediaItemDto dto = new MediaItemDto();
         
-        dto.setId(mediaNode.has("id") ? mediaNode.get("id").asLong() : null);
-        
-        // 미디어 타입별로 다른 필드 처리
-        switch (mediaType) {
-            case MOVIE -> {
-                dto.setTitle(mediaNode.has("title") ? mediaNode.get("title").asText() : "");
-                dto.setReleaseDate(mediaNode.has("release_date") ? mediaNode.get("release_date").asText() : null);
-                dto.setOriginalTitle(mediaNode.has("original_title") ? mediaNode.get("original_title").asText() : null);
-            }
-            case TV -> {
-                dto.setTitle(mediaNode.has("name") ? mediaNode.get("name").asText() : "");
-                dto.setReleaseDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
-                dto.setOriginalTitle(mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null);
-                if (mediaNode.has("origin_country")) {
-                    List<String> countries = StreamSupport.stream(mediaNode.get("origin_country").spliterator(), false)
-                            .map(JsonNode::asText)
-                            .collect(Collectors.toList());
-                    dto.setOriginCountry(countries);
-                }
-                dto.setNumberOfSeasons(mediaNode.has("number_of_seasons") ? mediaNode.get("number_of_seasons").asInt() : null);
-                dto.setNumberOfEpisodes(mediaNode.has("number_of_episodes") ? mediaNode.get("number_of_episodes").asInt() : null);
-                dto.setFirstAirDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
-                dto.setLastAirDate(mediaNode.has("last_air_date") ? mediaNode.get("last_air_date").asText() : null);
-            }
-            case ANIMATION -> {
-                // 애니메이션은 영화나 TV 형식에 따라 다르게 처리
-                if (mediaNode.has("title")) {
-                    dto.setTitle(mediaNode.get("title").asText());
-                    dto.setReleaseDate(mediaNode.has("release_date") ? mediaNode.get("release_date").asText() : null);
-                    dto.setOriginalTitle(mediaNode.has("original_title") ? mediaNode.get("original_title").asText() : null);
-                } else {
-                    dto.setTitle(mediaNode.has("name") ? mediaNode.get("name").asText() : "");
-                    dto.setReleaseDate(mediaNode.has("first_air_date") ? mediaNode.get("first_air_date").asText() : null);
-                    dto.setOriginalTitle(mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null);
-                }
-            }
-        }
-        
+        // 기본 필드 설정
+        dto.setId(mediaNode.get("id").asLong());
+        dto.setTitle(mediaNode.has("title") 
+            ? mediaNode.get("title").asText() 
+            : (mediaNode.has("name") ? mediaNode.get("name").asText() : ""));
         dto.setOverview(mediaNode.has("overview") ? mediaNode.get("overview").asText() : "");
         dto.setPosterPath(mediaNode.has("poster_path") ? mediaNode.get("poster_path").asText() : null);
         dto.setBackdropPath(mediaNode.has("backdrop_path") ? mediaNode.get("backdrop_path").asText() : null);
         dto.setVoteAverage(mediaNode.has("vote_average") ? mediaNode.get("vote_average").asDouble() : 0.0);
         dto.setPopularity(mediaNode.has("popularity") ? mediaNode.get("popularity").asDouble() : 0.0);
-        dto.setRuntime(mediaNode.has("runtime") ? mediaNode.get("runtime").asInt() : null);
         dto.setOriginalLanguage(mediaNode.has("original_language") ? mediaNode.get("original_language").asText() : null);
+        dto.setOriginalTitle(mediaNode.has("original_title") 
+            ? mediaNode.get("original_title").asText() 
+            : (mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null));
+        
+        // 개봉일/방영일 처리
+        if (mediaNode.has("release_date")) {
+            dto.setReleaseDate(mediaNode.get("release_date").asText());
+        } else if (mediaNode.has("first_air_date")) {
+            dto.setReleaseDate(mediaNode.get("first_air_date").asText());
+        }
+        
+        // TV 전용 필드 처리
+        if (mediaType == Media.MediaType.TV || (mediaNode.has("media_type") && mediaNode.get("media_type").asText().equals("tv"))) {
+            if (mediaNode.has("origin_country")) {
+                List<String> originCountry = new ArrayList<>();
+                JsonNode originCountryNode = mediaNode.get("origin_country");
+                if (originCountryNode.isArray()) {
+                    for (JsonNode countryNode : originCountryNode) {
+                        originCountry.add(countryNode.asText());
+                    }
+                }
+                dto.setOriginCountry(originCountry);
+            }
+            
+            if (mediaNode.has("first_air_date")) {
+                dto.setFirstAirDate(mediaNode.get("first_air_date").asText());
+            }
+            
+            if (mediaNode.has("last_air_date")) {
+                dto.setLastAirDate(mediaNode.get("last_air_date").asText());
+            }
+            
+            if (mediaNode.has("number_of_seasons")) {
+                dto.setNumberOfSeasons(mediaNode.get("number_of_seasons").asInt());
+            }
+            
+            if (mediaNode.has("number_of_episodes")) {
+                dto.setNumberOfEpisodes(mediaNode.get("number_of_episodes").asInt());
+            }
+        }
+        
+        // 영화 전용 필드 처리
+        if (mediaNode.has("runtime")) {
+            dto.setRuntime(mediaNode.get("runtime").asInt());
+        }
         
         // 장르 정보 처리
-        List<GenreDto> genreDtos = new ArrayList<>();
         if (mediaNode.has("genres")) {
+            List<GenreDto> genreDtos = new ArrayList<>();
             JsonNode genresNode = mediaNode.get("genres");
+            
             for (JsonNode genreNode : genresNode) {
                 GenreDto genreDto = new GenreDto();
                 genreDto.setId(genreNode.get("id").asInt());
                 genreDto.setName(genreNode.get("name").asText());
                 genreDtos.add(genreDto);
             }
+            
             dto.setGenres(genreDtos);
         } else if (mediaNode.has("genre_ids")) {
             List<Integer> genreIds = new ArrayList<>();
@@ -127,10 +140,19 @@ public class MediaMapperService {
             dto.setGenreIds(genreIds);
         }
         
-        // 비디오 정보 처리
+        dto.setMediaType(mediaType.name().toLowerCase());
+        
+        return dto;
+    }
+    
+    /**
+     * JSON 응답에서 비디오 정보를 추출
+     */
+    public List<VideoDto> extractVideosFromJson(JsonNode mediaNode) {
+        List<VideoDto> videoDtos = new ArrayList<>();
+        
         if (mediaNode.has("videos") && mediaNode.get("videos").has("results")) {
             JsonNode videosNode = mediaNode.get("videos").get("results");
-            List<VideoDto> videoDtos = new ArrayList<>();
             
             for (JsonNode videoNode : videosNode) {
                 VideoDto videoDto = new VideoDto();
@@ -141,53 +163,56 @@ public class MediaMapperService {
                 videoDto.setType(videoNode.get("type").asText());
                 videoDtos.add(videoDto);
             }
-            
-            dto.setVideos(videoDtos);
         }
         
-        // 출연진 정보 처리
-        if (mediaNode.has("credits")) {
-            JsonNode creditsNode = mediaNode.get("credits");
+        return videoDtos;
+    }
+    
+    /**
+     * JSON 응답에서 출연진 정보를 추출
+     */
+    public List<CastDto> extractCastFromJson(JsonNode mediaNode) {
+        List<CastDto> castDtos = new ArrayList<>();
+        
+        if (mediaNode.has("credits") && mediaNode.get("credits").has("cast")) {
+            JsonNode castNode = mediaNode.get("credits").get("cast");
             
-            if (creditsNode.has("cast")) {
-                List<CastDto> castDtos = new ArrayList<>();
-                JsonNode castNode = creditsNode.get("cast");
-                
-                for (JsonNode actorNode : castNode) {
-                    CastDto castDto = new CastDto();
-                    castDto.setId(actorNode.get("id").asLong());
-                    castDto.setCastId(actorNode.has("cast_id") ? actorNode.get("cast_id").asLong() : null);
-                    castDto.setName(actorNode.get("name").asText());
-                    castDto.setCharacter(actorNode.get("character").asText());
-                    castDto.setProfilePath(actorNode.has("profile_path") ? actorNode.get("profile_path").asText() : null);
-                    castDto.setOrder(actorNode.has("order") ? actorNode.get("order").asInt() : null);
-                    castDtos.add(castDto);
-                }
-                
-                dto.setCast(castDtos);
-            }
-            
-            if (creditsNode.has("crew")) {
-                List<CrewDto> crewDtos = new ArrayList<>();
-                JsonNode crewNode = creditsNode.get("crew");
-                
-                for (JsonNode crewMemberNode : crewNode) {
-                    CrewDto crewDto = new CrewDto();
-                    crewDto.setId(crewMemberNode.get("id").asLong());
-                    crewDto.setName(crewMemberNode.get("name").asText());
-                    crewDto.setJob(crewMemberNode.get("job").asText());
-                    crewDto.setDepartment(crewMemberNode.get("department").asText());
-                    crewDto.setProfilePath(crewMemberNode.has("profile_path") ? crewMemberNode.get("profile_path").asText() : null);
-                    crewDtos.add(crewDto);
-                }
-                
-                dto.setCrew(crewDtos);
+            for (JsonNode actorNode : castNode) {
+                CastDto castDto = new CastDto();
+                castDto.setId(actorNode.get("id").asLong());
+                castDto.setCastId(actorNode.has("cast_id") ? actorNode.get("cast_id").asLong() : null);
+                castDto.setName(actorNode.get("name").asText());
+                castDto.setCharacter(actorNode.get("character").asText());
+                castDto.setProfilePath(actorNode.has("profile_path") ? actorNode.get("profile_path").asText() : null);
+                castDto.setOrder(actorNode.has("order") ? actorNode.get("order").asInt() : null);
+                castDtos.add(castDto);
             }
         }
         
-        dto.setMediaType(mediaType.name().toLowerCase());
+        return castDtos;
+    }
+    
+    /**
+     * JSON 응답에서 제작진 정보를 추출
+     */
+    public List<CrewDto> extractCrewFromJson(JsonNode mediaNode) {
+        List<CrewDto> crewDtos = new ArrayList<>();
         
-        return dto;
+        if (mediaNode.has("credits") && mediaNode.get("credits").has("crew")) {
+            JsonNode crewNode = mediaNode.get("credits").get("crew");
+            
+            for (JsonNode crewMemberNode : crewNode) {
+                CrewDto crewDto = new CrewDto();
+                crewDto.setId(crewMemberNode.get("id").asLong());
+                crewDto.setName(crewMemberNode.get("name").asText());
+                crewDto.setJob(crewMemberNode.get("job").asText());
+                crewDto.setDepartment(crewMemberNode.get("department").asText());
+                crewDto.setProfilePath(crewMemberNode.has("profile_path") ? crewMemberNode.get("profile_path").asText() : null);
+                crewDtos.add(crewDto);
+            }
+        }
+        
+        return crewDtos;
     }
     
     /**
@@ -262,21 +287,6 @@ public class MediaMapperService {
         
         // 장르 정보 저장
         saveGenres(dto, movie.getId(), Media.MediaType.MOVIE);
-        
-        // 비디오 정보 저장
-        if (dto.getVideos() != null) {
-            saveVideos(dto.getVideos(), movie.getId(), Media.MediaType.MOVIE);
-        }
-        
-        // 출연진 정보 저장
-        if (dto.getCast() != null) {
-            saveCast(dto.getCast(), movie.getId(), Media.MediaType.MOVIE);
-        }
-        
-        // 제작진 정보 저장
-        if (dto.getCrew() != null) {
-            saveCrew(dto.getCrew(), movie.getId(), Media.MediaType.MOVIE);
-        }
     }
     
     /**
@@ -321,21 +331,6 @@ public class MediaMapperService {
         
         // 장르 정보 저장
         saveGenres(dto, tv.getId(), Media.MediaType.TV);
-        
-        // 비디오 정보 저장
-        if (dto.getVideos() != null) {
-            saveVideos(dto.getVideos(), tv.getId(), Media.MediaType.TV);
-        }
-        
-        // 출연진 정보 저장
-        if (dto.getCast() != null) {
-            saveCast(dto.getCast(), tv.getId(), Media.MediaType.TV);
-        }
-        
-        // 제작진 정보 저장
-        if (dto.getCrew() != null) {
-            saveCrew(dto.getCrew(), tv.getId(), Media.MediaType.TV);
-        }
     }
     
     /**
@@ -370,21 +365,6 @@ public class MediaMapperService {
         
         // 장르 정보 저장
         saveGenres(dto, animation.getId(), Media.MediaType.ANIMATION);
-        
-        // 비디오 정보 저장
-        if (dto.getVideos() != null) {
-            saveVideos(dto.getVideos(), animation.getId(), Media.MediaType.ANIMATION);
-        }
-        
-        // 출연진 정보 저장
-        if (dto.getCast() != null) {
-            saveCast(dto.getCast(), animation.getId(), Media.MediaType.ANIMATION);
-        }
-        
-        // 제작진 정보 저장
-        if (dto.getCrew() != null) {
-            saveCrew(dto.getCrew(), animation.getId(), Media.MediaType.ANIMATION);
-        }
     }
     
     /**
