@@ -1,0 +1,65 @@
+name: AI CodeMentor Review
+
+# 워크플로우 트리거 설정
+# opened: PR이 새로 생성될 때
+# synchronize: PR에 새로운 커밋이 추가될 때
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    # 실행 환경 설정 (Ubuntu 최신 버전)
+    runs-on: ubuntu-latest
+    
+    # 권한 설정
+    # pull-requests: write - PR에 코멘트를 작성하기 위해 필요
+    # contents: read - 코드 내용을 읽기 위해 필요
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      # 1. 코드 체크아웃
+      # fetch-depth: 0 - 모든 커밋 히스토리를 가져와 diff 생성에 활용
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}  # PR의 헤드를 명시적으로 체크아웃
+      
+      # 2. 모든 브랜치 가져오기 (선택사항)
+      # diff 생성 문제가 있을 경우 활성화
+      - name: Fetch all branches
+        run: |
+          git fetch --all
+          git fetch origin +refs/heads/*:refs/remotes/origin/*
+          
+      # 3. AI 코드 리뷰 실행
+      # 다음 환경 변수를 설정할 수 있습니다:
+      # (주의) 해당 환경 변수가 설정되어 있지 않으면 오류가 발생합니다.
+      # 설정 방법은 [installation.md] 파일을 참고하세요.
+      # - OPENAI_API_KEY: (필수) OpenAI API 키
+      # - GITHUB_TOKEN: (필수) GitHub 토큰, 자동으로 제공됨
+      # - SLACK_WEBHOOK_URL: (선택) Slack 알림용 웹훅 URL
+      # - DISCORD_WEBHOOK_URL: (선택) Discord 알림용 웹훅 URL
+      # - LANGUAGE: (선택) 리뷰 언어, 'ko' 또는 'en' (기본값: 'en')
+      # - REVIEW_TYPE: (선택) 리뷰 유형, 'standard', 'concise', 'detailed' (기본값: 'standard')
+      # - MAX_FILES: (선택) 리뷰할 최대 파일 수 (기본값: 5)
+      # - MAX_FILE_SIZE: (선택) 리뷰할 최대 파일 크기 (KB) (기본값: 500)
+      # - EXCLUDE_PATTERNS: (선택) 리뷰에서 제외할 파일 패턴 (예: '*.md,docs/*')
+      # - INCLUDE_PATTERNS: (선택) 리뷰에 포함할 파일 패턴 (예: 'src/*.js')
+      # - SKIP_LABELS: (선택) 리뷰를 건너뛸 PR 라벨 (예: 'no-ai-review,skip-review')
+      # - MODEL: (선택) 사용할 OpenAI 모델 (기본값: 'gpt-4')
+      # - SLACK_CHANNEL: (선택) Slack 알림을 보낼 채널 (기본값: '#code-reviews')
+      - name: Run AI Review
+        uses: Cine-Hive/MyCodeMentor@main
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          discord-webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          discord-username: 'AI CodeMentor'
+        env:
+          LANGUAGE: ${{ vars.LANGUAGE }}
+          REVIEW_TYPE: ${{ vars.REVIEW_TYPE }}
+          MAX_FILES: ${{ vars.MAX_FILES }}
+          EXCLUDE_PATTERNS: ${{ vars.EXCLUDE_PATTERNS }}
+          MODEL: ${{ vars.MODEL }}
