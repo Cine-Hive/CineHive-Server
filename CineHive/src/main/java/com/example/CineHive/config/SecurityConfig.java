@@ -5,81 +5,95 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
+            // 관리자 API
+            "/api/v1/admin/media/sync",
+            "/api/v1/admin/recommendations",
+            "/api/v1/admin/recommendations/cleanup",
+            "/api/v1/admin/recommendations/expiry",
+            "/api/v1/admin/recommendations/refresh",
+            "/api/v1/admin/recommendations/stats",
+            "/api/v1/admin/recommendations/threshold",
+            
+            // 애니메이션 API
+            "/api/v1/animations/**",
+            
+            // 영화 API
+            "/api/v1/movies/**",
+            
+            // TV 시리즈 API
+            "/api/v1/tv/**",
+            
+            // 게시판 API
+            "/boards", "/boards/**",
+            
+            // 즐겨찾기 API
+            "/bookmark/{boardId}", "/bookmark/{boardId}/count",
+            
+            // 댓글 API
+            "/comment/{boardId}", "/comment/{boardId}/**",
+            
+            // 좋아요/싫어요 API
+            "/like/{boardId}", "/like/{boardId}/count",
+            "/dislike/{boardId}", "/dislike/{boardId}/count",
+            
+            // 신고 API
+            "/report/{boardId}",
+            
+            // 감상평 API
+            "/reply", "/reply/**",
+            "/reply/bookmark/count", "/reply/bookmark/toggle",
+            "/reply/judge/count/dislike", "/reply/judge/count/like",
+            "/reply/judge/dislike", "/reply/judge/like",
+            
+            // 인증 API
+            "/api/auth/kakao", "/api/auth/kakao/**",
+            "/api/auth/google", "/api/auth/google/**",
+            "/api/auth/naver", "/api/auth/naver/**",
+            "/login", "/register",
+            "/checkemail/{memEmail}", "/checknickname/{memNickname}",
+            
+            // Swagger/API 문서
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
+    );
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'"))
+                        .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                        .frameOptions(frame -> frame.deny())
+                        .contentTypeOptions(contentType -> contentType.disable())
+                )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/movies",
-                                "/now_playing",
-                                "/search",
-                                "/top_movie","/movies/**",
-                                "/api/auth/undefined/success",
-                                "/dramas/**",
-                                "/animations/**",
-                                "/get_topmovies",
-                                "/topmovies/**", "/now_playing_movies"
-                                ,"/preferredGenres",
-                                "/explorer/index/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                 "/checkuserId/**").permitAll()
-                                       
-                        .requestMatchers("/login", "/register","/checknickname/**","/checkemail/**"
-                                ,"/preferredGenres","/boards/**","/boards"
-                                , "/bookmark/{boardId}","/bookmark/{boardId}/count",
-                                "/like/{boardId}","/like/{boardId}/count",
-                                "/dislike/{boardId}","/dislike/{boardId}/count",
-                                "/report/{boardId}",
-                                "/comment/{boardId}","/comment/{boardId}/**"
-                        ,"/boards/search","/update_now_playing","/update_top_movie","/get_upcoming_movies","/update_upcoming_movie",
-                                "/update_popular_movie","/get_popular_movies","/movies/{id}/similar",
-                                "api/ott/**").permitAll()
-                        .requestMatchers("/login", "/register", "/checkuserId/**","/checknickname/**","/checkemail/**",
-                                "/api/auth/kakao/check-user","/api/auth/kakao/register",
-                                "/api/auth/google/register","/api/auth/google/check-user","/api/auth/naver/check-user","/api/auth/naver/register").permitAll() // 로그인과 회원가입은 누구나 접근 가능
-                        .requestMatchers(
-                                "/api/auth/kakao",
-                                "/api/auth/logout",
-                                "/api/auth/kakao/callback",
-                                "/api/auth/kakao/success",
-                                "/api/auth/session",
-                                "/api/auth/naver",
-                                "/api/auth/naver/callback",
-                                "/api/auth/naver/success",
-                                "/api/auth/google",
-                                "/api/auth/google/callback",
-                                "/api/auth/google/success",
-                                "/register",
-                                "/login",
-                                "api/auth/**",
-                                "/api/auth/kakao/authenticate",
-                                "/api/auth/kakao/app-login",
-                                "/api/auth/kakao/login/success",
-                                "/api/auth/naver/login/success",
-                                "/api/auth/naver/app-login",
-                                "/api/auth/google/app-login",
-                                "/reply/**",
-                                "/reply/judge/**",
-                                "/reply/judge/count/**",
-                                "/reply/bookmark/**"
-
-                        ).permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionFixation().newSession()
-                        .maximumSessions(1).maxSessionsPreventsLogin(true)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionFixation().migrateSession()
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(true)
                 );
 
         http.addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -95,5 +109,27 @@ public class SecurityConfig {
     @Bean
     public JwtRequestFilter jwtRequestFilter() {
         return new JwtRequestFilter();
+    }
+    
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
+    }
+    
+    @Bean
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration());
+        return source;
+    }
+    
+    private CorsConfiguration corsConfiguration() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Collections.singletonList("https://cinehive.com")); // 배포후 우리 도메인으로 변경 필요
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+        return config;
     }
 }

@@ -2,10 +2,9 @@ package com.example.CineHive.controller.oauth.app;
 
 import com.example.CineHive.dto.oauth.KakaoUserInfo;
 import com.example.CineHive.dto.user.UserDto;
-import com.example.CineHive.entity.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
-import com.example.CineHive.service.UserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

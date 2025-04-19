@@ -1,6 +1,6 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.User;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

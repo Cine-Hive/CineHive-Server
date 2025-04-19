@@ -2,13 +2,12 @@ package com.example.CineHive.controller.oauth.app;
 
 import com.example.CineHive.dto.oauth.GoogleUserInfo;
 import com.example.CineHive.dto.user.UserDto;
-import com.example.CineHive.entity.User;
-import com.example.CineHive.repository.UserRepository;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.oauth.GoogleUserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 

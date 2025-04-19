@@ -1,7 +1,7 @@
 package com.example.CineHive.mapper;
 
 import com.example.CineHive.dto.user.LoginHistoryDto;
-import com.example.CineHive.entity.LoginHistory;
+import com.example.CineHive.entity.user.LoginHistory;
 
 public class LoginHistoryMapper {
     public static LoginHistoryDto toDto(LoginHistory loginHistory) {
