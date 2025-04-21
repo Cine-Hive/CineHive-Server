@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -53,10 +54,29 @@ public class RequestKakaoAppController {
 
                 String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
                 // 토큰 값 또한 필요에 따라 로깅 필요
-                return ResponseEntity.ok(Map.of("token", jwtToken, "user", userInfo));
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("memEmail", userInfo.getMemEmail());
+                userMap.put("memNickname", userInfo.getMemNickname());
+                userMap.put("memName", userInfo.getMemName());
+                userMap.put("genres", userInfo.getGenres());
+
+                Map<String, Object> responseMap = new HashMap<>();
+                responseMap.put("token", jwtToken);
+                responseMap.put("user", userMap);
+
+                return ResponseEntity.ok(responseMap);
             } else {
                 log.info("[Kakao Login] 신규 회원, 회원가입 필요: {}", userInfo.getMemEmail());
-                return ResponseEntity.status(201).body(userInfo);
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("memEmail", userInfo.getMemEmail());
+                userMap.put("memNickname", userInfo.getMemNickname());
+                userMap.put("memName", userInfo.getMemName());
+                userMap.put("genres", userInfo.getGenres());
+
+                Map<String, Object> responseMap = new HashMap<>();
+                responseMap.put("user", userMap);
+
+                return ResponseEntity.status(201).body(responseMap);
             }
 
         } catch (Exception e) {
