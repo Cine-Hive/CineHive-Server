@@ -237,8 +237,21 @@ public class TmdbMediaService implements MediaService {
                 };
                 
                 if (!exists) {
-                    mediaItem.setCategory(Media.MediaCategory.DEFAULT.name().toLowerCase());
-                    saveMediaEntity(mediaItem, mediaType, Media.MediaCategory.DEFAULT);
+                    // 각 미디어 항목의 카테고리 정보 확인 (없으면 DEFAULT로 설정)
+                    Media.MediaCategory category;
+                    if (mediaItem.getCategory() != null && !mediaItem.getCategory().isEmpty()) {
+                        try {
+                            category = Media.MediaCategory.valueOf(mediaItem.getCategory().toUpperCase());
+                        } catch (IllegalArgumentException e) {
+                            category = Media.MediaCategory.DEFAULT;
+                        }
+                    } else {
+                        category = Media.MediaCategory.DEFAULT;
+                    }
+                    
+                    // 카테고리 설정
+                    mediaItem.setCategory(category.name().toLowerCase());
+                    saveMediaEntity(mediaItem, mediaType, category);
                 }
             }
         }).start();
@@ -498,8 +511,21 @@ public class TmdbMediaService implements MediaService {
             for (MediaItemDto animation : animations) {
                 // 이미 존재하는지 확인
                 if (!animationRepository.existsById(animation.getId())) {
-                    animation.setCategory(Media.MediaCategory.DEFAULT.name().toLowerCase());
-                    saveMediaEntity(animation, Media.MediaType.ANIMATION, Media.MediaCategory.DEFAULT);
+                    // 각 미디어 항목의 카테고리 정보 확인 (없으면 DEFAULT로 설정)
+                    Media.MediaCategory category;
+                    if (animation.getCategory() != null && !animation.getCategory().isEmpty()) {
+                        try {
+                            category = Media.MediaCategory.valueOf(animation.getCategory().toUpperCase());
+                        } catch (IllegalArgumentException e) {
+                            category = Media.MediaCategory.DEFAULT;
+                        }
+                    } else {
+                        category = Media.MediaCategory.DEFAULT;
+                    }
+                    
+                    // 카테고리 설정
+                    animation.setCategory(category.name().toLowerCase());
+                    saveMediaEntity(animation, Media.MediaType.ANIMATION, category);
                 }
             }
         }).start();
@@ -559,7 +585,32 @@ public class TmdbMediaService implements MediaService {
                 
                 // 기본 정보 저장
                 MediaItemDto basicDto = mediaMapperService.mapJsonToMediaItemDto(rootNode, mediaType);
-                saveMediaEntity(basicDto, mediaType, Media.MediaCategory.DEFAULT);
+                
+                // 기존 엔티티의 카테고리 유지
+                Media.MediaCategory existingCategory = Media.MediaCategory.DEFAULT;
+                switch (mediaType) {
+                    case MOVIE:
+                        Optional<Movie> movie = movieRepository.findById(id);
+                        if (movie.isPresent()) {
+                            existingCategory = movie.get().getCategory();
+                        }
+                        break;
+                    case TV:
+                        Optional<Tv> tv = tvRepository.findById(id);
+                        if (tv.isPresent()) {
+                            existingCategory = tv.get().getCategory();
+                        }
+                        break;
+                    case ANIMATION:
+                        Optional<Animation> animation = animationRepository.findById(id);
+                        if (animation.isPresent()) {
+                            existingCategory = animation.get().getCategory();
+                        }
+                        break;
+                }
+                
+                // 카테고리 정보 유지하면서 저장
+                saveMediaEntity(basicDto, mediaType, existingCategory);
                 
                 // 비디오 정보 추출 및 저장
                 List<VideoDto> videoDtos = mediaMapperService.extractVideosFromJson(rootNode);
