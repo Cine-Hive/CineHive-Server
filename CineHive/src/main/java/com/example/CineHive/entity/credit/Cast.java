@@ -31,7 +31,7 @@ public class Cast {
     private String name;
 
     @Schema(description = "배역", example = "타일러 더든")
-    @Column(name = "`character`", nullable = false)
+    @Column(name = "`character`", nullable = false, columnDefinition = "TEXT")
     private String character;
     
     @Schema(description = "프로필 이미지 경로", example = "/path/to/profile.jpg")
