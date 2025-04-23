@@ -459,7 +459,14 @@ public class MediaMapperService {
             cast.setCastId(castDto.getCastId());
             cast.setPersonId(castDto.getId());
             cast.setName(castDto.getName());
-            cast.setCharacter(castDto.getCharacter());
+            
+            // 캐릭터 이름 처리 - null 체크와 길이 처리
+            String character = castDto.getCharacter();
+            if (character == null) {
+                character = "";
+            }
+            cast.setCharacter(character);
+            
             cast.setProfilePath(castDto.getProfilePath());
             cast.setOrder(castDto.getOrder());
             cast.setMediaId(mediaId);
