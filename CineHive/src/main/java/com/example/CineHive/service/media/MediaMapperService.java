@@ -12,7 +12,7 @@ import com.example.CineHive.entity.media.Movie;
 import com.example.CineHive.entity.media.Tv;
 import com.example.CineHive.repository.media.*;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,38 +22,22 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * JSON 데이터 및 엔티티 간 변환을 처리하는 서비스
  */
 @Service
+@RequiredArgsConstructor
 public class MediaMapperService {
 
-    @Autowired
-    private MovieRepository movieRepository;
-    
-    @Autowired
-    private TvRepository tvRepository;
-    
-    @Autowired
-    private GenreRepository genreRepository;
-    
-    @Autowired
-    private VideoRepository videoRepository;
-    
-    @Autowired
-    private CastRepository castRepository;
-    
-    @Autowired
-    private CrewRepository crewRepository;
-
-    @Autowired
-    private AnimationRepository animationRepository;
-
-    @Autowired
-    private MediaGenreRepository mediaGenreRepository;
+    private final MovieRepository movieRepository;
+    private final TvRepository tvRepository;
+    private final GenreRepository genreRepository;
+    private final VideoRepository videoRepository;
+    private final CastRepository castRepository;
+    private final CrewRepository crewRepository;
+    private final AnimationRepository animationRepository;
+    private final MediaGenreRepository mediaGenreRepository;
 
     /**
      * JSON 응답을 MediaItemDto로 변환
@@ -63,54 +47,21 @@ public class MediaMapperService {
         
         // 기본 필드 설정
         dto.setId(mediaNode.get("id").asLong());
-        dto.setTitle(mediaNode.has("title") 
-            ? mediaNode.get("title").asText() 
-            : (mediaNode.has("name") ? mediaNode.get("name").asText() : ""));
+        dto.setTitle(getTitle(mediaNode));
         dto.setOverview(mediaNode.has("overview") ? mediaNode.get("overview").asText() : "");
         dto.setPosterPath(mediaNode.has("poster_path") ? mediaNode.get("poster_path").asText() : null);
         dto.setBackdropPath(mediaNode.has("backdrop_path") ? mediaNode.get("backdrop_path").asText() : null);
         dto.setVoteAverage(mediaNode.has("vote_average") ? mediaNode.get("vote_average").asDouble() : 0.0);
         dto.setPopularity(mediaNode.has("popularity") ? mediaNode.get("popularity").asDouble() : 0.0);
         dto.setOriginalLanguage(mediaNode.has("original_language") ? mediaNode.get("original_language").asText() : null);
-        dto.setOriginalTitle(mediaNode.has("original_title") 
-            ? mediaNode.get("original_title").asText() 
-            : (mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null));
+        dto.setOriginalTitle(getOriginalTitle(mediaNode));
         
         // 개봉일/방영일 처리
-        if (mediaNode.has("release_date")) {
-            dto.setReleaseDate(mediaNode.get("release_date").asText());
-        } else if (mediaNode.has("first_air_date")) {
-            dto.setReleaseDate(mediaNode.get("first_air_date").asText());
-        }
+        setReleaseDate(dto, mediaNode);
         
         // TV 전용 필드 처리
         if (mediaType == Media.MediaType.TV || (mediaNode.has("media_type") && mediaNode.get("media_type").asText().equals("tv"))) {
-            if (mediaNode.has("origin_country")) {
-                List<String> originCountry = new ArrayList<>();
-                JsonNode originCountryNode = mediaNode.get("origin_country");
-                if (originCountryNode.isArray()) {
-                    for (JsonNode countryNode : originCountryNode) {
-                        originCountry.add(countryNode.asText());
-                    }
-                }
-                dto.setOriginCountry(originCountry);
-            }
-            
-            if (mediaNode.has("first_air_date")) {
-                dto.setFirstAirDate(mediaNode.get("first_air_date").asText());
-            }
-            
-            if (mediaNode.has("last_air_date")) {
-                dto.setLastAirDate(mediaNode.get("last_air_date").asText());
-            }
-            
-            if (mediaNode.has("number_of_seasons")) {
-                dto.setNumberOfSeasons(mediaNode.get("number_of_seasons").asInt());
-            }
-            
-            if (mediaNode.has("number_of_episodes")) {
-                dto.setNumberOfEpisodes(mediaNode.get("number_of_episodes").asInt());
-            }
+            setTvSpecificFields(dto, mediaNode);
         }
         
         // 영화 전용 필드 처리
@@ -118,26 +69,135 @@ public class MediaMapperService {
             dto.setRuntime(mediaNode.get("runtime").asInt());
         }
         
-        // 미디어 타입 결정 (애니메이션 여부 확인)
-        boolean isAnimation = false;
-        Media.MediaType determinedType = mediaType;
+        // 미디어 타입 및 장르 정보 처리
+        Media.MediaType determinedType = determineMediaType(mediaNode, mediaType);
+        dto.setMediaType(determinedType.name().toLowerCase());
         
-        // 장르 정보 처리 및 애니메이션 판별
+        // 장르 정보 처리
+        processGenreInfo(dto, mediaNode);
+        
+        return dto;
+    }
+
+    /**
+     * 미디어 타입 결정 (애니메이션 여부 포함)
+     */
+    private Media.MediaType determineMediaType(JsonNode mediaNode, Media.MediaType defaultType) {
+        boolean isAnimation = isAnimationByGenre(mediaNode);
+        
+        if (isAnimation) {
+            return Media.MediaType.ANIMATION;
+        }
+        
+        // TMDB 응답의 media_type 필드가 있으면 체크 (검색 결과 등에서 제공)
+        if (mediaNode.has("media_type")) {
+            String tmdbMediaType = mediaNode.get("media_type").asText();
+            if ("movie".equals(tmdbMediaType)) {
+                return Media.MediaType.MOVIE;
+            } else if ("tv".equals(tmdbMediaType)) {
+                return Media.MediaType.TV;
+            }
+        }
+        
+        return defaultType;
+    }
+
+    /**
+     * 장르 기반으로 애니메이션 여부 확인
+     */
+    private boolean isAnimationByGenre(JsonNode mediaNode) {
+        if (mediaNode.has("genres")) {
+            JsonNode genresNode = mediaNode.get("genres");
+            for (JsonNode genreNode : genresNode) {
+                if (genreNode.get("id").asInt() == 16) { // 16은 애니메이션 장르 ID
+                    return true;
+                }
+            }
+        } else if (mediaNode.has("genre_ids")) {
+            JsonNode genreIdsNode = mediaNode.get("genre_ids");
+            for (JsonNode genreIdNode : genreIdsNode) {
+                if (genreIdNode.asInt() == 16) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 제목 필드 추출
+     */
+    private String getTitle(JsonNode mediaNode) {
+        return mediaNode.has("title") 
+            ? mediaNode.get("title").asText() 
+            : (mediaNode.has("name") ? mediaNode.get("name").asText() : "");
+    }
+
+    /**
+     * 원제목 필드 추출
+     */
+    private String getOriginalTitle(JsonNode mediaNode) {
+        return mediaNode.has("original_title") 
+            ? mediaNode.get("original_title").asText() 
+            : (mediaNode.has("original_name") ? mediaNode.get("original_name").asText() : null);
+    }
+
+    /**
+     * 개봉일/방영일 설정
+     */
+    private void setReleaseDate(MediaItemDto dto, JsonNode mediaNode) {
+        if (mediaNode.has("release_date")) {
+            dto.setReleaseDate(mediaNode.get("release_date").asText());
+        } else if (mediaNode.has("first_air_date")) {
+            dto.setReleaseDate(mediaNode.get("first_air_date").asText());
+        }
+    }
+
+    /**
+     * TV 특정 필드 설정
+     */
+    private void setTvSpecificFields(MediaItemDto dto, JsonNode mediaNode) {
+        if (mediaNode.has("origin_country")) {
+            List<String> originCountry = new ArrayList<>();
+            JsonNode originCountryNode = mediaNode.get("origin_country");
+            if (originCountryNode.isArray()) {
+                for (JsonNode countryNode : originCountryNode) {
+                    originCountry.add(countryNode.asText());
+                }
+            }
+            dto.setOriginCountry(originCountry);
+        }
+        
+        if (mediaNode.has("first_air_date")) {
+            dto.setFirstAirDate(mediaNode.get("first_air_date").asText());
+        }
+        
+        if (mediaNode.has("last_air_date")) {
+            dto.setLastAirDate(mediaNode.get("last_air_date").asText());
+        }
+        
+        if (mediaNode.has("number_of_seasons")) {
+            dto.setNumberOfSeasons(mediaNode.get("number_of_seasons").asInt());
+        }
+        
+        if (mediaNode.has("number_of_episodes")) {
+            dto.setNumberOfEpisodes(mediaNode.get("number_of_episodes").asInt());
+        }
+    }
+
+    /**
+     * 장르 정보 처리
+     */
+    private void processGenreInfo(MediaItemDto dto, JsonNode mediaNode) {
         if (mediaNode.has("genres")) {
             List<GenreDto> genreDtos = new ArrayList<>();
             JsonNode genresNode = mediaNode.get("genres");
             
             for (JsonNode genreNode : genresNode) {
-                int genreId = genreNode.get("id").asInt();
                 GenreDto genreDto = new GenreDto();
-                genreDto.setId(genreId);
+                genreDto.setId(genreNode.get("id").asInt());
                 genreDto.setName(genreNode.get("name").asText());
                 genreDtos.add(genreDto);
-                
-                // 장르 ID 16이 애니메이션이면 타입을 ANIMATION으로 설정
-                if (genreId == 16) {
-                    isAnimation = true;
-                }
             }
             
             dto.setGenres(genreDtos);
@@ -145,38 +205,10 @@ public class MediaMapperService {
             List<Integer> genreIds = new ArrayList<>();
             JsonNode genreIdsNode = mediaNode.get("genre_ids");
             for (JsonNode genreIdNode : genreIdsNode) {
-                int genreId = genreIdNode.asInt();
-                genreIds.add(genreId);
-                
-                // 장르 ID 16이 애니메이션이면 타입을 ANIMATION으로 설정
-                if (genreId == 16) {
-                    isAnimation = true;
-                }
+                genreIds.add(genreIdNode.asInt());
             }
             dto.setGenreIds(genreIds);
         }
-        
-        // TMDB 응답의 media_type 필드가 있으면 체크 (검색 결과 등에서 제공)
-        if (mediaNode.has("media_type")) {
-            String tmdbMediaType = mediaNode.get("media_type").asText();
-            if (!isAnimation) { // 이미 애니메이션으로 판별된 경우는 무시
-                if ("movie".equals(tmdbMediaType)) {
-                    determinedType = Media.MediaType.MOVIE;
-                } else if ("tv".equals(tmdbMediaType)) {
-                    determinedType = Media.MediaType.TV;
-                }
-            }
-        }
-        
-        // 애니메이션인 경우 미디어 타입 변경
-        if (isAnimation) {
-            determinedType = Media.MediaType.ANIMATION;
-        }
-        
-        // 최종 결정된 미디어 타입 설정
-        dto.setMediaType(determinedType.name().toLowerCase());
-        
-        return dto;
     }
     
     /**
@@ -297,25 +329,13 @@ public class MediaMapperService {
         Movie movie = movieRepository.findById(dto.getId())
                 .orElse(new Movie(dto.getId()));
         
-        movie.setTitle(dto.getTitle());
-        movie.setOverview(dto.getOverview());
-        movie.setPosterPath(dto.getPosterPath());
-        movie.setBackdropPath(dto.getBackdropPath());
-        movie.setVoteAverage(dto.getVoteAverage());
-        movie.setPopularity(dto.getPopularity());
+        setBaseMediaProperties(movie, dto, category);
         movie.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
         movie.setOriginalTitle(dto.getOriginalTitle());
         movie.setOriginalLanguage(dto.getOriginalLanguage());
-        movie.setCategory(category);
         
         // 날짜 변환
-        if (dto.getReleaseDate() != null && !dto.getReleaseDate().isEmpty()) {
-            try {
-                movie.setReleaseDate(LocalDate.parse(dto.getReleaseDate(), DateTimeFormatter.ISO_LOCAL_DATE));
-            } catch (DateTimeParseException e) {
-                // 날짜 파싱 오류 처리
-            }
-        }
+        setReleaseDate(movie, dto.getReleaseDate());
         
         movieRepository.save(movie);
         
@@ -331,25 +351,13 @@ public class MediaMapperService {
         Tv tv = tvRepository.findById(dto.getId())
                 .orElse(new Tv(dto.getId()));
         
-        tv.setTitle(dto.getTitle());
-        tv.setOverview(dto.getOverview());
-        tv.setPosterPath(dto.getPosterPath());
-        tv.setBackdropPath(dto.getBackdropPath());
-        tv.setVoteAverage(dto.getVoteAverage());
-        tv.setPopularity(dto.getPopularity());
+        setBaseMediaProperties(tv, dto, category);
         tv.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
         tv.setOriginalName(dto.getOriginalTitle());
         tv.setOriginalLanguage(dto.getOriginalLanguage());
-        tv.setCategory(category);
         
         // 날짜 변환
-        if (dto.getReleaseDate() != null && !dto.getReleaseDate().isEmpty()) {
-            try {
-                tv.setReleaseDate(LocalDate.parse(dto.getReleaseDate(), DateTimeFormatter.ISO_LOCAL_DATE));
-            } catch (DateTimeParseException e) {
-                // 날짜 파싱 오류 처리
-            }
-        }
+        setReleaseDate(tv, dto.getReleaseDate());
         
         // TV 전용 필드 설정
         if (dto.getOriginCountry() != null) {
@@ -375,30 +383,44 @@ public class MediaMapperService {
         Animation animation = animationRepository.findById(dto.getId())
                 .orElse(new Animation(dto.getId()));
         
-        animation.setTitle(dto.getTitle());
-        animation.setOverview(dto.getOverview());
-        animation.setPosterPath(dto.getPosterPath());
-        animation.setBackdropPath(dto.getBackdropPath());
-        animation.setVoteAverage(dto.getVoteAverage());
-        animation.setPopularity(dto.getPopularity());
+        setBaseMediaProperties(animation, dto, category);
         animation.setRuntime(dto.getRuntime() != null ? dto.getRuntime() : 0);
         animation.setOriginalTitle(dto.getOriginalTitle());
         animation.setOriginalLanguage(dto.getOriginalLanguage());
-        animation.setCategory(category);
         
         // 날짜 변환
-        if (dto.getReleaseDate() != null && !dto.getReleaseDate().isEmpty()) {
-            try {
-                animation.setReleaseDate(LocalDate.parse(dto.getReleaseDate(), DateTimeFormatter.ISO_LOCAL_DATE));
-            } catch (DateTimeParseException e) {
-                // 날짜 파싱 오류 처리
-            }
-        }
+        setReleaseDate(animation, dto.getReleaseDate());
         
         animationRepository.save(animation);
         
         // 장르 정보 저장
         saveGenres(dto, animation.getId(), Media.MediaType.ANIMATION);
+    }
+    
+    /**
+     * 기본 미디어 속성 설정
+     */
+    private void setBaseMediaProperties(Media media, MediaItemDto dto, Media.MediaCategory category) {
+        media.setTitle(dto.getTitle());
+        media.setOverview(dto.getOverview());
+        media.setPosterPath(dto.getPosterPath());
+        media.setBackdropPath(dto.getBackdropPath());
+        media.setVoteAverage(dto.getVoteAverage());
+        media.setPopularity(dto.getPopularity());
+        media.setCategory(category);
+    }
+    
+    /**
+     * 출시일/방영일 설정
+     */
+    private void setReleaseDate(Media media, String releaseDateStr) {
+        if (releaseDateStr != null && !releaseDateStr.isEmpty()) {
+            try {
+                media.setReleaseDate(LocalDate.parse(releaseDateStr, DateTimeFormatter.ISO_LOCAL_DATE));
+            } catch (DateTimeParseException e) {
+                // 날짜 파싱 오류 처리
+            }
+        }
     }
     
     /**
@@ -410,58 +432,75 @@ public class MediaMapperService {
         mediaGenreRepository.deleteAll(existingGenres);
         
         if (dto.getGenres() != null) {
-            for (GenreDto genreDto : dto.getGenres()) {
-                Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(genreDto.getId(), Genre.MediaType.valueOf(mediaType.name()));
-                
-                Genre genre;
-                if (genreOptional.isPresent()) {
-                    genre = genreOptional.get();
-                } else {
-                    genre = new Genre();
-                    genre.setId(genreDto.getId());
-                    genre.setName(genreDto.getName());
-                    genre.setMediaType(Genre.MediaType.valueOf(mediaType.name()));
-                    genreRepository.save(genre);
-                }
-                
-                // MediaGenre 저장
-                MediaGenre mediaGenre = new MediaGenre();
-                mediaGenre.setMediaId(mediaId);
-                mediaGenre.setMediaType(mediaType);
-                mediaGenre.setGenre(genre);
-                mediaGenreRepository.save(mediaGenre);
-            }
+            saveGenresFromDtos(dto.getGenres(), mediaId, mediaType);
         } else if (dto.getGenreIds() != null) {
-            for (Integer genreId : dto.getGenreIds()) {
-                Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(genreId, Genre.MediaType.valueOf(mediaType.name()));
+            saveGenresFromIds(dto.getGenreIds(), mediaId, mediaType);
+        }
+    }
+
+    /**
+     * GenreDto 목록에서 장르 정보 저장
+     */
+    private void saveGenresFromDtos(List<GenreDto> genreDtos, Long mediaId, Media.MediaType mediaType) {
+        for (GenreDto genreDto : genreDtos) {
+            Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(
+                    genreDto.getId(), Genre.MediaType.valueOf(mediaType.name()));
+            
+            Genre genre;
+            if (genreOptional.isPresent()) {
+                genre = genreOptional.get();
+            } else {
+                genre = createNewGenre(genreDto.getId(), genreDto.getName(), 
+                        Genre.MediaType.valueOf(mediaType.name()));
+            }
+            
+            createMediaGenre(mediaId, mediaType, genre);
+        }
+    }
+
+    /**
+     * 장르 ID 목록에서 장르 정보 저장
+     */
+    private void saveGenresFromIds(List<Integer> genreIds, Long mediaId, Media.MediaType mediaType) {
+        for (Integer genreId : genreIds) {
+            Optional<Genre> genreOptional = genreRepository.findByIdAndMediaType(
+                    genreId, Genre.MediaType.valueOf(mediaType.name()));
+            
+            if (genreOptional.isPresent()) {
+                createMediaGenre(mediaId, mediaType, genreOptional.get());
+            } else {
+                // 장르 정보 없음, 공통 장르에서 검색
+                genreOptional = genreRepository.findByIdAndMediaType(genreId, Genre.MediaType.COMMON);
                 
                 if (genreOptional.isPresent()) {
-                    Genre genre = genreOptional.get();
-                    
-                    // MediaGenre 저장
-                    MediaGenre mediaGenre = new MediaGenre();
-                    mediaGenre.setMediaId(mediaId);
-                    mediaGenre.setMediaType(mediaType);
-                    mediaGenre.setGenre(genre);
-                    mediaGenreRepository.save(mediaGenre);
-                } else {
-                    // 장르 정보 없음, 공통 장르에서 검색
-                    genreOptional = genreRepository.findByIdAndMediaType(genreId, Genre.MediaType.COMMON);
-                    
-                    if (genreOptional.isPresent()) {
-                        Genre genre = genreOptional.get();
-                        
-                        // MediaGenre 저장
-                        MediaGenre mediaGenre = new MediaGenre();
-                        mediaGenre.setMediaId(mediaId);
-                        mediaGenre.setMediaType(mediaType);
-                        mediaGenre.setGenre(genre);
-                        mediaGenreRepository.save(mediaGenre);
-                    }
-                    // 장르 정보를 찾을 수 없는 경우는 무시
+                    createMediaGenre(mediaId, mediaType, genreOptional.get());
                 }
+                // 장르 정보를 찾을 수 없는 경우는 무시
             }
         }
+    }
+
+    /**
+     * 새 장르 생성
+     */
+    private Genre createNewGenre(Integer id, String name, Genre.MediaType mediaType) {
+        Genre genre = new Genre();
+        genre.setId(id);
+        genre.setName(name);
+        genre.setMediaType(mediaType);
+        genreRepository.save(genre);
+        return genre;
+    }
+
+    /**
+     * 미디어-장르 연결 생성
+     */
+    private void createMediaGenre(Long mediaId, Media.MediaType mediaType, Genre genre) {
+        MediaGenre mediaGenre = new MediaGenre();
+        mediaGenre.setMediaId(mediaId);
+        mediaGenre.setMediaType(mediaType);
+        mediaGenre.setGenre(genre);
+        mediaGenreRepository.save(mediaGenre);
     }
     
     /**
@@ -534,13 +573,7 @@ public class MediaMapperService {
     public MediaItemDto mapMovieToDto(Movie movie) {
         MediaItemDto dto = new MediaItemDto();
         
-        dto.setId(movie.getId());
-        dto.setTitle(movie.getTitle());
-        dto.setOverview(movie.getOverview());
-        dto.setPosterPath(movie.getPosterPath());
-        dto.setBackdropPath(movie.getBackdropPath());
-        dto.setVoteAverage(movie.getVoteAverage());
-        dto.setPopularity(movie.getPopularity());
+        mapBaseMediaToDto(dto, movie);
         dto.setRuntime(movie.getRuntime());
         dto.setOriginalTitle(movie.getOriginalTitle());
         dto.setOriginalLanguage(movie.getOriginalLanguage());
@@ -560,13 +593,7 @@ public class MediaMapperService {
     public MediaItemDto mapTvToDto(Tv tv) {
         MediaItemDto dto = new MediaItemDto();
         
-        dto.setId(tv.getId());
-        dto.setTitle(tv.getTitle());
-        dto.setOverview(tv.getOverview());
-        dto.setPosterPath(tv.getPosterPath());
-        dto.setBackdropPath(tv.getBackdropPath());
-        dto.setVoteAverage(tv.getVoteAverage());
-        dto.setPopularity(tv.getPopularity());
+        mapBaseMediaToDto(dto, tv);
         dto.setRuntime(tv.getRuntime());
         dto.setOriginalTitle(tv.getOriginalName());
         dto.setOriginalLanguage(tv.getOriginalLanguage());
@@ -592,13 +619,7 @@ public class MediaMapperService {
     public MediaItemDto mapAnimationToDto(Animation animation) {
         MediaItemDto dto = new MediaItemDto();
         
-        dto.setId(animation.getId());
-        dto.setTitle(animation.getTitle());
-        dto.setOverview(animation.getOverview());
-        dto.setPosterPath(animation.getPosterPath());
-        dto.setBackdropPath(animation.getBackdropPath());
-        dto.setVoteAverage(animation.getVoteAverage());
-        dto.setPopularity(animation.getPopularity());
+        mapBaseMediaToDto(dto, animation);
         dto.setRuntime(animation.getRuntime());
         dto.setOriginalTitle(animation.getOriginalTitle());
         dto.setOriginalLanguage(animation.getOriginalLanguage());
@@ -610,5 +631,18 @@ public class MediaMapperService {
         dto.setMediaType("animation");
         
         return dto;
+    }
+
+    /**
+     * 기본 미디어 속성을 DTO로 매핑
+     */
+    private void mapBaseMediaToDto(MediaItemDto dto, Media media) {
+        dto.setId(media.getId());
+        dto.setTitle(media.getTitle());
+        dto.setOverview(media.getOverview());
+        dto.setPosterPath(media.getPosterPath());
+        dto.setBackdropPath(media.getBackdropPath());
+        dto.setVoteAverage(media.getVoteAverage());
+        dto.setPopularity(media.getPopularity());
     }
 } 
