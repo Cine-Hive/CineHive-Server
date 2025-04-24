@@ -649,9 +649,11 @@ public class TmdbMediaService implements MediaService {
         syncMediaData(Media.MediaType.TV, Media.MediaCategory.NOW_PLAYING);
         syncMediaData(Media.MediaType.TV, Media.MediaCategory.TOP_RATED);
         
-        // 애니메이션 데이터 동기화 추가
+        // 애니메이션 데이터 동기화
         syncMediaData(Media.MediaType.ANIMATION, Media.MediaCategory.POPULAR);
         syncMediaData(Media.MediaType.ANIMATION, Media.MediaCategory.TOP_RATED);
+        syncMediaData(Media.MediaType.ANIMATION, Media.MediaCategory.NOW_PLAYING);
+        syncMediaData(Media.MediaType.ANIMATION, Media.MediaCategory.UPCOMING);
     }
     
     // 애니메이션 필터링 (장르 ID가 16인 항목만 추출)
@@ -671,7 +673,7 @@ public class TmdbMediaService implements MediaService {
         return switch (mediaType) {
             case MOVIE -> "movie";
             case TV -> "tv";
-            case ANIMATION -> "discover/movie"; // 애니메이션은 discover API 사용
+            case ANIMATION -> "discover"; // 애니메이션은 discover API 사용 ("movie" 부분은 getCategoryPath에서 처리)
         };
     }
     
