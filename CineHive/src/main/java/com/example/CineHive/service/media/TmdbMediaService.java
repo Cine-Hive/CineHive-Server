@@ -21,7 +21,8 @@ import com.example.CineHive.entity.media.Video;
 import com.example.CineHive.repository.media.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,90 +34,47 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TmdbMediaService implements MediaService {
 
     @Value("${tmdb.api.key}")
     private String apiKey;
 
-    private final WebClient webClient;
+    private WebClient webClient;
     private final ObjectMapper objectMapper;
-
-    @Autowired
-    private MediaMapperService mediaMapperService;
-    
-    @Autowired
-    private VideoRepository videoRepository;
-    
-    @Autowired
-    private CastRepository castRepository;
-    
-    @Autowired
-    private CrewRepository crewRepository;
-    
-    @Autowired
-    private MovieRepository movieRepository;
-    
-    @Autowired
-    private TvRepository tvRepository;
-    
-    @Autowired
-    private AnimationRepository animationRepository;
-    
-    @Autowired
-    private MediaRecommendationRepository mediaRecommendationRepository;
-    
-    @Autowired
-    private MediaGenreRepository mediaGenreRepository;
+    private final MediaMapperService mediaMapperService;
+    private final VideoRepository videoRepository;
+    private final CastRepository castRepository;
+    private final CrewRepository crewRepository;
+    private final MovieRepository movieRepository;
+    private final TvRepository tvRepository;
+    private final AnimationRepository animationRepository;
+    private final MediaRecommendationRepository mediaRecommendationRepository;
+    private final MediaGenreRepository mediaGenreRepository;
+    private final WebClient.Builder webClientBuilder;
 
     private int accessCountThreshold = 3;
     private int expiryDays = 30;
 
-    public TmdbMediaService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
+    @PostConstruct
+    private void initWebClient() {
         this.webClient = webClientBuilder.baseUrl("https://api.themoviedb.org/3").build();
-        this.objectMapper = objectMapper;
     }
 
     @Override
     public MediaItemDto getMediaById(Media.MediaType mediaType, Long id) {
         // 1. 먼저 DB에서 미디어 기본 정보 조회
-        MediaItemDto mediaItemDto = null;
-
-        switch (mediaType) {
-            case MOVIE -> {
-                Optional<Movie> movieOpt = movieRepository.findById(id);
-                if (movieOpt.isPresent()) {
-                    mediaItemDto = mediaMapperService.mapMovieToDto(movieOpt.get());
-                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
-                }
-            }
-            case TV -> {
-                Optional<Tv> tvOpt = tvRepository.findById(id);
-                if (tvOpt.isPresent()) {
-                    mediaItemDto = mediaMapperService.mapTvToDto(tvOpt.get());
-                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
-                }
-            }
-            case ANIMATION -> {
-                Optional<Animation> animationOpt = animationRepository.findById(id);
-                if (animationOpt.isPresent()) {
-                    mediaItemDto = mediaMapperService.mapAnimationToDto(animationOpt.get());
-                    // 기본 정보만 반환 (장르, 출연진, 제작진, 비디오 정보 제외)
-                }
-            }
-        }
+        MediaItemDto mediaItemDto = findMediaInDb(mediaType, id);
 
         // 2. DB에 없는 경우 TMDB API 호출
         if (mediaItemDto == null) {
             String path = getMediaTypePath(mediaType);
 
-            String response = webClient.get()
-                    .uri("/" + path + "/" + id + "?api_key=" + apiKey + "&language=ko-KR")
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            String response = fetchFromTmdbApi("/" + path + "/" + id + "?api_key=" + apiKey + "&language=ko-KR");
 
             if (response != null) {
                 try {
@@ -140,6 +98,34 @@ public class TmdbMediaService implements MediaService {
         return mediaItemDto;
     }
 
+    /**
+     * DB에서 미디어 정보 조회
+     */
+    private MediaItemDto findMediaInDb(Media.MediaType mediaType, Long id) {
+        return switch (mediaType) {
+            case MOVIE -> movieRepository.findById(id)
+                    .map(mediaMapperService::mapMovieToDto)
+                    .orElse(null);
+            case TV -> tvRepository.findById(id)
+                    .map(mediaMapperService::mapTvToDto)
+                    .orElse(null);
+            case ANIMATION -> animationRepository.findById(id)
+                    .map(mediaMapperService::mapAnimationToDto)
+                    .orElse(null);
+        };
+    }
+
+    /**
+     * TMDB API에서 데이터 가져오기
+     */
+    private String fetchFromTmdbApi(String uri) {
+        return webClient.get()
+                .uri(uri)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
     @Override
     public MediaDto searchMedia(Media.MediaType mediaType, String query, int page) {
         // 페이징 설정
@@ -147,57 +133,10 @@ public class TmdbMediaService implements MediaService {
 
         // 미디어 타입에 따라 적절한 레포지토리에서 검색
         if (mediaType == Media.MediaType.MOVIE) {
-            // 영화인 경우 영화 레포지토리에서 검색
-            Page<Movie> moviesPage = movieRepository.searchByTitleContainingIgnoreCase(query, pageable);
-            List<Movie> movies = moviesPage.getContent();
-            
-            // 결과가 없으면 API 호출 (첫 페이지인 경우만)
-            if (movies.isEmpty() && page == 1) {
-                return searchMediaFromApi(mediaType, query, page);
-            }
-            
-            // 결과를 DTO로 변환
-            List<MediaItemDto> movieDtos = movies.stream()
-                    .map(mediaMapperService::mapMovieToDto)
-                    .collect(Collectors.toList());
-            
-            // 결과 생성
-            MediaDto result = new MediaDto();
-            result.setResults(movieDtos);
-            result.setPage(page);
-            result.setTotalPages(moviesPage.getTotalPages());
-            result.setTotalResults((int) moviesPage.getTotalElements());
-            
-            if (!result.getResults().isEmpty()) {
-                return result;
-            }
+            return searchMovies(query, page, pageable);
         } else if (mediaType == Media.MediaType.TV) {
-            // TV인 경우 TV 레포지토리에서 검색
-            Page<Tv> tvsPage = tvRepository.searchByTitleContainingIgnoreCase(query, pageable);
-            List<Tv> tvs = tvsPage.getContent();
-            
-            // 결과가 없으면 API 호출 (첫 페이지인 경우만)
-            if (tvs.isEmpty() && page == 1) {
-                return searchMediaFromApi(mediaType, query, page);
-            }
-            
-            // 결과를 DTO로 변환
-            List<MediaItemDto> tvDtos = tvs.stream()
-                    .map(mediaMapperService::mapTvToDto)
-                    .collect(Collectors.toList());
-            
-            // 결과 생성
-            MediaDto result = new MediaDto();
-            result.setResults(tvDtos);
-            result.setPage(page);
-            result.setTotalPages(tvsPage.getTotalPages());
-            result.setTotalResults((int) tvsPage.getTotalElements());
-            
-            if (!result.getResults().isEmpty()) {
-                return result;
-            }
+            return searchTvs(query, page, pageable);
         } else if (mediaType == Media.MediaType.ANIMATION) {
-            // 애니메이션인 경우 기존 searchAnimations 메서드 호출
             return searchAnimations(query, page);
         }
         
@@ -205,15 +144,67 @@ public class TmdbMediaService implements MediaService {
         return new MediaDto();
     }
 
+    /**
+     * 영화 검색
+     */
+    private MediaDto searchMovies(String query, int page, Pageable pageable) {
+        // 영화 레포지토리에서 검색
+        Page<Movie> moviesPage = movieRepository.searchByTitleContainingIgnoreCase(query, pageable);
+        List<Movie> movies = moviesPage.getContent();
+        
+        // 결과가 없으면 API 호출 (첫 페이지인 경우만)
+        if (movies.isEmpty() && page == 1) {
+            return searchMediaFromApi(Media.MediaType.MOVIE, query, page);
+        }
+        
+        // 결과를 DTO로 변환
+        List<MediaItemDto> movieDtos = movies.stream()
+                .map(mediaMapperService::mapMovieToDto)
+                .collect(Collectors.toList());
+        
+        // 결과 생성
+        return createMediaDtoResult(movieDtos, page, moviesPage.getTotalPages(), (int) moviesPage.getTotalElements());
+    }
+
+    /**
+     * TV 프로그램 검색
+     */
+    private MediaDto searchTvs(String query, int page, Pageable pageable) {
+        // TV 레포지토리에서 검색
+        Page<Tv> tvsPage = tvRepository.searchByTitleContainingIgnoreCase(query, pageable);
+        List<Tv> tvs = tvsPage.getContent();
+        
+        // 결과가 없으면 API 호출 (첫 페이지인 경우만)
+        if (tvs.isEmpty() && page == 1) {
+            return searchMediaFromApi(Media.MediaType.TV, query, page);
+        }
+        
+        // 결과를 DTO로 변환
+        List<MediaItemDto> tvDtos = tvs.stream()
+                .map(mediaMapperService::mapTvToDto)
+                .collect(Collectors.toList());
+        
+        // 결과 생성
+        return createMediaDtoResult(tvDtos, page, tvsPage.getTotalPages(), (int) tvsPage.getTotalElements());
+    }
+
+    /**
+     * MediaDto 결과 생성 헬퍼 메소드
+     */
+    private MediaDto createMediaDtoResult(List<MediaItemDto> items, int page, int totalPages, int totalResults) {
+        MediaDto result = new MediaDto();
+        result.setResults(items);
+        result.setPage(page);
+        result.setTotalPages(totalPages);
+        result.setTotalResults(totalResults);
+        return result;
+    }
+
     // API에서 미디어 검색 (기존 로직)
     private MediaDto searchMediaFromApi(Media.MediaType mediaType, String query, int page) {
         String path = getMediaTypePath(mediaType);
         
-        String response = webClient.get()
-                .uri("/search/" + path + "?api_key=" + apiKey + "&language=ko-KR&query=" + query + "&page=" + page)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        String response = fetchFromTmdbApi("/search/" + path + "?api_key=" + apiKey + "&language=ko-KR&query=" + query + "&page=" + page);
                 
         MediaDto result = parseMediaListResponse(response, mediaType);
         
@@ -227,7 +218,7 @@ public class TmdbMediaService implements MediaService {
 
     // API 검색 결과를 DB에 저장하는 비동기 메서드
     private void saveMediaToDbAsync(List<MediaItemDto> mediaItems, Media.MediaType mediaType) {
-        new Thread(() -> {
+        CompletableFuture.runAsync(() -> {
             for (MediaItemDto mediaItem : mediaItems) {
                 // 이미 존재하는지 확인
                 boolean exists = switch (mediaType) {
@@ -238,23 +229,28 @@ public class TmdbMediaService implements MediaService {
                 
                 if (!exists) {
                     // 각 미디어 항목의 카테고리 정보 확인 (없으면 DEFAULT로 설정)
-                    Media.MediaCategory category;
-                    if (mediaItem.getCategory() != null && !mediaItem.getCategory().isEmpty()) {
-                        try {
-                            category = Media.MediaCategory.valueOf(mediaItem.getCategory().toUpperCase());
-                        } catch (IllegalArgumentException e) {
-                            category = Media.MediaCategory.DEFAULT;
-                        }
-                    } else {
-                        category = Media.MediaCategory.DEFAULT;
-                    }
+                    Media.MediaCategory category = determineMediaCategory(mediaItem);
                     
                     // 카테고리 설정
                     mediaItem.setCategory(category.name().toLowerCase());
                     saveMediaEntity(mediaItem, mediaType, category);
                 }
             }
-        }).start();
+        });
+    }
+
+    /**
+     * 미디어 항목의 카테고리 결정
+     */
+    private Media.MediaCategory determineMediaCategory(MediaItemDto mediaItem) {
+        if (mediaItem.getCategory() != null && !mediaItem.getCategory().isEmpty()) {
+            try {
+                return Media.MediaCategory.valueOf(mediaItem.getCategory().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return Media.MediaCategory.DEFAULT;
+            }
+        }
+        return Media.MediaCategory.DEFAULT;
     }
 
     @Override
@@ -262,46 +258,10 @@ public class TmdbMediaService implements MediaService {
         String path = getMediaTypePath(mediaType);
         String categoryPath = getCategoryPath(category, mediaType);
         
-        String uriString;
-        if (mediaType == Media.MediaType.ANIMATION) {
-            // 애니메이션은 장르 ID 16을 사용하여 필터링
-            uriString = "/" + path + "/" + categoryPath + "?api_key=" + apiKey 
-                + "&language=ko-KR&with_genres=16";
-            
-            // 정렬 옵션 추가 (제공된 경우)
-            if (sortBy != null && !sortBy.isEmpty()) {
-                uriString += "&sort_by=" + sortBy;
-            } else {
-                // 카테고리에 따라 기본 정렬 방식 결정
-                switch (category) {
-                    case POPULAR -> uriString += "&sort_by=popularity.desc";
-                    case TOP_RATED -> uriString += "&sort_by=vote_average.desc";
-                    case NOW_PLAYING -> uriString += "&sort_by=primary_release_date.desc";
-                    case UPCOMING -> uriString += "&sort_by=primary_release_date.asc";
-                    default -> uriString += "&sort_by=popularity.desc";
-                }
-            }
-            
-            uriString += "&page=" + page;
-        } else {
-            // 일반 영화/TV 시리즈
-            uriString = "/" + path + "/" + categoryPath + "?api_key=" + apiKey + "&language=ko-KR";
-            
-            // 정렬 옵션 추가 (제공된 경우)
-            if (sortBy != null && !sortBy.isEmpty()) {
-                uriString += "&sort_by=" + sortBy;
-            }
-            
-            uriString += "&page=" + page;
-        }
+        String uriString = buildCategoryUriString(mediaType, path, categoryPath, category, page, sortBy);
         
         try {
-            String response = webClient.get()
-                    .uri(uriString)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-                    
+            String response = fetchFromTmdbApi(uriString);
             return parseMediaListResponse(response, mediaType);
         } catch (Exception e) {
             // 오류 로깅
@@ -309,6 +269,47 @@ public class TmdbMediaService implements MediaService {
             // 빈 결과 반환
             return new MediaDto();
         }
+    }
+
+    /**
+     * 카테고리 URI 문자열 구성
+     */
+    private String buildCategoryUriString(Media.MediaType mediaType, String path, String categoryPath, 
+                                        Media.MediaCategory category, int page, String sortBy) {
+        StringBuilder uriBuilder = new StringBuilder();
+        
+        if (mediaType == Media.MediaType.ANIMATION) {
+            // 애니메이션은 장르 ID 16을 사용하여 필터링
+            uriBuilder.append("/").append(path).append("/").append(categoryPath)
+                    .append("?api_key=").append(apiKey)
+                    .append("&language=ko-KR&with_genres=16");
+            
+            // 정렬 옵션 추가 (제공된 경우)
+            if (sortBy != null && !sortBy.isEmpty()) {
+                uriBuilder.append("&sort_by=").append(sortBy);
+            } else {
+                // 카테고리에 따라 기본 정렬 방식 결정
+                switch (category) {
+                    case POPULAR -> uriBuilder.append("&sort_by=popularity.desc");
+                    case TOP_RATED -> uriBuilder.append("&sort_by=vote_average.desc");
+                    case NOW_PLAYING -> uriBuilder.append("&sort_by=primary_release_date.desc");
+                    case UPCOMING -> uriBuilder.append("&sort_by=primary_release_date.asc");
+                    default -> uriBuilder.append("&sort_by=popularity.desc");
+                }
+            }
+        } else {
+            // 일반 영화/TV 시리즈
+            uriBuilder.append("/").append(path).append("/").append(categoryPath)
+                    .append("?api_key=").append(apiKey).append("&language=ko-KR");
+            
+            // 정렬 옵션 추가 (제공된 경우)
+            if (sortBy != null && !sortBy.isEmpty()) {
+                uriBuilder.append("&sort_by=").append(sortBy);
+            }
+        }
+        
+        uriBuilder.append("&page=").append(page);
+        return uriBuilder.toString();
     }
     
     @Override
@@ -348,39 +349,9 @@ public class TmdbMediaService implements MediaService {
         }
         
         // 2. 캐시가 없거나 충분하지 않으면 TMDB API 호출
-        String path = getMediaTypePath(mediaType);
-        String uriString;
+        String uriString = buildSimilarMediaUriString(mediaType, id, page);
         
-        if (mediaType == Media.MediaType.ANIMATION) {
-            // 애니메이션인 경우 discover API 사용하여 유사 애니메이션 가져오기
-            // 우선 해당 애니메이션 정보 조회
-            MediaItemDto mediaItem = getMediaById(mediaType, id);
-            if (mediaItem == null || mediaItem.getGenreIds() == null || mediaItem.getGenreIds().isEmpty()) {
-                return new MediaDto(); // 빈 결과 반환
-            }
-            
-            // 장르 ID를 기반으로 유사한 콘텐츠 검색 (애니메이션 장르 16 포함)
-            uriString = "/discover/movie?api_key=" + apiKey + "&language=ko-KR&with_genres=16";
-            
-            // 추가 장르 포함
-            for (Integer genreId : mediaItem.getGenreIds()) {
-                if (genreId != 16) { // 애니메이션(16)은 이미 포함됨
-                    uriString += "," + genreId;
-                }
-            }
-            
-            uriString += "&sort_by=popularity.desc&page=" + page;
-        } else {
-            // 일반 영화/TV 시리즈는 similar API 사용
-            uriString = "/" + path + "/" + id + "/similar?api_key=" + apiKey + "&language=ko-KR&page=" + page;
-        }
-        
-        String response = webClient.get()
-                .uri(uriString)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-                
+        String response = fetchFromTmdbApi(uriString);
         MediaDto result = parseMediaListResponse(response, mediaType);
         
         // 3. 받은 추천 데이터를 DB에 저장 (백그라운드 작업)
@@ -389,6 +360,60 @@ public class TmdbMediaService implements MediaService {
         }
         
         return result;
+    }
+
+    /**
+     * 유사 미디어 URI 문자열 구성
+     */
+    private String buildSimilarMediaUriString(Media.MediaType mediaType, Long id, int page) {
+        if (mediaType == Media.MediaType.ANIMATION) {
+            // 애니메이션인 경우, 해당 애니메이션 정보를 조회
+            Animation animation = animationRepository.findById(id).orElse(null);
+            if (animation == null) {
+                // 애니메이션 정보가 없는 경우 discover API 사용하여 유사 애니메이션 가져오기 (기존 로직)
+                return buildSimilarAnimationUriByGenre(id, page);
+            }
+            
+            // 애니메이션 타입에 따라 적절한 엔드포인트 선택
+            String basePath = "movie"; // 기본값은 영화
+            if (animation.getAnimationType() != null && 
+                "tv".equalsIgnoreCase(animation.getAnimationType().toString())) {
+                basePath = "tv";
+            }
+            
+            // similar API 사용
+            return "/" + basePath + "/" + id + "/similar?api_key=" + apiKey + "&language=ko-KR&page=" + page;
+        } else {
+            // 일반 영화/TV 시리즈는 similar API 사용
+            String path = getMediaTypePath(mediaType);
+            return "/" + path + "/" + id + "/similar?api_key=" + apiKey + "&language=ko-KR&page=" + page;
+        }
+    }
+    
+    /**
+     * 장르 기반 유사 애니메이션 URI 구성 (기존 로직 분리)
+     */
+    private String buildSimilarAnimationUriByGenre(Long id, int page) {
+        // 우선 해당 애니메이션 정보 조회
+        MediaItemDto mediaItem = getMediaById(Media.MediaType.ANIMATION, id);
+        if (mediaItem == null || mediaItem.getGenreIds() == null || mediaItem.getGenreIds().isEmpty()) {
+            return ""; // 빈 문자열 반환
+        }
+        
+        // 장르 ID를 기반으로 유사한 콘텐츠 검색 (애니메이션 장르 16 포함)
+        StringBuilder uriBuilder = new StringBuilder();
+        uriBuilder.append("/discover/movie?api_key=").append(apiKey)
+                .append("&language=ko-KR&with_genres=16");
+        
+        // 추가 장르 포함
+        for (Integer genreId : mediaItem.getGenreIds()) {
+            if (genreId != 16) { // 애니메이션(16)은 이미 포함됨
+                uriBuilder.append(",").append(genreId);
+            }
+        }
+        
+        uriBuilder.append("&sort_by=popularity.desc&page=").append(page);
+        return uriBuilder.toString();
     }
 
     @Override
@@ -425,11 +450,10 @@ public class TmdbMediaService implements MediaService {
 
     @Override
     public MediaDto searchAnimations(String query, int page) {
-        // 1. 로컬 DB에서 애니메이션 검색
         // 페이징 설정
-        Pageable pageable = PageRequest.of(page - 1, 20); // 페이지는 0부터 시작, TMDB API는 1부터 시작하므로 -1
+        Pageable pageable = PageRequest.of(page - 1, 20);
 
-        // 로컬 DB에서 제목으로 검색
+        // 로컬 DB에서 애니메이션 검색
         Page<Animation> animationsPage = animationRepository.searchByTitleContainingIgnoreCase(query, pageable);
         List<Animation> animations = animationsPage.getContent();
         
@@ -445,40 +469,21 @@ public class TmdbMediaService implements MediaService {
                 .collect(Collectors.toList());
         
         // 결과 생성
-        MediaDto result = new MediaDto();
-        result.setResults(animationDtos);
-        result.setPage(page);
-        result.setTotalPages(animationsPage.getTotalPages());
-        result.setTotalResults((int) animationsPage.getTotalElements());
-        
-        if (!result.getResults().isEmpty()) {
-            return result;
-        }
-        
-        return result; // 비어있더라도 결과 반환
+        return createMediaDtoResult(animationDtos, page, animationsPage.getTotalPages(), 
+                (int) animationsPage.getTotalElements());
     }
 
-    // TMDB API에서 애니메이션 검색 (기존 로직)
+    // TMDB API에서 애니메이션 검색 (리팩토링)
     private MediaDto searchAnimationsFromApi(String query, int page) {
-        // TMDB API에서 검색 결과 가져오기
-        String response = webClient.get()
-                .uri("/search/movie?api_key=" + apiKey + "&language=ko-KR&query=" + query + "&with_genres=16&page=" + page)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-        
         // 영화 애니메이션 결과 파싱
-        MediaDto movieResults = parseMediaListResponse(response, Media.MediaType.ANIMATION);
-        
-        // TV 애니메이션도 검색
-        response = webClient.get()
-                .uri("/search/tv?api_key=" + apiKey + "&language=ko-KR&query=" + query + "&with_genres=16&page=" + page)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        String movieResponse = fetchFromTmdbApi("/search/movie?api_key=" + apiKey + 
+                "&language=ko-KR&query=" + query + "&with_genres=16&page=" + page);
+        MediaDto movieResults = parseMediaListResponse(movieResponse, Media.MediaType.ANIMATION);
         
         // TV 애니메이션 결과 파싱
-        MediaDto tvResults = parseMediaListResponse(response, Media.MediaType.ANIMATION);
+        String tvResponse = fetchFromTmdbApi("/search/tv?api_key=" + apiKey + 
+                "&language=ko-KR&query=" + query + "&with_genres=16&page=" + page);
+        MediaDto tvResults = parseMediaListResponse(tvResponse, Media.MediaType.ANIMATION);
         
         // 결과 장르 ID가 16인 항목들만 필터링 (애니메이션만)
         List<MediaItemDto> filteredMovies = filterAnimations(movieResults.getResults());
@@ -492,43 +497,26 @@ public class TmdbMediaService implements MediaService {
         saveAnimationsToDbAsync(combinedResults);
         
         // 결과 생성
-        MediaDto result = new MediaDto();
-        result.setResults(combinedResults);
-        result.setPage(page);
-        result.setTotalPages(Math.max(movieResults.getTotalPages(), tvResults.getTotalPages()));
-        result.setTotalResults(combinedResults.size());
-        
-        if (!result.getResults().isEmpty()) {
-            return result;
-        }
-        
-        return result; // 비어있더라도 결과 반환
+        return createMediaDtoResult(combinedResults, page, 
+                Math.max(movieResults.getTotalPages(), tvResults.getTotalPages()), 
+                combinedResults.size());
     }
 
     // API 검색 결과를 DB에 저장하는 비동기 메서드
     private void saveAnimationsToDbAsync(List<MediaItemDto> animations) {
-        new Thread(() -> {
+        CompletableFuture.runAsync(() -> {
             for (MediaItemDto animation : animations) {
                 // 이미 존재하는지 확인
                 if (!animationRepository.existsById(animation.getId())) {
                     // 각 미디어 항목의 카테고리 정보 확인 (없으면 DEFAULT로 설정)
-                    Media.MediaCategory category;
-                    if (animation.getCategory() != null && !animation.getCategory().isEmpty()) {
-                        try {
-                            category = Media.MediaCategory.valueOf(animation.getCategory().toUpperCase());
-                        } catch (IllegalArgumentException e) {
-                            category = Media.MediaCategory.DEFAULT;
-                        }
-                    } else {
-                        category = Media.MediaCategory.DEFAULT;
-                    }
+                    Media.MediaCategory category = determineMediaCategory(animation);
                     
                     // 카테고리 설정
                     animation.setCategory(category.name().toLowerCase());
                     saveMediaEntity(animation, Media.MediaType.ANIMATION, category);
                 }
             }
-        }).start();
+        });
     }
 
     @Override
@@ -537,32 +525,64 @@ public class TmdbMediaService implements MediaService {
         // 각 미디어 타입 및 카테고리에 대한 데이터 동기화
         String path = getMediaTypePath(mediaType);
         String categoryPath = getCategoryPath(category, mediaType);
+        String uriString;
         
-        for (int page = 1; page <= 5; page++) { // 최대 5페이지까지 동기화
-            String response = webClient.get()
-                    .uri("/" + path + "/" + categoryPath + "?api_key=" + apiKey + "&language=ko-KR&page=" + page)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-                    
-            if (response != null) {
-                try {
-                    JsonNode rootNode = objectMapper.readTree(response);
-                    JsonNode resultsNode = rootNode.path("results");
-                    
-                    for (JsonNode mediaNode : resultsNode) {
-                        MediaItemDto dto = mediaMapperService.mapJsonToMediaItemDto(mediaNode, mediaType);
-                        dto.setCategory(category.name().toLowerCase());
-                        
-                        // 미디어 유형별로 저장 처리
-                        saveMediaEntity(dto, mediaType, category);
-                        
-                        // 각 항목별로 상세 정보 추가 조회 (출연진, 제작진, 비디오 포함)
-                        fetchAndSaveMediaDetails(dto.getId(), mediaType);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to sync media data", e);
+        // 애니메이션은 discover API 사용하는 특별한 처리
+        if (mediaType == Media.MediaType.ANIMATION) {
+            for (int page = 1; page <= 5; page++) { // 최대 5페이지까지 동기화
+                uriString = "/discover/movie?api_key=" + apiKey + 
+                            "&language=ko-KR&with_genres=16" + // 16은 애니메이션 장르 ID
+                            "&sort_by=";
+                            
+                // 카테고리별 정렬 방식 결정
+                switch(category) {
+                    case POPULAR -> uriString += "popularity.desc";
+                    case TOP_RATED -> uriString += "vote_average.desc";
+                    case NOW_PLAYING -> uriString += "primary_release_date.desc";
+                    case UPCOMING -> uriString += "primary_release_date.asc";
+                    default -> uriString += "popularity.desc";
                 }
+                
+                uriString += "&page=" + page;
+                
+                // API 호출 및 데이터 처리
+                processApiResponse(uriString, mediaType, category);
+            }
+        } else {
+            // 일반 영화/TV 시리즈에 대한 기존 처리
+            for (int page = 1; page <= 5; page++) { // 최대 5페이지까지 동기화
+                uriString = "/" + path + "/" + categoryPath + 
+                        "?api_key=" + apiKey + "&language=ko-KR&page=" + page;
+                        
+                // API 호출 및 데이터 처리
+                processApiResponse(uriString, mediaType, category);
+            }
+        }
+    }
+    
+    /**
+     * API 응답을 처리하여 데이터베이스에 저장
+     */
+    private void processApiResponse(String uriString, Media.MediaType mediaType, Media.MediaCategory category) {
+        String response = fetchFromTmdbApi(uriString);
+                
+        if (response != null) {
+            try {
+                JsonNode rootNode = objectMapper.readTree(response);
+                JsonNode resultsNode = rootNode.path("results");
+                
+                for (JsonNode mediaNode : resultsNode) {
+                    MediaItemDto dto = mediaMapperService.mapJsonToMediaItemDto(mediaNode, mediaType);
+                    dto.setCategory(category.name().toLowerCase());
+                    
+                    // 미디어 유형별로 저장 처리
+                    saveMediaEntity(dto, mediaType, category);
+                    
+                    // 각 항목별로 상세 정보 추가 조회 (출연진, 제작진, 비디오 포함)
+                    fetchAndSaveMediaDetails(dto.getId(), mediaType);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to sync media data", e);
             }
         }
     }
@@ -571,14 +591,28 @@ public class TmdbMediaService implements MediaService {
      * 미디어 상세 정보 조회 및 저장 (출연진, 제작진, 비디오 등)
      */
     private void fetchAndSaveMediaDetails(Long id, Media.MediaType mediaType) {
-        String path = getMediaTypePath(mediaType);
+        // API 요청 경로 결정
+        String path;
+        if (mediaType == Media.MediaType.ANIMATION) {
+            // 애니메이션인 경우, 애니메이션 정보를 조회하여 원본 미디어 타입 확인
+            Animation animation = animationRepository.findById(id).orElse(null);
+            
+            // 기본적으로 영화로 간주 (대부분의 애니메이션이 영화임)
+            path = "movie";
+            
+            // 애니메이션 정보가 있고 타입이 명시적으로 "tv"인 경우 TV 경로 사용
+            if (animation != null && animation.getAnimationType() != null && 
+                "tv".equalsIgnoreCase(animation.getAnimationType().toString())) {
+                path = "tv";
+            }
+        } else {
+            // 일반 미디어(영화, TV)는 기존 로직 사용
+            path = getMediaTypePath(mediaType);
+        }
         
         try {
-            String response = webClient.get()
-                    .uri("/" + path + "/" + id + "?api_key=" + apiKey + "&language=ko-KR&append_to_response=videos,credits")
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            String response = fetchFromTmdbApi("/" + path + "/" + id + 
+                    "?api_key=" + apiKey + "&language=ko-KR&append_to_response=videos,credits");
                     
             if (response != null) {
                 JsonNode rootNode = objectMapper.readTree(response);
@@ -587,27 +621,7 @@ public class TmdbMediaService implements MediaService {
                 MediaItemDto basicDto = mediaMapperService.mapJsonToMediaItemDto(rootNode, mediaType);
                 
                 // 기존 엔티티의 카테고리 유지
-                Media.MediaCategory existingCategory = Media.MediaCategory.DEFAULT;
-                switch (mediaType) {
-                    case MOVIE:
-                        Optional<Movie> movie = movieRepository.findById(id);
-                        if (movie.isPresent()) {
-                            existingCategory = movie.get().getCategory();
-                        }
-                        break;
-                    case TV:
-                        Optional<Tv> tv = tvRepository.findById(id);
-                        if (tv.isPresent()) {
-                            existingCategory = tv.get().getCategory();
-                        }
-                        break;
-                    case ANIMATION:
-                        Optional<Animation> animation = animationRepository.findById(id);
-                        if (animation.isPresent()) {
-                            existingCategory = animation.get().getCategory();
-                        }
-                        break;
-                }
+                Media.MediaCategory existingCategory = getExistingCategory(id, mediaType);
                 
                 // 카테고리 정보 유지하면서 저장
                 saveMediaEntity(basicDto, mediaType, existingCategory);
@@ -636,6 +650,23 @@ public class TmdbMediaService implements MediaService {
         }
     }
     
+    /**
+     * 기존 미디어의 카테고리 조회
+     */
+    private Media.MediaCategory getExistingCategory(Long id, Media.MediaType mediaType) {
+        return switch (mediaType) {
+            case MOVIE -> movieRepository.findById(id)
+                    .map(Movie::getCategory)
+                    .orElse(Media.MediaCategory.DEFAULT);
+            case TV -> tvRepository.findById(id)
+                    .map(Tv::getCategory)
+                    .orElse(Media.MediaCategory.DEFAULT);
+            case ANIMATION -> animationRepository.findById(id)
+                    .map(Animation::getCategory)
+                    .orElse(Media.MediaCategory.DEFAULT);
+        };
+    }
+    
     // Scheduled 작업용 메서드
     @Scheduled(cron = "0 0 1 * * ?") // 매일 새벽 1시에 실행
     @Transactional
@@ -658,6 +689,10 @@ public class TmdbMediaService implements MediaService {
     
     // 애니메이션 필터링 (장르 ID가 16인 항목만 추출)
     private List<MediaItemDto> filterAnimations(List<MediaItemDto> mediaItems) {
+        if (mediaItems == null) {
+            return new ArrayList<>();
+        }
+        
         return mediaItems.stream()
                 .filter(item -> {
                     if (item.getGenreIds() != null) {
@@ -673,38 +708,28 @@ public class TmdbMediaService implements MediaService {
         return switch (mediaType) {
             case MOVIE -> "movie";
             case TV -> "tv";
-            case ANIMATION -> "discover"; // 애니메이션은 discover API 사용 ("movie" 부분은 getCategoryPath에서 처리)
+            case ANIMATION -> "discover"; // 애니메이션은 discover API 사용
         };
     }
     
     // 카테고리별 API 경로 가져오기
     private String getCategoryPath(Media.MediaCategory category, Media.MediaType mediaType) {
         if (mediaType == Media.MediaType.MOVIE) {
-            switch (category) {
-                case POPULAR:
-                    return "popular";
-                case TOP_RATED:
-                    return "top_rated";
-                case NOW_PLAYING:
-                    return "now_playing";
-                case UPCOMING:
-                    return "upcoming";
-                default:
-                    return "popular";
-            }
+            return switch (category) {
+                case POPULAR -> "popular";
+                case TOP_RATED -> "top_rated";
+                case NOW_PLAYING -> "now_playing";
+                case UPCOMING -> "upcoming";
+                default -> "popular";
+            };
         } else if (mediaType == Media.MediaType.TV) {
-            switch (category) {
-                case POPULAR:
-                    return "popular";
-                case TOP_RATED:
-                    return "top_rated";
-                case ON_THE_AIR:
-                    return "on_the_air";
-                case AIRING_TODAY:
-                    return "airing_today";
-                default:
-                    return "popular";
-            }
+            return switch (category) {
+                case POPULAR -> "popular";
+                case TOP_RATED -> "top_rated";
+                case ON_THE_AIR -> "on_the_air";
+                case AIRING_TODAY -> "airing_today";
+                default -> "popular";
+            };
         } else { // ANIMATION
             return "movie"; // 애니메이션은 discover/movie 엔드포인트 사용
         }
@@ -712,33 +737,27 @@ public class TmdbMediaService implements MediaService {
     
     // API 응답을 MediaDto로 파싱
     private MediaDto parseMediaListResponse(String response, Media.MediaType mediaType) {
-        if (response != null) {
-            try {
-                JsonNode rootNode = objectMapper.readTree(response);
-                int page = rootNode.path("page").asInt();
-                int totalPages = rootNode.path("total_pages").asInt();
-                int totalResults = rootNode.path("total_results").asInt();
-                JsonNode resultsNode = rootNode.path("results");
-                
-                List<MediaItemDto> mediaItems = new ArrayList<>();
-                for (JsonNode mediaNode : resultsNode) {
-                    MediaItemDto dto = mediaMapperService.mapJsonToMediaItemDto(mediaNode, mediaType);
-                    mediaItems.add(dto);
-                }
-                
-                MediaDto mediaDto = new MediaDto();
-                mediaDto.setResults(mediaItems);
-                mediaDto.setPage(page);
-                mediaDto.setTotalPages(totalPages);
-                mediaDto.setTotalResults(totalResults);
-                
-                return mediaDto;
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to parse media list response", e);
-            }
+        if (response == null) {
+            return new MediaDto();
         }
         
-        return new MediaDto();
+        try {
+            JsonNode rootNode = objectMapper.readTree(response);
+            int page = rootNode.path("page").asInt();
+            int totalPages = rootNode.path("total_pages").asInt();
+            int totalResults = rootNode.path("total_results").asInt();
+            JsonNode resultsNode = rootNode.path("results");
+            
+            List<MediaItemDto> mediaItems = new ArrayList<>();
+            for (JsonNode mediaNode : resultsNode) {
+                MediaItemDto dto = mediaMapperService.mapJsonToMediaItemDto(mediaNode, mediaType);
+                mediaItems.add(dto);
+            }
+            
+            return createMediaDtoResult(mediaItems, page, totalPages, totalResults);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse media list response", e);
+        }
     }
     
     // 미디어 엔티티 저장 (영화, TV, 애니메이션에 따라 다르게 처리)
@@ -761,12 +780,7 @@ public class TmdbMediaService implements MediaService {
         
         // 요청된 페이지가 범위를 벗어나면 빈 결과 반환
         if (page > totalPages || page < 1) {
-            MediaDto emptyResult = new MediaDto();
-            emptyResult.setPage(page);
-            emptyResult.setTotalPages(totalPages);
-            emptyResult.setTotalResults(totalSize);
-            emptyResult.setResults(new ArrayList<>());
-            return emptyResult;
+            return createMediaDtoResult(new ArrayList<>(), page, totalPages, totalSize);
         }
         
         // 해당 페이지의 추천 정보 추출
@@ -775,33 +789,29 @@ public class TmdbMediaService implements MediaService {
         List<MediaRecommendation> pageRecommendations = recommendations.subList(fromIndex, toIndex);
         
         // MediaDto로 변환
-        List<MediaItemDto> mediaItems = new ArrayList<>();
-        for (MediaRecommendation recommendation : pageRecommendations) {
-            // 추천된 미디어의 타입에 따라 다른 저장소에서 조회
-            MediaItemDto itemDto = switch (recommendation.getRecommendedMediaType()) {
-                case MOVIE -> movieRepository.findById(recommendation.getRecommendedMediaId())
-                        .map(mediaMapperService::mapMovieToDto)
-                        .orElse(null);
-                case TV -> tvRepository.findById(recommendation.getRecommendedMediaId())
-                        .map(mediaMapperService::mapTvToDto)
-                        .orElse(null);
-                case ANIMATION -> animationRepository.findById(recommendation.getRecommendedMediaId())
-                        .map(mediaMapperService::mapAnimationToDto)
-                        .orElse(null);
-            };
-            
-            if (itemDto != null) {
-                mediaItems.add(itemDto);
-            }
-        }
+        List<MediaItemDto> mediaItems = pageRecommendations.stream()
+                .map(this::mapRecommendationToMediaItem)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         
-        MediaDto result = new MediaDto();
-        result.setResults(mediaItems);
-        result.setPage(page);
-        result.setTotalPages(totalPages);
-        result.setTotalResults(totalSize);
-        
-        return result;
+        return createMediaDtoResult(mediaItems, page, totalPages, totalSize);
+    }
+
+    /**
+     * 추천 정보를 MediaItemDto로 변환
+     */
+    private MediaItemDto mapRecommendationToMediaItem(MediaRecommendation recommendation) {
+        return switch (recommendation.getRecommendedMediaType()) {
+            case MOVIE -> movieRepository.findById(recommendation.getRecommendedMediaId())
+                    .map(mediaMapperService::mapMovieToDto)
+                    .orElse(null);
+            case TV -> tvRepository.findById(recommendation.getRecommendedMediaId())
+                    .map(mediaMapperService::mapTvToDto)
+                    .orElse(null);
+            case ANIMATION -> animationRepository.findById(recommendation.getRecommendedMediaId())
+                    .map(mediaMapperService::mapAnimationToDto)
+                    .orElse(null);
+        };
     }
 
     /**
@@ -822,10 +832,9 @@ public class TmdbMediaService implements MediaService {
      * 추천 정보 비동기 저장
      */
     private void saveRecommendationsAsync(List<MediaItemDto> recommendedItems, Long sourceMediaId, Media.MediaType sourceType) {
-        // 실제 구현에서는 Async 처리 (예: @Async 또는 ThreadPoolTaskExecutor 사용)
-        new Thread(() -> {
+        CompletableFuture.runAsync(() -> {
             saveRecommendations(recommendedItems, sourceMediaId, sourceType);
-        }).start();
+        });
     }
 
     /**
@@ -839,12 +848,9 @@ public class TmdbMediaService implements MediaService {
                 continue;
             }
             
-            Media.MediaType recommendedType;
-            try {
-                recommendedType = Media.MediaType.valueOf(item.getMediaType().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // 지원하지 않는 미디어 타입
-                continue;
+            Media.MediaType recommendedType = parseMediaType(item.getMediaType());
+            if (recommendedType == null) {
+                continue; // 지원하지 않는 미디어 타입
             }
             
             // 중복 체크
@@ -853,21 +859,39 @@ public class TmdbMediaService implements MediaService {
                     sourceMediaId, item.getId(), sourceType, recommendedType);
                 
             if (!exists) {
-                MediaRecommendation recommendation = new MediaRecommendation();
-                recommendation.setMediaId(sourceMediaId);
-                recommendation.setRecommendedMediaId(item.getId());
-                recommendation.setMediaType(sourceType);
-                recommendation.setRecommendedMediaType(recommendedType);
-                recommendation.setSimilarityScore((float)(item.getVoteAverage() / 10.0)); // Float 타입으로 명시적 캐스팅
-                
-                // 동적 만료 기간 설정
-                recommendation.setExpiresAt(LocalDateTime.now().plusDays(expiryDays));
-                
-                mediaRecommendationRepository.save(recommendation);
-                
-                // 해당 미디어 정보도 저장
-                saveMediaEntity(item, recommendedType, Media.MediaCategory.POPULAR);
+                saveRecommendation(item, sourceMediaId, sourceType, recommendedType);
             }
+        }
+    }
+
+    /**
+     * 단일 추천 정보 저장
+     */
+    private void saveRecommendation(MediaItemDto item, Long sourceMediaId, Media.MediaType sourceType, Media.MediaType recommendedType) {
+        MediaRecommendation recommendation = new MediaRecommendation();
+        recommendation.setMediaId(sourceMediaId);
+        recommendation.setRecommendedMediaId(item.getId());
+        recommendation.setMediaType(sourceType);
+        recommendation.setRecommendedMediaType(recommendedType);
+        recommendation.setSimilarityScore((float)(item.getVoteAverage() / 10.0));
+        
+        // 동적 만료 기간 설정
+        recommendation.setExpiresAt(LocalDateTime.now().plusDays(expiryDays));
+        
+        mediaRecommendationRepository.save(recommendation);
+        
+        // 해당 미디어 정보도 저장
+        saveMediaEntity(item, recommendedType, Media.MediaCategory.POPULAR);
+    }
+
+    /**
+     * 문자열을 MediaType으로 변환
+     */
+    private Media.MediaType parseMediaType(String mediaTypeStr) {
+        try {
+            return Media.MediaType.valueOf(mediaTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -896,12 +920,7 @@ public class TmdbMediaService implements MediaService {
         // TMDB API에서 새로운 추천 정보 가져오기
         String path = getMediaTypePath(mediaType);
         
-        String response = webClient.get()
-                .uri("/" + path + "/" + mediaId + "/similar?api_key=" + apiKey + "&language=ko-KR&page=1")
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-                
+        String response = fetchFromTmdbApi("/" + path + "/" + mediaId + "/similar?api_key=" + apiKey + "&language=ko-KR&page=1");
         MediaDto result = parseMediaListResponse(response, mediaType);
         
         if (result != null && result.getResults() != null && !result.getResults().isEmpty()) {
@@ -954,8 +973,6 @@ public class TmdbMediaService implements MediaService {
      */
     @Override
     public void updateAccessCountThreshold(int threshold) {
-        // application.properties에 저장하거나 DB 설정 테이블로 옮길것임
-        // 지금은 일단 Environment를 사용하지 않고 간단하게 정적 변수로 관리
         this.accessCountThreshold = threshold;
     }
 
@@ -1008,23 +1025,7 @@ public class TmdbMediaService implements MediaService {
             fetchAndSaveMediaDetails(id, mediaType);
             
             // 다시 DB에서 정보 조회
-            castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
-                    .stream()
-                    .map(mediaMapperService::mapCastToCastDto)
-                    .collect(Collectors.toList());
-            detailsDto.setCredits(castDtos);
-            
-            crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
-                    .stream()
-                    .map(mediaMapperService::mapCrewToCrewDto)
-                    .collect(Collectors.toList());
-            detailsDto.setCrew(crewDtos);
-            
-            videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
-                    .stream()
-                    .map(mediaMapperService::mapVideoToVideoDto)
-                    .collect(Collectors.toList());
-            detailsDto.setVideos(videoDtos);
+            detailsDto = refreshDetailsFromDb(id, mediaType, detailsDto);
         }
         
         // 유사 미디어 조회
@@ -1032,6 +1033,34 @@ public class TmdbMediaService implements MediaService {
         if (similarMedia != null && similarMedia.getResults() != null) {
             detailsDto.setSimilar(similarMedia.getResults());
         }
+        
+        return detailsDto;
+    }
+
+    /**
+     * DB에서 미디어 상세 정보 새로고침
+     */
+    private MediaDetailsDto refreshDetailsFromDb(Long id, Media.MediaType mediaType, MediaDetailsDto detailsDto) {
+        // 출연진 정보 새로고침
+        List<CastDto> castDtos = castRepository.findByMediaIdAndMediaTypeOrderByOrder(id, mediaType)
+                .stream()
+                .map(mediaMapperService::mapCastToCastDto)
+                .collect(Collectors.toList());
+        detailsDto.setCredits(castDtos);
+        
+        // 제작진 정보 새로고침
+        List<CrewDto> crewDtos = crewRepository.findByMediaIdAndMediaType(id, mediaType)
+                .stream()
+                .map(mediaMapperService::mapCrewToCrewDto)
+                .collect(Collectors.toList());
+        detailsDto.setCrew(crewDtos);
+        
+        // 비디오 정보 새로고침
+        List<VideoDto> videoDtos = videoRepository.findByMediaIdAndMediaType(id, mediaType)
+                .stream()
+                .map(mediaMapperService::mapVideoToVideoDto)
+                .collect(Collectors.toList());
+        detailsDto.setVideos(videoDtos);
         
         return detailsDto;
     }
@@ -1047,19 +1076,24 @@ public class TmdbMediaService implements MediaService {
             return;
         }
         
-        List<GenreDto> genreDtos = new ArrayList<>();
         List<MediaGenre> mediaGenres = mediaGenreRepository.findByMediaIdAndMediaType(mediaId, mediaType);
         
-        for (MediaGenre mediaGenre : mediaGenres) {
-            Genre genre = mediaGenre.getGenre();
-            if (genre != null) {
-                GenreDto genreDto = new GenreDto();
-                genreDto.setId(genre.getId());
-                genreDto.setName(genre.getName());
-                genreDtos.add(genreDto);
-            }
-        }
+        List<GenreDto> genreDtos = mediaGenres.stream()
+                .map(MediaGenre::getGenre)
+                .filter(Objects::nonNull)
+                .map(this::mapGenreToDto)
+                .collect(Collectors.toList());
         
         mediaItemDto.setGenres(genreDtos);
+    }
+
+    /**
+     * Genre 엔티티를 GenreDto로 변환
+     */
+    private GenreDto mapGenreToDto(Genre genre) {
+        GenreDto genreDto = new GenreDto();
+        genreDto.setId(genre.getId());
+        genreDto.setName(genre.getName());
+        return genreDto;
     }
 } 
