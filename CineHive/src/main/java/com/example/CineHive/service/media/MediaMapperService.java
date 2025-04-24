@@ -118,16 +118,26 @@ public class MediaMapperService {
             dto.setRuntime(mediaNode.get("runtime").asInt());
         }
         
-        // 장르 정보 처리
+        // 미디어 타입 결정 (애니메이션 여부 확인)
+        boolean isAnimation = false;
+        Media.MediaType determinedType = mediaType;
+        
+        // 장르 정보 처리 및 애니메이션 판별
         if (mediaNode.has("genres")) {
             List<GenreDto> genreDtos = new ArrayList<>();
             JsonNode genresNode = mediaNode.get("genres");
             
             for (JsonNode genreNode : genresNode) {
+                int genreId = genreNode.get("id").asInt();
                 GenreDto genreDto = new GenreDto();
-                genreDto.setId(genreNode.get("id").asInt());
+                genreDto.setId(genreId);
                 genreDto.setName(genreNode.get("name").asText());
                 genreDtos.add(genreDto);
+                
+                // 장르 ID 16이 애니메이션이면 타입을 ANIMATION으로 설정
+                if (genreId == 16) {
+                    isAnimation = true;
+                }
             }
             
             dto.setGenres(genreDtos);
@@ -135,12 +145,36 @@ public class MediaMapperService {
             List<Integer> genreIds = new ArrayList<>();
             JsonNode genreIdsNode = mediaNode.get("genre_ids");
             for (JsonNode genreIdNode : genreIdsNode) {
-                genreIds.add(genreIdNode.asInt());
+                int genreId = genreIdNode.asInt();
+                genreIds.add(genreId);
+                
+                // 장르 ID 16이 애니메이션이면 타입을 ANIMATION으로 설정
+                if (genreId == 16) {
+                    isAnimation = true;
+                }
             }
             dto.setGenreIds(genreIds);
         }
         
-        dto.setMediaType(mediaType.name().toLowerCase());
+        // TMDB 응답의 media_type 필드가 있으면 체크 (검색 결과 등에서 제공)
+        if (mediaNode.has("media_type")) {
+            String tmdbMediaType = mediaNode.get("media_type").asText();
+            if (!isAnimation) { // 이미 애니메이션으로 판별된 경우는 무시
+                if ("movie".equals(tmdbMediaType)) {
+                    determinedType = Media.MediaType.MOVIE;
+                } else if ("tv".equals(tmdbMediaType)) {
+                    determinedType = Media.MediaType.TV;
+                }
+            }
+        }
+        
+        // 애니메이션인 경우 미디어 타입 변경
+        if (isAnimation) {
+            determinedType = Media.MediaType.ANIMATION;
+        }
+        
+        // 최종 결정된 미디어 타입 설정
+        dto.setMediaType(determinedType.name().toLowerCase());
         
         return dto;
     }
