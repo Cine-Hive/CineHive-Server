@@ -7,20 +7,14 @@ import com.example.CineHive.dto.user.ChangeMemNameRequest;
 import com.example.CineHive.dto.user.ChangeMemSexRequest;
 import com.example.CineHive.dto.user.ChangePasswordRequest;
 import com.example.CineHive.entity.User;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.BoardDisLike;
-import com.example.CineHive.entity.board.BoardLike;
-import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.entity.board.*;
 
 import com.example.CineHive.entity.reply.Reply;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.CommentRepository;
-import com.example.CineHive.repository.board.DisLikeRepository;
-import com.example.CineHive.repository.board.LikeRepository;
+import com.example.CineHive.repository.board.*;
 import com.example.CineHive.repository.reply.ReplyRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.service.UserService;
@@ -58,6 +52,7 @@ public class MyPageController {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final DisLikeRepository dislikeRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     @GetMapping("/info")
     @Operation(summary = "내 정보 조회", description = "JWT를 통해 인증된 사용자의 기본 정보를 조회합니다.")
@@ -215,6 +210,44 @@ public class MyPageController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    @GetMapping("/boardbookmarks")
+    @Operation(summary = "내가 즐겨찾기한 게시글 조회", description = "JWT에서 추출한 사용자 email을 기준으로 즐겨찾기한 게시글 정보를 조회")
+    public ResponseEntity<?> getMyBookmarkedBoards(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
+
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+
+            User user = optionalUser.get();
+            List<Bookmark> bookmarks = bookmarkRepository.findByUser(user);
+
+            List<Map<String, Object>> bookmarkedBoards = bookmarks.stream()
+                    .map(bookmark -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("boardId", bookmark.getBoard().getId());
+                        map.put("boardTitle", bookmark.getBoard().getBrdTitle());
+                        map.put("boardContent", bookmark.getBoard().getBrdContent());
+                        map.put("boardViews", bookmark.getBoard().getViews());
+                        map.put("boardRegDate", bookmark.getBoard().getBrdRegDate());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(bookmarkedBoards);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
         }
     }
 
