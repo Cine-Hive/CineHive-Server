@@ -6,9 +6,13 @@ import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.*;
 
 import com.example.CineHive.entity.reply.Reply;
+import com.example.CineHive.entity.reply.ReplyDisLike;
+import com.example.CineHive.entity.reply.ReplyLike;
 import com.example.CineHive.entity.videotype.Movie;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.*;
+import com.example.CineHive.repository.reply.ReplyDisLikeRepository;
+import com.example.CineHive.repository.reply.ReplyLikeRepository;
 import com.example.CineHive.repository.reply.ReplyRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.service.reply.ReplyBookmarkService;
@@ -43,6 +47,9 @@ public class MyPageController {
     private final LikeRepository likeRepository;
     private final DisLikeRepository dislikeRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final ReplyLikeRepository replyLikeRepository;
+    private final ReplyDisLikeRepository replyDisLikeRepository;
+
 
     @GetMapping("/info")
     @Operation(summary = "내 정보 조회", description = "JWT를 통해 인증된 사용자의 기본 정보를 조회합니다.")
@@ -342,4 +349,54 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
         }
     }
+
+    @GetMapping("/reply-likes")
+    @Operation(summary = "내가 좋아요 누른 감상평 조회", description = "JWT를 통해 인증된 사용자가 좋아요한 감상평 목록을 조회합니다.")
+    public ResponseEntity<?> getLikedReplies(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+
+            List<ReplyLike> replyLikes = replyLikeRepository.findByMemEmail(memEmail);
+            List<Long> replyIds = replyLikes.stream()
+                    .map(ReplyLike::getReplyId)
+                    .collect(Collectors.toList());
+
+            List<Reply> likedReplies = replyRepository.findAllById(replyIds);
+
+            return ResponseEntity.ok(likedReplies);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("좋아요 감상평 조회 실패");
+        }
+    }
+
+
+
+    @GetMapping("/reply-dislikes")
+    public ResponseEntity<?> getDislikedReplies(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            List<ReplyDisLike> replyDislikes = replyDisLikeRepository.findByMemEmail(memEmail);
+            List<Long> replyIds = replyDislikes.stream()
+                    .map(ReplyDisLike::getReplyId)
+                    .collect(Collectors.toList());
+            List<Reply> replies = replyRepository.findAllById(replyIds);
+            return ResponseEntity.ok(replies);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("싫어요 감상평 조회 실패");
+        }
+    }
+
+
 }

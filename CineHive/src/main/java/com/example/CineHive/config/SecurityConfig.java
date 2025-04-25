@@ -28,6 +28,7 @@ public class SecurityConfig {
                                 "/api/auth/undefined/success",
                                 "/dramas/**",
                                 "/myPage/bookmarks/**",
+                                "/myInfo/**",
                                 "/myPage/**",
                                 "/animations/**",
                                 "/get_topmovies",

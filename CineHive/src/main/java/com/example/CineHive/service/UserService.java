@@ -133,7 +133,11 @@ public class UserService{
         User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        user.setMemName(newMemName);
+        if (newMemName == null || newMemName.trim().isEmpty()) {
+            throw new RuntimeException("변경할 이름을 입력해야 합니다.");
+        }
+
+        user.setMemName(newMemName.trim()); // 공백 제거하고 저장
         userRepository.save(user);
         return true;
     }
