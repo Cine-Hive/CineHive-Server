@@ -8,6 +8,7 @@ import com.example.CineHive.dto.user.ChangeMemSexRequest;
 import com.example.CineHive.dto.user.ChangePasswordRequest;
 import com.example.CineHive.entity.User;
 import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.board.BoardLike;
 import com.example.CineHive.entity.board.Comment;
 
 import com.example.CineHive.entity.reply.Reply;
@@ -17,6 +18,7 @@ import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.CommentRepository;
+import com.example.CineHive.repository.board.LikeRepository;
 import com.example.CineHive.repository.reply.ReplyRepository;
 import com.example.CineHive.repository.videos.movie.MovieRepository;
 import com.example.CineHive.service.UserService;
@@ -32,7 +34,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -50,7 +54,7 @@ public class MyPageController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
-    private CommentMapper commentMapper;
+    private final LikeRepository likeRepository;
 
     @GetMapping("/info")
     @Operation(summary = "내 정보 조회", description = "JWT를 통해 인증된 사용자의 기본 정보를 조회합니다.")
@@ -134,8 +138,8 @@ public class MyPageController {
         }
     }
 
-    @GetMapping("/likes")
-    @Operation(summary = "내가 좋아요한 댓글 조회", description = "JWT에서 추출한 사용자 email을 기준으로 좋아요한 댓글 정보를 조회")
+    @GetMapping("/boardlikes")
+    @Operation(summary = "내가 좋아요한 게시글 조회", description = "사용자가 좋아요한 게시글 정보를 조회")
     public ResponseEntity<?> getMyLikes(HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
@@ -144,11 +148,29 @@ public class MyPageController {
 
         try {
             String memEmail = jwtTokenUtil.extractUsername(token);
-            System.out.println("토큰에서 추출한 이메일: " + memEmail);
+            Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
 
-            List<Reply> myLikes = replyRepository.findByMemEmail(memEmail);
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
 
-            return ResponseEntity.ok(myLikes);
+            User user = optionalUser.get();
+
+            List<BoardLike> myLikes = likeRepository.findByUser(user);
+
+            List<Map<String, Object>> likedBoards = myLikes.stream()
+                    .map(boardLike -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("boardId", boardLike.getBoard().getId());
+                        map.put("boardTitle", boardLike.getBoard().getBrdTitle());
+                        map.put("boardContent", boardLike.getBoard().getBrdContent());
+                        map.put("boardViews", boardLike.getBoard().getViews());
+                        map.put("boardRegDate", boardLike.getBoard().getBrdRegDate());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(likedBoards);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
