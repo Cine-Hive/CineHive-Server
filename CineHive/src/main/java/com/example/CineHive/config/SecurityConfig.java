@@ -40,7 +40,10 @@ public class SecurityConfig {
             
             // TV 시리즈 API
             "/api/v1/tv/**",
-            
+
+            // OTT 인기 콘텐츠 API
+            "/api/ott/**",
+
             // 게시판 API
             "/boards", "/boards/**",
             
