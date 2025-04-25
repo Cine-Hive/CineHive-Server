@@ -12,6 +12,7 @@ import com.example.CineHive.entity.board.Comment;
 
 import com.example.CineHive.entity.reply.Reply;
 import com.example.CineHive.entity.videotype.Movie;
+import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.LoginHistoryRepository;
 import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +50,44 @@ public class MyPageController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private CommentMapper commentMapper;
+
+    @GetMapping("/info")
+    @Operation(summary = "내 정보 조회", description = "JWT를 통해 인증된 사용자의 기본 정보를 조회합니다.")
+    public ResponseEntity<?> getMyInfo(HttpServletRequest request) {
+        String token = jwtTokenUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        try {
+            String memEmail = jwtTokenUtil.extractUsername(token);
+            Optional<User> optionalUser = userRepository.findByMemEmail(memEmail);
+
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+
+            User user = optionalUser.get();
+
+            // 필요한 정보만 추려서 반환
+            return ResponseEntity.ok(
+                    new java.util.HashMap<String, Object>() {{
+                        put("memName", user.getMemName());
+                        put("memEmail", user.getMemEmail());
+                        put("memNickname", user.getMemNickname());
+                        put("memSex", user.getMemSex());
+                        put("genres", user.getGenres());
+                    }}
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 정보 조회 실패");
+        }
+    }
+
+
 
     @GetMapping("/bookmarks")
     @Operation(summary = "찜한 영화 목록 조회", description = "JWT에서 추출한 사용자 email을 기준으로 찜한 영화 정보를 조회")
@@ -144,7 +184,8 @@ public class MyPageController {
                                 comment.getContent(),
                                 comment.getUser().getMemNickname(),
                                 comment.getUser().getMemEmail(),
-                                comment.getCreatedAt()
+                                comment.getCreatedAt(),
+                                comment.getBoard().getId()   // ✅ boardId 추가
                         ))
                         .collect(Collectors.toList());
 
@@ -171,6 +212,7 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
         }
     }
+
 
 
     @GetMapping("/comments")
@@ -200,11 +242,13 @@ public class MyPageController {
                     .map(comment -> new CommentDto(
                             comment.getId(),
                             comment.getContent(),
-                            comment.getUser().getMemNickname(),
-                            comment.getUser().getMemEmail(),
-                            comment.getCreatedAt()
+                            comment.getUser() != null ? comment.getUser().getMemNickname() : null,
+                            comment.getUser() != null ? comment.getUser().getMemEmail() : null,
+                            comment.getCreatedAt(),
+                            comment.getBoard() != null ? comment.getBoard().getId() : null
                     ))
                     .collect(Collectors.toList());
+
 
             return ResponseEntity.ok(commentDtos);
         } catch (Exception e) {
@@ -212,6 +256,8 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
         }
     }
+
+
 
 
     @PutMapping("/change-password")
