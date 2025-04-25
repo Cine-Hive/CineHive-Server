@@ -17,7 +17,8 @@ public class CommentMapper {
                 comment.getContent(),
                 comment.getUser().getMemNickname(),
                 comment.getUser().getMemEmail(),
-                comment.getUser().getMemRegisterDatetime()
+                comment.getUser().getMemRegisterDatetime(),
+                comment.getBoard().getId()
         );
     }
 

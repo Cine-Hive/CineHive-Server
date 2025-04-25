@@ -17,4 +17,5 @@ public class CommentDto {
     private String memNickname;
     private String memEmail;
     private LocalDateTime brgRedDate;
+    private Long boardId;
 }
