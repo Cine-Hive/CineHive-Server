@@ -122,10 +122,13 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", corsConfiguration());
         return source;
     }
-    
+
     private CorsConfiguration corsConfiguration() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Collections.singletonList("https://cinehive.com")); // 배포후 우리 도메인으로 변경 필요
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8080",
+                "http://localhost:8081",
+                "https://cinehive.com"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(true);
