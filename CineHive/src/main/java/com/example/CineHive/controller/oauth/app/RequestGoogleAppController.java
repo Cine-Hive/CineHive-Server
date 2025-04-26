@@ -11,11 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -24,6 +22,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 public class RequestGoogleAppController {
+
     @Autowired
     private GoogleUserService googleUserService;
 
@@ -33,33 +32,53 @@ public class RequestGoogleAppController {
     @Autowired
     private UserRepository userRepository;
 
-    @Operation(summary = "구글 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청코드 ")
+    @Operation(summary = "구글 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청 코드")
     @PostMapping("/google/app-login")
-    public ResponseEntity<?> kakaoAppLogin(@RequestBody String accessToken) {
+    public ResponseEntity<?> googleAppLogin(@RequestBody String accessToken) {
         try {
             GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
+            log.info("[Google Login] Google 사용자 정보 수신: {}", userInfo);
+
             Optional<User> user = userRepository.findByMemEmail(userInfo.getMemEmail());
 
-            if (user != null) {
-
+            if (user.isPresent()) {
                 String jwtToken = jwtUtil.generateToken(userInfo.getMemEmail());
-                return ResponseEntity.ok(Map.of("token", jwtToken, "user", userInfo));
-            } else {
 
-                return ResponseEntity.status(201).body(userInfo);
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("memEmail", userInfo.getMemEmail());
+                userMap.put("memNickname", userInfo.getMemNickname());
+                userMap.put("memName", userInfo.getMemName());
+                userMap.put("genres", userInfo.getGenres());
+
+                Map<String, Object> responseMap = new HashMap<>();
+                responseMap.put("token", jwtToken);
+                responseMap.put("user", userMap);
+
+                return ResponseEntity.ok(responseMap);
+            } else {
+                log.info("[Google Login] 신규 회원, 회원가입 필요: {}", userInfo.getMemEmail());
+
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("memEmail", userInfo.getMemEmail());
+                userMap.put("memNickname", userInfo.getMemNickname());
+                userMap.put("memName", userInfo.getMemName());
+                userMap.put("genres", userInfo.getGenres());
+
+                Map<String, Object> responseMap = new HashMap<>();
+                responseMap.put("user", userMap);
+
+                return ResponseEntity.status(201).body(responseMap);
             }
         } catch (Exception e) {
-            log.error("Error during Kakao login", e);
+            log.error("[Google Login] 로그인 처리 중 예외 발생", e);
             return ResponseEntity.status(500).body("로그인 처리 중 오류 발생");
         }
     }
-
 
     @Operation(summary = "구글 사용자 회원가입", description = "구글 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
     @PostMapping("/google/register")
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         googleUserService.registerGoogleUser(userDto);
-
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 }
