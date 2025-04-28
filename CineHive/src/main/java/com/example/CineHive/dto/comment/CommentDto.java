@@ -17,5 +17,5 @@ public class CommentDto {
     private String content;
     private String memNickname;
     private String memEmail;
-    private LocalDateTime brgRedDate;
+    private LocalDateTime brdRegDate;
 }
