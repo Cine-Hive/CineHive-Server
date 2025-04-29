@@ -11,7 +11,7 @@ import com.example.CineHive.repository.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -125,6 +125,14 @@ public class UserService{
         user.setMemPw(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return true;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean checkPassword(String memEmail, String password) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        return passwordEncoder.matches(password, user.getMemPw());
     }
 
 
