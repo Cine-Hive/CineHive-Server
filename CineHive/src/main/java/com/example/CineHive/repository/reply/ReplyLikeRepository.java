@@ -16,4 +16,6 @@ public interface ReplyLikeRepository extends JpaRepository<ReplyLike, Long>{
 
     List<ReplyLike> findByMemEmail(String memEmail);
 
+    void deleteByMemEmail(String memEmail);
+
 }

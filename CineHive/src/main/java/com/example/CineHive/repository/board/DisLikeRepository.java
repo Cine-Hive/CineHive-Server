@@ -15,4 +15,6 @@ public interface DisLikeRepository extends JpaRepository<BoardDisLike, Long> {
     long countByBoard(Board board);
 
     List<BoardDisLike> findByUser(User user);
+
+    void deleteByUser_MemEmail(String memEmail);
 }

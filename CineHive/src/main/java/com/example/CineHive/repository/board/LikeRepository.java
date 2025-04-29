@@ -12,4 +12,6 @@ public interface LikeRepository extends JpaRepository<BoardLike, Long> {
     Optional<BoardLike> findByUserAndBoard(User user, Board board);
     long countByBoard(Board board);
     List<BoardLike> findByUser(User user);
+
+    void deleteByUser_MemEmail(String memEmail);
 }

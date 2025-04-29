@@ -20,5 +20,5 @@ public interface ReplyBookmarkRepository extends JpaRepository<ReplyBookmark, Lo
     List<Long> findMovieIdsByMemEmail(@Param("memEmail") String memEmail);
 
 
-
+    void deleteByMemEmail(String memEmail);
 }

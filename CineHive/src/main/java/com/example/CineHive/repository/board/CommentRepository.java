@@ -16,4 +16,7 @@ public interface CommentRepository extends JpaRepository <Comment,Long> {
 
     @Query(value = "SELECT * FROM comment WHERE user_id = :memId", nativeQuery = true)
     List<Comment> findCommentsByUserId(@Param("memId") Long memId);
+
+    void deleteByUser_MemEmail(String memEmail);
+
 }

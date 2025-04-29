@@ -16,4 +16,5 @@ public interface ReplyDisLikeRepository extends JpaRepository<ReplyDisLike, Long
 
     List<ReplyDisLike> findByMemEmail(String memEmail);
 
+    void deleteByMemEmail(String memEmail);
 }

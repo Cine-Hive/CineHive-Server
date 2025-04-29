@@ -20,4 +20,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query(value = "SELECT * FROM board WHERE mem_id = :memId", nativeQuery = true)
     List<Board> findBoardsByMemId(@Param("memId") Long memId);
 
+    void deleteByUserMemEmail(String memEmail);
 }

@@ -11,5 +11,5 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
 
     List<Reply> findByMovieId(Long movieId);
     List<Reply> findByMemEmail(String memEmail);
-
+    void deleteByMemEmail(String memEmail);
 }
