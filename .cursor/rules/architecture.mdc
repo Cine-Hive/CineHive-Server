@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: CineHive Spring Boot 계층 구조 및 코딩 규칙
+globs:
+  - "**/src/main/java/**/*.java"
+alwaysApply: true
+---
+
+# 공통
+- SOLID, DRY, KISS, YAGNI 철학 유지
+- public 메서드에는 한글 JavaDoc 작성
+- N+1 방지용 fetch 전략 지정, 필요 시 @EntityGraph·QueryDSL 사용
+
+# 계층 책임
+- RestController  
+  - 요청 검증과 응답 직렬화만 담당  
+  - 서비스 호출 외 로직·DB 접근 금지  
+- Service / ServiceImpl  
+  - 비즈니스 로직과 트랜잭션 경계  
+  - DB 작업은 Repository를 통해서만 수행  
+- Repository  
+  - Spring Data JPA 인터페이스 정의  
+  - 복잡 쿼리는 `XXXRepositoryCustom`에서 구현  
+- DTO  
+  - 컨트롤러↔서비스 데이터 전달 전용  
+  - 외부 입출력은 `FooRequest` `FooResponse`  
+  - 내부 전용은 `FooDto`  
+- Entity  
+  - 순수 도메인 모델  
+  - DTO→Entity 매핑은 전용 매퍼 클래스에서 처리
+
+# 패키지 구조 예
+CineHive.src.main.java.com.example.CineHive.controller.<domain>
+CineHive.src.main.java.com.example.CineHive.service.<domain>
+CineHive.src.main.java.com.example.CineHive.repository.<domain>
+CineHive.src.main.java.com.example.CineHive.entity.<domain>
+CineHive.src.main.java.com.example.CineHive.dto.<domain>
+
+# 예외 처리
+- 전역 @RestControllerAdvice에서 ErrorResponse 반환
+- 서비스는 도메인 예외만 throw
