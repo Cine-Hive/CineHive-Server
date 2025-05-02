@@ -15,13 +15,10 @@ import java.util.List;
 @Schema(description = "미디어 통합 상세 정보 응답 DTO")
 public class MediaDetailsDto {
     @Schema(description = "미디어 기본 정보")
-    private MediaItemDto media;
+    private MediaItemDto mediaInfo;
     
-    @Schema(description = "출연진 정보 목록")
-    private List<CastDto> credits;
-    
-    @Schema(description = "제작진 정보 목록")
-    private List<CrewDto> crew;
+    @Schema(description = "크레딧 정보 (출연진, 제작진)")
+    private MediaCreditsDto credits;
     
     @Schema(description = "비디오 정보 목록")
     private List<VideoDto> videos;
