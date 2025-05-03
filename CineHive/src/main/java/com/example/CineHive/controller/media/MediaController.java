@@ -1,8 +1,8 @@
 package com.example.CineHive.controller.media;
 
 import com.example.CineHive.dto.media.MediaDetailsDto;
-import com.example.CineHive.dto.media.MediaDto;
 import com.example.CineHive.dto.media.MediaItemDto;
+import com.example.CineHive.dto.media.MediaPageDto;
 import com.example.CineHive.entity.media.Media;
 import com.example.CineHive.exception.GenreNotFoundException;
 import com.example.CineHive.service.media.MediaService;
@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ import java.util.Map;
  * 미디어 정보 제공 API 컨트롤러
  * 영화, TV 프로그램, 애니메이션 관련 정보를 조회합니다.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/media")
 @RequiredArgsConstructor
@@ -78,6 +80,10 @@ public class MediaController {
                                     )
                             }
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "미디어 내용이 비어있음"
             )
     })
     public ResponseEntity<MediaDetailsDto> getMediaDetails(
@@ -97,19 +103,24 @@ public class MediaController {
                     example = "505642"
             )
             @PathVariable Long id) {
+        
+        log.info("미디어 상세 정보 조회 요청: mediaType={}, id={}", mediaType, id);
 
         // 미디어 타입 문자열을 enum으로 변환
         Media.MediaType type = convertMediaType(mediaType);
         if (type == null) {
+            log.warn("잘못된 미디어 타입: {}", mediaType);
             return ResponseEntity.badRequest().build();
         }
 
         MediaDetailsDto dto = mediaService.getMediaDetails(id, type);
 
         if (dto == null) {
+            log.info("미디어를 찾을 수 없음: mediaType={}, id={}", mediaType, id);
             return ResponseEntity.notFound().build();
         }
 
+        log.info("미디어 상세 정보 조회 성공: mediaType={}, id={}, title={}", mediaType, id, dto.getMediaInfo().getTitle());
         return ResponseEntity.ok(dto);
     }
 
@@ -133,7 +144,7 @@ public class MediaController {
                     description = "조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class),
+                            schema = @Schema(implementation = MediaPageDto.class),
                             examples = {
                                     @ExampleObject(
                                             name = "페이징된 인기 영화 목록 예시",
@@ -171,9 +182,22 @@ public class MediaController {
                                     )
                             }
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "검색 결과가 비어있음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MediaPageDto.class),
+                            examples = {
+                                    @ExampleObject(
+                                            value = "{\"page\": 1, \"results\": [], \"totalPages\": 0, \"totalResults\": 0}"
+                                    )
+                            }
+                    )
             )
     })
-    public ResponseEntity<Page<MediaItemDto>> getMediaList(
+    public ResponseEntity<MediaPageDto> getMediaList(
             @Parameter(
                     description = "미디어 타입 (movie, tv, animation)",
                     schema = @Schema(type= "string"),
@@ -197,21 +221,33 @@ public class MediaController {
             )
             @RequestParam(defaultValue = "popular") String category,
             
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
+            @Parameter(
+                    description = "페이지 번호 (1부터 시작)",
+                    example = "1",
+                    schema = @Schema(type = "integer", minimum = "1", maximum = "50")
+            )
             @RequestParam(defaultValue = "1") int page,
             
-            @Parameter(description = "페이지 크기", example = "20")
+            @Parameter(
+                    description = "페이지 크기", 
+                    example = "20",
+                    schema = @Schema(type = "integer", minimum = "1", maximum = "100")
+            )
             @RequestParam(defaultValue = "20") int size) {
+        
+        log.info("미디어 목록 조회 요청: mediaType={}, category={}, page={}, size={}", mediaType, category, page, size);
         
         // 미디어 타입 문자열을 enum으로 변환
         Media.MediaType type = convertMediaType(mediaType);
         if (type == null) {
+            log.warn("잘못된 미디어 타입: {}", mediaType);
             return ResponseEntity.badRequest().build();
         }
         
         // 카테고리 문자열을 enum으로 변환
         Media.MediaCategory categoryEnum = convertCategory(category);
         if (categoryEnum == null) {
+            log.warn("잘못된 카테고리: {}", category);
             return ResponseEntity.badRequest().build();
         }
         
@@ -223,7 +259,23 @@ public class MediaController {
         
         // 서비스 호출
         Page<MediaItemDto> mediaPage = mediaService.getMediaListPaged(type, categoryEnum, pageable);
-        return ResponseEntity.ok(mediaPage);
+        
+        // Page<MediaItemDto>를 MediaPageDto로 변환
+        MediaPageDto pageDto = MediaPageDto.builder()
+                .page(pageable.getPageNumber() + 1) // 1부터 시작
+                .results(mediaPage.getContent())
+                .totalPages(mediaPage.getTotalPages())
+                .totalResults((int) mediaPage.getTotalElements())
+                .build();
+        
+        if (mediaPage.isEmpty()) {
+            log.info("미디어 목록 조회 결과 없음: mediaType={}, category={}, page={}", mediaType, category, page);
+        } else {
+            log.info("미디어 목록 조회 성공: mediaType={}, category={}, page={}, 결과 수={}", 
+                mediaType, category, page, mediaPage.getNumberOfElements());
+        }
+                
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
@@ -264,6 +316,19 @@ public class MediaController {
                                     )
                             }
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "검색 결과가 비어있음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Object.class),
+                            examples = {
+                                    @ExampleObject(
+                                            value = "[]"
+                                    )
+                            }
+                    )
             )
     })
     public ResponseEntity<List<MediaItemDto>> searchMedia(
@@ -274,12 +339,22 @@ public class MediaController {
             )
             @RequestParam String query) {
 
+        log.info("미디어 검색 요청: query={}", query);
+        
         // 검색어 길이 검증
         if (query == null || query.trim().length() < 2) {
+            log.warn("검색어 길이가 너무 짧음: {}", query);
             return ResponseEntity.badRequest().build();
         }
 
         List<MediaItemDto> searchResults = mediaService.searchMedia(query);
+        
+        if (searchResults.isEmpty()) {
+            log.info("검색 결과 없음: query={}", query);
+        } else {
+            log.info("검색 성공: query={}, 결과 수={}", query, searchResults.size());
+        }
+        
         return ResponseEntity.ok(searchResults);
     }
     
@@ -304,7 +379,7 @@ public class MediaController {
                     description = "조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class),
+                            schema = @Schema(implementation = MediaPageDto.class),
                             examples = {
                                     @ExampleObject(
                                             name = "페이징된 액션 영화 목록 예시",
@@ -338,6 +413,7 @@ public class MediaController {
                             schema = @Schema(implementation = String.class),
                             examples = {
                                     @ExampleObject(
+                                            name = "잘못된 미디어 타입",
                                             value = "{\"code\": \"INVALID_INPUT_VALUE\", \"message\": \"지원하지 않는 미디어 타입입니다.\", \"details\": null}"
                                     )
                             }
@@ -351,13 +427,26 @@ public class MediaController {
                             schema = @Schema(implementation = String.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"code\": \"GENRE_NOT_FOUND\", \"message\": \"해당 ID의 장르를 찾을 수 없습니다.\", \"details\": null}"
+                                            value = "{\"code\":\"GENRE_NOT_FOUND\",\"message\":\"해당 ID의 장르를 찾을 수 없습니다.\",\"details\":null}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "장르에 해당하는 미디어가 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MediaPageDto.class),
+                            examples = {
+                                    @ExampleObject(
+                                            value = "{\"page\": 1, \"results\": [], \"totalPages\": 0, \"totalResults\": 0}"
                                     )
                             }
                     )
             )
     })
-    public ResponseEntity<?> getMediaListByGenre(
+    public ResponseEntity<Object> getMediaListByGenre(
             @Parameter(
                     description = "미디어 타입 (movie, tv, animation)",
                     schema = @Schema(type= "string"),
@@ -376,16 +465,27 @@ public class MediaController {
             )
             @PathVariable Integer genreId,
             
-            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
+            @Parameter(
+                    description = "페이지 번호 (1부터 시작)",
+                    example = "1",
+                    schema = @Schema(type = "integer", minimum = "1", maximum = "50")
+            )
             @RequestParam(defaultValue = "1") int page,
             
-            @Parameter(description = "페이지 크기", example = "20")
+            @Parameter(
+                    description = "페이지 크기", 
+                    example = "20",
+                    schema = @Schema(type = "integer", minimum = "1", maximum = "100")
+            )
             @RequestParam(defaultValue = "20") int size) {
 
+        log.info("장르별 미디어 목록 조회 요청: mediaType={}, genreId={}, page={}, size={}", mediaType, genreId, page, size);
+        
         try {
             // 미디어 타입 문자열을 enum으로 변환
             Media.MediaType type = convertMediaType(mediaType);
             if (type == null) {
+                log.warn("잘못된 미디어 타입: {}", mediaType);
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("code", "INVALID_INPUT_VALUE");
                 errorResponse.put("message", "지원하지 않는 미디어 타입입니다.");
@@ -399,14 +499,31 @@ public class MediaController {
             // 장르별 미디어 목록 조회 서비스 호출
             Page<MediaItemDto> result = mediaService.getMediaListByGenrePaged(genreId, type, pageable);
             
-            return ResponseEntity.ok(result);
+            // Page<MediaItemDto>를 MediaPageDto로 변환
+            MediaPageDto pageDto = MediaPageDto.builder()
+                    .page(pageable.getPageNumber() + 1) // 1부터 시작
+                    .results(result.getContent())
+                    .totalPages(result.getTotalPages())
+                    .totalResults((int) result.getTotalElements())
+                    .build();
+            
+            if (result.isEmpty()) {
+                log.info("장르별 미디어 목록 조회 결과 없음: mediaType={}, genreId={}, page={}", mediaType, genreId, page);
+            } else {
+                log.info("장르별 미디어 목록 조회 성공: mediaType={}, genreId={}, page={}, 결과 수={}", 
+                    mediaType, genreId, page, result.getNumberOfElements());
+            }
+                    
+            return ResponseEntity.ok(pageDto);
         } catch (GenreNotFoundException e) {
+            log.warn("장르를 찾을 수 없음: genreId={}, message={}", genreId, e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("code", "GENRE_NOT_FOUND");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("details", null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         } catch (Exception e) {
+            log.error("장르별 미디어 목록 조회 중 오류 발생: mediaType={}, genreId={}", mediaType, genreId, e);
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("code", "INTERNAL_SERVER_ERROR");
             errorResponse.put("message", "서버 내부 오류가 발생했습니다.");
