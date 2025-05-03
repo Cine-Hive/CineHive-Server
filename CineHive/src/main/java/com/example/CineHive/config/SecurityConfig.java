@@ -31,7 +31,10 @@ public class SecurityConfig {
             "/api/v1/admin/recommendations/refresh",
             "/api/v1/admin/recommendations/stats",
             "/api/v1/admin/recommendations/threshold",
-            
+
+            //마이페이지 API
+            "/myInfo/**",
+
             // 애니메이션 API
             "/api/v1/animations/**",
             

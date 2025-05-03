@@ -11,10 +11,10 @@ import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
@@ -111,6 +111,59 @@ public class UserService{
     }
     public User getUserInfo(String memEmail) {
         return userRepository.findByMemEmail(memEmail).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    }
+
+    @Transactional
+    public boolean changePassword(String memEmail, String oldPassword, String newPassword) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (!passwordEncoder.matches(oldPassword, user.getMemPw())) {
+            return false;
+        }
+
+        user.setMemPw(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean checkPassword(String memEmail, String password) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        return passwordEncoder.matches(password, user.getMemPw());
+    }
+
+
+    @Transactional
+    public boolean changeMemName(String memEmail, String newMemName) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (newMemName == null || newMemName.trim().isEmpty()) {
+            throw new RuntimeException("변경할 이름을 입력해야 합니다.");
+        }
+
+        user.setMemName(newMemName.trim()); // 공백 제거하고 저장
+        userRepository.save(user);
+        return true;
+    }
+
+    @Transactional
+    public boolean changeMemSex(String memEmail, String newMemSex) {
+        if (!newMemSex.equalsIgnoreCase("male") &&
+                !newMemSex.equalsIgnoreCase("female") &&
+                !newMemSex.equalsIgnoreCase("other")) {
+            return false; // 유효하지 않은 값일 경우
+        }
+
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        user.setMemSex(newMemSex.toLowerCase()); // 저장 시 소문자로 통일
+        userRepository.save(user);
+        return true;
     }
 
 }

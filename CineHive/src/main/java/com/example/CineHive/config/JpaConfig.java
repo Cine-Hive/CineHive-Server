@@ -7,8 +7,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackages = {
-    "com.example.CineHive.repository",
-    "com.example.CineHive.repository.media"
+    "com.example.CineHive.repository"
 })
 public class JpaConfig {
     // 기존 JPA 설정 유지

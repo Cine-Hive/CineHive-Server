@@ -13,4 +13,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByUserAndBoard(User user, Board board);
     void deleteByUserAndBoard(User user, Board board);
     int countByBoard(Board board);
+
+    void deleteByUser_MemEmail(String memEmail);
 }

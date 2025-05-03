@@ -15,4 +15,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             "OR LOWER(b.brdContent) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(u.memNickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Board> searchByKeyword(@Param("keyword") String keyword);
+
+    void deleteByUserMemEmail(String memEmail);
 }
