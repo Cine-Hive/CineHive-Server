@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Schema(description = "미디어 목록 응답 DTO")
-public class MediaDto {
+public class MediaPageDto {
     @Schema(description = "현재 페이지 번호", example = "1")
     private int page;
 
