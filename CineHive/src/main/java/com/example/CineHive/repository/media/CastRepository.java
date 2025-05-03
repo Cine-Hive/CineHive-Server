@@ -9,5 +9,8 @@ import java.util.List;
 
 @Repository
 public interface CastRepository extends JpaRepository<Cast, Long> {
-    List<Cast> findByMediaIdAndMediaTypeOrderByOrder(Long mediaId, Media.MediaType mediaType);
+    /**
+     * 미디어 ID와 타입으로 출연진 목록 조회
+     */
+    List<Cast> findByMediaIdAndMediaType(Long mediaId, Media.MediaType mediaType);
 } 
