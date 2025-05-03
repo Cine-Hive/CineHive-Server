@@ -63,7 +63,7 @@ public class MediaController {
                             examples = {
                                     @ExampleObject(
                                             name = "영화 상세 정보 예시",
-                                            value = "{\"id\": 505642, \"title\": \"블랙 팬서: 와칸다 포에버\", \"overview\": \"국왕이자 블랙 팬서인 티찰라의 죽음 이후 수많은 강대국으로부터 위협을 받게 된 와칸다...\", \"type\": \"MOVIE\", \"releaseDate\": \"2022-11-09\", \"voteAverage\": 7.3, \"posterPath\": \"/image.jpg\"}"
+                                            value = "{\"mediaInfo\":{\"id\":505642,\"title\":\"블랙 팬서: 와칸다 포에버\",\"overview\":\"국왕이자 블랙 팬서인 티찰라의 죽음 이후 수많은 강대국으로부터 위협을 받게 된 와칸다...\",\"mediaType\":\"MOVIE\",\"releaseDate\":\"2022-11-09\",\"voteAverage\":7.3,\"posterPath\":\"/image.jpg\"},\"credits\":{\"cast\":[],\"crew\":[]},\"videos\":[],\"similar\":[]}"
                                     )
                             }
                     )
@@ -76,7 +76,8 @@ public class MediaController {
                             schema = @Schema(implementation = String.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"message\": \"해당 ID의 미디어를 찾을 수 없습니다.\"}"
+                                            name = "미디어 없음",
+                                            value = "{\"code\":\"MEDIA_NOT_FOUND\",\"message\":\"해당 ID의 미디어를 찾을 수 없습니다.\",\"details\":null}"
                                     )
                             }
                     )
@@ -148,24 +149,7 @@ public class MediaController {
                             examples = {
                                     @ExampleObject(
                                             name = "페이징된 인기 영화 목록 예시",
-                                            value = "{\n" +
-                                                    "  \"content\": [\n" +
-                                                    "    {\"id\": 505642, \"title\": \"블랙 팬서: 와칸다 포에버\", \"type\": \"MOVIE\", \"posterPath\": \"/image.jpg\", \"voteAverage\": 7.3},\n" +
-                                                    "    {\"id\": 76600, \"title\": \"아바타: 물의 길\", \"type\": \"MOVIE\", \"posterPath\": \"/image2.jpg\", \"voteAverage\": 8.0}\n" +
-                                                    "  ],\n" +
-                                                    "  \"pageable\": {\n" +
-                                                    "    \"pageNumber\": 0,\n" +
-                                                    "    \"pageSize\": 10\n" +
-                                                    "  },\n" +
-                                                    "  \"totalElements\": 100,\n" +
-                                                    "  \"totalPages\": 10,\n" +
-                                                    "  \"last\": false,\n" +
-                                                    "  \"size\": 10,\n" +
-                                                    "  \"number\": 0,\n" +
-                                                    "  \"numberOfElements\": 10,\n" +
-                                                    "  \"first\": true,\n" +
-                                                    "  \"empty\": false\n" +
-                                                    "}"
+                                            value = "{\"page\":1,\"results\":[{\"id\":505642,\"title\":\"블랙 팬서: 와칸다 포에버\",\"overview\":\"국왕이자 블랙 팬서인 티찰라의 죽음 이후\",\"posterPath\":\"/image.jpg\",\"backdropPath\":\"/path.jpg\",\"releaseDate\":\"2022-11-09\",\"genreIds\":[28,12,878],\"voteAverage\":7.3,\"popularity\":234.5,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"},{\"id\":76600,\"title\":\"아바타: 물의 길\",\"overview\":\"판도라 행성에서\",\"posterPath\":\"/image2.jpg\",\"backdropPath\":\"/path2.jpg\",\"releaseDate\":\"2022-12-14\",\"genreIds\":[28,12,878],\"voteAverage\":8.0,\"popularity\":342.8,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"}],\"totalPages\":10,\"totalResults\":200}"
                                     )
                             }
                     )
@@ -178,7 +162,8 @@ public class MediaController {
                             schema = @Schema(implementation = String.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"code\": \"INVALID_INPUT_VALUE\", \"message\": \"지원하지 않는 카테고리입니다.\", \"details\": null}"
+                                            name = "잘못된 카테고리",
+                                            value = "{\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"지원하지 않는 카테고리입니다.\",\"details\":null}"
                                     )
                             }
                     )
@@ -191,7 +176,8 @@ public class MediaController {
                             schema = @Schema(implementation = MediaPageDto.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"page\": 1, \"results\": [], \"totalPages\": 0, \"totalResults\": 0}"
+                                            name = "빈 결과",
+                                            value = "{\"page\":1,\"results\":[],\"totalPages\":0,\"totalResults\":0}"
                                     )
                             }
                     )
@@ -299,7 +285,7 @@ public class MediaController {
                             examples = {
                                     @ExampleObject(
                                             name = "검색 결과 예시",
-                                            value = "[{\"id\": 76600, \"title\": \"아바타: 물의 길\", \"type\": \"MOVIE\", \"posterPath\": \"/image.jpg\", \"voteAverage\": 8.0, \"popularity\": 1842.5}, {\"id\": 19995, \"title\": \"아바타\", \"type\": \"MOVIE\", \"posterPath\": \"/image2.jpg\", \"voteAverage\": 7.5, \"popularity\": 756.3}]"
+                                            value = "[{\"id\":76600,\"title\":\"아바타: 물의 길\",\"overview\":\"판도라 행성에서\",\"posterPath\":\"/image.jpg\",\"backdropPath\":\"/path.jpg\",\"releaseDate\":\"2022-12-14\",\"genreIds\":[28,12,878],\"voteAverage\":8.0,\"popularity\":1842.5,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"},{\"id\":19995,\"title\":\"아바타\",\"overview\":\"판도라 행성의 원주민\",\"posterPath\":\"/image2.jpg\",\"backdropPath\":\"/path2.jpg\",\"releaseDate\":\"2009-12-18\",\"genreIds\":[28,12,878],\"voteAverage\":7.5,\"popularity\":756.3,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"}]"
                                     )
                             }
                     )
@@ -312,7 +298,8 @@ public class MediaController {
                             schema = @Schema(implementation = String.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"code\": \"INVALID_INPUT_VALUE\", \"message\": \"검색어는 2글자 이상이어야 합니다.\", \"details\": null}"
+                                            name = "검색어 길이 부족",
+                                            value = "{\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"검색어는 2글자 이상이어야 합니다.\",\"details\":null}"
                                     )
                             }
                     )
@@ -383,24 +370,7 @@ public class MediaController {
                             examples = {
                                     @ExampleObject(
                                             name = "페이징된 액션 영화 목록 예시",
-                                            value = "{\n" +
-                                                    "  \"content\": [\n" +
-                                                    "    {\"id\": 505642, \"title\": \"블랙 팬서: 와칸다 포에버\", \"type\": \"MOVIE\", \"posterPath\": \"/image.jpg\", \"voteAverage\": 7.3},\n" +
-                                                    "    {\"id\": 76600, \"title\": \"아바타: 물의 길\", \"type\": \"MOVIE\", \"posterPath\": \"/image2.jpg\", \"voteAverage\": 8.0}\n" +
-                                                    "  ],\n" +
-                                                    "  \"pageable\": {\n" +
-                                                    "    \"pageNumber\": 0,\n" +
-                                                    "    \"pageSize\": 20\n" +
-                                                    "  },\n" +
-                                                    "  \"totalElements\": 100,\n" +
-                                                    "  \"totalPages\": 5,\n" +
-                                                    "  \"last\": false,\n" +
-                                                    "  \"size\": 20,\n" +
-                                                    "  \"number\": 0,\n" +
-                                                    "  \"numberOfElements\": 20,\n" +
-                                                    "  \"first\": true,\n" +
-                                                    "  \"empty\": false\n" +
-                                                    "}"
+                                            value = "{\"page\":1,\"results\":[{\"id\":505642,\"title\":\"블랙 팬서: 와칸다 포에버\",\"overview\":\"국왕이자 블랙 팬서인 티찰라의 죽음 이후\",\"posterPath\":\"/image.jpg\",\"backdropPath\":\"/path.jpg\",\"releaseDate\":\"2022-11-09\",\"genreIds\":[28,12,878],\"voteAverage\":7.3,\"popularity\":234.5,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"},{\"id\":76600,\"title\":\"아바타: 물의 길\",\"overview\":\"판도라 행성에서\",\"posterPath\":\"/image2.jpg\",\"backdropPath\":\"/path2.jpg\",\"releaseDate\":\"2022-12-14\",\"genreIds\":[28,12,878],\"voteAverage\":8.0,\"popularity\":342.8,\"mediaType\":\"MOVIE\",\"category\":\"POPULAR\"}],\"totalPages\":5,\"totalResults\":100}"
                                     )
                             }
                     )
@@ -440,7 +410,8 @@ public class MediaController {
                             schema = @Schema(implementation = MediaPageDto.class),
                             examples = {
                                     @ExampleObject(
-                                            value = "{\"page\": 1, \"results\": [], \"totalPages\": 0, \"totalResults\": 0}"
+                                            name = "빈 결과",
+                                            value = "{\"page\":1,\"results\":[],\"totalPages\":0,\"totalResults\":0}"
                                     )
                             }
                     )
