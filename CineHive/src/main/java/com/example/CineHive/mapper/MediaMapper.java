@@ -734,8 +734,8 @@ public class MediaMapper {
      * @param mediaType 미디어 타입
      * @return MediaDto 객체
      */
-    public MediaDto mapJsonToMediaDto(JsonNode jsonNode, Media.MediaType mediaType) {
-        MediaDto mediaDto = new MediaDto();
+    public MediaPageDto mapJsonToMediaDto(JsonNode jsonNode, Media.MediaType mediaType) {
+        MediaPageDto mediaDto = new MediaPageDto();
         
         // 페이지 정보 설정
         mediaDto.setPage(jsonNode.has("page") ? jsonNode.get("page").asInt() : 1);
