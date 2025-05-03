@@ -1,14 +1,11 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.dto.media.MediaDetailsDto;
-import com.example.CineHive.dto.media.MediaDto;
 import com.example.CineHive.dto.media.MediaItemDto;
-import com.example.CineHive.dto.media.VideoDto;
-import com.example.CineHive.dto.media.MediaCreditsDto;
 import com.example.CineHive.entity.media.Media;
 
 import java.util.List;
-import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
