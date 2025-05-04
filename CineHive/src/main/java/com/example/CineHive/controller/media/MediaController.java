@@ -312,6 +312,7 @@ public class MediaController {
                             schema = @Schema(implementation = Object.class),
                             examples = {
                                     @ExampleObject(
+                                            name = "빈 검색 결과",
                                             value = "[]"
                                     )
                             }
@@ -384,7 +385,7 @@ public class MediaController {
                             examples = {
                                     @ExampleObject(
                                             name = "잘못된 미디어 타입",
-                                            value = "{\"code\": \"INVALID_INPUT_VALUE\", \"message\": \"지원하지 않는 미디어 타입입니다.\", \"details\": null}"
+                                            value = "{\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"지원하지 않는 미디어 타입입니다.\",\"details\":null}"
                                     )
                             }
                     )

@@ -77,7 +77,9 @@ public class MediaSyncController {
                     @ExampleObject(name = "인기작", value = "POPULAR", summary = "인기 있는 미디어 동기화"),
                     @ExampleObject(name = "평점순", value = "TOP_RATED", summary = "높은 평점의 미디어 동기화"),
                     @ExampleObject(name = "현재 상영작", value = "NOW_PLAYING", summary = "현재 상영 중인 미디어 동기화"),
-                    @ExampleObject(name = "개봉 예정작", value = "UPCOMING", summary = "개봉 예정인 미디어 동기화")
+                    @ExampleObject(name = "개봉 예정작", value = "UPCOMING", summary = "개봉 예정인 미디어 동기화"),
+                    @ExampleObject(name = "방영 중", value = "ON_THE_AIR", summary = "현재 방영 중인 TV 시리즈 동기화"),
+                    @ExampleObject(name = "오늘 방영", value = "AIRING_TODAY", summary = "오늘 방영 예정인 TV 시리즈 동기화")
                 }
             )
             @PathVariable Media.MediaCategory category,
