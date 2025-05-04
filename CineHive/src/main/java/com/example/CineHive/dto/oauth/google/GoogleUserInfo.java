@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.oauth;
+package com.example.CineHive.dto.oauth.google;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
