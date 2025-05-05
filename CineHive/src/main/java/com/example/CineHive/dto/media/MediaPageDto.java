@@ -13,12 +13,12 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Schema(description = "미디어 목록 응답 DTO")
-public class MediaDto {
-    @Schema(description = "미디어 아이템 목록", example = "[]")
-    private List<MediaItemDto> results;
-    
+public class MediaPageDto {
     @Schema(description = "현재 페이지 번호", example = "1")
     private int page;
+
+    @Schema(description = "미디어 아이템 목록", example = "[]")
+    private List<MediaItemDto> results;
     
     @Schema(description = "전체 페이지 수", example = "100")
     private int totalPages;

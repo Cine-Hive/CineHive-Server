@@ -1,0 +1,19 @@
+---
+description: DTO ↔ Entity 매핑·검증·테스트 규칙
+globs: 
+alwaysApply: false
+---
+---
+description: DTO ↔ Entity 매핑·검증·테스트 규칙
+globs:
+  - "**/src/main/java/**/*.java"
+alwaysApply: false
+---
+
+- 컨트롤러에서 @Valid로 DTO 입력 검증 완료 후 서비스 호출
+- DTO→Entity 변환은 `MovieMapper` 같은 전용 매퍼 클래스에서 수행
+- 매퍼 클래스는 MapStruct 또는 수동 매핑  
+  - `@Mapper(componentModel = "spring")` 권장
+- 단위 테스트  
+  - 매퍼 테스트는 JUnit 5 + AssertJ  
+  - 계층별 테스트는 @DataJpaTest, @WebMvcTest 사용

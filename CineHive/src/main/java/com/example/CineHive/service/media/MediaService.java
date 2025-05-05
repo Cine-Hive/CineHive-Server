@@ -1,61 +1,67 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.dto.media.MediaDetailsDto;
-import com.example.CineHive.dto.media.MediaDto;
 import com.example.CineHive.dto.media.MediaItemDto;
-import com.example.CineHive.dto.media.VideoDto;
-import com.example.CineHive.dto.media.MediaCreditsDto;
 import com.example.CineHive.entity.media.Media;
 
 import java.util.List;
-import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface MediaService {
-    // 기본 미디어 조회
-    MediaItemDto getMediaById(Media.MediaType mediaType, Long id);
+    /**
+     * 미디어 ID로 상세 정보 조회
+     * 
+     * @param mediaId 미디어 ID
+     * @param mediaType 미디어 타입 (영화, TV, 애니메이션)
+     * @return 미디어 상세 정보
+     */
+    MediaDetailsDto getMediaDetails(Long mediaId, Media.MediaType mediaType);
     
-    // 검색
-    MediaDto searchMedia(Media.MediaType mediaType, String query, int page);
+    /**
+     * 카테고리별 미디어 목록 조회
+     * 
+     * @param mediaType 미디어 타입 (영화, TV, 애니메이션)
+     * @param category 카테고리 (인기, 평점 높은, 현재 상영 중 등)
+     * @return 미디어 목록
+     */
+    List<MediaItemDto> getMediaList(Media.MediaType mediaType, Media.MediaCategory category);
     
-    // 카테고리별 미디어 목록
-    MediaDto getMediaByCategory(Media.MediaType mediaType, Media.MediaCategory category, int page);
+    /**
+     * 카테고리별 미디어 목록 조회 (페이지네이션)
+     * 
+     * @param mediaType 미디어 타입 (영화, TV, 애니메이션)
+     * @param category 카테고리 (인기, 평점 높은, 현재 상영 중 등)
+     * @param pageable 페이지 정보 (페이지 번호, 크기, 정렬)
+     * @return 페이징된 미디어 목록
+     */
+    Page<MediaItemDto> getMediaListPaged(Media.MediaType mediaType, Media.MediaCategory category, Pageable pageable);
     
-    // 카테고리별 미디어 목록 (정렬 옵션 포함)
-    MediaDto getMediaByCategory(Media.MediaType mediaType, Media.MediaCategory category, int page, String sortBy);
+    /**
+     * 미디어 검색
+     * 
+     * @param keyword 검색 키워드
+     * @return 검색 결과 목록
+     */
+    List<MediaItemDto> searchMedia(String keyword);
     
-    // 유사 미디어 조회
-    MediaDto getSimilarMedia(Media.MediaType mediaType, Long id, int page);
+    /**
+     * 특정 장르의 미디어 목록 조회
+     * 
+     * @param genreId 장르 ID
+     * @param mediaType 미디어 타입 (영화, TV, 애니메이션)
+     * @return 해당 장르의 미디어 목록
+     */
+    List<MediaItemDto> getMediaListByGenre(Integer genreId, Media.MediaType mediaType);
     
-    // 출연/제작진 정보
-    MediaCreditsDto getMediaWithCredits(Media.MediaType mediaType, Long id);
-    
-    // 비디오 정보
-    List<VideoDto> getMediaVideos(Media.MediaType mediaType, Long id);
-    
-    // 미디어 통합 상세 정보 조회 (기본 정보 + 출연/제작진 + 비디오 + 유사 미디어)
-    MediaDetailsDto getMediaDetails(Media.MediaType mediaType, Long id);
-    
-    // 애니메이션 전용 (장르 필터링)
-    MediaDto getAnimationsByCategory(Media.MediaCategory category, int page);
-    MediaDto getAnimationsByCategory(Media.MediaCategory category, int page, String sortBy);
-    MediaDto searchAnimations(String query, int page);
-    
-    // 데이터 동기화 (TMDB API에서 데이터 가져오기)
-    void syncMediaData(Media.MediaType mediaType, Media.MediaCategory category);
-
-    // 관리자 기능
-    // 특정 미디어의 추천 정보 강제 갱신
-    void refreshRecommendations(Media.MediaType mediaType, Long mediaId);
-    
-    // 특정 미디어의 추천 정보 삭제
-    void deleteRecommendations(Media.MediaType mediaType, Long mediaId);
-    
-    // 추천 정보 통계 조회 (만료 예정 수, 접근 빈도 낮은 수 등)
-    Map<String, Object> getRecommendationStats();
-    
-    // 접근 빈도 기준 조정
-    void updateAccessCountThreshold(int threshold);
-    
-    // 만료 기간 조정
-    void updateExpiryDays(int days);
+    /**
+     * 특정 장르의 미디어 목록 페이징 조회
+     * 
+     * @param genreId 장르 ID
+     * @param mediaType 미디어 타입 (영화, TV, 애니메이션)
+     * @param pageable 페이지 정보 (페이지 번호, 크기, 정렬)
+     * @return 페이징된 장르별 미디어 목록
+     */
+    Page<MediaItemDto> getMediaListByGenrePaged(Integer genreId, Media.MediaType mediaType, Pageable pageable);
 } 
