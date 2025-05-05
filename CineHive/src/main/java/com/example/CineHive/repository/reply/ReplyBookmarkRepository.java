@@ -11,4 +11,5 @@ public interface ReplyBookmarkRepository extends JpaRepository<ReplyBookmark, Lo
 
     long countByMovieId(Long movieId);
 
+    void deleteByMemEmail(String memEmail);
 }

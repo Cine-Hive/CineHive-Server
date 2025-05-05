@@ -14,4 +14,5 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
 
     List<Reply> findByMemNickname(String memNickname);
 
+    void deleteByMemEmail(String memEmail);
 }
