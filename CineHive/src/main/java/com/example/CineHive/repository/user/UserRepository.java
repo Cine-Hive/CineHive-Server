@@ -14,5 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByMemNickname(String memNickname);
     boolean existsByMemNameAndMemEmailNot(String memName, String memEmail);
+
+    boolean existsByMemNicknameAndMemEmailNot(String memNickname, String memEmail);
+
     void deleteByMemEmail(String memEmail);
 }

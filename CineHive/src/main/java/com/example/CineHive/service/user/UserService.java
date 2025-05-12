@@ -67,7 +67,6 @@ public class UserService{
         return true;
     }
 
-
     @Transactional
     public LoginHistoryDto loginUser(String memEmail, String memPassword, HttpServletRequest request) {
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
@@ -82,19 +81,15 @@ public class UserService{
             throw new IllegalArgumentException("비밀번호가 맞지 않습니다.");
         }
 
-        // 브라우저 정보 가져오기
         String browser = getBrowserInfo(request);
 
-        // 로그인 기록 조회
         Optional<LoginHistory> loginHistoryOpt = loginHistoryRepository.findByUser(user);
         LocalDateTime now = LocalDateTime.now();
         LoginHistory loginHistory;
 
         if (loginHistoryOpt.isEmpty()) {
-            // 최초 로그인 기록 생성
             loginHistory = new LoginHistory(null, user, now, now, browser);
         } else {
-            // 기존 로그인 기록 업데이트
             loginHistory = loginHistoryOpt.get();
             loginHistory.setLastLoginDate(now);
             loginHistory.setBrowser(browser);
@@ -164,15 +159,38 @@ public class UserService{
         if (!newMemSex.equalsIgnoreCase("male") &&
                 !newMemSex.equalsIgnoreCase("female") &&
                 !newMemSex.equalsIgnoreCase("other")) {
-            return false; // 유효하지 않은 값일 경우
+            return false;
         }
 
         User user = userRepository.findByMemEmail(memEmail)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        user.setMemSex(newMemSex.toLowerCase()); // 저장 시 소문자로 통일
+        user.setMemSex(newMemSex.toLowerCase());
         userRepository.save(user);
         return true;
     }
 
+    @Transactional
+    public boolean changeNickname(String memEmail, String newNickname) {
+        User user = userRepository.findByMemEmail(memEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (newNickname == null || newNickname.trim().isEmpty()) {
+            throw new RuntimeException("변경할 닉네임을 입력해야 합니다.");
+        }
+
+        String trimmedNewNickname = newNickname.trim();
+
+        boolean nicknameExists = userRepository.existsByMemNicknameAndMemEmailNot(trimmedNewNickname, memEmail);
+
+
+        if (nicknameExists) {
+            throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+        }
+
+        user.setMemNickname(trimmedNewNickname);
+        userRepository.save(user);
+
+        return true;
+    }
 }
