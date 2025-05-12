@@ -13,6 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByMemEmail(String memEmail);
 
     Optional<User> findByMemNickname(String memNickname);
-
+    boolean existsByMemNameAndMemEmailNot(String memName, String memEmail);
     void deleteByMemEmail(String memEmail);
 }

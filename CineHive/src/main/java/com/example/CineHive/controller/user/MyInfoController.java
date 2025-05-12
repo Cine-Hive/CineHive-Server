@@ -160,11 +160,18 @@ public class MyInfoController {
             return result
                     ? ResponseEntity.ok("이름이 성공적으로 변경되었습니다.")
                     : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("이름 변경 실패");
+        } catch (RuntimeException e) {
+            if ("이미 사용 중인 이름입니다.".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            }
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이름 변경 중 오류 발생");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이름 변경 중 예상치 못한 오류 발생");
         }
     }
+
 
     @Operation(summary = "성별 변경", description = "사용자의 성별을 변경합니다. (male, female, other 허용)")
     @ApiResponses(value = {

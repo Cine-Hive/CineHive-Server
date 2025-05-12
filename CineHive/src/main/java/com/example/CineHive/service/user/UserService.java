@@ -145,8 +145,17 @@ public class UserService{
             throw new RuntimeException("변경할 이름을 입력해야 합니다.");
         }
 
-        user.setMemName(newMemName.trim()); // 공백 제거하고 저장
+        String trimmedNewName = newMemName.trim();
+
+        boolean nameExists = userRepository.existsByMemNameAndMemEmailNot(trimmedNewName, memEmail);
+
+        if (nameExists) {
+            throw new RuntimeException("이미 사용 중인 이름입니다.");
+        }
+
+        user.setMemName(trimmedNewName);
         userRepository.save(user);
+
         return true;
     }
 
