@@ -16,8 +16,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Slf4j
@@ -46,17 +48,22 @@ public class GoogleUserService {
         this.restTemplate = restTemplate;
     }
 
+
     public GoogleUserInfo verifyIdTokenAndGetUserInfo(String idToken) throws IOException {
-        String tokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+        URI tokenInfoUri = UriComponentsBuilder.fromUriString("https://oauth2.googleapis.com/tokeninfo")
+                .queryParam("id_token", idToken)
+                .build()
+                .toUri();
+
+        log.info("[Google ID Token] tokeninfo 호출 URI: {}", tokenInfoUri);
 
         ResponseEntity<String> response;
         try {
-            response = restTemplate.getForEntity(tokenInfoUrl, String.class);
+            response = restTemplate.getForEntity(tokenInfoUri, String.class);
         } catch (Exception e) {
             log.error("[Google ID Token] tokeninfo 호출 중 오류 발생", e);
             throw new IOException("Failed to call tokeninfo endpoint", e);
         }
-
 
         if (response.getStatusCode().is2xxSuccessful()) {
             JSONObject jsonObject = new JSONObject(response.getBody());
