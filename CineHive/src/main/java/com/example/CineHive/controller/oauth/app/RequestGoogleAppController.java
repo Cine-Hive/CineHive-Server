@@ -34,9 +34,10 @@ public class RequestGoogleAppController {
 
     @Operation(summary = "구글 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청 코드")
     @PostMapping("/google/app-login")
-    public ResponseEntity<?> googleAppLogin(@RequestBody String accessToken) {
+    public ResponseEntity<?> googleAppLogin(@RequestBody String idToken) {
         try {
-            GoogleUserInfo userInfo = googleUserService.getUserInfo(accessToken);
+            GoogleUserInfo userInfo = googleUserService.verifyIdTokenAndGetUserInfo(idToken);
+            log.info("[Google Login] Google 사용자 정보(ID Token 검증 후) 수신: {}", userInfo);
             log.info("[Google Login] Google 사용자 정보 수신: {}", userInfo);
 
             Optional<User> user = userRepository.findByMemEmail(userInfo.getMemEmail());
