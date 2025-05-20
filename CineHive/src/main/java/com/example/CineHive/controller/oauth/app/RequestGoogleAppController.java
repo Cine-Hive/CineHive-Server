@@ -1,6 +1,7 @@
 package com.example.CineHive.controller.oauth.app;
 
 import com.example.CineHive.dto.oauth.google.GoogleUserInfo;
+import com.example.CineHive.dto.oauth.google.IdTokenRequest;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.repository.user.UserRepository;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,13 +34,19 @@ public class RequestGoogleAppController {
     @Autowired
     private UserRepository userRepository;
 
-    @Operation(summary = "구글 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청 코드")
+    @Operation(summary = "구글 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 ID Token을 JSON 객체 형태로 담아서 요청을 보내면 서버에서 처리하는 코드") // 설명 좀 더 정확하게 수정
     @PostMapping("/google/app-login")
-    public ResponseEntity<?> googleAppLogin(@RequestBody String idToken) {
+    public ResponseEntity<?> googleAppLogin(@RequestBody IdTokenRequest request) { // 파라미터 타입 변경
         try {
+            String idToken = request.getToken();
+
+            if (idToken == null || idToken.trim().isEmpty()) {
+                log.error("[Google Login] 요청 본문에 'token' 값이 비어 있습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유효한 'token' 값이 요청 본문에 필요합니다.");
+            }
+
             GoogleUserInfo userInfo = googleUserService.verifyIdTokenAndGetUserInfo(idToken);
             log.info("[Google Login] Google 사용자 정보(ID Token 검증 후) 수신: {}", userInfo);
-            log.info("[Google Login] Google 사용자 정보 수신: {}", userInfo);
 
             Optional<User> user = userRepository.findByMemEmail(userInfo.getMemEmail());
 
