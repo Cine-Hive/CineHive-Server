@@ -18,11 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/*
-    엑세스 토큰으로 사용자 정보 가져오기 (앱에서 SDK로 사용자 인증 처리까지 한 후, 액세스 토큰을 서버에 보내야 함.)
-    웹은 인가 코드를 클라이언트한테서 받고, 이때 인가 코드에 대해 처리를 한 후, 엑세스 토큰을 서버에서 요청을 보내서 처리를 한다면,
-    앱은 SDK로 사용자 인증 처리까지 한 후(인가 코드를 sdk에서 다 처리) -> 액세스 토큰까지 생성이 가능함. 이때 엑세스 토큰을 포함해서 다음과 같은 요청주소로 보내주면 됨.
- */
 @Tag(name = "Kakao User App Controller", description = "카카오 앱 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
