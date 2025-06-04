@@ -8,6 +8,8 @@ import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,8 +43,12 @@ public class RequestGoogleWebController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Operation(summary = "구글 로그인 리다이렉션", description = "사용자를 구글 OAuth 로그인 페이지로 리다이렉션하여 구글 인증을 시작")
     @GetMapping("/google")
+    @Operation(summary = "구글 로그인 리다이렉션", description = "사용자를 구글 OAuth 로그인 페이지로 리다이렉션하여 구글 인증을 시작")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "구글 OAuth 로그인 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "500", description = "리다이렉션 URL 생성 중 오류 발생")
+    })
     public void googleLoginRedirect(HttpServletResponse response) throws IOException {
         String redirectUrl = "https://accounts.google.com/o/oauth2/v2/auth?" +
                 "client_id=" + googleUserService.getClientId() +
@@ -55,8 +61,14 @@ public class RequestGoogleWebController {
         response.sendRedirect(redirectUrl);
     }
 
-    @Operation(summary = "구글 OAuth 로그인 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
     @GetMapping("/google/callback")
+    @Operation(summary = "구글 OAuth 로그인 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "기존 구글 사용자 로그인 성공 후 JSON 데이터 반환 및 메인 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "302", description = "신규 구글 사용자, 추가 정보 입력 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (예: 'code' 파라미터 누락 또는 유효하지 않음)"),
+            @ApiResponse(responseCode = "500", description = "인증 처리 중 오류 발생")
+    })
     public void googleCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = googleUserService.getAccessToken(code);
@@ -99,8 +111,13 @@ public class RequestGoogleWebController {
         }
     }
 
-    @Operation(summary = "구글 인증 성공", description = "구글 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
     @GetMapping("/google/success")
+    @Operation(summary = "구글 인증 성공 정보 반환", description = "구글 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증된 구글 사용자 정보 (GoogleUserInfo) 반환"),
+            @ApiResponse(responseCode = "401", description = "세션에 사용자 정보가 없거나 유효하지 않음 (인증되지 않은 사용자)"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<?> googleSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -116,8 +133,13 @@ public class RequestGoogleWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @Operation(summary = "구글 로그인 성공 정보 반환", description = "세션에서 구글 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @GetMapping("/google/login/success")
+    @Operation(summary = "구글 로그인 성공 정보 반환 (토큰 포함)", description = "세션에서 구글 로그인한 사용자 정보를 가져와 JWT 토큰과 함께 반환, 인증되지 않은 사용자는 401 오류를 반환")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증된 구글 사용자 정보 (GoogleUserInfo) 및 JWT 토큰 반환"),
+            @ApiResponse(responseCode = "401", description = "세션에 사용자 정보가 없거나 유효하지 않음 (인증되지 않은 사용자)"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<?> loginSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         log.info("Session exists: {}", session != null);
