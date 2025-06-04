@@ -26,7 +26,7 @@ import java.util.Map;
 
 @Tag(name = "Google User Controller", description = "구글 로그인 API 관련 기능을 제공하는 API")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/google")
 @Slf4j
 public class RequestGoogleWebController {
 
@@ -43,7 +43,7 @@ public class RequestGoogleWebController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @GetMapping("/google")
+    @GetMapping
     @Operation(summary = "구글 로그인 리다이렉션", description = "사용자를 구글 OAuth 로그인 페이지로 리다이렉션하여 구글 인증을 시작")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "구글 OAuth 로그인 페이지로 리다이렉션"),
@@ -61,7 +61,7 @@ public class RequestGoogleWebController {
         response.sendRedirect(redirectUrl);
     }
 
-    @GetMapping("/google/callback")
+    @GetMapping("/callback")
     @Operation(summary = "구글 OAuth 로그인 및 사용자 등록", description = "구글 OAuth 인증 후 구글 사용자 정보를 이용하여 로그인하거나 신규 사용자를 등록, 인증 후 해당 사용자를 리다이렉션")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 구글 사용자 로그인 성공 후 JSON 데이터 반환 및 메인 페이지로 리다이렉션"),
@@ -111,7 +111,7 @@ public class RequestGoogleWebController {
         }
     }
 
-    @GetMapping("/google/success")
+    @GetMapping("/success")
     @Operation(summary = "구글 인증 성공 정보 반환", description = "구글 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 구글 사용자 정보 (GoogleUserInfo) 반환"),
@@ -133,7 +133,7 @@ public class RequestGoogleWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @GetMapping("/google/login/success")
+    @GetMapping("/login/success")
     @Operation(summary = "구글 로그인 성공 정보 반환 (토큰 포함)", description = "세션에서 구글 로그인한 사용자 정보를 가져와 JWT 토큰과 함께 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 구글 사용자 정보 (GoogleUserInfo) 및 JWT 토큰 반환"),

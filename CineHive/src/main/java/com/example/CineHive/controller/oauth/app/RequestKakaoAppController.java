@@ -23,7 +23,7 @@ import java.util.Optional;
 @Tag(name = "Kakao User App Controller", description = "카카오 앱 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/kakao")
 public class RequestKakaoAppController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class RequestKakaoAppController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/kakao/app-login")
+    @PostMapping("/app-login")
     @Operation(
             summary = "카카오 앱 로그인",
             description = "앱에서 카카오 SDK 실행 후 받은 Access Token으로 사용자 정보를 가져와 로그인 처리합니다."
@@ -94,7 +94,7 @@ public class RequestKakaoAppController {
     }
 
 
-    @PostMapping("/kakao/register")
+    @PostMapping("/register")
     @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
     @ApiResponses(value = { // ApiResponses 추가!
             @ApiResponse(responseCode = "200", description = "카카오 사용자 추가 정보 기반 회원가입 완료"),

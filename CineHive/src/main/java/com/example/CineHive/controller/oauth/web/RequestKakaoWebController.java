@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/kakao")
 public class RequestKakaoWebController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class RequestKakaoWebController {
     private JwtUtil jwtUtil;
 
 
-    @GetMapping("/kakao")
+    @GetMapping
     @Operation(summary = "카카오 로그인", description = "카카오 OAuth 로그인 페이지로 사용자를 리다이렉션하여 카카오 인증을 시작")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "카카오 OAuth 로그인 페이지로 리다이렉션"),
@@ -52,7 +52,7 @@ public class RequestKakaoWebController {
         response.sendRedirect(url);
     }
 
-    @GetMapping("/kakao/callback")
+    @GetMapping("/callback")
     @Operation(summary = "카카오 OAuth 로그인 및 사용자 등록", description = "카카오 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 카카오 사용자 로그인 성공 후 JSON 데이터 반환 및 메인 페이지로 리다이렉션"),
@@ -105,7 +105,7 @@ public class RequestKakaoWebController {
         }
     }
 
-    @GetMapping("/kakao/success")
+    @GetMapping("/success")
     @Operation(summary = "카카오 인증 성공 정보 반환", description = "카카오 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 카카오 사용자 정보 (KakaoUserInfo) 반환"),
@@ -127,7 +127,7 @@ public class RequestKakaoWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @GetMapping("/kakao/login/success")
+    @GetMapping("/login/success")
     @Operation(summary = "카카오 로그인 성공 정보 반환 (토큰 포함)", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 JWT 토큰과 함께 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 카카오 사용자 정보 (KakaoUserInfo) 및 JWT 토큰 반환"),

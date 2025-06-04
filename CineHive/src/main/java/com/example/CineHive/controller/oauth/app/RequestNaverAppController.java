@@ -23,7 +23,7 @@ import java.util.Optional;
 @Tag(name = "Naver User App Controller", description = "네이버 앱 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/naver")
 public class RequestNaverAppController {
 
     @Autowired
@@ -36,7 +36,7 @@ public class RequestNaverAppController {
     private JwtUtil jwtUtil;
 
 
-    @PostMapping("/naver/app-login")
+    @PostMapping("/app-login")
     @Operation(summary = "네이버 앱 로그인", description = "앱에서 SDK를 실행 후 인증 및 로그인이 성공된 후, 앱에서 Access Token을 담아서 요청을 보내면 서버에서 json 데이터를 클라이언트에게 보내야 할 요청 코드")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 네이버 사용자 로그인 성공, JWT 토큰 및 사용자 정보 반환"),
@@ -89,7 +89,7 @@ public class RequestNaverAppController {
         }
     }
 
-    @PostMapping("/naver/register")
+    @PostMapping("/register")
     @Operation(summary = "네이버 사용자 등록", description = "네이버 사용자 정보를 입력받아 회원가입을 진행, 중복 검사 통과 후 저장")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "네이버 사용자 추가 정보 기반 회원가입 완료"),

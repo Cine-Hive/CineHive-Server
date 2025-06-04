@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @Tag(name = "Naver User Controller", description = "네이버 로그인 API 관련 기능을 제공하는 API")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/naver")
 @RequiredArgsConstructor
 @Slf4j
 public class RequestNaverWebController {
@@ -46,7 +46,7 @@ public class RequestNaverWebController {
     private JwtUtil jwtUtil;
 
 
-    @GetMapping("/naver")
+    @GetMapping
     @Operation(summary ="네이버 로그인 리다이렉션", description = "사용자를 네이버 OAuth 로그인 페이지로 리다이렉션하여 네이버 인증을 시작")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "네이버 OAuth 로그인 페이지로 리다이렉션"),
@@ -60,7 +60,7 @@ public class RequestNaverWebController {
         response.sendRedirect(redirectUrl);
     }
 
-    @GetMapping("/naver/callback")
+    @GetMapping("/callback")
     @Operation(summary = "네이버 OAuth 로그인 및 사용자 등록", description = "네이버 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 네이버 사용자 로그인 성공 후 JSON 데이터 반환 및 메인 페이지로 리다이렉션"),
@@ -111,7 +111,7 @@ public class RequestNaverWebController {
         }
     }
 
-    @GetMapping("/naver/success")
+    @GetMapping("/success")
     @Operation(summary = "네이버 로그인 성공 정보 반환 (세션 기반)", description = "네이버 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 네이버 사용자 정보 (NaverUserInfo) 반환"),
@@ -129,7 +129,7 @@ public class RequestNaverWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @GetMapping("/naver/login/success")
+    @GetMapping("/login/success")
     @Operation(summary = "네이버 로그인 성공 정보 반환 (세션 & 토큰 포함)", description = "세션에서 네이버 로그인한 사용자 정보를 가져와 JWT 토큰과 함께 반환, 인증되지 않은 사용자는 401 오류를 반환")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "인증된 네이버 사용자 정보 (NaverUserInfo) 및 JWT 토큰 반환"),
