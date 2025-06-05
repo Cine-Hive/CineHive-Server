@@ -31,15 +31,13 @@ public class BoardService {
     @Autowired
     private CommentMapper commentMapper;
 
+
     /*게시글 생성 */
     public Board createBoard(CreateBoardDto createBoardDto) {
         User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + createBoardDto.getMemEmail()));
 
-        Board board = new Board();
-        board.setBrdTitle(createBoardDto.getBrdTitle());
-        board.setBrdContent(createBoardDto.getBrdContent());
-        board.setUser(user);
+        Board board = BoardMapper.toEntity(createBoardDto, user);
 
         return boardRepository.save(board);
     }
