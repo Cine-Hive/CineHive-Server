@@ -8,6 +8,8 @@ import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
+import com.example.CineHive.exception.UnauthorizedAccessException;
+import com.example.CineHive.exception.UserNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.user.UserRepository;
@@ -32,7 +34,7 @@ public class BoardService {
     /*게시글 생성 */
     public Board createBoard(CreateBoardDto createBoardDto) {
         User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + createBoardDto.getMemEmail()));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + createBoardDto.getMemEmail()));
 
         Board board = new Board();
         board.setBrdTitle(createBoardDto.getBrdTitle());
@@ -51,7 +53,7 @@ public class BoardService {
         boardRepository.save(board);
 
         BoardDto boardDto = BoardMapper.convertToDto(board);
-        
+
         List<CommentDto> commentDtos = board.getComments().stream()
                 .map(commentMapper::toDTO)
                 .collect(Collectors.toList());
@@ -68,7 +70,7 @@ public class BoardService {
             Board board = optionalBoard.get();
 
             if (!board.getUser().getMemEmail().equals(memEmail)) {
-                throw new RuntimeException("사용자가 이 게시글을 수정할 권한이 없습니다.");
+                 new UnauthorizedAccessException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
             }
 
             board.setBrdTitle(brdTitle);
