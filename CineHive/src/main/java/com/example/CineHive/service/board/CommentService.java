@@ -4,6 +4,8 @@ import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.exception.BoardNotFoundException;
+import com.example.CineHive.exception.UserNotFoundException;
 import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -31,9 +33,9 @@ public class CommentService {
 
     public CommentDto addComment(Long boardId, String memEmail, String content) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found."));
         User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
 
         Comment comment = new Comment();
         comment.setContent(content);
@@ -51,7 +53,7 @@ public class CommentService {
 
     public List<CommentDto> getCommentsByBoard(Long boardId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("Board not found."));
         List<Comment> comments = commentRepository.findByBoard(board);
 
         return comments.stream()
@@ -61,10 +63,10 @@ public class CommentService {
 
     public void deleteComment(Long boardId, Long commentId, String memEmail) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("Board not found."));
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("Commnet not found."));
 
         if (!comment.getUser().getMemEmail().equals(memEmail)) {
             throw new RuntimeException("댓글을 삭제할 권한이 없습니다.");
@@ -80,10 +82,10 @@ public class CommentService {
 
     public CommentDto updateComment(Long boardId, Long commentId, CommentDto commentDto, String memEmail) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+                .orElseThrow(() ->new BoardNotFoundException("Board not found."));
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("Comment not found."));
 
         if (!comment.getUser().getMemEmail().equals(memEmail)) {
             throw new RuntimeException("댓글을 수정할 권한이 없습니다.");
