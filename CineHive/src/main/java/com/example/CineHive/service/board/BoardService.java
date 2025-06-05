@@ -26,6 +26,8 @@ public class BoardService {
     private BoardRepository boardRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private CommentMapper commentMapper;
 
     /*게시글 생성 */
     public Board createBoard(CreateBoardDto createBoardDto) {
@@ -49,8 +51,7 @@ public class BoardService {
         boardRepository.save(board);
 
         BoardDto boardDto = BoardMapper.convertToDto(board);
-
-        CommentMapper commentMapper = new CommentMapper();
+        
         List<CommentDto> commentDtos = board.getComments().stream()
                 .map(commentMapper::toDTO)
                 .collect(Collectors.toList());
