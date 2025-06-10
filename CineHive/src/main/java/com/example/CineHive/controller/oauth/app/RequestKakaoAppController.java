@@ -8,6 +8,8 @@ import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.oauth.KakaoUserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/*
-    엑세스 토큰으로 사용자 정보 가져오기 (앱에서 SDK로 사용자 인증 처리까지 한 후, 액세스 토큰을 서버에 보내야 함.)
-    웹은 인가 코드를 클라이언트한테서 받고, 이때 인가 코드에 대해 처리를 한 후, 엑세스 토큰을 서버에서 요청을 보내서 처리를 한다면,
-    앱은 SDK로 사용자 인증 처리까지 한 후(인가 코드를 sdk에서 다 처리) -> 액세스 토큰까지 생성이 가능함. 이때 엑세스 토큰을 포함해서 다음과 같은 요청주소로 보내주면 됨.
- */
 @Tag(name = "Kakao User App Controller", description = "카카오 앱 로그인 API 관련 기능을 제공하는 API")
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/kakao")
 public class RequestKakaoAppController {
 
     @Autowired
@@ -38,7 +35,18 @@ public class RequestKakaoAppController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/kakao/app-login")
+    @PostMapping("/app-login")
+    @Operation(
+            summary = "카카오 앱 로그인",
+            description = "앱에서 카카오 SDK 실행 후 받은 Access Token으로 사용자 정보를 가져와 로그인 처리합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "기존 카카오 사용자 로그인 성공, JWT 토큰 및 사용자 정보 반환"),
+            @ApiResponse(responseCode = "201", description = "신규 카카오 사용자, 회원가입 추가 정보 입력 필요 알림"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (예: 필수 파라미터 누락)"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 Access Token 또는 카카오 API 호출 실패"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<?> kakaoAppLogin(@RequestBody KakaoTokenRequest kakaoTokenRequest) {
         try {
             String accessToken = kakaoTokenRequest.getAccessToken();
@@ -86,9 +94,13 @@ public class RequestKakaoAppController {
     }
 
 
-
+    @PostMapping("/register")
     @Operation(summary = "카카오 사용자 회원가입", description = "카카오 로그인 후, 사용자가 추가 정보를 입력하면 이를 기반으로 사용자 정보를 저장")
-    @PostMapping("/kakao/register")
+    @ApiResponses(value = { // ApiResponses 추가!
+            @ApiResponse(responseCode = "200", description = "카카오 사용자 추가 정보 기반 회원가입 완료"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (예: 필수 정보 누락, 유효성 검사 실패, 이미 존재하는 이메일/닉네임 등)"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<String> registerUserDetails(@RequestBody UserDto userDto) {
         kakaoUserService.registerKakaoUser(userDto);
 

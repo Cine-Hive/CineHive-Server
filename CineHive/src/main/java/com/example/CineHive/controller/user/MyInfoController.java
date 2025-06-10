@@ -86,7 +86,7 @@ public class MyInfoController {
         }
     }
 
-
+    @PutMapping("/change-password")
     @Operation(summary = "비밀번호 변경", description = "기존 비밀번호 확인 후 새 비밀번호로 변경합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
@@ -94,7 +94,6 @@ public class MyInfoController {
             @ApiResponse(responseCode = "401", description = "토큰 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(
             @RequestBody MemPasswordRequest request,
             @Parameter(hidden = true) HttpServletRequest httpRequest) {
@@ -116,12 +115,12 @@ public class MyInfoController {
         }
     }
 
+    @PostMapping("/check-password")
     @Operation(summary = "비밀번호 확인", description = "입력된 비밀번호가 현재 비밀번호와 일치하는지 검증합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "검증 성공"),
             @ApiResponse(responseCode = "401", description = "토큰 없음")
     })
-    @PostMapping("/check-password")
     public ResponseEntity<?> checkPassword(
             @RequestBody Map<String, String> request,
             @Parameter(hidden = true) HttpServletRequest servletRequest) {
@@ -137,6 +136,7 @@ public class MyInfoController {
         return ResponseEntity.ok(Collections.singletonMap("success", isMatch));
     }
 
+    @PutMapping("/change-memname")
     @Operation(summary = "이름 변경", description = "사용자의 이름을 변경합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이름 변경 성공"),
@@ -144,7 +144,6 @@ public class MyInfoController {
             @ApiResponse(responseCode = "401", description = "토큰 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @PutMapping("/change-memname")
     public ResponseEntity<?> changeMemName(
             @RequestBody MemNameRequest request,
             @Parameter(hidden = true) HttpServletRequest httpRequest) {
@@ -166,6 +165,7 @@ public class MyInfoController {
         }
     }
 
+    @PutMapping("/change-memsex")
     @Operation(summary = "성별 변경", description = "사용자의 성별을 변경합니다. (male, female, other 허용)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성별 변경 성공"),
@@ -173,7 +173,6 @@ public class MyInfoController {
             @ApiResponse(responseCode = "401", description = "토큰 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @PutMapping("/change-memsex")
     public ResponseEntity<?> changeMemSex(
             @RequestBody MemSexRequest request,
             @Parameter(hidden = true) HttpServletRequest httpRequest) {
@@ -195,13 +194,13 @@ public class MyInfoController {
         }
     }
 
+    @DeleteMapping("/delete-account")
     @Operation(summary = "회원 탈퇴", description = "회원 정보를 포함한 모든 데이터를 삭제합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 완료"),
             @ApiResponse(responseCode = "401", description = "토큰 없음"),
             @ApiResponse(responseCode = "500", description = "회원 탈퇴 실패")
     })
-    @DeleteMapping("/delete-account")
     @Transactional
     public ResponseEntity<?> deleteAccount(@Parameter(hidden = true) HttpServletRequest request) {
         String token = jwtTokenUtil.extractTokenFromRequest(request);

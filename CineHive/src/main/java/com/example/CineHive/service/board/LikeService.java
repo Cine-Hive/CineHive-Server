@@ -3,6 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardLike;
+import com.example.CineHive.exception.BoardNotFoundException;
+import com.example.CineHive.exception.UserNotFoundException;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.LikeRepository;
@@ -25,9 +27,9 @@ public class LikeService {
     @Transactional
     public boolean addLike(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
 
 
         Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
@@ -50,9 +52,9 @@ public class LikeService {
     @Transactional
     public boolean removeLike(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
 
         Optional<BoardLike> existingLike = likeRepository.findByUserAndBoard(user, board);
         if (existingLike.isPresent()) {
@@ -71,7 +73,7 @@ public class LikeService {
     }
     public int getLikeCount(Long boardId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
         return board.getLikeCount();
     }
 

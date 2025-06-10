@@ -7,6 +7,8 @@ import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +37,16 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Operation(summary = "회원가입", description = "사용자 정보를 입력받아 일반 회원가입을 진행, 중복 검사 통과 후 user 테이블에 저장")
     @PostMapping("/register")
+    @Operation(
+            summary = "회원가입",
+            description = "사용자 정보를 입력받아 일반 회원가입을 진행, 중복 검사 통과 후 user 테이블에 저장"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "성공적으로 회원가입했습니다!"), // 201 Created 응답 추가
+            @ApiResponse(responseCode = "400", description = "잘못된 요청: 이미 등록된 이메일/닉네임 또는 기타 유효성 오류"), // 400 Bad Request 응답 추가
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생") // 500 Internal Server Error 응답 추가
+    })
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserDto userDto) {
         try {
 
@@ -71,8 +81,16 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "로그인", description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인")
     @PostMapping("/login")
+    @Operation(
+            summary = "로그인",
+            description = "user 테이블에 사용자가 입력한 ID와 비밀번호 쌍이 맞는지 확인 후 로그인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공, JWT 토큰 및 사용자 정보 반환"), // 200 OK 응답 추가
+            @ApiResponse(responseCode = "401", description = "인증 실패 (잘못된 이메일/비밀번호)"), // 401 Unauthorized 응답 추가 (로그인 실패 시)
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생") // 500 Internal Server Error 응답 추가
+    })
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDto loginRequest, HttpServletRequest request) {
         try {
             userService.loginUser(loginRequest.getMemEmail(), loginRequest.getMemPassword(), request); // 로그인 기록은 저장되지만 반환 X
@@ -97,16 +115,30 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "닉네임 중복 확인", description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인")
     @GetMapping("/checknickname/{memNickname}")
+    @Operation(
+            summary = "닉네임 중복 확인",
+            description = "user 테이블에 해당 닉네임이 이미 등록되어 있는지 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 사용 가능 여부 반환 (true: 사용 가능, false: 사용 불가)"), // 200 OK 응답 추가
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생") // 500 Internal Server Error 응답 추가 (예외 발생 시)
+    })
     public ResponseEntity<Boolean> checkmemNickname(@PathVariable(value="memNickname") String memNickname) {
         Optional<User> existingUser = userRepository.findByMemNickname(memNickname);
         boolean isAvailable = existingUser.isEmpty(); // 사용자 ID가 존재하지 않으면 사용 가능
         return ResponseEntity.ok(isAvailable);
     }
 
-    @Operation(summary = "이메일 중복 확인", description = "user 테이블에 해당 이메일이 이미 등록되어 있는지 확인")
     @GetMapping("/checkemail/{memEmail}")
+    @Operation(
+            summary = "이메일 중복 확인",
+            description = "user 테이블에 해당 이메일이 이미 등록되어 있는지 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "이메일 사용 가능 여부 반환 (true: 사용 가능, false: 사용 불가)"), // 200 OK 응답 추가
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생") // 500 Internal Server Error 응답 추가 (예외 발생 시)
+    })
     public ResponseEntity<Boolean> checkmemEmail(@PathVariable(value="memEmail") String memEmail) {
         Optional<User> existingUser = userRepository.findByMemEmail(memEmail);
         boolean isAvailable = existingUser.isEmpty(); // 사용자 ID가 존재하지 않으면 사용 가능
