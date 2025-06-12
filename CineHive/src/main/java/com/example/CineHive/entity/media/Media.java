@@ -1,56 +1,50 @@
 package com.example.CineHive.entity.media;
 
+import com.example.CineHive.entity.credit.Director;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import lombok.*;
 
-import java.time.LocalDate;
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "media_type")
 public abstract class Media {
+
     @Id
     private Long id;
-    
-    private String title; // 영화, 드라마, 애니메이션의 제목
-    
-    @Lob
-    private String overview;
-    
-    private String posterPath;
 
-    @Column(name = "backdrop_path")
+    private String title;
+    private String originalTitle;
+    private String overview;
+    private String releaseDate;
+    private Double voteAverage;
+    private Integer voteCount;
+    private Double popularity;
+    private String posterPath;
     private String backdropPath;
-    
-    @Column(name = "release_date")
-    private LocalDate releaseDate;
-    
-    private double voteAverage;
-    private double popularity;
-    
-    private int runtime;
-    
-    @Enumerated(EnumType.STRING)
-    private MediaType mediaType;
-    
-    // 장르는 각 서브클래스에서 구현 (Movie, Drama, Animation)
-    
-    public enum MediaType {
-        MOVIE, TV, ANIMATION
+
+    @Column(nullable = false)
+    private boolean isAnimation = false;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
     }
-    
-    @Enumerated(EnumType.STRING)
-    private MediaCategory category;
-    
-    public enum MediaCategory {
-        POPULAR, TOP_RATED, NOW_PLAYING, UPCOMING, ON_THE_AIR, AIRING_TODAY, DEFAULT
-    }
-} 
+
+    @OneToMany(mappedBy = "media", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<MediaGenre> mediaGenres;
+
+    @OneToMany(mappedBy = "media", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Director> director;
+}
