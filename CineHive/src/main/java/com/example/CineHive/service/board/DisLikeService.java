@@ -3,6 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardDisLike;
+import com.example.CineHive.exception.BoardNotFoundException;
+import com.example.CineHive.exception.UserNotFoundException;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.DisLikeRepository;
@@ -28,9 +30,9 @@ public class DisLikeService {
     @Transactional
     public boolean addDisLike(String memEmail, Long boardId) {
         User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
 
         Optional<BoardDisLike> existingDisLike = disLikeRepository.findByUserAndBoard(user, board);
         if (existingDisLike.isPresent()) {

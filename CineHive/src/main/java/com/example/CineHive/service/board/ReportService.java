@@ -3,6 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Report;
+import com.example.CineHive.exception.BoardNotFoundException;
+import com.example.CineHive.exception.UserNotFoundException;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.ReportRepository;
@@ -26,10 +28,10 @@ public class ReportService {
     @Transactional
     public boolean reportBoard(String memEmail, Long boardId, String reason) {
         User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
 
         // 이미 신고했는지 확인
         Optional<Report> existingReport = reportRepository.findByUserAndBoard(user, board);

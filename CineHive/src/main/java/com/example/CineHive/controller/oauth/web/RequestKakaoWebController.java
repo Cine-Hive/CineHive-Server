@@ -8,6 +8,8 @@ import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -22,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/kakao")
 public class RequestKakaoWebController {
 
     @Autowired
@@ -37,16 +39,28 @@ public class RequestKakaoWebController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
+    @GetMapping
     @Operation(summary = "카카오 로그인", description = "카카오 OAuth 로그인 페이지로 사용자를 리다이렉션하여 카카오 인증을 시작")
-    @GetMapping("/kakao")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "카카오 OAuth 로그인 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "500", description = "리다이렉션 URL 생성 중 오류 발생")
+    })
     public void kakaoLogin(HttpServletResponse response) throws IOException {
         String url = "https://kauth.kakao.com/oauth/authorize?client_id=" + kakaoUserService.getClientId() +
                 "&redirect_uri=" + kakaoUserService.getRedirectUri() + "&response_type=code";
         response.sendRedirect(url);
     }
 
+    @GetMapping("/callback")
     @Operation(summary = "카카오 OAuth 로그인 및 사용자 등록", description = "카카오 OAuth 인증 후 사용자 정보를 이용하여 로그인하거나, 신규 사용자를 등록하고 로그인 후 사용자를 리다이렉션")
-    @GetMapping("/kakao/callback")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "기존 카카오 사용자 로그인 성공 후 JSON 데이터 반환 및 메인 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "302", description = "신규 카카오 사용자, 추가 정보 입력 페이지로 리다이렉션"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (예: 'code' 파라미터 누락 또는 유효하지 않음)"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 Access Token 또는 카카오 API 호출 실패"),
+            @ApiResponse(responseCode = "500", description = "인증 처리 중 오류 발생")
+    })
     public void kakaoCallback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String accessToken = kakaoUserService.getAccessToken(code);
@@ -90,8 +104,14 @@ public class RequestKakaoWebController {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "카카오 로그인 과정 중 오류 발생");
         }
     }
-    @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
-    @GetMapping("/kakao/success")
+
+    @GetMapping("/success")
+    @Operation(summary = "카카오 인증 성공 정보 반환", description = "카카오 OAuth 인증 성공 후 세션에 저장된 사용자 정보를 반환, 사용자가 인증되지 않은 경우 401 상태 코드와 함께 오류 메시지를 반환")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증된 카카오 사용자 정보 (KakaoUserInfo) 반환"),
+            @ApiResponse(responseCode = "401", description = "세션에 사용자 정보가 없거나 유효하지 않음 (인증되지 않은 사용자)"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<?> successPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -107,8 +127,13 @@ public class RequestKakaoWebController {
         return ResponseEntity.status(401).body("Unauthorized");
     }
 
-    @Operation(summary = "카카오 로그인 성공 정보 반환", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 반환, 인증되지 않은 사용자는 401 오류를 반환")
-    @GetMapping("/kakao/login/success")
+    @GetMapping("/login/success")
+    @Operation(summary = "카카오 로그인 성공 정보 반환 (토큰 포함)", description = "세션에서 카카오 로그인한 사용자 정보를 가져와 JWT 토큰과 함께 반환, 인증되지 않은 사용자는 401 오류를 반환")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증된 카카오 사용자 정보 (KakaoUserInfo) 및 JWT 토큰 반환"),
+            @ApiResponse(responseCode = "401", description = "세션에 사용자 정보가 없거나 유효하지 않음 (인증되지 않은 사용자)"),
+            @ApiResponse(responseCode = "500", description = "서버 오류 발생")
+    })
     public ResponseEntity<?> loginSuccessPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         log.info("Session exists: {}", session != null);
