@@ -53,6 +53,7 @@ public class SecurityConfig {
             
             // 미디어 API (통합)
             "/api/v1/media/**",
+            "/api/media/**",
 
             // OTT 인기 콘텐츠 API
             "/api/ott/**",
