@@ -7,24 +7,26 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "media_genres")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"media_id", "genre_id"}))
 public class MediaGenre {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id @GeneratedValue
     private Long id;
-    
-    @Column(name = "media_id")
-    private Long mediaId;
-    
-    @Column(name = "media_type")
-    @Enumerated(EnumType.STRING)
-    private Media.MediaType mediaType;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "media_id")
+    private Media media;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "genre_id")
     private Genre genre;
-} 
+
+    public MediaGenre(Media media, Genre genre) {
+        this.media = media;
+        this.genre = genre;
+    }
+}
