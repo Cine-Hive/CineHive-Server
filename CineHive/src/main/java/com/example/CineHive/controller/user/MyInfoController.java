@@ -228,4 +228,44 @@ public class MyInfoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 탈퇴 실패");
         }
     }
+
+    @Operation(summary = "닉네임 변경", description = "사용자의 닉네임을 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 변경 성공"),
+            @ApiResponse(responseCode = "400", description = "닉네임 변경 실패"),
+            @ApiResponse(responseCode = "401", description = "토큰 없음"),
+            @ApiResponse(responseCode = "409", description = "닉네임 중복"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PutMapping("/change-nickname")
+    public ResponseEntity<?> changeNickname(
+            @RequestBody Map<String, String> request,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+
+        String token = jwtTokenUtil.extractTokenFromRequest(httpRequest);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 필요합니다.");
+        }
+
+        String newNickname = request.get("newNickname");
+
+        try {
+            String email = jwtTokenUtil.extractUsername(token);
+            boolean result = userService.changeNickname(email, newNickname);
+
+            return result
+                    ? ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.")
+                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("닉네임 변경 실패");
+
+        } catch (RuntimeException e) {
+            if ("이미 사용 중인 닉네임입니다.".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            }
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("닉네임 변경 중 예상치 못한 오류 발생");
+        }
+    }
 }

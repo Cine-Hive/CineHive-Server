@@ -4,6 +4,7 @@ import com.example.CineHive.dto.oauth.google.GoogleUserInfo;
 import com.example.CineHive.dto.user.UserDto;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.repository.user.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -15,9 +16,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import java.io.IOException;
+import java.net.URI;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
+@Slf4j
 public class GoogleUserService {
 
 
@@ -41,6 +46,55 @@ public class GoogleUserService {
     public GoogleUserService(UserRepository userRepository, RestTemplate restTemplate) {
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
+    }
+
+
+    public GoogleUserInfo verifyIdTokenAndGetUserInfo(String idToken) throws IOException {
+        URI tokenInfoUri = UriComponentsBuilder.fromUriString("https://oauth2.googleapis.com/tokeninfo")
+                .queryParam("id_token", idToken)
+                .build()
+                .toUri();
+
+        log.info("[Google ID Token] tokeninfo 호출 URI: {}", tokenInfoUri);
+
+        ResponseEntity<String> response;
+        try {
+            response = restTemplate.getForEntity(tokenInfoUri, String.class);
+        } catch (Exception e) {
+            log.error("[Google ID Token] tokeninfo 호출 중 오류 발생", e);
+            throw new IOException("Failed to call tokeninfo endpoint", e);
+        }
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            JSONObject jsonObject = new JSONObject(response.getBody());
+
+            if (!clientId.equals(jsonObject.optString("aud"))) {
+                log.error("[Google ID Token] 유효하지 않은 aud 값: {}", jsonObject.optString("aud"));
+                throw new IOException("Invalid ID token: aud mismatch");
+            }
+            String issuer = jsonObject.optString("iss");
+            if (!"accounts.google.com".equals(issuer) && !"https://accounts.google.com".equals(issuer)) {
+                log.error("[Google ID Token] 유효하지 않은 iss 값: {}", issuer);
+                throw new IOException("Invalid ID token: iss mismatch");
+            }
+            long expirationTime = jsonObject.optLong("exp");
+            if (Instant.now().getEpochSecond() >= expirationTime) {
+                log.error("[Google ID Token] 토큰 만료됨: {}", Instant.ofEpochSecond(expirationTime));
+                throw new IOException("ID token expired");
+            }
+
+            log.info("[Google ID Token] 토큰 검증 성공. 유저 정보: email={}, name={}",
+                    jsonObject.optString("email"), jsonObject.optString("name"));
+
+            GoogleUserInfo userInfo = new GoogleUserInfo();
+            userInfo.setMemNickname(jsonObject.optString("name", ""));
+            userInfo.setMemEmail(jsonObject.optString("email", ""));
+
+            return userInfo;
+        } else {
+            log.error("[Google ID Token] tokeninfo 호출 실패: 상태 코드 {}", response.getStatusCode());
+            throw new IOException("Failed to verify ID token: " + response.getStatusCode());
+        }
     }
 
     public String getAccessToken(String code) throws IOException {
