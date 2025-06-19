@@ -23,8 +23,12 @@ public interface MediaQueryService {
     // 애니메이션 차트 메서드
     PagedResponse<MediaChartDto> getPopularAnimationMovieChart(int page, int size);
     PagedResponse<MediaChartDto> getTopRatedAnimationMovieChart(int page, int size);
+    PagedResponse<MediaChartDto> getNowPlayingAnimationMovieChart(int page, int size);
+    PagedResponse<MediaChartDto> getUpcomingAnimationMovieChart(int page, int size);
     PagedResponse<MediaChartDto> getPopularAnimationTvSeriesChart(int page, int size);
     PagedResponse<MediaChartDto> getTopRatedAnimationTvSeriesChart(int page, int size);
+    PagedResponse<MediaChartDto> getOnTheAirAnimationTvSeriesChart(int page, int size);
+    PagedResponse<MediaChartDto> getUpcomingAnimationTvSeriesChart(int page, int size);
 
     // 검색
     PagedResponse<MediaSummaryDto> searchMedia(String query, int page, int size);
