@@ -35,7 +35,8 @@ public class TmdbApiClient {
     private static final String PAGE_PARAM = "page";
     private static final String QUERY_PARAM = "query";
 
-    private <T> List<T> getPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
+    // 페이지 정보를 포함한 응답을 반환하는 메서드
+    private <T> TmdbPagedResponse<T> getFullPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
         try {
             // page 값 검증 (1-1000 범위)
             int validatedPage = Math.max(1, Math.min(page, 1000));
@@ -54,7 +55,7 @@ public class TmdbApiClient {
                     .bodyToMono(typeRef)
                     .block();
 
-            return response != null ? response.getResults() : Collections.emptyList();
+            return response;
 
         } catch (WebClientResponseException e) {
             log.error("TMDB API request failed for path: {}, page: {}, status: {}, body: {}",
@@ -73,151 +74,45 @@ public class TmdbApiClient {
         }
     }
 
-    // 기존 메서드들
-    public List<TmdbMovieResponse> getPopularMovies(int page) {
-        return getPagedResponse("/movie/popular", page,
+    // 기존 메서드들 - 전체 페이지 정보 반환으로 변경
+    public TmdbPagedResponse<TmdbMovieResponse> getPopularMovies(int page) {
+        return getFullPagedResponse("/movie/popular", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
     }
 
-    public List<TmdbTvSeriesResponse> getTopRatedTvSeries(int page) {
-        return getPagedResponse("/tv/top_rated", page,
+    public TmdbPagedResponse<TmdbTvSeriesResponse> getTopRatedTvSeries(int page) {
+        return getFullPagedResponse("/tv/top_rated", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
     }
 
-    public List<TmdbMovieResponse> getUpcomingMovies(int page) {
-        return getPagedResponse("/movie/upcoming", page,
+    public TmdbPagedResponse<TmdbMovieResponse> getUpcomingMovies(int page) {
+        return getFullPagedResponse("/movie/upcoming", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
     }
 
-    public List<TmdbTvSeriesResponse> getOnTheAirTvSeries(int page) {
-        return getPagedResponse("/tv/on_the_air", page,
+    public TmdbPagedResponse<TmdbTvSeriesResponse> getOnTheAirTvSeries(int page) {
+        return getFullPagedResponse("/tv/on_the_air", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
     }
 
-    public List<TmdbTvSeriesResponse> getPopularTvSeries(int page) {
-        return getPagedResponse("/tv/popular", page,
+    public TmdbPagedResponse<TmdbTvSeriesResponse> getPopularTvSeries(int page) {
+        return getFullPagedResponse("/tv/popular", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
     }
 
-    public List<TmdbMovieResponse> getTopRatedMovies(int page) {
-        return getPagedResponse("/movie/top_rated", page,
+    public TmdbPagedResponse<TmdbMovieResponse> getTopRatedMovies(int page) {
+        return getFullPagedResponse("/movie/top_rated", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
     }
 
-    public List<TmdbMovieResponse> getNowPlayingMovies(int page) {
-        return getPagedResponse("/movie/now_playing", page,
+    public TmdbPagedResponse<TmdbMovieResponse> getNowPlayingMovies(int page) {
+        return getFullPagedResponse("/movie/now_playing", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
     }
 
-    public List<TmdbTvSeriesResponse> getAiringTodayTvSeries(int page) {
-        return getPagedResponse("/tv/airing_today", page,
+    public TmdbPagedResponse<TmdbTvSeriesResponse> getAiringTodayTvSeries(int page) {
+        return getFullPagedResponse("/tv/airing_today", page,
                 new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
-    }
-
-    /**
-     * 애니메이션 영화 발견 (인기순)
-     */
-    public List<TmdbMovieResponse> discoverAnimationMovies(int page, String sortBy) {
-        return getDiscoverMoviesResponse(page, sortBy, "16"); // 16 = Animation genre
-    }
-
-    /**
-     * 애니메이션 TV 시리즈 발견 (인기순)
-     */
-    public List<TmdbTvSeriesResponse> discoverAnimationTvSeries(int page, String sortBy) {
-        return getDiscoverTvResponse(page, sortBy, "16"); // 16 = Animation genre
-    }
-
-    /**
-     * 영화 발견 API (장르별 필터링 및 정렬)
-     */
-    public List<TmdbMovieResponse> discoverMovies(int page, String sortBy, String genreIds) {
-        return getDiscoverMoviesResponse(page, sortBy, genreIds);
-    }
-
-    /**
-     * TV 시리즈 발견 API (장르별 필터링 및 정렬)
-     */
-    public List<TmdbTvSeriesResponse> discoverTvSeries(int page, String sortBy, String genreIds) {
-        return getDiscoverTvResponse(page, sortBy, genreIds);
-    }
-
-    private List<TmdbMovieResponse> getDiscoverMoviesResponse(int page, String sortBy, String genreIds) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Discovering movies with genres: {}, sortBy: {}, page: {}", genreIds, sortBy, validatedPage);
-
-            TmdbPagedResponse<TmdbMovieResponse> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder
-                                .path("/discover/movie")
-                                .queryParam(API_KEY_PARAM, apiKey)
-                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                                .queryParam(PAGE_PARAM, validatedPage);
-
-                        if (sortBy != null && !sortBy.isEmpty()) {
-                            builder.queryParam("sort_by", sortBy);
-                        }
-
-                        if (genreIds != null && !genreIds.isEmpty()) {
-                            builder.queryParam("with_genres", genreIds);
-                        }
-
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {})
-                    .block();
-
-            return response != null ? response.getResults() : Collections.emptyList();
-
-        } catch (WebClientResponseException e) {
-            log.error("Discover movies failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
-                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("영화 발견 요청 실패: " + e.getMessage(), e);
-        }
-    }
-
-    private List<TmdbTvSeriesResponse> getDiscoverTvResponse(int page, String sortBy, String genreIds) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Discovering TV series with genres: {}, sortBy: {}, page: {}", genreIds, sortBy, validatedPage);
-
-            TmdbPagedResponse<TmdbTvSeriesResponse> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder
-                                .path("/discover/tv")
-                                .queryParam(API_KEY_PARAM, apiKey)
-                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                                .queryParam(PAGE_PARAM, validatedPage);
-
-                        if (sortBy != null && !sortBy.isEmpty()) {
-                            builder.queryParam("sort_by", sortBy);
-                        }
-
-                        if (genreIds != null && !genreIds.isEmpty()) {
-                            builder.queryParam("with_genres", genreIds);
-                        }
-
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {})
-                    .block();
-
-            return response != null ? response.getResults() : Collections.emptyList();
-
-        } catch (WebClientResponseException e) {
-            log.error("Discover TV series failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
-                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("TV 시리즈 발견 요청 실패: " + e.getMessage(), e);
-        }
     }
 
     /**
@@ -271,6 +166,164 @@ public class TmdbApiClient {
             log.error("TV series detail request failed for ID: {}, status: {}, body: {}",
                     tvId, e.getStatusCode(), e.getResponseBodyAsString());
             throw new RuntimeException("TV 시리즈 상세 정보 조회 실패: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 애니메이션 영화 발견
+     */
+    public TmdbPagedResponse<TmdbMovieResponse> discoverAnimationMovies(int page, String sortBy) {
+        return getDiscoverMoviesResponse(page, sortBy, "16", null, null);
+    }
+
+    /**
+     * 현재 상영중 애니메이션 영화
+     */
+    public TmdbPagedResponse<TmdbMovieResponse> discoverNowPlayingAnimationMovies(int page) {
+        String today = java.time.LocalDate.now().toString();
+        return getDiscoverMoviesResponse(page, "popularity.desc", "16", null, today);
+    }
+
+    /**
+     * 상영 예정 애니메이션 영화
+     */
+    public TmdbPagedResponse<TmdbMovieResponse> discoverUpcomingAnimationMovies(int page) {
+        String today = java.time.LocalDate.now().toString();
+        return getDiscoverMoviesResponse(page, "release_date.asc", "16", today, null);
+    }
+
+    /**
+     * 애니메이션 TV 시리즈 발견
+     */
+    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverAnimationTvSeries(int page, String sortBy) {
+        return getDiscoverTvResponse(page, sortBy, "16", null, null);
+    }
+
+    /**
+     * 현재 방영중 애니메이션 TV 시리즈
+     */
+    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverOnTheAirAnimationTvSeries(int page) {
+        String today = java.time.LocalDate.now().toString();
+        return getDiscoverTvResponse(page, "popularity.desc", "16", null, today);
+    }
+
+    /**
+     * 방영 예정 애니메이션 TV 시리즈
+     */
+    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverUpcomingAnimationTvSeries(int page) {
+        String today = java.time.LocalDate.now().toString();
+        return getDiscoverTvResponse(page, "first_air_date.asc", "16", today, null);
+    }
+
+    /**
+     * 영화 발견 API (장르별 필터링 및 정렬)
+     */
+    public TmdbPagedResponse<TmdbMovieResponse> discoverMovies(int page, String sortBy, String genreIds) {
+        return getDiscoverMoviesResponse(page, sortBy, genreIds, null, null);
+    }
+
+    /**
+     * TV 시리즈 발견 API (장르별 필터링 및 정렬)
+     */
+    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverTvSeries(int page, String sortBy, String genreIds) {
+        return getDiscoverTvResponse(page, sortBy, genreIds, null, null);
+    }
+
+    private TmdbPagedResponse<TmdbMovieResponse> getDiscoverMoviesResponse(int page, String sortBy, String genreIds,
+                                                                           String releaseDateGte, String releaseDateLte) {
+        try {
+            // page 값 검증
+            int validatedPage = Math.max(1, Math.min(page, 1000));
+
+            log.debug("Discovering movies with genres: {}, sortBy: {}, page: {}, dateGte: {}, dateLte: {}",
+                    genreIds, sortBy, validatedPage, releaseDateGte, releaseDateLte);
+
+            TmdbPagedResponse<TmdbMovieResponse> response = tmdbWebClient()
+                    .get()
+                    .uri(uriBuilder -> {
+                        var builder = uriBuilder
+                                .path("/discover/movie")
+                                .queryParam(API_KEY_PARAM, apiKey)
+                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
+                                .queryParam(PAGE_PARAM, validatedPage);
+
+                        if (sortBy != null && !sortBy.isEmpty()) {
+                            builder.queryParam("sort_by", sortBy);
+                        }
+
+                        if (genreIds != null && !genreIds.isEmpty()) {
+                            builder.queryParam("with_genres", genreIds);
+                        }
+
+                        if (releaseDateGte != null && !releaseDateGte.isEmpty()) {
+                            builder.queryParam("release_date.gte", releaseDateGte);
+                        }
+
+                        if (releaseDateLte != null && !releaseDateLte.isEmpty()) {
+                            builder.queryParam("release_date.lte", releaseDateLte);
+                        }
+
+                        return builder.build();
+                    })
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {})
+                    .block();
+
+            return response;
+
+        } catch (WebClientResponseException e) {
+            log.error("Discover movies failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
+                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("영화 발견 요청 실패: " + e.getMessage(), e);
+        }
+    }
+
+    private TmdbPagedResponse<TmdbTvSeriesResponse> getDiscoverTvResponse(int page, String sortBy, String genreIds,
+                                                                          String firstAirDateGte, String firstAirDateLte) {
+        try {
+            // page 값 검증
+            int validatedPage = Math.max(1, Math.min(page, 1000));
+
+            log.debug("Discovering TV series with genres: {}, sortBy: {}, page: {}, dateGte: {}, dateLte: {}",
+                    genreIds, sortBy, validatedPage, firstAirDateGte, firstAirDateLte);
+
+            TmdbPagedResponse<TmdbTvSeriesResponse> response = tmdbWebClient()
+                    .get()
+                    .uri(uriBuilder -> {
+                        var builder = uriBuilder
+                                .path("/discover/tv")
+                                .queryParam(API_KEY_PARAM, apiKey)
+                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
+                                .queryParam(PAGE_PARAM, validatedPage);
+
+                        if (sortBy != null && !sortBy.isEmpty()) {
+                            builder.queryParam("sort_by", sortBy);
+                        }
+
+                        if (genreIds != null && !genreIds.isEmpty()) {
+                            builder.queryParam("with_genres", genreIds);
+                        }
+
+                        if (firstAirDateGte != null && !firstAirDateGte.isEmpty()) {
+                            builder.queryParam("first_air_date.gte", firstAirDateGte);
+                        }
+
+                        if (firstAirDateLte != null && !firstAirDateLte.isEmpty()) {
+                            builder.queryParam("first_air_date.lte", firstAirDateLte);
+                        }
+
+                        return builder.build();
+                    })
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {})
+                    .block();
+
+            return response;
+
+        } catch (WebClientResponseException e) {
+            log.error("Discover TV series failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
+                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("TV 시리즈 발견 요청 실패: " + e.getMessage(), e);
         }
     }
 
