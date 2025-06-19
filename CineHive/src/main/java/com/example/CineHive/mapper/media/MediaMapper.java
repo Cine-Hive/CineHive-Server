@@ -188,6 +188,70 @@ public class MediaMapper {
                 .build();
     }
 
+    /**
+     * TMDB 페이지 응답을 활용한 영화 차트 페이지 응답 변환
+     */
+    public static PagedResponse<MediaChartDto> toMovieChartPagedResponseFromTmdb(
+            TmdbPagedResponse<TmdbMovieResponse> tmdbResponse, int requestedPage, int size) {
+
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PagedResponse.<MediaChartDto>builder()
+                    .content(List.of())
+                    .page(requestedPage)
+                    .size(size)
+                    .totalElements(0)
+                    .totalPages(0)
+                    .last(true)
+                    .build();
+        }
+
+        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbResponse.getResults().size())
+                .mapToObj(i -> toMediaChartDto(tmdbResponse.getResults().get(i), i + 1 + (requestedPage * size)))
+                .toList();
+
+        return PagedResponse.<MediaChartDto>builder()
+                .content(chartDtos)
+                .page(requestedPage + 1) // 클라이언트용 1-based 페이지
+                .size(size)
+                .totalElements(tmdbResponse.getTotal_results())
+                .totalPages(tmdbResponse.getTotal_pages())
+                .last(tmdbResponse.getPage() >= tmdbResponse.getTotal_pages())
+                .build();
+    }
+
+    /**
+     * TMDB 페이지 응답을 활용한 TV 차트 페이지 응답 변환
+     */
+    public static PagedResponse<MediaChartDto> toTvChartPagedResponseFromTmdb(
+            TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse, int requestedPage, int size) {
+
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PagedResponse.<MediaChartDto>builder()
+                    .content(List.of())
+                    .page(requestedPage)
+                    .size(size)
+                    .totalElements(0)
+                    .totalPages(0)
+                    .last(true)
+                    .build();
+        }
+
+        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbResponse.getResults().size())
+                .mapToObj(i -> toMediaChartDto(tmdbResponse.getResults().get(i), i + 1 + (requestedPage * size)))
+                .toList();
+
+        return PagedResponse.<MediaChartDto>builder()
+                .content(chartDtos)
+                .page(requestedPage + 1) // 클라이언트용 1-based 페이지
+                .size(size)
+                .totalElements(tmdbResponse.getTotal_results())
+                .totalPages(tmdbResponse.getTotal_pages())
+                .last(tmdbResponse.getPage() >= tmdbResponse.getTotal_pages())
+                .build();
+    }
+
+
+
     // === 개별 변환 메서드들 ===
 
     public static GenreDto toGenreDto(TmdbGenreResponse tmdbGenre) {
