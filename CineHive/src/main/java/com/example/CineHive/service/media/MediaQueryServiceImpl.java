@@ -40,50 +40,50 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     @Override
     public PagedResponse<MediaChartDto> getPopularMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.getPopularMovies(page);
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.getPopularMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getTopRatedMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.getTopRatedMovies(page);
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.getTopRatedMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getUpcomingMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.getUpcomingMovies(page);
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.getUpcomingMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getNowPlayingMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.getNowPlayingMovies(page);
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.getNowPlayingMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getPopularTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.getPopularTvSeries(page);
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.getPopularTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getTopRatedTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.getTopRatedTvSeries(page);
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.getTopRatedTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getOnTheAirTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.getOnTheAirTvSeries(page);
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.getOnTheAirTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getAiringTodayTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.getAiringTodayTvSeries(page);
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.getAiringTodayTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
@@ -92,27 +92,52 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         return MediaMapper.toSearchPagedResponse(searchResults, page, size);
     }
 
+    // 애니메이션 차트 메서드들
     @Override
     public PagedResponse<MediaChartDto> getPopularAnimationMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.discoverAnimationMovies(page, "popularity.desc");
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.discoverAnimationMovies(page, "popularity.desc");
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getTopRatedAnimationMovieChart(int page, int size) {
-        List<TmdbMovieResponse> tmdbMovies = tmdbApiClient.discoverAnimationMovies(page, "vote_average.desc");
-        return MediaMapper.toMovieChartPagedResponse(tmdbMovies, page, size);
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.discoverAnimationMovies(page, "vote_average.desc");
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
+    }
+
+    @Override
+    public PagedResponse<MediaChartDto> getNowPlayingAnimationMovieChart(int page, int size) {
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.discoverNowPlayingAnimationMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
+    }
+
+    @Override
+    public PagedResponse<MediaChartDto> getUpcomingAnimationMovieChart(int page, int size) {
+        TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.discoverUpcomingAnimationMovies(page);
+        return MediaMapper.toMovieChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getPopularAnimationTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.discoverAnimationTvSeries(page, "popularity.desc");
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.discoverAnimationTvSeries(page, "popularity.desc");
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 
     @Override
     public PagedResponse<MediaChartDto> getTopRatedAnimationTvSeriesChart(int page, int size) {
-        List<TmdbTvSeriesResponse> tmdbTvSeries = tmdbApiClient.discoverAnimationTvSeries(page, "vote_average.desc");
-        return MediaMapper.toTvChartPagedResponse(tmdbTvSeries, page, size);
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.discoverAnimationTvSeries(page, "vote_average.desc");
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
+    }
+
+    @Override
+    public PagedResponse<MediaChartDto> getOnTheAirAnimationTvSeriesChart(int page, int size) {
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.discoverOnTheAirAnimationTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
+    }
+
+    @Override
+    public PagedResponse<MediaChartDto> getUpcomingAnimationTvSeriesChart(int page, int size) {
+        TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.discoverUpcomingAnimationTvSeries(page);
+        return MediaMapper.toTvChartPagedResponseFromTmdb(tmdbResponse, page, size);
     }
 }
