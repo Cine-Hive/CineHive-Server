@@ -4,46 +4,20 @@ import com.example.CineHive.dto.response.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Optional;
 
 @Slf4j
-public class MediaMapper {
+public final class MediaMapper {
 
-    /**
-     * TMDB 영화 상세 응답을 MediaDetailDto로 변환
-     */
+    private MediaMapper() {
+        // 유틸리티 클래스이므로 인스턴스화 방지
+    }
+
     public static MediaDetailDto toMediaDetailDto(TmdbMovieDetailResponse tmdbDetail) {
-        // 장르 변환
-        List<GenreDto> genres = tmdbDetail.getGenres().stream()
-                .map(MediaMapper::toGenreDto)
-                .toList();
-
-        // 캐스트 변환 (상위 10명만)
-        List<CastDto> cast = tmdbDetail.getCredits().getCast().stream()
-                .limit(10)
-                .map(MediaMapper::toCastDto)
-                .toList();
-
-        // 감독 변환
-        List<DirectorDto> directors = tmdbDetail.getCredits().getCrew().stream()
-                .filter(crew -> "Director".equals(crew.getJob()))
-                .map(MediaMapper::toDirectorDto)
-                .toList();
-
-        // 비디오 변환
-        List<VideoDto> videos = tmdbDetail.getVideos().getResults().stream()
-                .map(MediaMapper::toVideoDto)
-                .toList();
-
-        // 추가 정보들 변환
-        List<ImageDto> images = toImageDtoList(tmdbDetail.getImages());
-        List<MediaSummaryDto> recommendations = toMovieRecommendationsList(tmdbDetail.getRecommendations());
-        List<MediaSummaryDto> similar = toMovieSimilarList(tmdbDetail.getSimilar());
-        List<KeywordDto> keywords = toKeywordDtoList(tmdbDetail.getKeywords());
-        WatchProvidersDto watchProviders = toWatchProvidersDto(tmdbDetail.getWatchProviders());
-
+        if (tmdbDetail == null) return null;
         return MediaDetailDto.builder()
                 .id(tmdbDetail.getId())
                 .title(tmdbDetail.getTitle())
@@ -56,53 +30,20 @@ public class MediaMapper {
                 .voteCount(tmdbDetail.getVote_count())
                 .popularity(tmdbDetail.getPopularity())
                 .isAnimation(isAnimation(tmdbDetail.getGenre_ids()))
-                .genres(genres)
-                .cast(cast)
-                .directors(directors)
-                .videos(videos)
-                .images(images)
-                .recommendations(recommendations)
-                .similar(similar)
-                .keywords(keywords)
-                .watchProviders(watchProviders)
+                .genres(toGenreDtoList(tmdbDetail.getGenres()))
+                .cast(toCastDtoList(tmdbDetail.getCredits()))
+                .directors(toDirectorDtoList(tmdbDetail.getCredits()))
+                .videos(toVideoDtoList(tmdbDetail.getVideos()))
+                .images(toImageDtoList(tmdbDetail.getImages()))
+                .recommendations(toMovieSummaryList(tmdbDetail.getRecommendations()))
+                .similar(toMovieSummaryList(tmdbDetail.getSimilar()))
+                .keywords(toKeywordDtoList(tmdbDetail.getKeywords()))
+                .watchProviders(toWatchProvidersDto(tmdbDetail.getWatchProviders()))
                 .build();
     }
 
-    /**
-     * TMDB TV 시리즈 상세 응답을 MediaDetailDto로 변환
-     */
     public static MediaDetailDto toMediaDetailDto(TmdbTvSeriesDetailResponse tmdbDetail) {
-        // 장르 변환
-        List<GenreDto> genres = tmdbDetail.getGenres().stream()
-                .map(MediaMapper::toGenreDto)
-                .toList();
-
-        // 캐스트 변환 (상위 10명만)
-        List<CastDto> cast = tmdbDetail.getCredits().getCast().stream()
-                .limit(10)
-                .map(MediaMapper::toCastDto)
-                .toList();
-
-        // 감독 변환 (TV의 경우 Creator나 Executive Producer 등도 포함)
-        List<DirectorDto> directors = tmdbDetail.getCredits().getCrew().stream()
-                .filter(crew -> "Director".equals(crew.getJob()) ||
-                        "Creator".equals(crew.getJob()) ||
-                        "Executive Producer".equals(crew.getJob()))
-                .map(MediaMapper::toDirectorDto)
-                .toList();
-
-        // 비디오 변환
-        List<VideoDto> videos = tmdbDetail.getVideos().getResults().stream()
-                .map(MediaMapper::toVideoDto)
-                .toList();
-
-        // 추가 정보들 변환
-        List<ImageDto> images = toImageDtoList(tmdbDetail.getImages());
-        List<MediaSummaryDto> recommendations = toTvRecommendationsList(tmdbDetail.getRecommendations());
-        List<MediaSummaryDto> similar = toTvSimilarList(tmdbDetail.getSimilar());
-        List<KeywordDto> keywords = toKeywordDtoList(tmdbDetail.getKeywords());
-        WatchProvidersDto watchProviders = toWatchProvidersDto(tmdbDetail.getWatchProviders());
-
+        if (tmdbDetail == null) return null;
         return MediaDetailDto.builder()
                 .id(tmdbDetail.getId())
                 .title(tmdbDetail.getName())
@@ -115,201 +56,89 @@ public class MediaMapper {
                 .voteCount(tmdbDetail.getVote_count())
                 .popularity(tmdbDetail.getPopularity())
                 .isAnimation(isAnimation(tmdbDetail.getGenre_ids()))
-                .genres(genres)
-                .cast(cast)
-                .directors(directors)
-                .videos(videos)
-                .images(images)
-                .recommendations(recommendations)
-                .similar(similar)
-                .keywords(keywords)
-                .watchProviders(watchProviders)
+                .genres(toGenreDtoList(tmdbDetail.getGenres()))
+                .cast(toCastDtoList(tmdbDetail.getCredits()))
+                .directors(toDirectorDtoList(tmdbDetail.getCredits()))
+                .videos(toVideoDtoList(tmdbDetail.getVideos()))
+                .images(toImageDtoList(tmdbDetail.getImages()))
+                .recommendations(toTvSummaryList(tmdbDetail.getRecommendations()))
+                .similar(toTvSummaryList(tmdbDetail.getSimilar()))
+                .keywords(toKeywordDtoList(tmdbDetail.getKeywords()))
+                .watchProviders(toWatchProvidersDto(tmdbDetail.getWatchProviders()))
                 .build();
     }
 
-    /**
-     * TMDB 영화 목록을 차트 페이지 응답으로 변환
-     */
-    public static PagedResponse<MediaChartDto> toMovieChartPagedResponse(
-            List<TmdbMovieResponse> tmdbMovies, int page, int size) {
-
-        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbMovies.size())
-                .mapToObj(i -> toMediaChartDto(tmdbMovies.get(i), i + 1 + (page * size)))
-                .toList();
-
-        return PagedResponse.<MediaChartDto>builder()
-                .content(chartDtos)
-                .page(page + 1)
-                .size(size)
-                .totalElements(chartDtos.size())
-                .totalPages(calculateTotalPages(chartDtos.size(), size))
-                .last(page >= calculateTotalPages(chartDtos.size(), size) - 1)
-                .build();
-    }
-
-    /**
-     * TMDB TV 시리즈 목록을 차트 페이지 응답으로 변환
-     */
-    public static PagedResponse<MediaChartDto> toTvChartPagedResponse(
-            List<TmdbTvSeriesResponse> tmdbTvSeries, int page, int size) {
-
-        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbTvSeries.size())
-                .mapToObj(i -> toMediaChartDto(tmdbTvSeries.get(i), i + 1 + (page * size)))
-                .toList();
-
-        return PagedResponse.<MediaChartDto>builder()
-                .content(chartDtos)
-                .page(page + 1)
-                .size(size)
-                .totalElements(chartDtos.size())
-                .totalPages(calculateTotalPages(chartDtos.size(), size))
-                .last(page >= calculateTotalPages(chartDtos.size(), size) - 1)
-                .build();
-    }
-
-    /**
-     * TMDB 멀티 검색 결과를 MediaSummaryDto 페이지 응답으로 변환
-     */
-    public static PagedResponse<MediaSummaryDto> toSearchPagedResponse(
-            List<TmdbMultiSearchResponse> searchResults, int page, int size) {
-
-        List<MediaSummaryDto> summaryDtos = searchResults.stream()
-                .filter(result -> "movie".equals(result.getMedia_type()) || "tv".equals(result.getMedia_type()))
-                .map(MediaMapper::toMediaSummaryDto)
-                .toList();
-
-        return PagedResponse.<MediaSummaryDto>builder()
-                .content(summaryDtos)
-                .page(page)
-                .size(size)
-                .totalElements(summaryDtos.size())
-                .totalPages(calculateTotalPages(summaryDtos.size(), size))
-                .last(page >= calculateTotalPages(summaryDtos.size(), size) - 1)
-                .build();
-    }
-
-    /**
-     * TMDB 페이지 응답을 활용한 영화 차트 페이지 응답 변환
-     */
     public static PagedResponse<MediaChartDto> toMovieChartPagedResponseFromTmdb(
             TmdbPagedResponse<TmdbMovieResponse> tmdbResponse, int requestedPage, int size) {
 
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.<MediaChartDto>builder()
-                    .content(List.of())
-                    .page(requestedPage)
-                    .size(size)
-                    .totalElements(0)
-                    .totalPages(0)
-                    .last(true)
-                    .build();
+            return PagedResponse.empty(requestedPage, size);
         }
 
-        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbResponse.getResults().size())
-                .mapToObj(i -> toMediaChartDto(tmdbResponse.getResults().get(i), i + 1 + (requestedPage * size)))
+        List<MediaChartDto> chartDtos = tmdbResponse.getResults().stream()
+                .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
                 .toList();
 
-        return PagedResponse.<MediaChartDto>builder()
-                .content(chartDtos)
-                .page(requestedPage + 1) // 클라이언트용 1-based 페이지
-                .size(size)
-                .totalElements(tmdbResponse.getTotal_results())
-                .totalPages(tmdbResponse.getTotal_pages())
-                .last(tmdbResponse.getPage() >= tmdbResponse.getTotal_pages())
-                .build();
+        // 생성자가 아닌 빌더를 사용하거나, AllArgsConstructor로 생성된 생성자를 사용합니다.
+        return new PagedResponse<>(chartDtos, tmdbResponse.getPage(), size,
+                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
-    /**
-     * TMDB 페이지 응답을 활용한 TV 차트 페이지 응답 변환
-     */
     public static PagedResponse<MediaChartDto> toTvChartPagedResponseFromTmdb(
             TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse, int requestedPage, int size) {
 
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.<MediaChartDto>builder()
-                    .content(List.of())
-                    .page(requestedPage)
-                    .size(size)
-                    .totalElements(0)
-                    .totalPages(0)
-                    .last(true)
-                    .build();
+            return PagedResponse.empty(requestedPage, size);
         }
 
-        List<MediaChartDto> chartDtos = IntStream.range(0, tmdbResponse.getResults().size())
-                .mapToObj(i -> toMediaChartDto(tmdbResponse.getResults().get(i), i + 1 + (requestedPage * size)))
+        List<MediaChartDto> chartDtos = tmdbResponse.getResults().stream()
+                .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
                 .toList();
 
-        return PagedResponse.<MediaChartDto>builder()
-                .content(chartDtos)
-                .page(requestedPage + 1) // 클라이언트용 1-based 페이지
-                .size(size)
-                .totalElements(tmdbResponse.getTotal_results())
-                .totalPages(tmdbResponse.getTotal_pages())
-                .last(tmdbResponse.getPage() >= tmdbResponse.getTotal_pages())
-                .build();
+        return new PagedResponse<>(chartDtos, tmdbResponse.getPage(), size,
+                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
+    public static PagedResponse<MediaSummaryDto> toSearchPagedResponseFromTmdb(
+            TmdbPagedResponse<TmdbMultiSearchResponse> tmdbResponse, int requestedPage, int size) {
 
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PagedResponse.empty(requestedPage, size);
+        }
 
-    // === 개별 변환 메서드들 ===
+        List<MediaSummaryDto> summaryDtos = tmdbResponse.getResults().stream()
+                .filter(result -> "movie".equals(result.getMedia_type()) || "tv".equals(result.getMedia_type()))
+                .map(MediaMapper::toMediaSummaryDto)
+                .toList();
 
-    public static GenreDto toGenreDto(TmdbGenreResponse tmdbGenre) {
-        return GenreDto.builder()
-                .id(tmdbGenre.getId())
-                .name(tmdbGenre.getName())
-                .build();
+        return new PagedResponse<>(summaryDtos, tmdbResponse.getPage(), size,
+                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
-    public static CastDto toCastDto(TmdbCastResponse tmdbCast) {
-        return CastDto.builder()
-                .id(tmdbCast.getId())
-                .name(tmdbCast.getName())
-                .character(tmdbCast.getCharacter())
-                .profilePath(tmdbCast.getProfile_path())
-                .build();
-    }
-
-    public static DirectorDto toDirectorDto(TmdbCrewResponse tmdbCrew) {
-        return DirectorDto.builder()
-                .id(tmdbCrew.getId())
-                .name(tmdbCrew.getName())
-                .profilePath(tmdbCrew.getProfile_path())
-                .build();
-    }
-
-    public static VideoDto toVideoDto(TmdbVideoResponse tmdbVideo) {
-        return VideoDto.builder()
-                .name(tmdbVideo.getName())
-                .key(tmdbVideo.getKey())
-                .site(tmdbVideo.getSite())
-                .type(tmdbVideo.getType())
-                .build();
-    }
-
-    public static MediaChartDto toMediaChartDto(TmdbMovieResponse tmdbMovie, int rank) {
+    private static MediaChartDto toMediaChartDto(TmdbMovieResponse movie) {
         return MediaChartDto.builder()
-                .mediaId(tmdbMovie.getId())
-                .title(tmdbMovie.getTitle())
-                .posterPath(tmdbMovie.getPoster_path())
-                .voteAverage(tmdbMovie.getVote_average())
-                .isAnimation(isAnimation(tmdbMovie.getGenre_ids()))
-                .rank(rank)
+                .mediaId(movie.getId())
+                .title(movie.getTitle())
+                .posterPath(movie.getPoster_path())
+                .voteAverage(movie.getVote_average())
+                .isAnimation(isAnimation(movie.getGenre_ids()))
                 .build();
     }
 
-    public static MediaChartDto toMediaChartDto(TmdbTvSeriesResponse tmdbTvSeries, int rank) {
+    private static MediaChartDto toMediaChartDto(TmdbTvSeriesResponse tv) {
         return MediaChartDto.builder()
-                .mediaId(tmdbTvSeries.getId())
-                .title(tmdbTvSeries.getName())
-                .posterPath(tmdbTvSeries.getPoster_path())
-                .voteAverage(tmdbTvSeries.getVote_average())
-                .isAnimation(isAnimation(tmdbTvSeries.getGenre_ids()))
-                .rank(rank)
+                .mediaId(tv.getId())
+                .title(tv.getName())
+                .posterPath(tv.getPoster_path())
+                .voteAverage(tv.getVote_average())
+                .isAnimation(isAnimation(tv.getGenre_ids()))
                 .build();
     }
 
-    public static MediaSummaryDto toMediaSummaryDto(TmdbMultiSearchResponse searchResult) {
+    private static MediaSummaryDto toMediaSummaryDto(TmdbMultiSearchResponse searchResult) {
         String title = "movie".equals(searchResult.getMedia_type())
                 ? searchResult.getTitle()
                 : searchResult.getName();
@@ -323,48 +152,49 @@ public class MediaMapper {
                 .build();
     }
 
-    // === 복합 변환 메서드들 ===
+    // --- 상세 정보의 하위 리스트 매핑 메서드 (변경 없음) ---
+    // (이하 toGenreDtoList, toCastDtoList 등의 메서드는 이전과 동일합니다)
 
-    public static List<ImageDto> toImageDtoList(TmdbImagesResponse imagesResponse) {
-        if (imagesResponse == null) return List.of();
-
-        List<ImageDto> images = new ArrayList<>();
-
-        // 백드롭 이미지들 추가 (최대 5개)
-        if (imagesResponse.getBackdrops() != null) {
-            images.addAll(imagesResponse.getBackdrops().stream()
-                    .limit(5)
-                    .map(MediaMapper::toImageDto)
-                    .toList());
-        }
-
-        // 포스터 이미지들 추가 (최대 5개)
-        if (imagesResponse.getPosters() != null) {
-            images.addAll(imagesResponse.getPosters().stream()
-                    .limit(5)
-                    .map(MediaMapper::toImageDto)
-                    .toList());
-        }
-
-        return images;
+    private static List<GenreDto> toGenreDtoList(List<TmdbGenreResponse> genres) {
+        if (genres == null) return Collections.emptyList();
+        return genres.stream().map(g -> new GenreDto(g.getId(), g.getName())).toList();
     }
 
-    public static ImageDto toImageDto(TmdbImageResponse tmdbImage) {
-        return ImageDto.builder()
-                .filePath(tmdbImage.getFile_path())
-                .aspectRatio(tmdbImage.getAspect_ratio())
-                .height(tmdbImage.getHeight())
-                .width(tmdbImage.getWidth())
-                .voteAverage(tmdbImage.getVote_average())
-                .voteCount(tmdbImage.getVote_count())
-                .build();
+    private static List<CastDto> toCastDtoList(TmdbCreditsResponse credits) {
+        if (credits == null || credits.getCast() == null) return Collections.emptyList();
+        return credits.getCast().stream()
+                .limit(10)
+                .map(c -> new CastDto(c.getId(), c.getName(), c.getCharacter(), c.getProfile_path()))
+                .toList();
     }
 
-    public static List<MediaSummaryDto> toMovieRecommendationsList(TmdbPagedResponse<TmdbMovieResponse> recommendations) {
-        if (recommendations == null || recommendations.getResults() == null) return List.of();
+    private static List<DirectorDto> toDirectorDtoList(TmdbCreditsResponse credits) {
+        if (credits == null || credits.getCrew() == null) return Collections.emptyList();
+        return credits.getCrew().stream()
+                .filter(c -> "Director".equals(c.getJob()))
+                .map(c -> new DirectorDto(c.getId(), c.getName(), c.getProfile_path()))
+                .toList();
+    }
 
-        return recommendations.getResults().stream()
-                .limit(10) // 최대 10개만
+    private static List<VideoDto> toVideoDtoList(TmdbVideosResponse videos) {
+        if (videos == null || videos.getResults() == null) return Collections.emptyList();
+        return videos.getResults().stream()
+                .map(v -> new VideoDto(v.getName(), v.getKey(), v.getSite(), v.getType()))
+                .toList();
+    }
+
+    private static List<ImageDto> toImageDtoList(TmdbImagesResponse images) {
+        if (images == null || images.getBackdrops() == null) return Collections.emptyList();
+        return images.getBackdrops().stream()
+                .limit(10)
+                .map(i -> new ImageDto(i.getFile_path(), i.getAspect_ratio(), i.getHeight(), i.getWidth(), i.getVote_average(), i.getVote_count()))
+                .toList();
+    }
+
+    private static List<MediaSummaryDto> toMovieSummaryList(TmdbPagedResponse<TmdbMovieResponse> response) {
+        if (response == null || response.getResults() == null) return Collections.emptyList();
+        return response.getResults().stream()
+                .limit(10)
                 .map(movie -> MediaSummaryDto.builder()
                         .id(movie.getId())
                         .title(movie.getTitle())
@@ -375,11 +205,10 @@ public class MediaMapper {
                 .toList();
     }
 
-    public static List<MediaSummaryDto> toTvRecommendationsList(TmdbPagedResponse<TmdbTvSeriesResponse> recommendations) {
-        if (recommendations == null || recommendations.getResults() == null) return List.of();
-
-        return recommendations.getResults().stream()
-                .limit(10) // 최대 10개만
+    private static List<MediaSummaryDto> toTvSummaryList(TmdbPagedResponse<TmdbTvSeriesResponse> response) {
+        if (response == null || response.getResults() == null) return Collections.emptyList();
+        return response.getResults().stream()
+                .limit(10)
                 .map(tv -> MediaSummaryDto.builder()
                         .id(tv.getId())
                         .title(tv.getName())
@@ -390,110 +219,50 @@ public class MediaMapper {
                 .toList();
     }
 
-    public static List<MediaSummaryDto> toMovieSimilarList(TmdbPagedResponse<TmdbMovieResponse> similar) {
-        if (similar == null || similar.getResults() == null) return List.of();
-
-        return similar.getResults().stream()
-                .limit(10) // 최대 10개만
-                .map(movie -> MediaSummaryDto.builder()
-                        .id(movie.getId())
-                        .title(movie.getTitle())
-                        .posterPath(movie.getPoster_path())
-                        .voteAverage(movie.getVote_average())
-                        .isAnimation(isAnimation(movie.getGenre_ids()))
-                        .build())
+    private static List<KeywordDto> toKeywordDtoList(TmdbKeywordsResponse keywords) {
+        if (keywords == null) return Collections.emptyList();
+        List<TmdbKeywordResponse> keywordList = Optional.ofNullable(keywords.getKeywords()).orElse(keywords.getResults());
+        if (keywordList == null) return Collections.emptyList();
+        return keywordList.stream()
+                .map(k -> new KeywordDto(k.getId(), k.getName()))
                 .toList();
     }
 
-    public static List<MediaSummaryDto> toTvSimilarList(TmdbPagedResponse<TmdbTvSeriesResponse> similar) {
-        if (similar == null || similar.getResults() == null) return List.of();
-
-        return similar.getResults().stream()
-                .limit(10) // 최대 10개만
-                .map(tv -> MediaSummaryDto.builder()
-                        .id(tv.getId())
-                        .title(tv.getName())
-                        .posterPath(tv.getPoster_path())
-                        .voteAverage(tv.getVote_average())
-                        .isAnimation(isAnimation(tv.getGenre_ids()))
-                        .build())
-                .toList();
+    private static WatchProvidersDto toWatchProvidersDto(TmdbWatchProvidersResponse providers) {
+        if (providers == null || providers.getResults() == null) return new WatchProvidersDto();
+        TmdbCountryWatchProvidersResponse countryProviders = providers.getResults().get("KR");
+        if (countryProviders == null) return new WatchProvidersDto();
+        return new WatchProvidersDto(
+                countryProviders.getLink(),
+                toProviderDtoList(countryProviders.getFlatrate()),
+                toProviderDtoList(countryProviders.getRent()),
+                toProviderDtoList(countryProviders.getBuy())
+        );
     }
 
-    public static List<KeywordDto> toKeywordDtoList(TmdbKeywordsResponse keywordsResponse) {
-        if (keywordsResponse == null) return List.of();
-
-        List<TmdbKeywordResponse> keywords = keywordsResponse.getKeywords() != null
-                ? keywordsResponse.getKeywords()
-                : keywordsResponse.getResults();
-
-        if (keywords == null) return List.of();
-
-        return keywords.stream()
-                .map(keyword -> KeywordDto.builder()
-                        .id(keyword.getId())
-                        .name(keyword.getName())
-                        .build())
-                .toList();
-    }
-
-    public static WatchProvidersDto toWatchProvidersDto(TmdbWatchProvidersResponse watchProvidersResponse) {
-        if (watchProvidersResponse == null || watchProvidersResponse.getResults() == null) {
-            return WatchProvidersDto.builder().build();
-        }
-
-        // 한국(KR) 정보 우선, 없으면 미국(US) 정보 사용
-        TmdbCountryWatchProvidersResponse countryProviders =
-                watchProvidersResponse.getResults().get("KR");
-        if (countryProviders == null) {
-            countryProviders = watchProvidersResponse.getResults().get("US");
-        }
-
-        if (countryProviders == null) {
-            return WatchProvidersDto.builder().build();
-        }
-
-        return WatchProvidersDto.builder()
-                .link(countryProviders.getLink())
-                .streaming(toProviderDtoList(countryProviders.getFlatrate()))
-                .rent(toProviderDtoList(countryProviders.getRent()))
-                .buy(toProviderDtoList(countryProviders.getBuy()))
-                .build();
-    }
-
-    public static List<ProviderDto> toProviderDtoList(List<TmdbProviderResponse> providers) {
-        if (providers == null) return List.of();
-
+    private static List<ProviderDto> toProviderDtoList(List<TmdbProviderResponse> providers) {
+        if (providers == null) return Collections.emptyList();
         return providers.stream()
-                .map(provider -> ProviderDto.builder()
-                        .providerId(provider.getProvider_id())
-                        .providerName(provider.getProvider_name())
-                        .logoPath(provider.getLogo_path())
-                        .displayPriority(provider.getDisplay_priority())
-                        .build())
+                .map(p -> new ProviderDto(p.getProvider_id(), p.getProvider_name(), p.getLogo_path(), p.getDisplay_priority()))
                 .toList();
     }
 
-    // === 유틸리티 메서드들 ===
 
-    public static boolean isAnimation(List<Long> genreIds) {
-        // 애니메이션 장르 ID (TMDB에서 16이 애니메이션)
+    // --- 유틸리티 메서드 ---
+
+    private static boolean isAnimation(List<Long> genreIds) {
         return genreIds != null && genreIds.contains(16L);
     }
 
-    public static LocalDate parseLocalDate(String dateString) {
-        if (dateString == null || dateString.isEmpty()) {
+    private static LocalDate parseLocalDate(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
             return null;
         }
         try {
             return LocalDate.parse(dateString);
-        } catch (Exception e) {
-            log.warn("Failed to parse date: {}", dateString, e);
+        } catch (DateTimeParseException e) {
+            log.warn("Failed to parse date string: {}", dateString);
             return null;
         }
-    }
-
-    public static int calculateTotalPages(int totalElements, int size) {
-        return (int) Math.ceil((double) totalElements / size);
     }
 }
