@@ -1,16 +1,21 @@
 package com.example.CineHive.client;
 
 import com.example.CineHive.dto.response.*;
+import com.example.CineHive.exception.TmdbApiException; // 커스텀 예외 클래스
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -25,383 +30,209 @@ public class TmdbApiClient {
     @Value("${tmdb.api.key}")
     private String apiKey;
 
-    private WebClient tmdbWebClient() {
-        return webClientBuilder.baseUrl(tmdbBaseUrl).build();
-    }
-
-    private static final String LANGUAGE = "ko-KR";
+    // --- 상수 정의 ---
     private static final String API_KEY_PARAM = "api_key";
     private static final String LANGUAGE_PARAM = "language";
     private static final String PAGE_PARAM = "page";
     private static final String QUERY_PARAM = "query";
+    private static final String SORT_BY_PARAM = "sort_by";
+    private static final String WITH_GENRES_PARAM = "with_genres";
+    private static final String RELEASE_DATE_GTE_PARAM = "release_date.gte";
+    private static final String RELEASE_DATE_LTE_PARAM = "release_date.lte";
+    private static final String FIRST_AIR_DATE_GTE_PARAM = "first_air_date.gte";
+    private static final String FIRST_AIR_DATE_LTE_PARAM = "first_air_date.lte";
+    private static final String APPEND_TO_RESPONSE_PARAM = "append_to_response";
+    private static final String INCLUDE_IMAGE_LANGUAGE_PARAM = "include_image_language";
 
-    // 페이지 정보를 포함한 응답을 반환하는 메서드
-    private <T> TmdbPagedResponse<T> getFullPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
-        try {
-            // page 값 검증 (1-1000 범위)
-            int validatedPage = Math.max(1, Math.min(page, 1000));
+    private static final String DEFAULT_LANGUAGE = "ko-KR";
+    private static final String ANIMATION_GENRE_ID = "16";
 
-            log.debug("Requesting TMDB API: {} with page: {}", path, validatedPage);
+    private WebClient tmdbWebClient;
 
-            TmdbPagedResponse<T> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(path)
-                            .queryParam(API_KEY_PARAM, apiKey)
-                            .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                            .queryParam(PAGE_PARAM, validatedPage)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(typeRef)
-                    .block();
-
-            return response;
-
-        } catch (WebClientResponseException e) {
-            log.error("TMDB API request failed for path: {}, page: {}, status: {}, body: {}",
-                    path, page, e.getStatusCode(), e.getResponseBodyAsString());
-
-            if (e.getStatusCode().is4xxClientError()) {
-                // 클라이언트 오류의 경우 상세 로깅
-                log.error("Client error details - API Key present: {}, Language: {}, Page: {}",
-                        apiKey != null && !apiKey.isEmpty(), LANGUAGE, page);
-            }
-
-            throw new RuntimeException("TMDB API 요청 실패: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error during TMDB API request for path: {}, page: {}", path, page, e);
-            throw new RuntimeException("TMDB API 요청 중 예상치 못한 오류 발생", e);
+    // WebClient 인스턴스를 한 번만 생성하여 재사용
+    private WebClient getTmdbWebClient() {
+        if (this.tmdbWebClient == null) {
+            this.tmdbWebClient = webClientBuilder.baseUrl(tmdbBaseUrl).build();
         }
+        return this.tmdbWebClient;
     }
 
-    // 기존 메서드들 - 전체 페이지 정보 반환으로 변경
-    public TmdbPagedResponse<TmdbMovieResponse> getPopularMovies(int page) {
-        return getFullPagedResponse("/movie/popular", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
+    // --- 공용 GET 요청 메서드 ---
+    private <T> Mono<T> get(String path, ParameterizedTypeReference<T> responseType, MultiValueMap<String, String> queryParams) {
+        // 모든 요청에 기본 파라미터 추가
+        queryParams.add(API_KEY_PARAM, apiKey);
+        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
+
+        log.debug("Requesting TMDB API: {}, params: {}", path, queryParams);
+
+        return getTmdbWebClient()
+                .get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
+                .bodyToMono(responseType);
     }
 
-    public TmdbPagedResponse<TmdbTvSeriesResponse> getTopRatedTvSeries(int page) {
-        return getFullPagedResponse("/tv/top_rated", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
+    private <T> Mono<T> get(String path, Class<T> responseType, MultiValueMap<String, String> queryParams) {
+        queryParams.add(API_KEY_PARAM, apiKey);
+        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
+
+        log.debug("Requesting TMDB API: {}, params: {}", path, queryParams);
+
+        return getTmdbWebClient()
+                .get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
+                .bodyToMono(responseType);
     }
 
-    public TmdbPagedResponse<TmdbMovieResponse> getUpcomingMovies(int page) {
-        return getFullPagedResponse("/movie/upcoming", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
+    // --- 영화 차트 API ---
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> getPopularMovies(int page) {
+        return getPagedResponse("/movie/popular", page, new ParameterizedTypeReference<>() {});
     }
 
-    public TmdbPagedResponse<TmdbTvSeriesResponse> getOnTheAirTvSeries(int page) {
-        return getFullPagedResponse("/tv/on_the_air", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> getTopRatedMovies(int page) {
+        return getPagedResponse("/movie/top_rated", page, new ParameterizedTypeReference<>() {});
     }
 
-    public TmdbPagedResponse<TmdbTvSeriesResponse> getPopularTvSeries(int page) {
-        return getFullPagedResponse("/tv/popular", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> getUpcomingMovies(int page) {
+        return getPagedResponse("/movie/upcoming", page, new ParameterizedTypeReference<>() {});
     }
 
-    public TmdbPagedResponse<TmdbMovieResponse> getTopRatedMovies(int page) {
-        return getFullPagedResponse("/movie/top_rated", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> getNowPlayingMovies(int page) {
+        return getPagedResponse("/movie/now_playing", page, new ParameterizedTypeReference<>() {});
     }
 
-    public TmdbPagedResponse<TmdbMovieResponse> getNowPlayingMovies(int page) {
-        return getFullPagedResponse("/movie/now_playing", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
+    // --- TV 시리즈 차트 API ---
+    public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getPopularTvSeries(int page) {
+        return getPagedResponse("/tv/popular", page, new ParameterizedTypeReference<>() {});
     }
 
-    public TmdbPagedResponse<TmdbTvSeriesResponse> getAiringTodayTvSeries(int page) {
-        return getFullPagedResponse("/tv/airing_today", page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
+    public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getTopRatedTvSeries(int page) {
+        return getPagedResponse("/tv/top_rated", page, new ParameterizedTypeReference<>() {});
+    }
+
+    public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getOnTheAirTvSeries(int page) {
+        return getPagedResponse("/tv/on_the_air", page, new ParameterizedTypeReference<>() {});
+    }
+
+    public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getAiringTodayTvSeries(int page) {
+        return getPagedResponse("/tv/airing_today", page, new ParameterizedTypeReference<>() {});
+    }
+
+    // --- 상세 정보 API ---
+    public Mono<TmdbMovieDetailResponse> getMovieDetail(Long movieId) {
+        String path = "/movie/" + movieId;
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
+        params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
+        return get(path, TmdbMovieDetailResponse.class, params);
+    }
+
+    public Mono<TmdbTvSeriesDetailResponse> getTvSeriesDetail(Long tvId) {
+        String path = "/tv/" + tvId;
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
+        params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
+        return get(path, TmdbTvSeriesDetailResponse.class, params);
+    }
+
+    // --- 검색 API ---
+    public Mono<TmdbPagedResponse<TmdbMultiSearchResponse>> searchMulti(String query, int page) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(QUERY_PARAM, query);
+        params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
+        return get("/search/multi", new ParameterizedTypeReference<>() {}, params);
+    }
+
+    // --- Discover (애니메이션 등) API ---
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> discoverAnimationMovies(int page, String sortBy) {
+        return discoverMovies(page, sortBy, ANIMATION_GENRE_ID, null, null);
+    }
+
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> discoverNowPlayingAnimationMovies(int page) {
+        String today = LocalDate.now().toString();
+        // 현재 상영중인 작품은 인기도 순으로 정렬하는 것이 일반적
+        return discoverMovies(page, "popularity.desc", ANIMATION_GENRE_ID, null, today);
+    }
+
+    public Mono<TmdbPagedResponse<TmdbMovieResponse>> discoverUpcomingAnimationMovies(int page) {
+        String today = LocalDate.now().toString();
+        // 개봉 예정작은 개봉일 순으로 정렬
+        return discoverMovies(page, "release_date.asc", ANIMATION_GENRE_ID, today, null);
+    }
+
+    public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> discoverAnimationTvSeries(int page, String sortBy) {
+        return discoverTvSeries(page, sortBy, ANIMATION_GENRE_ID, null, null);
+    }
+
+    // --- Private Helper Methods ---
+
+    /**
+     * 페이지네이션이 있는 API를 호출하는 공통 메서드
+     */
+    private <T> Mono<TmdbPagedResponse<T>> getPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
+        return get(path, typeRef, params);
     }
 
     /**
-     * 영화 상세 정보 조회
+     * 영화 Discover API를 호출하는 공통 메서드
      */
-    public TmdbMovieDetailResponse getMovieDetail(Long movieId) {
-        try {
-            log.debug("Requesting movie detail for ID: {}", movieId);
+    private Mono<TmdbPagedResponse<TmdbMovieResponse>> discoverMovies(int page, String sortBy, String genreIds, String releaseDateGte, String releaseDateLte) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
+        addQueryParamIfPresent(params, SORT_BY_PARAM, sortBy);
+        addQueryParamIfPresent(params, WITH_GENRES_PARAM, genreIds);
+        addQueryParamIfPresent(params, RELEASE_DATE_GTE_PARAM, releaseDateGte);
+        addQueryParamIfPresent(params, RELEASE_DATE_LTE_PARAM, releaseDateLte);
 
-            return tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/movie/{movieId}")
-                            .queryParam(API_KEY_PARAM, apiKey)
-                            .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                            .queryParam("include_image_language", "ko,null")
-                            .queryParam("append_to_response", "credits,videos,images,recommendations,similar,keywords,watch/providers")
-                            .build(movieId))
-                    .retrieve()
-                    .bodyToMono(TmdbMovieDetailResponse.class)
-                    .block();
-
-        } catch (WebClientResponseException e) {
-            log.error("Movie detail request failed for ID: {}, status: {}, body: {}",
-                    movieId, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("영화 상세 정보 조회 실패: " + e.getMessage(), e);
-        }
+        return get("/discover/movie", new ParameterizedTypeReference<>() {}, params);
     }
 
     /**
-     * TV 시리즈 상세 정보 조회
+     * TV 시리즈 Discover API를 호출하는 공통 메서드
      */
-    public TmdbTvSeriesDetailResponse getTvSeriesDetail(Long tvId) {
-        try {
-            log.debug("Requesting TV series detail for ID: {}", tvId);
+    private Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> discoverTvSeries(int page, String sortBy, String genreIds, String firstAirDateGte, String firstAirDateLte) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
+        addQueryParamIfPresent(params, SORT_BY_PARAM, sortBy);
+        addQueryParamIfPresent(params, WITH_GENRES_PARAM, genreIds);
+        addQueryParamIfPresent(params, FIRST_AIR_DATE_GTE_PARAM, firstAirDateGte);
+        addQueryParamIfPresent(params, FIRST_AIR_DATE_LTE_PARAM, firstAirDateLte);
 
-            return tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/tv/{tvId}")
-                            .queryParam(API_KEY_PARAM, apiKey)
-                            .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                            .queryParam("include_image_language", "ko,null")
-                            .queryParam("append_to_response", "credits,videos,images,recommendations,similar,keywords,watch/providers")
-                            .build(tvId))
-                    .retrieve()
-                    .bodyToMono(TmdbTvSeriesDetailResponse.class)
-                    .block();
-
-        } catch (WebClientResponseException e) {
-            log.error("TV series detail request failed for ID: {}, status: {}, body: {}",
-                    tvId, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("TV 시리즈 상세 정보 조회 실패: " + e.getMessage(), e);
-        }
+        return get("/discover/tv", new ParameterizedTypeReference<>() {}, params);
     }
 
     /**
-     * 애니메이션 영화 발견
+     * WebClient 에러를 처리하는 공통 핸들러
      */
-    public TmdbPagedResponse<TmdbMovieResponse> discoverAnimationMovies(int page, String sortBy) {
-        return getDiscoverMoviesResponse(page, sortBy, "16", null, null);
+    private Mono<Throwable> handleApiError(ClientResponse response, String path) {
+        return response.bodyToMono(String.class)
+                .switchIfEmpty(Mono.just("Response body is empty")) // 응답 본문이 비었을 때 기본 메시지 제공
+                .flatMap(errorBody -> {
+                    log.error("TMDB API Error for path [{}], Status: {}, Body: {}",
+                            path, response.statusCode(), errorBody);
+                    // 항상 TmdbApiException을 포함하는 Mono<Throwable>을 반환합니다.
+                    return Mono.error(new TmdbApiException("TMDB API 요청 실패: " + response.statusCode()));
+                });
     }
 
     /**
-     * 현재 상영중 애니메이션 영화
+     * TMDB API의 페이지 파라미터 유효성 검사 (1 ~ 1000)
      */
-    public TmdbPagedResponse<TmdbMovieResponse> discoverNowPlayingAnimationMovies(int page) {
-        String today = java.time.LocalDate.now().toString();
-        return getDiscoverMoviesResponse(page, "popularity.desc", "16", null, today);
+    private int validatePage(int page) {
+        return Math.max(1, Math.min(page, 1000));
     }
 
     /**
-     * 상영 예정 애니메이션 영화
+     * 파라미터 값이 null이 아닐 경우에만 추가하는 유틸리티 메서드
      */
-    public TmdbPagedResponse<TmdbMovieResponse> discoverUpcomingAnimationMovies(int page) {
-        String today = java.time.LocalDate.now().toString();
-        return getDiscoverMoviesResponse(page, "release_date.asc", "16", today, null);
-    }
-
-    /**
-     * 애니메이션 TV 시리즈 발견
-     */
-    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverAnimationTvSeries(int page, String sortBy) {
-        return getDiscoverTvResponse(page, sortBy, "16", null, null);
-    }
-
-    /**
-     * 현재 방영중 애니메이션 TV 시리즈
-     */
-    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverOnTheAirAnimationTvSeries(int page) {
-        String today = java.time.LocalDate.now().toString();
-        return getDiscoverTvResponse(page, "popularity.desc", "16", null, today);
-    }
-
-    /**
-     * 방영 예정 애니메이션 TV 시리즈
-     */
-    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverUpcomingAnimationTvSeries(int page) {
-        String today = java.time.LocalDate.now().toString();
-        return getDiscoverTvResponse(page, "first_air_date.asc", "16", today, null);
-    }
-
-    /**
-     * 영화 발견 API (장르별 필터링 및 정렬)
-     */
-    public TmdbPagedResponse<TmdbMovieResponse> discoverMovies(int page, String sortBy, String genreIds) {
-        return getDiscoverMoviesResponse(page, sortBy, genreIds, null, null);
-    }
-
-    /**
-     * TV 시리즈 발견 API (장르별 필터링 및 정렬)
-     */
-    public TmdbPagedResponse<TmdbTvSeriesResponse> discoverTvSeries(int page, String sortBy, String genreIds) {
-        return getDiscoverTvResponse(page, sortBy, genreIds, null, null);
-    }
-
-    private TmdbPagedResponse<TmdbMovieResponse> getDiscoverMoviesResponse(int page, String sortBy, String genreIds,
-                                                                           String releaseDateGte, String releaseDateLte) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Discovering movies with genres: {}, sortBy: {}, page: {}, dateGte: {}, dateLte: {}",
-                    genreIds, sortBy, validatedPage, releaseDateGte, releaseDateLte);
-
-            TmdbPagedResponse<TmdbMovieResponse> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder
-                                .path("/discover/movie")
-                                .queryParam(API_KEY_PARAM, apiKey)
-                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                                .queryParam(PAGE_PARAM, validatedPage);
-
-                        if (sortBy != null && !sortBy.isEmpty()) {
-                            builder.queryParam("sort_by", sortBy);
-                        }
-
-                        if (genreIds != null && !genreIds.isEmpty()) {
-                            builder.queryParam("with_genres", genreIds);
-                        }
-
-                        if (releaseDateGte != null && !releaseDateGte.isEmpty()) {
-                            builder.queryParam("release_date.gte", releaseDateGte);
-                        }
-
-                        if (releaseDateLte != null && !releaseDateLte.isEmpty()) {
-                            builder.queryParam("release_date.lte", releaseDateLte);
-                        }
-
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {})
-                    .block();
-
-            return response;
-
-        } catch (WebClientResponseException e) {
-            log.error("Discover movies failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
-                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("영화 발견 요청 실패: " + e.getMessage(), e);
-        }
-    }
-
-    private TmdbPagedResponse<TmdbTvSeriesResponse> getDiscoverTvResponse(int page, String sortBy, String genreIds,
-                                                                          String firstAirDateGte, String firstAirDateLte) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Discovering TV series with genres: {}, sortBy: {}, page: {}, dateGte: {}, dateLte: {}",
-                    genreIds, sortBy, validatedPage, firstAirDateGte, firstAirDateLte);
-
-            TmdbPagedResponse<TmdbTvSeriesResponse> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder
-                                .path("/discover/tv")
-                                .queryParam(API_KEY_PARAM, apiKey)
-                                .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                                .queryParam(PAGE_PARAM, validatedPage);
-
-                        if (sortBy != null && !sortBy.isEmpty()) {
-                            builder.queryParam("sort_by", sortBy);
-                        }
-
-                        if (genreIds != null && !genreIds.isEmpty()) {
-                            builder.queryParam("with_genres", genreIds);
-                        }
-
-                        if (firstAirDateGte != null && !firstAirDateGte.isEmpty()) {
-                            builder.queryParam("first_air_date.gte", firstAirDateGte);
-                        }
-
-                        if (firstAirDateLte != null && !firstAirDateLte.isEmpty()) {
-                            builder.queryParam("first_air_date.lte", firstAirDateLte);
-                        }
-
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {})
-                    .block();
-
-            return response;
-
-        } catch (WebClientResponseException e) {
-            log.error("Discover TV series failed for genres: {}, sortBy: {}, page: {}, status: {}, body: {}",
-                    genreIds, sortBy, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("TV 시리즈 발견 요청 실패: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 멀티 검색 (영화 + TV 시리즈)
-     */
-    public List<TmdbMultiSearchResponse> searchMulti(String query, int page) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Searching for: {} on page: {}", query, validatedPage);
-
-            TmdbPagedResponse<TmdbMultiSearchResponse> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/search/multi")
-                            .queryParam(API_KEY_PARAM, apiKey)
-                            .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                            .queryParam(PAGE_PARAM, validatedPage)
-                            .queryParam(QUERY_PARAM, query)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<TmdbPagedResponse<TmdbMultiSearchResponse>>() {})
-                    .block();
-
-            return response != null ? response.getResults() : Collections.emptyList();
-
-        } catch (WebClientResponseException e) {
-            log.error("Multi search failed for query: {}, page: {}, status: {}, body: {}",
-                    query, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("검색 요청 실패: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 영화 검색
-     */
-    public List<TmdbMovieResponse> searchMovies(String query, int page) {
-        return getSearchPagedResponse("/search/movie", query, page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbMovieResponse>>() {});
-    }
-
-    /**
-     * TV 시리즈 검색
-     */
-    public List<TmdbTvSeriesResponse> searchTvSeries(String query, int page) {
-        return getSearchPagedResponse("/search/tv", query, page,
-                new ParameterizedTypeReference<TmdbPagedResponse<TmdbTvSeriesResponse>>() {});
-    }
-
-    private <T> List<T> getSearchPagedResponse(String path, String query, int page,
-                                               ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
-        try {
-            // page 값 검증
-            int validatedPage = Math.max(1, Math.min(page, 1000));
-
-            log.debug("Search request: {} for query: {} on page: {}", path, query, validatedPage);
-
-            TmdbPagedResponse<T> response = tmdbWebClient()
-                    .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(path)
-                            .queryParam(API_KEY_PARAM, apiKey)
-                            .queryParam(LANGUAGE_PARAM, LANGUAGE)
-                            .queryParam(PAGE_PARAM, validatedPage)
-                            .queryParam(QUERY_PARAM, query)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(typeRef)
-                    .block();
-
-            return response != null ? response.getResults() : Collections.emptyList();
-
-        } catch (WebClientResponseException e) {
-            log.error("Search request failed for path: {}, query: {}, page: {}, status: {}, body: {}",
-                    path, query, page, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("검색 요청 실패: " + e.getMessage(), e);
+    private void addQueryParamIfPresent(MultiValueMap<String, String> params, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            params.add(key, value);
         }
     }
 }
