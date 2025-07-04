@@ -6,6 +6,8 @@ import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.MediaType;
 import com.example.CineHive.dto.response.*;
 import com.example.CineHive.mapper.media.MediaMapper;
+import com.example.CineHive.entity.setting.HomeChartSetting;
+import com.example.CineHive.service.admin.AdminSettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +27,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     private final TmdbApiClient tmdbApiClient;
     private final ChartStrategyFactory chartStrategyFactory;
+    private final AdminSettingService adminSettingService;
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int SUMMARY_SIZE = 10;
 
@@ -46,28 +49,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         log.info("Searching media for query '{}' on page {}", query, page);
         return tmdbApiClient.searchMulti(query, page)
                 .map(tmdbResponse -> MediaMapper.toSearchPagedResponseFromTmdb(tmdbResponse, page, DEFAULT_PAGE_SIZE));
-    }
-
-    @Override
-    @Cacheable("chartSummary")
-    public Mono<ChartSummaryResponse> getChartSummary() {
-        log.info("Fetching chart summary for home screen.");
-        // 홈 화면에 보여줄 차트 목록 (DB나 설정 파일에서 관리 가능)
-        List<ChartType> summaryChartTypes = List.of(
-                ChartType.TRENDING_MOVIES_WEEK,
-                ChartType.TOP_RATED_TV,
-                ChartType.KOREAN_DRAMA_SERIES,
-                ChartType.PIXAR_ANIMATION_COLLECTION
-        );
-
-        List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
-                .map(this::createChartSection)
-                .toList();
-
-        return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
-                        .map(obj -> (ChartSection) obj)
-                        .collect(Collectors.toList()))
-                .map(ChartSummaryResponse::new);
     }
 
     @Override
@@ -180,5 +161,29 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .title(chartType.getDescription()) // Enum에 정의된 설명 사용
                         .content(content)
                         .build());
+    }
+
+    @Override
+    @Cacheable("chartSummary")
+    public Mono<ChartSummaryResponse> getChartSummary() {
+        log.info("Fetching chart summary for home screen from database settings.");
+
+        // [변경] DB에서 홈 화면 차트 설정을 조회
+        List<ChartType> summaryChartTypes = adminSettingService.getHomeChartSettings().stream()
+                .map(HomeChartSetting::getChartType)
+                .toList();
+
+        if (summaryChartTypes.isEmpty()) {
+            return Mono.just(new ChartSummaryResponse(List.of()));
+        }
+
+        List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
+                .map(this::createChartSection)
+                .toList();
+
+        return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
+                        .map(obj -> (ChartSection) obj)
+                        .collect(Collectors.toList()))
+                .map(ChartSummaryResponse::new);
     }
 }
