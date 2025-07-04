@@ -15,7 +15,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -37,13 +36,7 @@ public class SecurityConfig {
 
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             // 관리자 API
-            "/api/v1/admin/sync/**",
-            "/api/v1/admin/recommendations",
-            "/api/v1/admin/recommendations/cleanup",
-            "/api/v1/admin/recommendations/expiry",
-            "/api/v1/admin/recommendations/refresh",
-            "/api/v1/admin/recommendations/stats",
-            "/api/v1/admin/recommendations/threshold",
+            "/api/admin/settings/**",
 
             //마이페이지 API
             "/myInfo/**",
