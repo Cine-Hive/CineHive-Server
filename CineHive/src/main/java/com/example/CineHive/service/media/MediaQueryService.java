@@ -1,6 +1,7 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.dto.media.ChartType;
+import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
 import reactor.core.publisher.Mono;
 
@@ -55,7 +56,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse의 Mono 객체
      */
-    Mono<PagedResponse<MediaChartDto>> getPlatformChart(Long networkId, int page);
+    Mono<PagedResponse<MediaChartDto>> getPlatformChart(Platform platform, int page);
 
     /**
      * 클라이언트 필터 UI 구성을 위한 메타데이터를 조회합니다.
