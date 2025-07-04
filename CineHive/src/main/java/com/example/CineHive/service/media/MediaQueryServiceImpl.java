@@ -4,6 +4,7 @@ import com.example.CineHive.client.TmdbApiClient;
 import com.example.CineHive.dto.media.ChartProperties;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.MediaType;
+import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
 import com.example.CineHive.mapper.media.MediaMapper;
 import com.example.CineHive.entity.setting.HomeChartSetting;
@@ -71,14 +72,13 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     }
 
     @Override
-    @Cacheable(value = "platformCharts", key = "#networkId + '_' + #page")
-    public Mono<PagedResponse<MediaChartDto>> getPlatformChart(Long networkId, int page) {
-        log.info("Fetching platform chart for networkId '{}' on page {}", networkId, page);
+    @Cacheable(value = "platformCharts", key = "#platform.name() + '_' + #page")
+    public Mono<PagedResponse<MediaChartDto>> getPlatformChart(Platform platform, int page) {
+        log.info("Fetching platform chart for platform '{}' on page {}", platform.name(), page);
         ChartProperties props = ChartProperties.builder()
-                .networkId(String.valueOf(networkId))
+                .networkId(String.valueOf(platform.getId()))
                 .sortBy("popularity.desc")
                 .build();
-        // 플랫폼 차트는 TV 시리즈만 해당
         return discoverMedia(MediaType.TV, props, page);
     }
 
@@ -96,20 +96,15 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .map(g -> new GenreOptionDto(g.getId(), g.getName()))
                         .toList());
 
-        Mono<List<PlatformOptionDto>> platforms = Mono.just(List.of(
-                new PlatformOptionDto(213L, "Netflix", "/t2yyOv4xD9xpcGPNavKrDdGFEly.jpg"),
-                new PlatformOptionDto(2739L, "Disney+", "/uzKjDo45H33D4nJ2T2aC2L8b20.jpg"),
-                new PlatformOptionDto(1024L, "Amazon Prime Video", "/emthSpie82kbr2s4fM0M3aL2h29.jpg"),
-                new PlatformOptionDto(49L, "HBO", "/tuomPhY2UtuPTqqFnKMVHvroqBA.jpg"),
-                new PlatformOptionDto(2552L, "Apple TV+", "/4f3T3Z1yK2dYvKaS3d2p2y9N2B.jpg"),
-                new PlatformOptionDto(453L, "Hulu", "/pqUTCleNUiTLAVaH28p3OP_2hA.jpg"),
-                new PlatformOptionDto(3321L, "Wavve", "/1TB2a264J0gds6Teyvvr9a46L9E.jpg"),
-                new PlatformOptionDto(318L, "tvN", "/kGRavMqU4Oad2b2Hza53v2d2jaA.jpg"),
-                new PlatformOptionDto(67L, "SBS", "/j61aM2N2dK3mOo4L1so2pA14T3A.jpg"),
-                new PlatformOptionDto(62L, "KBS", "/11G3GzYg3g2iT3aB2i2b0O6om3.jpg"),
-                new PlatformOptionDto(74L, "MBC", "/wK2g6sY2yAl266eP3w5epDkw5dG.jpg"),
-                new PlatformOptionDto(269L, "JTBC", "/sL43iR2nESpgh1g3d7s2iHw3Gz.jpg")
-        ));
+        Mono<List<PlatformOptionDto>> platforms = Mono.just(
+                Arrays.stream(Platform.values())
+                        .map(p -> new PlatformOptionDto(
+                                p.name(),               // value: "NETFLIX" (API 호출용)
+                                p.getDisplayName(),     // label: "Netflix" (UI 표시용)
+                                p.getLogoPath()         // logoPath: 이미지 경로
+                        ))
+                        .collect(Collectors.toList())
+        );
 
         Mono<List<SortOptionDto>> sortOptions = Mono.just(List.of(
                 new SortOptionDto("popularity.desc", "인기순"),
