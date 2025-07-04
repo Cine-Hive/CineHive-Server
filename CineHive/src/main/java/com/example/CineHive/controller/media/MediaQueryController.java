@@ -2,6 +2,7 @@ package com.example.CineHive.controller.media;
 
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.response.*;
+import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.service.media.MediaQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,7 +57,6 @@ public class MediaQueryController {
     @GetMapping("/charts/{chartType}")
     public Mono<ApiResponse<PagedResponse<MediaChartDto>>> getCuratedChart(
             @Parameter(description = "조회할 차트의 종류",
-                    // schema를 통해 Enum 타입을 명시하여 Swagger UI에서 드롭다운으로 표시
                     schema = @Schema(implementation = ChartType.class))
             @PathVariable String chartType,
             @Parameter(description = "페이지 번호", example = "1") @RequestParam(defaultValue = "1") @Min(1) int page) {
@@ -66,31 +66,43 @@ public class MediaQueryController {
     }
 
     @Operation(summary = "장르별 차트 조회",
-            description = "특정 장르의 영화/TV 시리즈 목록을 인기순으로 조회합니다.")
+            description = "특정 장르의 영화/TV 시리즈 목록을 인기순으로 조회합니다. 사용 가능한 장르 ID 목록은 `/api/media/meta/filters` 엔드포인트를 통해 얻을 수 있습니다.")
     @GetMapping("/charts/genres/{genreId}")
     public Mono<ApiResponse<PagedResponse<MediaChartDto>>> getGenreChart(
             @Parameter(description = "TMDB 장르 ID", example = "28") @PathVariable Long genreId,
             @Parameter(description = "미디어 타입 (`movie` 또는 `tv`)", example = "movie") @RequestParam(defaultValue = "movie") String mediaType,
             @Parameter(description = "페이지 번호", example = "1") @RequestParam(defaultValue = "1") @Min(1) int page) {
-        return mediaQueryService.getGenreChart(mediaType, genreId, page)
-                .map(ApiResponse::ok);
+        return mediaQueryService.getGenreChart(mediaType, genreId, page).map(ApiResponse::ok);
     }
 
     @Operation(summary = "플랫폼별 TV 시리즈 차트 조회",
-            description = "특정 플랫폼(방송사)의 TV 시리즈 목록을 인기순으로 조회합니다.")
-    @GetMapping("/charts/platforms/{networkId}")
+            description = """
+            특정 플랫폼(방송사)의 TV 시리즈 목록을 인기순으로 조회합니다.
+            경로 변수에는 숫자 ID가 아닌, 플랫폼의 이름(Enum 상수)을 대문자로 사용합니다.
+            
+            **사용 가능한 플랫폼 이름 목록은 `/api/media/meta/filters` 엔드포인트를 통해 얻을 수 있습니다.**
+            (예: `NETFLIX`, `DISNEY_PLUS`, `TVN` 등)
+            """)
+    @GetMapping("/charts/platforms/{platform}")
     public Mono<ApiResponse<PagedResponse<MediaChartDto>>> getPlatformChart(
-            @Parameter(description = "TMDB 네트워크 ID", example = "213") @PathVariable Long networkId,
+            @Parameter(description = "조회할 플랫폼의 이름 (예: NETFLIX)",
+                    schema = @Schema(implementation = Platform.class))
+            @PathVariable Platform platform,
             @Parameter(description = "페이지 번호", example = "1") @RequestParam(defaultValue = "1") @Min(1) int page) {
-        return mediaQueryService.getPlatformChart(networkId, page)
-                .map(ApiResponse::ok);
+        return mediaQueryService.getPlatformChart(platform, page).map(ApiResponse::ok);
     }
 
     @Operation(summary = "필터 메타데이터 조회",
-            description = "검색/탐색 필터 UI 구성에 필요한 메타데이터(장르, 플랫폼 목록 등)를 제공합니다.")
+            description = """
+            클라이언트에서 필터링 UI를 동적으로 구성하는 데 필요한 모든 데이터를 제공합니다.
+            앱 실행 시 한 번 호출하여 캐시해두고 사용하는 것이 좋습니다.
+            
+            **응답 데이터 사용법:**
+            - **`label`**: UI에 사용자에게 보여줄 이름입니다. (예: "Netflix")
+            - **`value`**: 실제 API 호출 시 경로 변수나 파라미터로 사용될 값입니다. (예: "NETFLIX")
+            """)
     @GetMapping("/meta/filters")
     public Mono<ApiResponse<FilterMetadataResponse>> getFilterMetadata() {
-        return mediaQueryService.getFilterMetadata()
-                .map(ApiResponse::ok);
+        return mediaQueryService.getFilterMetadata().map(ApiResponse::ok);
     }
 }
