@@ -30,11 +30,10 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     private final TmdbApiClient tmdbApiClient;
     private final ChartStrategyFactory chartStrategyFactory;
     private final AdminSettingService adminSettingService;
-    private final PlatformMetadataService platformMetadataService; // 신규 서비스 주입
+    private final PlatformMetadataService platformMetadataService;
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int SUMMARY_SIZE = 10;
 
-    // getMediaDetail, searchMedia, getCuratedChart, getGenreChart, getPlatformChart 메서드는 이전과 동일
     @Override
     @Cacheable(value = "mediaDetails", key = "#mediaType + '_' + #id")
     public Mono<MediaDetailDto> getMediaDetail(Long id, String mediaType) {
@@ -113,7 +112,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         Mono<List<GenreOptionDto>> tvGenres = tmdbApiClient.getTvGenres()
                 .map(res -> res.getGenres().stream().map(g -> new GenreOptionDto(g.getId(), g.getName())).toList());
 
-        // [수정] 플랫폼 정보 조회를 PlatformMetadataService에 위임
         Mono<List<PlatformOptionDto>> platforms = platformMetadataService.getPlatformOptions();
 
         Mono<List<SortOptionDto>> sortOptions = Mono.just(List.of(
