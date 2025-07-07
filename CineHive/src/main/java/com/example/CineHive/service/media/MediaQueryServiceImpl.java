@@ -1,14 +1,15 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.client.TmdbApiClient;
+import com.example.CineHive.entity.setting.HomeChartSetting;
 import com.example.CineHive.dto.media.ChartProperties;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.MediaType;
 import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
 import com.example.CineHive.mapper.media.MediaMapper;
-import com.example.CineHive.entity.setting.HomeChartSetting;
 import com.example.CineHive.service.admin.AdminSettingService;
+import com.example.CineHive.service.meta.PlatformMetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,9 +30,11 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     private final TmdbApiClient tmdbApiClient;
     private final ChartStrategyFactory chartStrategyFactory;
     private final AdminSettingService adminSettingService;
+    private final PlatformMetadataService platformMetadataService; // 신규 서비스 주입
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int SUMMARY_SIZE = 10;
 
+    // getMediaDetail, searchMedia, getCuratedChart, getGenreChart, getPlatformChart 메서드는 이전과 동일
     @Override
     @Cacheable(value = "mediaDetails", key = "#mediaType + '_' + #id")
     public Mono<MediaDetailDto> getMediaDetail(Long id, String mediaType) {
@@ -50,6 +53,25 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         log.info("Searching media for query '{}' on page {}", query, page);
         return tmdbApiClient.searchMulti(query, page)
                 .map(tmdbResponse -> MediaMapper.toSearchPagedResponseFromTmdb(tmdbResponse, page, DEFAULT_PAGE_SIZE));
+    }
+
+    @Override
+    @Cacheable("chartSummary")
+    public Mono<ChartSummaryResponse> getChartSummary() {
+        log.info("Fetching chart summary for home screen from database settings.");
+        List<ChartType> summaryChartTypes = adminSettingService.getHomeChartSettings().stream()
+                .map(HomeChartSetting::getChartType)
+                .toList();
+        if (summaryChartTypes.isEmpty()) {
+            return Mono.just(new ChartSummaryResponse(List.of()));
+        }
+        List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
+                .map(this::createChartSection)
+                .toList();
+        return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
+                        .map(obj -> (ChartSection) obj)
+                        .collect(Collectors.toList()))
+                .map(ChartSummaryResponse::new);
     }
 
     @Override
@@ -87,24 +109,12 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     public Mono<FilterMetadataResponse> getFilterMetadata() {
         log.info("Fetching filter metadata.");
         Mono<List<GenreOptionDto>> movieGenres = tmdbApiClient.getMovieGenres()
-                .map(res -> res.getGenres().stream()
-                        .map(g -> new GenreOptionDto(g.getId(), g.getName()))
-                        .toList());
-
+                .map(res -> res.getGenres().stream().map(g -> new GenreOptionDto(g.getId(), g.getName())).toList());
         Mono<List<GenreOptionDto>> tvGenres = tmdbApiClient.getTvGenres()
-                .map(res -> res.getGenres().stream()
-                        .map(g -> new GenreOptionDto(g.getId(), g.getName()))
-                        .toList());
+                .map(res -> res.getGenres().stream().map(g -> new GenreOptionDto(g.getId(), g.getName())).toList());
 
-        Mono<List<PlatformOptionDto>> platforms = Mono.just(
-                Arrays.stream(Platform.values())
-                        .map(p -> new PlatformOptionDto(
-                                p.name(),               // value: "NETFLIX" (API 호출용)
-                                p.getDisplayName(),     // label: "Netflix" (UI 표시용)
-                                p.getLogoPath()         // logoPath: 이미지 경로
-                        ))
-                        .collect(Collectors.toList())
-        );
+        // [수정] 플랫폼 정보 조회를 PlatformMetadataService에 위임
+        Mono<List<PlatformOptionDto>> platforms = platformMetadataService.getPlatformOptions();
 
         Mono<List<SortOptionDto>> sortOptions = Mono.just(List.of(
                 new SortOptionDto("popularity.desc", "인기순"),
@@ -122,17 +132,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .build());
     }
 
-    /**
-     * 모든 필터 기반 조회의 중심이 되는 비공개 메서드.
-     * 외부에서는 직접 호출하지 않고, getGenreChart, getPlatformChart 등에서 재사용합니다.
-     *
-     * @param type       미디어 타입 (MOVIE 또는 TV)
-     * @param properties 필터 조건
-     * @param page       페이지 번호
-     * @return 페이지 정보가 포함된 차트 DTO의 Mono
-     */
     private Mono<PagedResponse<MediaChartDto>> discoverMedia(MediaType type, ChartProperties properties, int page) {
-        // 상세 로그는 debug 레벨로 남겨서 평소에는 보이지 않도록 함
         log.debug("Discovering {} with properties {} on page {}", type, properties, page);
         return switch (type) {
             case MOVIE -> tmdbApiClient.discoverMovies(page, properties)
@@ -142,43 +142,13 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         };
     }
 
-    /**
-     * 홈 화면 요약을 위한 개별 차트 섹션을 생성하는 비공개 헬퍼 메서드.
-     *
-     * @param chartType 생성할 차트의 타입
-     * @return 차트 섹션 DTO의 Mono
-     */
     private Mono<ChartSection> createChartSection(ChartType chartType) {
-        return getCuratedChart(chartType, 1) // 각 차트의 첫 페이지만 조회
+        return getCuratedChart(chartType, 1)
                 .map(pagedResponse -> pagedResponse.getContent().stream().limit(SUMMARY_SIZE).toList())
                 .map(content -> ChartSection.builder()
                         .chartType(chartType.name())
-                        .title(chartType.getDescription()) // Enum에 정의된 설명 사용
+                        .title(chartType.getDescription())
                         .content(content)
                         .build());
-    }
-
-    @Override
-    @Cacheable("chartSummary")
-    public Mono<ChartSummaryResponse> getChartSummary() {
-        log.info("Fetching chart summary for home screen from database settings.");
-
-        // [변경] DB에서 홈 화면 차트 설정을 조회
-        List<ChartType> summaryChartTypes = adminSettingService.getHomeChartSettings().stream()
-                .map(HomeChartSetting::getChartType)
-                .toList();
-
-        if (summaryChartTypes.isEmpty()) {
-            return Mono.just(new ChartSummaryResponse(List.of()));
-        }
-
-        List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
-                .map(this::createChartSection)
-                .toList();
-
-        return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
-                        .map(obj -> (ChartSection) obj)
-                        .collect(Collectors.toList()))
-                .map(ChartSummaryResponse::new);
     }
 }
