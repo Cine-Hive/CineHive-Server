@@ -164,13 +164,18 @@ public class TmdbApiClient {
         return get("/discover/tv", new ParameterizedTypeReference<>() {}, params);
     }
 
-    // --- 메타데이터 API (신규 추가) ---
+    // --- 메타데이터 API ---
     public Mono<TmdbGenreListResponse> getMovieGenres() {
         return get("/genre/movie/list", TmdbGenreListResponse.class, new LinkedMultiValueMap<>());
     }
 
     public Mono<TmdbGenreListResponse> getTvGenres() {
         return get("/genre/tv/list", TmdbGenreListResponse.class, new LinkedMultiValueMap<>());
+    }
+
+    public Mono<TmdbNetworkImagesResponse> getNetworkImages(Long networkId) {
+        String path = "/network/" + networkId + "/images";
+        return get(path, TmdbNetworkImagesResponse.class, new LinkedMultiValueMap<>());
     }
 
 
