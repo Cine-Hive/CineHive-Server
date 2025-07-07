@@ -15,12 +15,10 @@ public class ChartProperties {
     private final String keywordId;
     private final String networkId;
     private final String withOriginalLanguage;
-
-    // --- 신규 필터 필드 추가 ---
     private final String releaseDateGte; // ~부터 (Greater than or equal)
     private final String releaseDateLte; // ~까지 (Less than or equal)
     private final String firstAirDateGte;
     private final String firstAirDateLte;
-    private final String withCast; // 출연진 ID
-    private final String numberOfSeasons; // 시즌 수
+    private final String withCast;
+    private final String numberOfSeasons;
 }
