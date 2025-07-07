@@ -17,7 +17,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
-@Tag(name = "Admin: Settings Controller", description = "관리자용 설정 API")
+@Tag(name = "Admin Settings Controller", description = "관리자용 설정 API")
 @RestController
 @RequestMapping("/api/admin/settings")
 @RequiredArgsConstructor
