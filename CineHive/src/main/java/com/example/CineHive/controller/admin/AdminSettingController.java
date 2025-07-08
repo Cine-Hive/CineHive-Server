@@ -19,7 +19,7 @@ import java.util.List;
 
 @Tag(name = "Admin Settings Controller", description = "관리자용 설정 API")
 @RestController
-@RequestMapping("/api/admin/settings")
+@RequestMapping("/api/v1/admin/settings")
 @RequiredArgsConstructor
 // TODO: Spring Security를 사용하여 이 컨트롤러에 대한 접근을 'ROLE_ADMIN'으로 제한해야 합니다.
 // @PreAuthorize("hasRole('ADMIN')")
