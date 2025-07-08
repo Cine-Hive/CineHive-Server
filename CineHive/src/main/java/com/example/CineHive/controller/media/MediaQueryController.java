@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "", description = "영화, TV 시리즈 등 다양한 미디어 콘텐츠를 탐색, 검색, 조회하기 위한 핵심 API입니다.")
+@Tag(name = "Media Query Controller", description = "영화, TV 시리즈 등 다양한 미디어 콘텐츠를 탐색, 검색, 조회하기 위한 핵심 API입니다.")
 @Validated
 @RestController
 @RequestMapping("/api/v1/media")
