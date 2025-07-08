@@ -178,7 +178,6 @@ public class TmdbApiClient {
         return get(path, TmdbNetworkImagesResponse.class, new LinkedMultiValueMap<>());
     }
 
-
     // --- Private Helper Methods ---
 
     private <T> Mono<TmdbPagedResponse<T>> getPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
