@@ -37,12 +37,16 @@ public class SecurityConfig {
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             // 관리자 API
             "/api/v1/admin/settings/**",
+            "/api/v1/admin/banners/**",
 
             //마이페이지 API
             "/myInfo/**",
 
             // 미디어 API
             "/api/v1/media/**",
+
+            // 사용자요 배너 조회 API
+            "api/v1/banners",
 
             // 게시판 API
             "/boards", "/boards/**",
