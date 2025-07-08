@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
         description = "영화, TV 시리즈 등 다양한 미디어 콘텐츠를 탐색, 검색, 조회기능을 제공하는 API")
 @Validated
 @RestController
-@RequestMapping("/api/media")
+@RequestMapping("/api/v1/media")
 @RequiredArgsConstructor
 public class MediaQueryController {
 
