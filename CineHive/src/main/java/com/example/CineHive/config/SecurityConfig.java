@@ -36,43 +36,36 @@ public class SecurityConfig {
 
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             // 관리자 API
-            "/api/admin/settings/**",
+            "/api/v1/admin/settings/**",
 
             //마이페이지 API
             "/myInfo/**",
 
-            // 애니메이션 API
-            "/api/v1/animations/**",
-            
-            // 미디어 API (통합)
+            // 미디어 API
             "/api/v1/media/**",
-            "/api/media/**",
-
-            // OTT 인기 콘텐츠 API
-            "/api/ott/**",
 
             // 게시판 API
             "/boards", "/boards/**",
-            
+
             // 즐겨찾기 API
             "/bookmark/{boardId}", "/bookmark/{boardId}/count",
-            
+
             // 댓글 API
             "/comment/{boardId}", "/comment/{boardId}/**",
-            
+
             // 좋아요/싫어요 API
             "/like/{boardId}", "/like/{boardId}/count",
             "/dislike/{boardId}", "/dislike/{boardId}/count",
-            
+
             // 신고 API
             "/report/{boardId}",
-            
+
             // 감상평 API
             "/reply", "/reply/**",
             "/reply/bookmark/count", "/reply/bookmark/toggle",
             "/reply/judge/count/dislike", "/reply/judge/count/like",
             "/reply/judge/dislike", "/reply/judge/like",
-            
+
             // 인증 API
             "/api/auth/kakao", "/api/auth/kakao/**",
             "/api/auth/google", "/api/auth/google/**",
@@ -118,12 +111,12 @@ public class SecurityConfig {
     public JwtRequestFilter jwtRequestFilter() {
         return new JwtRequestFilter();
     }
-    
+
     @Bean
     public CorsFilter corsFilter() {
         return new CorsFilter(corsConfigurationSource());
     }
-    
+
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
