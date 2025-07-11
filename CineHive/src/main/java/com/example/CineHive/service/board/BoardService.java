@@ -10,7 +10,6 @@ import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.exception.BoardNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.mapper.CommentMapper;
-import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.repository.board.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
