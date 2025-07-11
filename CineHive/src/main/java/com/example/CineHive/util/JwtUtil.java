@@ -1,83 +1,70 @@
 package com.example.CineHive.util;
 
-import com.example.CineHive.exception.TokenExpiredException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component
 @Slf4j
 public class JwtUtil {
 
-    @Value("${jwt.secret.key}")
-    private String secretKey;
-
+    private final SecretKey secretKey;
     private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1시간
 
+    public JwtUtil(@Value("${jwt.secret.key}") String secret) {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateToken(String email) {
-        log.info("Generating token for email: {}", email);
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, email);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        try {
-            // secretKey를 Base64 디코딩 후 사용하여 SecretKey 생성
-            byte[] decodedKey = Base64.getDecoder().decode(secretKey);
-            SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
-
-            String token = Jwts.builder()
-                    .setClaims(claims)
-                    .setSubject(subject)
-                    .setIssuedAt(new Date(System.currentTimeMillis()))
-                    .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                    .signWith(key)
-                    .compact();
-
-            log.info("Generated JWT: {}", token);
-            return token;
-        } catch (Exception e) {
-            log.error("Error generating JWT: {}", e.getMessage(), e);
-            throw e;
-        }
+        return Jwts.builder()
+                .claims(claims)
+                .subject(subject)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(this.secretKey)
+                .compact();
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
-        // secretKey를 Base64 디코딩 후 사용하여 SecretKey 생성
-        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
-        SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
-
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(this.secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    public boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+    public Boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    public boolean validateToken(String token, String email) {
-        final String username = extractUsername(token);
-        if (isTokenExpired(token)) {
-            throw new TokenExpiredException("Token has expired");
-        }
-        return (username.equals(email) && !isTokenExpired(token));
+    public Boolean validateToken(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return (username.equals(extractedUsername) && !isTokenExpired(token));
     }
-
 }
