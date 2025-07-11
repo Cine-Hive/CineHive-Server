@@ -4,7 +4,6 @@ import com.example.CineHive.dto.oauth.naver.NaverUserInfo;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.service.oauth.NaverUserService;
-import com.example.CineHive.service.user.UserService;
 import com.example.CineHive.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
