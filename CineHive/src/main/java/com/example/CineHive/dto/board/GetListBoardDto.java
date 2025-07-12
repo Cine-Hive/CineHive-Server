@@ -1,23 +1,15 @@
 package com.example.CineHive.dto.board;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.Builder;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class GetListBoardDto {
-    private Long id;
-    private String brdTitle;
-    private String brdContent;
-    private String memNickname;
-    private LocalDateTime brdRegDate; // 등록 날짜
-    private int likeCount; // 좋아요 수
-    private int views;
-
-}
+@Builder
+public record GetListBoardDto(
+        Long id,
+        String brdTitle,
+        String memNickname,
+        LocalDateTime createdAt,
+        int views,
+        int likeCount,
+        int commentCount
+) {}
