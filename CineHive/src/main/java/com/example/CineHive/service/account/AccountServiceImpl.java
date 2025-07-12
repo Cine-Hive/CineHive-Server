@@ -2,9 +2,12 @@ package com.example.CineHive.service.account;
 
 import com.example.CineHive.dto.account.AccountInfoResponseDto;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.repository.board.*;
+import com.example.CineHive.repository.board.BoardRepository;
+import com.example.CineHive.repository.board.BookmarkRepository;
+import com.example.CineHive.repository.board.CommentRepository;
+import com.example.CineHive.repository.board.DislikeRepository;
+import com.example.CineHive.repository.board.LikeRepository;
 import com.example.CineHive.repository.member.MemberRepository;
-import com.example.CineHive.repository.reply.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,15 +27,11 @@ public class AccountServiceImpl implements AccountService {
     private final PasswordEncoder passwordEncoder;
 
     // 회원 탈퇴 시 연관 데이터 삭제를 위한 리포지토리들
-    private final ReplyLikeRepository replyLikeRepository;
-    private final ReplyDislikeRepository replyDislikeRepository;
     private final BookmarkRepository bookmarkRepository;
-    private final DisLikeRepository disLikeRepository;
+    private final DislikeRepository disLikeRepository;
     private final LikeRepository likeRepository;
-    private final ReplyRepository replyRepository;
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
-    private final ReplyBookmarkRepository replyBookmarkRepository;
 
     @Override
     public AccountInfoResponseDto getAccountInfo(String email) {
@@ -77,15 +76,12 @@ public class AccountServiceImpl implements AccountService {
         log.warn("Deleting all data for member: {}", email);
 
         // 연관된 모든 데이터 삭제
-        // 실제 서비스에서는 성능과 데이터 무결성을 위해 '소프트 삭제'나 비동기 처리를 고려해야 합니다.
-        replyLikeRepository.deleteByMember_Email(email);
-        replyDislikeRepository.deleteByMember_Email(email);
+        // 주의: 이 로직은 매우 파괴적이므로 신중하게 다뤄야 합니다.
+        // 실제 서비스에서는 회원 상태를 DEACTIVATED로 바꾸는 '소프트 삭제'를 더 권장합니다.
         bookmarkRepository.deleteByMember_Email(email);
-        replyBookmarkRepository.deleteByMember_Email(email);
         likeRepository.deleteByMember_Email(email);
         disLikeRepository.deleteByMember_Email(email);
         commentRepository.deleteByMember_Email(email);
-        replyRepository.deleteByMember_Email(email);
         boardRepository.deleteByMember_Email(email);
 
         // 마지막으로 회원 정보 삭제
