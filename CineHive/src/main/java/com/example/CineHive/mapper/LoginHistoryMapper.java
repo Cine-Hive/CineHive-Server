@@ -16,8 +16,8 @@ public class LoginHistoryMapper {
 
         return new LoginHistoryDto(
                 loginHistory.getId(),
-                memberId, // [수정] 연관된 Member 객체에서 ID를 가져옵니다.
-                memberNickname, // [추가] 연관된 Member 객체에서 닉네임을 가져옵니다.
+                memberId,
+                memberNickname,
                 loginHistory.getFirstLoginDate(),
                 loginHistory.getLastLoginDate(),
                 loginHistory.getBrowser()
