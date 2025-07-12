@@ -1,16 +1,17 @@
 package com.example.CineHive.repository.board;
 
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface CommentRepository extends JpaRepository <Comment,Long> {
-    List<Comment> findByUserAndBoard(User user, Board board);
+@Repository
+public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    List<Comment> findByBoard(Board board);
+    // [추가된 부분] Board의 ID를 기준으로 모든 Comment를 찾는 쿼리 메서드
+    List<Comment> findByBoard_Id(Long boardId);
 
-    void deleteByUser_MemEmail(String memEmail);
+    // 회원 탈퇴를 위한 메서드 (AccountService에서 사용)
+    void deleteByMember_Email(String email);
 }

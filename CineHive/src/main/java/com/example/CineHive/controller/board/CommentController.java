@@ -1,96 +1,70 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.dto.comment.CommentDto;
+import com.example.CineHive.dto.comment.CreateCommentRequest;
+import com.example.CineHive.dto.comment.UpdateCommentRequest;
+import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.service.board.CommentService;
-import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-@Tag(name = "Comment Controller", description = "게시글 댓글의 CURD 기능을 제공하는 API ")
+@Tag(name = "Comment Controller", description = "게시글 댓글 CRUD API")
 @RestController
-@RequestMapping("/comment")
+@RequestMapping("/api/v1/boards/{boardId}/comments")
+@RequiredArgsConstructor
 public class CommentController {
 
-    @Autowired
-    private CommentService commentService;
+    private final CommentService commentService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    /* 댓글 추가 */
-    @Operation(summary = "댓글 등록", description = "특정 게시글에 대한 댓글을 추가")
-    @PostMapping("/{boardId}")
-    public ResponseEntity<CommentDto> addComment(
+    @Operation(summary = "댓글 작성", description = "특정 게시글에 새로운 댓글을 등록합니다.")
+    @PostMapping
+    public ResponseEntity<ApiResponse<CommentDto>> addComment(
             @PathVariable Long boardId,
-            @RequestBody CommentDto commentDto,
-            HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+            @Valid @RequestBody CreateCommentRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-            CommentDto createdComment = commentService.addComment(boardId, memEmail, commentDto.getContent());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        CommentDto createdComment = commentService.addComment(boardId, request, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdComment));
     }
 
-    /* 댓글 조회 */
-    @Operation(summary = "댓글 조회", description = "특정 게시글의 전채 댓글 수 조회")
-    @GetMapping("/{boardId}/board/all")
-    public ResponseEntity<List<CommentDto>> getCommentsByBoard(@PathVariable Long boardId) {
+    @Operation(summary = "게시글의 모든 댓글 조회", description = "특정 게시글에 달린 모든 댓글 목록을 조회합니다.")
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<CommentDto>>> getCommentsByBoard(@PathVariable Long boardId) {
         List<CommentDto> comments = commentService.getCommentsByBoard(boardId);
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok(ApiResponse.ok(comments));
     }
 
-    /* 댓글 삭제 */
-    @Operation(summary = "댓글 삭제", description = "사용자가 등록한 특정 게시글의 댓글을 삭제")
-    @DeleteMapping("/{boardId}/board/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long boardId, @PathVariable Long commentId, HttpServletRequest request) {
-        // Authorization 헤더에서 토큰 추출
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-            commentService.deleteComment(boardId, commentId, memEmail);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-
-    /* 댓글 수정 */
-    @Operation(summary = "댓글 수정", description = "사용자가 등록한 특정 게시글의 댓글을 수정")
-    @PutMapping("/{boardId}/board/{commentId}")
-    public ResponseEntity<CommentDto> updateComment(
-            @PathVariable Long boardId,
+    @Operation(summary = "댓글 수정", description = "자신이 작성한 댓글의 내용을 수정합니다.")
+    @PutMapping("/{commentId}")
+    public ResponseEntity<ApiResponse<CommentDto>> updateComment(
+            @PathVariable Long boardId, // boardId는 경로에 있지만, 권한 검증 등에 사용될 수 있으므로 유지
             @PathVariable Long commentId,
-            @RequestBody CommentDto commentDto,
-            HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+            @Valid @RequestBody UpdateCommentRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-            CommentDto updatedComment = commentService.updateComment(boardId, commentId, commentDto, memEmail);
-            return ResponseEntity.ok(updatedComment);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        CommentDto updatedComment = commentService.updateComment(commentId, request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(updatedComment));
+    }
+
+    @Operation(summary = "댓글 삭제", description = "자신이 작성한 댓글을 삭제합니다.")
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<ApiResponse<Map<String, String>>> deleteComment(
+            @PathVariable Long boardId, // boardId는 경로에 있지만, 권한 검증 등에 사용될 수 있으므로 유지
+            @PathVariable Long commentId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        commentService.deleteComment(commentId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "댓글이 성공적으로 삭제되었습니다.")));
     }
 }
