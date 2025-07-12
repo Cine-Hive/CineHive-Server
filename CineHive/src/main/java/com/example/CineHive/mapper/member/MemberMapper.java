@@ -15,26 +15,20 @@ public final class MemberMapper {
     public static Member toEntity(MemberRegisterRequestDto dto, PasswordEncoder passwordEncoder) {
         return Member.builder()
                 .email(dto.email())
-                .password(passwordEncoder.encode(dto.password())) // 서비스에서 암호화
+                .password(passwordEncoder.encode(dto.password()))
                 .name(dto.name())
                 .nickname(dto.nickname())
                 .gender(Gender.valueOf(dto.gender().toUpperCase()))
-                .genres(new HashSet<>(dto.genres())) // List를 Set으로 변환
+                .genres(new HashSet<>(dto.genres()))
                 .build();
     }
 
     public static LoginResponseDto toLoginResponseDto(Member member, String token) {
-        LoginResponseDto.MemberInfo memberInfo = LoginResponseDto.MemberInfo.builder()
-                .id(member.getId())
-                .email(member.getEmail())
-                .name(member.getName())
-                .nickname(member.getNickname())
-                .gender(member.getGender().name())
-                .genres(member.getGenres().stream().toList()) // Set을 List로 변환
-                .build();
+        LoginResponseDto.MemberInfo memberInfo = new LoginResponseDto.MemberInfo(member);
 
         return LoginResponseDto.builder()
                 .token(token)
+                .isNewMember(false) // 일반 로그인이므로 항상 기존 회원
                 .member(memberInfo)
                 .build();
     }

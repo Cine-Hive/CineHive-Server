@@ -37,4 +37,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * @return 존재하면 true, 아니면 false
      */
     boolean existsByNickname(String nickname);
+
+    void deleteByEmail(String email);
 }
