@@ -1,71 +1,63 @@
 package com.example.CineHive.controller.board;
 
+import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.service.board.BookmarkService;
-import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Bookmark Controller", description = "게시글의 즐겨찾기를 등록, 취소 및 전체 갯수 조회 기능을 제공하는 API")
+import java.util.Map;
+
+@Tag(name = "Bookmark Controller", description = "게시글 북마크 관련 API")
 @RestController
-@RequestMapping("/bookmark")
+@RequestMapping("/api/v1/boards/{boardId}/bookmarks")
+@RequiredArgsConstructor
 public class BookmarkController {
 
-    @Autowired
-    private BookmarkService bookmarkService;
+    private final BookmarkService bookmarkService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+    @Operation(summary = "게시글 북마크 추가", description = "특정 게시글을 북마크합니다.")
+    @PostMapping
+    public ResponseEntity<ApiResponse<Map<String, String>>> addBookmark(
+            @PathVariable Long boardId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    // 북마크 추가
-    @Operation(summary = "즐겨찾기 등록", description = "특정 게시글의 즐겨찾기를 등록")
-    @PostMapping("/{boardId}")
-    public ResponseEntity<String> addBookmark(@PathVariable Long boardId, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        bookmarkService.addBookmark(boardId, userDetails.getUsername());
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-
-            boolean isBookmarked = bookmarkService.addBookmark(memEmail, boardId);
-            return ResponseEntity.ok(isBookmarked ? "Bookmarked" : "Already Exists");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "게시글을 북마크했습니다.")));
     }
 
-    // 북마크 삭제
-    @Operation(summary = "즐겨찾기 취소", description = "특정 게시글에 대해 등록한 즐겨찾기를 삭제")
-    @DeleteMapping("/{boardId}")
-    public ResponseEntity<String> removeBookmark(@PathVariable Long boardId, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+    @Operation(summary = "게시글 북마크 취소", description = "특정 게시글의 북마크를 취소합니다.")
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Map<String, String>>> removeBookmark(
+            @PathVariable Long boardId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
+        // [수정된 부분] 파라미터 순서를 올바르게 전달합니다.
+        bookmarkService.removeBookmark(boardId, userDetails.getUsername());
 
-            boolean isRemoved = bookmarkService.removeBookmark(memEmail, boardId);
-            return isRemoved ? ResponseEntity.ok("Unbookmarked") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bookmark Not Found");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "북마크를 취소했습니다.")));
     }
 
-    // 특정 게시글의 북마크 개수 조회
-    @Operation(summary = "즐겨찾기 수 조회", description = "특정 게시글에 대해 전체 즐겨찾기 수 조회")
-    @GetMapping("/{boardId}/count")
-    public ResponseEntity<Integer> getBookmarkCount(@PathVariable Long boardId) {
-        int bookmarkCount = bookmarkService.getBookmarkCount(boardId);
-        return ResponseEntity.ok(bookmarkCount);
+    @Operation(summary = "게시글 북마크 개수 조회", description = "특정 게시글의 북마크 개수를 조회합니다.")
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> getBookmarkCount(@PathVariable Long boardId) {
+        int count = bookmarkService.getBookmarkCount(boardId);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("bookmarkCount", count)));
+    }
+
+    @Operation(summary = "사용자의 북마크 여부 확인", description = "현재 로그인한 사용자가 특정 게시글을 북마크했는지 확인합니다.")
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> getBookmarkStatus(
+            @PathVariable Long boardId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        boolean isBookmarked = bookmarkService.isBookmarkedByUser(boardId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("isBookmarked", isBookmarked)));
     }
 }
