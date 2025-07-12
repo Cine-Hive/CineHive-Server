@@ -1,119 +1,69 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.BoardSearchDto;
-import com.example.CineHive.dto.board.CreateBoardDto;
+import com.example.CineHive.dto.board.CreateBoardRequest;
 import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.mapper.BoardMapper;
-import com.example.CineHive.mapper.CommentMapper;
-import com.example.CineHive.repository.board.BoardRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.example.CineHive.dto.board.UpdateBoardRequest;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Service
-public class BoardService {
+/**
+ * 게시글(Board) 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.
+ * 컨트롤러는 이 인터페이스에 의존하여 실제 구현과 분리됩니다.
+ */
+public interface BoardService {
 
-    @Autowired
-    private BoardRepository boardRepository;
-    @Autowired
-    private UserRepository userRepository;
+    /**
+     * 새로운 게시글을 생성합니다.
+     *
+     * @param request     게시글 생성에 필요한 데이터(제목, 내용)를 담은 DTO
+     * @param memberEmail 게시글을 작성하는 회원의 이메일 (인증된 사용자 정보)
+     * @return 생성된 게시글의 상세 정보를 담은 DTO
+     */
+    BoardDto createBoard(CreateBoardRequest request, String memberEmail);
 
-    /*게시글 생성 */
-    public Board createBoard(CreateBoardDto createBoardDto) {
-        User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + createBoardDto.getMemEmail()));
+    /**
+     * ID를 기준으로 특정 게시글의 상세 정보를 조회합니다.
+     * 이 메서드 호출 시 해당 게시글의 조회수가 1 증가합니다.
+     *
+     * @param boardId 조회할 게시글의 고유 ID
+     * @return 게시글의 상세 정보를 담은 DTO
+     */
+    BoardDto getBoardById(Long boardId);
 
-        Board board = new Board();
-        board.setBrdTitle(createBoardDto.getBrdTitle());
-        board.setBrdContent(createBoardDto.getBrdContent());
-        board.setUser(user);
+    /**
+     * 기존 게시글의 내용을 수정합니다.
+     * 내부적으로 수정 권한이 있는지 확인하는 로직이 포함됩니다.
+     *
+     * @param boardId     수정할 게시글의 고유 ID
+     * @param request     수정할 게시글의 데이터(제목, 내용)를 담은 DTO
+     * @param memberEmail 수정을 요청하는 회원의 이메일 (인증된 사용자 정보)
+     * @return 수정된 게시글의 상세 정보를 담은 DTO
+     */
+    BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail);
 
-        return boardRepository.save(board);
-    }
+    /**
+     * 특정 게시글을 삭제합니다.
+     * 내부적으로 삭제 권한이 있는지 확인하는 로직이 포함됩니다.
+     *
+     * @param boardId     삭제할 게시글의 고유 ID
+     * @param memberEmail 삭제를 요청하는 회원의 이메일 (인증된 사용자 정보)
+     */
+    void deleteBoard(Long boardId, String memberEmail);
 
-    /*게시글 상세글 조회 */
-    public BoardDto getBoardPostId(Long postId) {
-        Board board = boardRepository.findById(postId)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+    /**
+     * 모든 게시글의 목록을 조회합니다.
+     * 게시글 목록 화면에 표시될 요약된 정보를 반환합니다.
+     *
+     * @return {@code GetListBoardDto} 객체들의 리스트
+     */
+    List<GetListBoardDto> getAllBoards();
 
-        board.increaseViews();
-        boardRepository.save(board);
-
-        BoardDto boardDto = BoardMapper.convertToDto(board);
-
-        CommentMapper commentMapper = new CommentMapper();
-        List<CommentDto> commentDtos = board.getComments().stream()
-                .map(commentMapper::toDTO)
-                .collect(Collectors.toList());
-        boardDto.setComments(commentDtos);
-
-        return boardDto;
-    }
-
-
-    /*게시글 수정 */
-    public Board updateBoard(Long id, String brdTitle, String brdContent, String memEmail) {
-        Optional<Board> optionalBoard = boardRepository.findById(id);
-        if (optionalBoard.isPresent()) {
-            Board board = optionalBoard.get();
-
-            if (!board.getUser().getMemEmail().equals(memEmail)) {
-                throw new RuntimeException("사용자가 이 게시글을 수정할 권한이 없습니다.");
-            }
-
-            board.setBrdTitle(brdTitle);
-            board.setBrdContent(brdContent);
-            return boardRepository.save(board);
-        } else {
-            throw new RuntimeException("게시글을 찾을 수 없습니다.");
-        }
-    }
-
-
-    /* 게시글 삭제 */
-    public Board deleteBoard(Long id, String memEmail) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
-
-        if (!board.getUser().getMemEmail().equals(memEmail)) {
-            throw new RuntimeException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
-        }
-
-        boardRepository.delete(board);
-        return board;
-    }
-
-    /*게시글 전체 목록 조회 */
-    public List<GetListBoardDto> getAllBoard() {
-        List<Board> boards = boardRepository.findAll();
-        return boards.stream()
-                .map(board -> {
-                    GetListBoardDto dto = new GetListBoardDto();
-                    dto.setId(board.getId());
-                    dto.setBrdTitle(board.getBrdTitle());
-                    dto.setBrdContent(board.getBrdContent());
-                    dto.setMemNickname(board.getUser().getMemNickname());
-                    dto.setBrdRegDate(board.getBrdRegDate());
-                    dto.setLikeCount(board.getLikeCount());
-                    dto.setViews(board.getViews());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-    }
-
-
-    public List<BoardSearchDto> searchBoards(String keyword) {
-        List<Board> boards = boardRepository.searchByKeyword(keyword);
-        return boards.stream()
-                .map(BoardMapper::convertToSearchDto)
-                .collect(Collectors.toList());
-    }
+    /**
+     * 키워드를 사용하여 게시글을 검색합니다. (필요 시 주석 해제 후 구현)
+     *
+     * @param keyword 검색할 키워드
+     * @return 검색 결과에 해당하는 {@code BoardSearchDto} 객체들의 리스트
+     */
+    // List<BoardSearchDto> searchBoards(String keyword);
 }
