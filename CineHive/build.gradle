@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.4.1'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'com.example'
@@ -30,7 +30,7 @@ dependencies {
 
 	// --- 웹 (리액티브 스택) ---
 	implementation 'org.springframework.boot:spring-boot-starter-web' // 서블릿 기반 웹 스택
-	//implementation 'org.springframework.boot:spring-boot-starter-webflux' // 리액티브 웹 스택
+	implementation 'org.springframework.boot:spring-boot-starter-webflux' // 리액티브 웹 스택
 
 	// --- 보안 ---
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -51,7 +51,8 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
 	// --- Swagger (springdoc) ---
-	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
+	//implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
 	// --- 테스트 ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
