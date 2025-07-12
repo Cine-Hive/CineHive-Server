@@ -1,28 +1,33 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.member.Member;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class BoardDisLike {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "board_dislikes")
+public class BoardDislike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
+
+    @Builder
+    public BoardDislike(Member member, Board board) {
+        this.member = member;
+        this.board = board;
+    }
 }

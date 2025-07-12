@@ -1,71 +1,50 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.service.board.DisLikeService;
-import com.example.CineHive.util.JwtTokenUtil;
+import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.service.board.DislikeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "DisLike Controller", description = "게시글의 싫어요를 등록, 취소 및 싫어요 수 조회 기능을 제공하는 API")
+import java.util.Map;
+
+@Tag(name = "Dislike Controller", description = "게시글 '싫어요' 관련 API")
 @RestController
-@RequestMapping("/dislike")
-public class DisLikeController {
+@RequestMapping("/api/v1/boards/{boardId}/dislikes")
+@RequiredArgsConstructor
+public class DislikeController {
 
-    @Autowired
-    private DisLikeService disLikeService;
+    private final DislikeService dislikeService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+    @Operation(summary = "게시글 '싫어요' 추가", description = "특정 게시글에 '싫어요'를 누릅니다. 이미 '좋아요'를 누른 경우, '좋아요'는 자동으로 취소됩니다.")
+    @PostMapping
+    public ResponseEntity<ApiResponse<Map<String, String>>> addDislike(
+            @PathVariable Long boardId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    // 싫어요 등록
-    @Operation(summary = "싫어요 등록", description = "특정 게시글에 대한 싫어요를 등록")
-    @PostMapping("/{boardId}")
-    public ResponseEntity<String> addDisLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
-
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-
-            boolean isDisLiked = disLikeService.addDisLike(memEmail, boardId);
-            return ResponseEntity.ok(isDisLiked ? "DisLiked" : "Already DisLiked");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        dislikeService.addDislike(boardId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "게시글에 '싫어요'를 눌렀습니다.")));
     }
 
-    // 싫어요 삭제
-    @Operation(summary = "싫어요 취소", description = "특정 게시글에 대해 등록한 싫어요를 취소")
-    @DeleteMapping("/{boardId}")
-    public ResponseEntity<String> removeDisLike(@PathVariable Long boardId, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+    @Operation(summary = "게시글 '싫어요' 취소", description = "특정 게시글에 눌렀던 '싫어요'를 취소합니다.")
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Map<String, String>>> removeDislike(
+            @PathVariable Long boardId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
-
-            boolean isRemoved = disLikeService.removeDisLike(memEmail, boardId);
-            return isRemoved ? ResponseEntity.ok("Removed DisLike") : ResponseEntity.status(HttpStatus.NOT_FOUND).body("DisLike Not Found");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        dislikeService.removeDislike(boardId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "'싫어요'를 취소했습니다.")));
     }
 
-    // 특정 게시글의 싫어요 갯수 조회
-    @Operation(summary = "싫어요 갯수 조회", description = "특정 게시글에 대해 싫어요의 총 갯수를 조회")
-    @GetMapping("/{boardId}/count")
-    public ResponseEntity<Integer> getDisLikeCount(@PathVariable Long boardId) {
-        int disLikeCount = disLikeService.getDisLikeCount(boardId);
-        return ResponseEntity.ok(disLikeCount);
+    @Operation(summary = "게시글 '싫어요' 개수 조회", description = "특정 게시글의 '싫어요' 개수를 조회합니다.")
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> getDislikeCount(@PathVariable Long boardId) {
+        int count = dislikeService.getDislikeCount(boardId);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("dislikeCount", count)));
     }
 }
