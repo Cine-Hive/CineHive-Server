@@ -1,9 +1,10 @@
 package com.example.CineHive.exception;
 
-public class BookmarkNotFoundException extends BusinessException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+public class BookmarkNotFoundException extends RuntimeException {
     public BookmarkNotFoundException(Long memberId, Long boardId) {
-        super(String.format("Bookmark not found for Member %d on Board %d", memberId, boardId),
-                ErrorCode.BOOKMARK_NOT_FOUND);
+        super("회원(ID: " + memberId + ")이 게시글(ID: " + boardId + ")에 대해 추가한 북마크를 찾을 수 없습니다.");
     }
 }
