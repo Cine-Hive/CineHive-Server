@@ -1,12 +1,13 @@
 package com.example.CineHive.filter;
 
-import com.example.CineHive.exception.TokenExpiredException;
 import com.example.CineHive.util.JwtUtil;
+import io.jsonwebtoken.JwtException; // 포괄적인 JWT 예외를 사용
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // Slf4j 어노테이션 추가
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -26,31 +28,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response, FilterChain chain)
+                                    HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         final String authorizationHeader = request.getHeader("Authorization");
 
-        String email = null;
-        String jwt = null;
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            try {
-                email = jwtUtil.extractUsername(jwt);
-            } catch (TokenExpiredException e) {
-                logger.warn("JWT Token has expired");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token has expired");
-                return;
-            } catch (Exception e) {
-                logger.error("JWT Token parsing error", e);
-            }
+        String jwt = authorizationHeader.substring(7);
+        String email = null;
+
+        try {
+            email = jwtUtil.extractUsername(jwt);
+        } catch (JwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
-
-            // [수정] validateToken이 false를 반환하거나 예외를 던지는 경우를 모두 처리
             try {
                 if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -58,14 +56,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
-            } catch (TokenExpiredException e) {
-                // validateToken 내부에서 만료 예외가 발생한 경우
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token has expired");
-                return; // 필터 체인 중단
+            } catch (JwtException e) {
+                log.warn("JWT token validation failed: {}", e.getMessage());
             }
         }
-
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
     }
 }
