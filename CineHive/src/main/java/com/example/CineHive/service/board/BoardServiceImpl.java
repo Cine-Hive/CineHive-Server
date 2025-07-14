@@ -1,22 +1,21 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.CreateBoardRequest;
-import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.dto.board.UpdateBoardRequest;
+import com.example.CineHive.dto.board.*;
+import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.member.Member;
 import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException; // MemberNotFoundException 임포트
+import com.example.CineHive.exception.MemberNotFoundException;
 import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,13 +71,20 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public List<GetListBoardDto> getAllBoards() {
-        return boardRepository.findAll().stream()
-                .map(BoardMapper::toListDto)
-                .collect(Collectors.toList());
-    }
+    public PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
 
-    //== Private Helper Methods ==//
+        Page<Board> boardPage = boardRepository.findAll(pageable);
+
+        return PagedResponse.<GetListBoardDto>builder()
+                .content(boardPage.getContent().stream().map(BoardMapper::toListDto).toList())
+                .page(boardPage.getNumber() + 1)
+                .size(boardPage.getSize())
+                .totalElements(boardPage.getTotalElements())
+                .totalPages(boardPage.getTotalPages())
+                .last(boardPage.isLast())
+                .build();
+    }
 
     /**
      * 이메일을 사용하여 회원을 찾고, 없으면 MemberNotFoundException을 발생시킵니다.
@@ -100,5 +106,17 @@ public class BoardServiceImpl implements BoardService {
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardNotFoundException(boardId));
+    }
+
+    /**
+     * 정렬 기준 문자열을 기반으로 Sort 객체를 생성하는 private 헬퍼 메서드.
+     */
+    private Sort createSort(String sort) {
+        return switch (sort.toLowerCase()) {
+            case "views" -> Sort.by("views").descending();
+            case "likes" -> Sort.by("likeCount").descending();
+            // "latest" 및 기타 모든 알 수 없는 값에 대해 기본적으로 최신순 정렬
+            default -> Sort.by("createdAt").descending();
+        };
     }
 }

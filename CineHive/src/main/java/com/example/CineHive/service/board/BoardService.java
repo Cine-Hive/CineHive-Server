@@ -1,69 +1,46 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.CreateBoardRequest;
-import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.dto.board.UpdateBoardRequest;
+import com.example.CineHive.dto.board.*;
+import com.example.CineHive.dto.response.PagedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
-/**
- * 게시글(Board) 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.
- * 컨트롤러는 이 인터페이스에 의존하여 실제 구현과 분리됩니다.
- */
 public interface BoardService {
 
     /**
      * 새로운 게시글을 생성합니다.
-     *
-     * @param request     게시글 생성에 필요한 데이터(제목, 내용)를 담은 DTO
-     * @param memberEmail 게시글을 작성하는 회원의 이메일 (인증된 사용자 정보)
-     * @return 생성된 게시글의 상세 정보를 담은 DTO
+     * @param request 게시글 생성 요청 DTO
+     * @param memberEmail 작성자 회원 이메일
+     * @return 생성된 게시글 정보 DTO
      */
     BoardDto createBoard(CreateBoardRequest request, String memberEmail);
 
     /**
-     * ID를 기준으로 특정 게시글의 상세 정보를 조회합니다.
-     * 이 메서드 호출 시 해당 게시글의 조회수가 1 증가합니다.
-     *
-     * @param boardId 조회할 게시글의 고유 ID
-     * @return 게시글의 상세 정보를 담은 DTO
+     * 특정 ID의 게시글을 상세 조회합니다. 조회 시 조회수가 1 증가합니다.
+     * @param boardId 조회할 게시글 ID
+     * @return 조회된 게시글 정보 DTO
      */
     BoardDto getBoardById(Long boardId);
 
     /**
-     * 기존 게시글의 내용을 수정합니다.
-     * 내부적으로 수정 권한이 있는지 확인하는 로직이 포함됩니다.
-     *
-     * @param boardId     수정할 게시글의 고유 ID
-     * @param request     수정할 게시글의 데이터(제목, 내용)를 담은 DTO
-     * @param memberEmail 수정을 요청하는 회원의 이메일 (인증된 사용자 정보)
-     * @return 수정된 게시글의 상세 정보를 담은 DTO
+     * 특정 ID의 게시글을 수정합니다. 작성자 본인만 수정할 수 있습니다.
+     * @param boardId 수정할 게시글 ID
+     * @param request 게시글 수정 요청 DTO
+     * @param memberEmail 수정 요청자 회원 이메일
+     * @return 수정된 게시글 정보 DTO
      */
     BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail);
 
     /**
-     * 특정 게시글을 삭제합니다.
-     * 내부적으로 삭제 권한이 있는지 확인하는 로직이 포함됩니다.
-     *
-     * @param boardId     삭제할 게시글의 고유 ID
-     * @param memberEmail 삭제를 요청하는 회원의 이메일 (인증된 사용자 정보)
+     * 특정 ID의 게시글을 삭제합니다. 작성자 본인만 삭제할 수 있습니다.
+     * @param boardId 삭제할 게시글 ID
+     * @param memberEmail 삭제 요청자 회원 이메일
      */
     void deleteBoard(Long boardId, String memberEmail);
 
     /**
-     * 모든 게시글의 목록을 조회합니다.
-     * 게시글 목록 화면에 표시될 요약된 정보를 반환합니다.
-     *
-     * @return {@code GetListBoardDto} 객체들의 리스트
+     * 게시글 목록을 페이징하여 조회합니다.
+     * @return 클라이언트 친화적인 페이징 응답 DTO
      */
-    List<GetListBoardDto> getAllBoards();
-
-    /**
-     * 키워드를 사용하여 게시글을 검색합니다. (필요 시 주석 해제 후 구현)
-     *
-     * @param keyword 검색할 키워드
-     * @return 검색 결과에 해당하는 {@code BoardSearchDto} 객체들의 리스트
-     */
-    // List<BoardSearchDto> searchBoards(String keyword);
+    PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort);
 }
