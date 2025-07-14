@@ -58,6 +58,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'com.h2database:h2'
 
 	// M1/M2 Mac용 (오류 로그 방지)
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.101.Final:osx-aarch_64'
