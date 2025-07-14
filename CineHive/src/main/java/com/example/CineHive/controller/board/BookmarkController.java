@@ -51,13 +51,18 @@ public class BookmarkController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("bookmarkCount", count)));
     }
 
-    @Operation(summary = "사용자의 북마크 여부 확인", description = "현재 로그인한 사용자가 특정 게시글을 북마크했는지 확인합니다.")
+    @Operation(summary = "사용자의 북마크 여부 확인", description = "현재 로그인한 사용자가 특정 게시글을 북마크했는지 확인합니다. 비로그인 사용자는 항상 false를 반환합니다.")
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> getBookmarkStatus(
             @PathVariable Long boardId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        boolean isBookmarked = bookmarkService.isBookmarkedByUser(boardId, userDetails.getUsername());
+        boolean isBookmarked = false;
+
+        if (userDetails != null) {
+            isBookmarked = bookmarkService.isBookmarkedByUser(boardId, userDetails.getUsername());
+        }
+
         return ResponseEntity.ok(ApiResponse.ok(Map.of("isBookmarked", isBookmarked)));
     }
 }
