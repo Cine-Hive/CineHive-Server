@@ -54,10 +54,14 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProviderType provider; // 가입 경로 필드
+    private ProviderType provider;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MemberRole role;
 
     @Builder
-    public Member(String email, String password, String name, String nickname, Gender gender, Set<String> genres, ProviderType provider) {
+    public Member(String email, String password, String name, String nickname, Gender gender, Set<String> genres, ProviderType provider, MemberRole role) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -65,8 +69,8 @@ public class Member {
         this.gender = gender;
         this.type = "일반";
         this.genres = (genres != null) ? genres : new HashSet<>();
-        // provider가 null이면 일반 가입(LOCAL)으로 간주하여 기본값을 설정합니다.
         this.provider = (provider != null) ? provider : ProviderType.LOCAL;
+        this.role = (role != null) ? role : MemberRole.ROLE_USER; // 기본값으로 USER 설정
     }
 
     public void changePassword(String newPassword) {
