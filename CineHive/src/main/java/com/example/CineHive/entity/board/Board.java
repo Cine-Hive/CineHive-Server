@@ -2,6 +2,7 @@ package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.BaseEntity;
 import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.exception.BoardAccessDeniedException;
 import com.example.CineHive.exception.SelfReportException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -70,7 +71,7 @@ public class Board extends BaseEntity {
 
     public void verifyOwnership(Member member) {
         if (!this.member.getId().equals(member.getId())) {
-            throw new IllegalStateException("이 게시글에 대한 권한이 없습니다.");
+            throw new BoardAccessDeniedException("이 게시글에 대한 권한이 없습니다.");
         }
     }
 
@@ -118,4 +119,5 @@ public class Board extends BaseEntity {
             throw new SelfReportException();
         }
     }
+
 }
