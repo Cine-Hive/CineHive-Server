@@ -101,11 +101,33 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 유효하지 않은 OAuth 토큰/코드로 인한 예외를 처리합니다. (400 Bad Request)
+     */
+    @ExceptionHandler(InvalidOAuthTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidOAuthToken(InvalidOAuthTokenException e) {
+        log.warn("잘못된 OAuth 토큰/코드: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+
+    /**
+     * 외부 소셜 플랫폼과의 통신 오류 발생 시 예외를 처리합니다. (503 Service Unavailable)
+     */
+    @ExceptionHandler(OAuthCommunicationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOAuthCommunication(OAuthCommunicationException e) {
+        log.error("OAuth 통신 오류: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getMessage()));
+    }
+
+    /**
      * 위에서 처리되지 않은 모든 예외를 처리하는 최종 핸들러입니다. (500 Internal Server Error)
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleAllUncaughtException(Exception e) {
-        log.error("예상치 못한 오류 발생", e); // 서버 디버깅을 위해 스택 트레이스를 함께 로깅합니다.
+        log.error("예상치 못한 오류 발생", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버 내부에서 예상치 못한 오류가 발생했습니다. 관리자에게 문의하세요."));
