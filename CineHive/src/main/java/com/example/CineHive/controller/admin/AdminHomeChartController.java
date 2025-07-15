@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/home-charts")
 @RequiredArgsConstructor
-public class HomeChartAdminController {
+public class AdminHomeChartController {
 
     private final AdminSettingService adminSettingService;
 
