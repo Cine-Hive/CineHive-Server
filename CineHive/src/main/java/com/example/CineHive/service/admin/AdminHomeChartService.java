@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AdminSettingService {
+public class AdminHomeChartService {
 
     private final HomeChartSettingRepository homeChartSettingRepository;
 

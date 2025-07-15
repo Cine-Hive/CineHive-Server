@@ -4,7 +4,7 @@ import com.example.CineHive.dto.admin.HomeChartSettingDto;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
-import com.example.CineHive.service.admin.AdminSettingService;
+import com.example.CineHive.service.admin.AdminHomeChartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminHomeChartController {
 
-    private final AdminSettingService adminSettingService;
+    private final AdminHomeChartService adminHomeChartService;
 
     @Operation(summary = "홈 화면 차트 설정 조회", description = "현재 홈 화면에 표시되도록 설정된 차트 목록과 순서를 조회합니다.")
     @ApiResponses(value = {
@@ -36,7 +36,7 @@ public class AdminHomeChartController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<List<HomeChartSettingDto>>> getHomeChartSettings() {
-        List<HomeChartSettingDto> settings = adminSettingService.getHomeChartSettings().stream()
+        List<HomeChartSettingDto> settings = adminHomeChartService.getHomeChartSettings().stream()
                 .map(entity -> {
                     var dto = new HomeChartSettingDto();
                     dto.setChartType(entity.getChartType());
@@ -54,7 +54,7 @@ public class AdminHomeChartController {
     })
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<ChartType>>> getAvailableChartTypes() {
-        List<ChartType> chartTypes = adminSettingService.getAvailableChartTypes();
+        List<ChartType> chartTypes = adminHomeChartService.getAvailableChartTypes();
         return ResponseEntity.ok(ApiResponse.ok(chartTypes));
     }
 
@@ -93,7 +93,7 @@ public class AdminHomeChartController {
     })
     @PutMapping
     public ResponseEntity<ApiResponse<Void>> updateHomeChartSettings(@Valid @RequestBody List<HomeChartSettingDto> settings) { // @Valid 추가
-        adminSettingService.updateHomeChartSettings(settings);
+        adminHomeChartService.updateHomeChartSettings(settings);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

@@ -8,7 +8,7 @@ import com.example.CineHive.dto.media.MediaType;
 import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
 import com.example.CineHive.mapper.media.MediaMapper;
-import com.example.CineHive.service.admin.AdminSettingService;
+import com.example.CineHive.service.admin.AdminHomeChartService;
 import com.example.CineHive.service.meta.PlatformMetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     private final TmdbApiClient tmdbApiClient;
     private final ChartStrategyFactory chartStrategyFactory;
-    private final AdminSettingService adminSettingService;
+    private final AdminHomeChartService adminHomeChartService;
     private final PlatformMetadataService platformMetadataService;
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int SUMMARY_SIZE = 10;
@@ -58,7 +58,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     @Cacheable("chartSummary")
     public Mono<ChartSummaryResponse> getChartSummary() {
         log.info("Fetching chart summary for home screen from database settings.");
-        List<ChartType> summaryChartTypes = adminSettingService.getHomeChartSettings().stream()
+        List<ChartType> summaryChartTypes = adminHomeChartService.getHomeChartSettings().stream()
                 .map(HomeChartSetting::getChartType)
                 .toList();
         if (summaryChartTypes.isEmpty()) {
