@@ -53,7 +53,7 @@ public enum ErrorCode {
 
     // Media & Chart
     INVALID_MEDIA_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 미디어 타입입니다."),
-    CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "해당 차트 타입을 처리할 수 없습니다."), // <--- 추가된 코드
+    CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "해당 차트 타입을 처리할 수 없습니다."),
 
     // External API & Data
     GENRE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장르를 찾을 수 없습니다."),
