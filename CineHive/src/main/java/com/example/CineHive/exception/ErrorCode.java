@@ -30,6 +30,9 @@ public enum ErrorCode {
     INVALID_OAUTH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 OAuth 토큰입니다."),
     OAUTH_COMMUNICATION_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "OAuth 서비스와 통신 중 오류가 발생했습니다."),
 
+    // Banner
+    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 배너를 찾을 수 없습니다."),
+
     // Board & Comment
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),
@@ -46,7 +49,11 @@ public enum ErrorCode {
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 정보를 찾을 수 없습니다."),
     REPORT_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 신고한 콘텐츠입니다."),
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신이 작성한 콘텐츠는 신고할 수 없습니다."),
-    REPORT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 신고입니다."), // <--- 추가된 코드
+    REPORT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 신고입니다."),
+
+    // Media & Chart
+    INVALID_MEDIA_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 미디어 타입입니다."),
+    CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "해당 차트 타입을 처리할 수 없습니다."), // <--- 추가된 코드
 
     // External API & Data
     GENRE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장르를 찾을 수 없습니다."),
