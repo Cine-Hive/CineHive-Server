@@ -4,8 +4,8 @@ import com.example.CineHive.dto.board.*;
 import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.BoardMapper;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -44,7 +44,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public BoardDto getBoardById(Long boardId) {
         Board board = findBoardById(boardId);
-        board.increaseViews();
+        board.increaseViews(); // 조회수 증가는 그대로 유지
         return BoardMapper.toBoardDto(board);
     }
 
@@ -54,9 +54,10 @@ public class BoardServiceImpl implements BoardService {
         Member member = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
-        board.verifyOwnership(member);
-        board.update(request.brdTitle(), request.brdContent());
+        // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
+        verifyBoardOwnership(board, member);
 
+        board.update(request.brdTitle(), request.brdContent());
         return BoardMapper.toBoardDto(board);
     }
 
@@ -66,14 +67,15 @@ public class BoardServiceImpl implements BoardService {
         Member member = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
-        board.verifyOwnership(member);
+        // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
+        verifyBoardOwnership(board, member);
+
         boardRepository.delete(board);
     }
 
     @Override
     public PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
-
         Page<Board> boardPage = boardRepository.findAll(pageable);
 
         return PagedResponse.<GetListBoardDto>builder()
@@ -86,37 +88,37 @@ public class BoardServiceImpl implements BoardService {
                 .build();
     }
 
+    //== private 헬퍼 메서드 ==//
+
     /**
-     * 이메일을 사용하여 회원을 찾고, 없으면 MemberNotFoundException을 발생시킵니다.
+     * 이메일을 사용하여 회원을 찾고, 없으면 BusinessException을 발생시킵니다.
      * @param email 찾을 회원의 이메일
      * @return 찾아낸 Member 엔티티
-     * @throws MemberNotFoundException 해당 이메일의 회원이 존재하지 않을 경우
      */
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     /**
-     * ID를 사용하여 게시글을 찾고, 없으면 BoardNotFoundException을 발생시킵니다.
+     * ID를 사용하여 게시글을 찾고, 없으면 BusinessException을 발생시킵니다.
      * @param boardId 찾을 게시글의 ID
      * @return 찾아낸 Board 엔티티
-     * @throws BoardNotFoundException 해당 ID의 게시글이 존재하지 않을 경우
      */
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 
     /**
-     * 정렬 기준 문자열을 기반으로 Sort 객체를 생성하는 private 헬퍼 메서드.
+     * 게시글의 소유자와 현재 요청을 보낸 회원이 일치하는지 확인합니다.
+     * 일치하지 않으면 BusinessException을 발생시킵니다.
+     * @param board 검증할 게시글 엔티티
+     * @param member 검증할 회원 엔티티
      */
-    private Sort createSort(String sort) {
-        return switch (sort.toLowerCase()) {
-            case "views" -> Sort.by("views").descending();
-            case "likes" -> Sort.by("likeCount").descending();
-            // "latest" 및 기타 모든 알 수 없는 값에 대해 기본적으로 최신순 정렬
-            default -> Sort.by("createdAt").descending();
-        };
+    private void verifyBoardOwnership(Board board, Member member) {
+        if (!board.getMember().equals(member)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
     }
 }
