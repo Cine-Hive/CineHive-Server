@@ -3,10 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardDislike;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.DislikeAlreadyExistsException;
-import com.example.CineHive.exception.DislikeNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.DislikeRepository;
 import com.example.CineHive.repository.board.LikeRepository;
@@ -33,7 +31,7 @@ public class DislikeServiceImpl implements DislikeService {
         Board board = findBoardById(boardId);
 
         if (dislikeRepository.existsByMemberAndBoard(member, board)) {
-            throw new DislikeAlreadyExistsException(member.getId(), board.getId());
+            throw new BusinessException(ErrorCode.DISLIKE_ALREADY_EXISTS);
         }
 
         // '좋아요'를 누른 상태였다면 '좋아요'를 취소하고, 게시글의 '좋아요' 카운트를 1 감소시킴
@@ -60,7 +58,7 @@ public class DislikeServiceImpl implements DislikeService {
         Board board = findBoardById(boardId);
 
         BoardDislike dislike = dislikeRepository.findByMemberAndBoard(member, board)
-                .orElseThrow(() -> new DislikeNotFoundException(member.getId(), board.getId()));
+                .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
 
         dislikeRepository.delete(dislike);
 
@@ -71,7 +69,6 @@ public class DislikeServiceImpl implements DislikeService {
     @Override
     @Transactional(readOnly = true)
     public int getDislikeCount(Long boardId) {
-        // 불필요한 count 쿼리 대신, 엔티티의 필드 값을 직접 반환
         Board board = findBoardById(boardId);
         return board.getDislikeCount();
     }
@@ -80,11 +77,11 @@ public class DislikeServiceImpl implements DislikeService {
 
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId)); // 컴파일 오류 수정
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 }
