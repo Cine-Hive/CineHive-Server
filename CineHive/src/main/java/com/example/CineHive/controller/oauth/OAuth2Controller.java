@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +73,7 @@ public class OAuth2Controller {
             @Parameter(description = "소셜 로그인 플랫폼", example = "kakao")
             @PathVariable ProviderType platform,
             @Parameter(description = "플랫폼으로부터 발급받은 인가 코드")
-            @RequestParam String code) {
+            @RequestParam @NotBlank(message = "인가 코드는 필수입니다.") String code) {
 
         LoginResponseDto loginResponse = oauth2Service.loginWithCode(platform, code);
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
