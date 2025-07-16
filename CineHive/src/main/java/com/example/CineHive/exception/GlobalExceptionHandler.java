@@ -5,29 +5,42 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
 
-/**
- * 전역 예외 처리를 담당하는 클래스.
- * @RestControllerAdvice 어노테이션을 통해 모든 @RestController에서 발생하는 예외를 가로챕니다.
- * 모든 에러 응답은 프로젝트 표준인 ApiResponse 형식으로 통일합니다.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * @Valid 어노테이션을 통한 유효성 검증 실패 시 발생하는 예외를 처리합니다. (400 Bad Request)
+     * 직접 정의한 모든 비즈니스 예외를 처리합니다.
+     * @param e BusinessException 또는 그 하위 예외
+     * @return ErrorCode에 정의된 상태 코드와 메시지를 포함한 ResponseEntity
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("BusinessException: {}", e.getMessage());
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ApiResponse.error(errorCode.getStatus().value(), errorCode.getMessage()));
+    }
+
+    /**
+     * @Valid 어노테이션을 통한 DTO 유효성 검증 실패 시 발생하는 예외를 처리합니다.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(MethodArgumentNotValidException e) {
         String errorMessage = e.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> String.format("'%s' 필드: %s", fieldError.getField(), fieldError.getDefaultMessage()))
+                .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
         log.warn("유효성 검증 실패: {}", errorMessage);
         return ResponseEntity
@@ -36,7 +49,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * @RequestParam 또는 @PathVariable 유효성 검증 실패 시 발생하는 예외를 처리합니다. (400 Bad Request)
+     * @RequestParam, @PathVariable 등에서의 유효성 검증 실패 시 발생하는 예외를 처리합니다.
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
@@ -47,89 +60,48 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 조회하려는 리소스를 찾을 수 없을 때 발생하는 예외들을 처리합니다. (404 Not Found)
-     * (예: 없는 게시글, 회원, 북마크 조회 시)
+     * 잘못된 HTTP 요청 파라미터 관련 예외를 처리합니다.
+     * (필수 파라미터 누락, 파라미터 타입 불일치 등)
      */
-    @ExceptionHandler({BoardNotFoundException.class, MemberNotFoundException.class, BookmarkNotFoundException.class})
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(RuntimeException e) {
-        log.warn("리소스를 찾을 수 없음: {}", e.getMessage());
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRequestParameter(Exception e) {
+        log.warn("잘못된 요청 파라미터: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), "요청 파라미터가 유효하지 않습니다."));
     }
 
     /**
-     * 리소스에 대한 접근 권한이 없을 때 발생하는 예외를 처리합니다. (403 Forbidden)
+     * 잘못된 JSON 형식의 요청 본문으로 인한 파싱 실패 시 예외를 처리합니다.
      */
-    @ExceptionHandler(BoardAccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(BoardAccessDeniedException e) {
-        log.warn("접근 권한 없음: {}", e.getMessage());
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleParseError(HttpMessageNotReadableException e) {
+        log.warn("JSON 파싱 오류: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage()));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 요청 형식입니다."));
     }
 
     /**
-     * 데이터 중복/충돌 시 발생하는 예외들을 처리합니다. (409 Conflict)
-     * (예: 이미 북마크한 게시글에 다시 북마크 시도 시)
+     * 데이터베이스 무결성 제약 조건 위반 시 예외를 처리합니다. (e.g., Unique Key 중복)
+     * 서비스 레이어에서 더 구체적인 BusinessException으로 변환하는 것을 권장합니다.
      */
-    @ExceptionHandler({BookmarkAlreadyExistsException.class, DataIntegrityViolationException.class})
-    public ResponseEntity<ApiResponse<Void>> handleDataConflictException(RuntimeException e) {
-        log.warn("데이터 충돌 발생: {}", e.getMessage());
-
-        String clientMessage;
-        if (e instanceof BookmarkAlreadyExistsException) {
-            clientMessage = e.getMessage();
-        } else {
-            clientMessage = "데이터 무결성 제약 조건에 위배되었습니다. (예: 중복된 이메일 또는 닉네임)";
-        }
-
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("데이터 무결성 위반: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), clientMessage));
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), "데이터 무결성 제약 조건에 위배되었습니다."));
     }
 
     /**
-     * 명시적으로 처리되지 않은 비즈니스 로직 상의 예외(잘못된 인자 등)를 처리합니다. (400 Bad Request)
-     */
-    @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(RuntimeException e) {
-        log.warn("비즈니스 로직 예외: {}", e.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
-    }
-
-    /**
-     * 유효하지 않은 OAuth 토큰/코드로 인한 예외를 처리합니다. (400 Bad Request)
-     */
-    @ExceptionHandler(InvalidOAuthTokenException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidOAuthToken(InvalidOAuthTokenException e) {
-        log.warn("잘못된 OAuth 토큰/코드: {}", e.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
-    }
-
-    /**
-     * 외부 소셜 플랫폼과의 통신 오류 발생 시 예외를 처리합니다. (503 Service Unavailable)
-     */
-    @ExceptionHandler(OAuthCommunicationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleOAuthCommunication(OAuthCommunicationException e) {
-        log.error("OAuth 통신 오류: {}", e.getMessage(), e);
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(ApiResponse.error(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getMessage()));
-    }
-
-    /**
-     * 위에서 처리되지 않은 모든 예외를 처리하는 최종 핸들러입니다. (500 Internal Server Error)
+     * 위에서 처리되지 않은 모든 서버 내부 예외를 처리하는 최종 핸들러입니다.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleAllUncaughtException(Exception e) {
-        log.error("예상치 못한 오류 발생", e);
+        log.error("처리되지 않은 예외 발생", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버 내부에서 예상치 못한 오류가 발생했습니다. 관리자에게 문의하세요."));
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
     }
 }
