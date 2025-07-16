@@ -2,6 +2,8 @@ package com.example.CineHive.service.account;
 
 import com.example.CineHive.dto.account.AccountInfoResponseDto;
 import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.exception.BusinessException; // BusinessException import
+import com.example.CineHive.exception.ErrorCode;       // ErrorCode import
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
 import com.example.CineHive.repository.board.CommentRepository;
@@ -43,9 +45,8 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void changeNickname(String email, String newNickname) {
         Member member = findMemberByEmail(email);
-        // 자기 자신의 닉네임으로 변경하는 경우는 예외처리하지 않음
         if (memberRepository.existsByNickname(newNickname) && !member.getNickname().equals(newNickname)) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
         member.changeNickname(newNickname);
         log.info("Member {} changed nickname to {}", email, newNickname);
@@ -56,7 +57,7 @@ public class AccountServiceImpl implements AccountService {
     public void changePassword(String email, String oldPassword, String newPassword) {
         Member member = findMemberByEmail(email);
         if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
-            throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         member.changePassword(passwordEncoder.encode(newPassword));
         log.info("Member {} changed password.", email);
@@ -75,9 +76,6 @@ public class AccountServiceImpl implements AccountService {
     public void deleteAccount(String email) {
         log.warn("Deleting all data for member: {}", email);
 
-        // 연관된 모든 데이터 삭제
-        // 주의: 이 로직은 매우 파괴적이므로 신중하게 다뤄야 합니다.
-        // 실제 서비스에서는 회원 상태를 DEACTIVATED로 바꾸는 '소프트 삭제'를 더 권장합니다.
         bookmarkRepository.deleteByMember_Email(email);
         likeRepository.deleteByMember_Email(email);
         disLikeRepository.deleteByMember_Email(email);
@@ -93,10 +91,12 @@ public class AccountServiceImpl implements AccountService {
      * 이메일로 회원을 조회하는 내부 헬퍼 메서드.
      * @param email 조회할 이메일
      * @return Member 엔티티
-     * @throws IllegalArgumentException 해당 이메일의 회원이 없을 경우
+     * @throws BusinessException 해당 이메일의 회원이 없을 경우
      */
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> {
+                    return new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
+                });
     }
 }
