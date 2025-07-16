@@ -69,8 +69,6 @@ public class MemberServiceImpl implements MemberService {
         String token = jwtUtil.generateToken(member.getEmail());
         log.info("로그인 성공: {}", requestDto.email());
 
-        // --- 수정된 부분 ---
-        // 서비스 계층에서 직접 LoginResponseDto를 생성합니다.
         return new LoginResponseDto(
                 token,
                 false, // 일반 로그인은 항상 기존 회원이므로 false
