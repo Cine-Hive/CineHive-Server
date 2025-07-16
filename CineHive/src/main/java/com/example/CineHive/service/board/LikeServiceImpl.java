@@ -3,10 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardLike;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.LikeAlreadyExistsException;
-import com.example.CineHive.exception.LikeNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.DislikeRepository;
 import com.example.CineHive.repository.board.LikeRepository;
@@ -33,7 +31,7 @@ public class LikeServiceImpl implements LikeService {
         Board board = findBoardById(boardId);
 
         if (likeRepository.existsByMemberAndBoard(member, board)) {
-            throw new LikeAlreadyExistsException(member.getId(), board.getId());
+            throw new BusinessException(ErrorCode.LIKE_ALREADY_EXISTS);
         }
 
         // '싫어요'를 누른 상태였다면 '싫어요'를 취소하고, 게시글의 '싫어요' 카운트를 1 감소시킴
@@ -49,7 +47,7 @@ public class LikeServiceImpl implements LikeService {
                 .build();
         likeRepository.save(like);
 
-        board.increaseLikeCount(); // 게시글의 '좋아요' 카운트 1 증가
+        board.increaseLikeCount();
         log.info("Member {} liked board {}", member.getId(), board.getId());
     }
 
@@ -60,18 +58,17 @@ public class LikeServiceImpl implements LikeService {
         Board board = findBoardById(boardId);
 
         BoardLike like = likeRepository.findByMemberAndBoard(member, board)
-                .orElseThrow(() -> new LikeNotFoundException(member.getId(), board.getId()));
+                .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND));
 
         likeRepository.delete(like);
 
-        board.decreaseLikeCount(); // 게시글의 '좋아요' 카운트 1 감소
+        board.decreaseLikeCount();
         log.info("Member {} removed like from board {}", member.getId(), board.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
     public int getLikeCount(Long boardId) {
-        // 불필요한 count 쿼리 대신, 엔티티의 필드 값을 직접 반환
         Board board = findBoardById(boardId);
         return board.getLikeCount();
     }
@@ -80,11 +77,11 @@ public class LikeServiceImpl implements LikeService {
 
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 }
