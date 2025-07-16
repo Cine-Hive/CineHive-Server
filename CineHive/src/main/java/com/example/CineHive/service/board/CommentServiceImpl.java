@@ -6,9 +6,8 @@ import com.example.CineHive.dto.comment.UpdateCommentRequest;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.CommentNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.CommentMapper;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.CommentRepository;
@@ -51,10 +50,8 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getCommentsByBoard(Long boardId) {
-        if (!boardRepository.existsById(boardId)) {
-            // boardId를 직접 전달하여 예외를 발생시킵니다.
-            throw new BoardNotFoundException(boardId);
-        }
+        // 게시글이 존재하는지 먼저 확인
+        findBoardById(boardId);
         List<Comment> comments = commentRepository.findByBoard_Id(boardId);
         return comments.stream()
                 .map(CommentMapper::toDto)
@@ -67,7 +64,7 @@ public class CommentServiceImpl implements CommentService {
         Member member = findMemberByEmail(memberEmail);
         Comment comment = findCommentById(commentId);
 
-        comment.verifyOwnership(member);
+        verifyCommentOwnership(comment, member);
         comment.update(request.content());
 
         return CommentMapper.toDto(comment);
@@ -79,33 +76,30 @@ public class CommentServiceImpl implements CommentService {
         Member member = findMemberByEmail(memberEmail);
         Comment comment = findCommentById(commentId);
 
-        comment.verifyOwnership(member);
+        verifyCommentOwnership(comment, member);
         commentRepository.delete(comment);
     }
 
     //== Private Helper Methods ==//
 
-    /**
-     * 이메일을 사용하여 회원을 찾습니다. 없으면 예외를 발생시킵니다.
-     */
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    /**
-     * ID를 사용하여 게시글을 찾습니다. 없으면 예외를 발생시킵니다.
-     */
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 
-    /**
-     * ID를 사용하여 댓글을 찾습니다. 없으면 예외를 발생시킵니다.
-     */
     private Comment findCommentById(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException(commentId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+    }
+
+    private void verifyCommentOwnership(Comment comment, Member member) {
+        if (!comment.getMember().equals(member)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
     }
 }
