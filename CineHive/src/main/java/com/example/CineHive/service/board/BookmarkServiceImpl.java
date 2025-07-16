@@ -3,10 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.BookmarkAlreadyExistsException;
-import com.example.CineHive.exception.BookmarkNotFoundException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -29,7 +27,6 @@ public class BookmarkServiceImpl implements BookmarkService {
      *
      * @param boardId     북마크할 게시글의 ID
      * @param memberEmail 북마크를 추가하는 회원의 이메일
-     * @throws BookmarkAlreadyExistsException 이미 해당 회원이 게시글을 북마크한 경우
      */
     @Override
     @Transactional
@@ -38,7 +35,7 @@ public class BookmarkServiceImpl implements BookmarkService {
         Board board = findBoardById(boardId);
 
         if (bookmarkRepository.existsByMemberAndBoard(member, board)) {
-            throw new BookmarkAlreadyExistsException(member.getId(), board.getId());
+            throw new BusinessException(ErrorCode.BOOKMARK_ALREADY_EXISTS);
         }
 
         Bookmark bookmark = Bookmark.builder()
@@ -47,7 +44,7 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .build();
         bookmarkRepository.save(bookmark);
 
-        board.increaseBookmarkCount(); // 엔티티의 비즈니스 로직 호출
+        board.increaseBookmarkCount();
         log.info("Member {} bookmarked board {}", member.getId(), board.getId());
     }
 
@@ -56,7 +53,6 @@ public class BookmarkServiceImpl implements BookmarkService {
      *
      * @param boardId     북마크를 제거할 게시글의 ID
      * @param memberEmail 북마크를 제거하는 회원의 이메일
-     * @throws BookmarkNotFoundException 해당 회원이 게시글을 북마크하지 않은 경우
      */
     @Override
     @Transactional
@@ -65,11 +61,11 @@ public class BookmarkServiceImpl implements BookmarkService {
         Board board = findBoardById(boardId);
 
         Bookmark bookmark = bookmarkRepository.findByMemberAndBoard(member, board)
-                .orElseThrow(() -> new BookmarkNotFoundException(member.getId(), board.getId()));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOOKMARK_NOT_FOUND));
 
         bookmarkRepository.delete(bookmark);
 
-        board.decreaseBookmarkCount(); // 엔티티의 비즈니스 로직 호출
+        board.decreaseBookmarkCount();
         log.info("Member {} removed bookmark from board {}", member.getId(), board.getId());
     }
 
@@ -105,11 +101,11 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 }
