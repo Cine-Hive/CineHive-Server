@@ -4,7 +4,8 @@ import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 import com.example.CineHive.entity.board.Report;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.*;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.CommentRepository;
 import com.example.CineHive.repository.board.ReportRepository;
@@ -30,12 +31,14 @@ public class ReportServiceImpl implements ReportService {
         Member reporter = findMemberByEmail(reporterEmail);
         Board board = findBoardById(boardId);
 
-        // 엔티티의 자체 검증 로직 호출 (Tell, Don't Ask)
-        board.validateNotSelfReport(reporter);
+        // 자신의 게시글은 신고할 수 없음
+        if (board.getMember().equals(reporter)) {
+            throw new BusinessException(ErrorCode.SELF_REPORT_NOT_ALLOWED);
+        }
 
-        // 중복 신고 방지 (최적화된 existsBy... 메서드 사용)
+        // 중복 신고 방지
         if (reportRepository.existsByReporterAndBoard(reporter, board)) {
-            throw new ReportAlreadyExistsException();
+            throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
         Report report = Report.builder()
@@ -54,12 +57,14 @@ public class ReportServiceImpl implements ReportService {
         Member reporter = findMemberByEmail(reporterEmail);
         Comment comment = findCommentById(commentId);
 
-        // 엔티티의 자체 검증 로직 호출 (Tell, Don't Ask)
-        comment.validateNotSelfReport(reporter);
+        // 자신의 댓글은 신고할 수 없음
+        if (comment.getMember().equals(reporter)) {
+            throw new BusinessException(ErrorCode.SELF_REPORT_NOT_ALLOWED);
+        }
 
-        // 중복 신고 방지 (최적화된 existsBy... 메서드 사용)
+        // 중복 신고 방지
         if (reportRepository.existsByReporterAndComment(reporter, comment)) {
-            throw new ReportAlreadyExistsException();
+            throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
         Report report = Report.builder()
@@ -76,16 +81,16 @@ public class ReportServiceImpl implements ReportService {
 
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Board findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException(boardId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 
     private Comment findCommentById(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException(commentId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
 }
