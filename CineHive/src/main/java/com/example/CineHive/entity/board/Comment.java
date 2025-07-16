@@ -2,7 +2,6 @@ package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.BaseEntity;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.SelfReportException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,6 +14,8 @@ import java.time.LocalDateTime;
 
 /**
  * 게시글에 대한 댓글을 나타내는 엔티티입니다.
+ * 이 엔티티는 데이터와 자체 상태 변경 로직에만 집중합니다.
+ * 비즈니스 규칙 검증(예: 권한 확인)은 서비스 레이어에서 처리합니다.
  */
 @Entity
 @Getter
@@ -40,7 +41,7 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @CreatedDate // 엔티티가 처음 저장될 때 시각을 자동으로 주입합니다.
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -65,28 +66,5 @@ public class Comment extends BaseEntity {
      */
     public void update(String newContent) {
         this.content = newContent;
-    }
-
-    /**
-     * 이 댓글의 소유주가 맞는지 확인합니다.
-     * @param memberToVerify 확인할 회원 엔티티
-     * @throws IllegalStateException 소유주가 아닐 경우 발생
-     */
-    public void verifyOwnership(Member memberToVerify) {
-        // ID를 비교하는 것이 객체 자체를 비교하는 것보다 더 안전하고 명확합니다.
-        if (!this.member.getId().equals(memberToVerify.getId())) {
-            throw new IllegalStateException("이 댓글에 대한 권한이 없습니다.");
-        }
-    }
-
-    /**
-     * 신고자가 댓글 작성자 본인인지 검증합니다.
-     * @param reporter 신고자 Member 엔티티
-     * @throws SelfReportException 신고자와 작성자가 동일할 경우
-     */
-    public void validateNotSelfReport(Member reporter) {
-        if (this.member.equals(reporter)) {
-            throw new SelfReportException();
-        }
     }
 }
