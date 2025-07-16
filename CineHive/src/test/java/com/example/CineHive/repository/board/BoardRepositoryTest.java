@@ -1,5 +1,6 @@
 package com.example.CineHive.repository.board;
 
+import com.example.CineHive.config.JpaAuditingConfig;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.member.Gender;
 import com.example.CineHive.entity.member.Member;
@@ -11,12 +12,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest // JPA 관련 컴포넌트만 로드하여 테스트
+@DataJpaTest
+@Import(JpaAuditingConfig.class)
 @DisplayName("BoardRepository 테스트")
 class BoardRepositoryTest {
 
