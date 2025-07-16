@@ -1,0 +1,128 @@
+package com.example.CineHive.service.member;
+
+import com.example.CineHive.dto.member.LoginRequestDto;
+import com.example.CineHive.dto.member.LoginResponseDto;
+import com.example.CineHive.dto.member.MemberRegisterRequestDto;
+import com.example.CineHive.entity.member.LoginHistory;
+import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.exception.DuplicateEmailException;
+import com.example.CineHive.exception.DuplicateNicknameException;
+import com.example.CineHive.exception.InvalidPasswordException;
+import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.mapper.member.MemberMapper;
+import com.example.CineHive.repository.member.LoginHistoryRepository;
+import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+/**
+ * 회원 관련 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ * 회원 가입, 로그인, 정보 수정 등의 기능을 제공합니다.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class MemberServiceImpl implements MemberService {
+
+    private final MemberRepository memberRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    @Override
+    @Transactional
+    public Member register(MemberRegisterRequestDto requestDto) {
+        log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
+        if (memberRepository.existsByEmail(requestDto.email())) {
+            throw new DuplicateEmailException("이미 사용 중인 이메일입니다: " + requestDto.email());
+        }
+        if (memberRepository.existsByNickname(requestDto.nickname())) {
+            throw new DuplicateNicknameException("이미 사용 중인 닉네임입니다: " + requestDto.nickname());
+        }
+
+        Member member = MemberMapper.toEntity(requestDto, passwordEncoder);
+        Member savedMember = memberRepository.save(member);
+        log.info("회원 가입이 완료되었습니다. 회원 ID: {}", savedMember.getId());
+        return savedMember;
+    }
+
+    @Override
+    @Transactional
+    public LoginResponseDto login(LoginRequestDto requestDto, String userAgent) {
+        log.info("로그인 시도: {}", requestDto.email());
+        Member member = memberRepository.findByEmail(requestDto.email())
+                .orElseThrow(() -> new MemberNotFoundException("이메일 또는 비밀번호가 올바르지 않습니다."));
+
+        if (!passwordEncoder.matches(requestDto.password(), member.getPassword())) {
+            throw new InvalidPasswordException("이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
+
+        recordLoginHistory(member, userAgent);
+
+        String token = jwtUtil.generateToken(member.getEmail());
+        log.info("로그인 성공: {}", requestDto.email());
+
+        // --- 수정된 부분 ---
+        // 서비스 계층에서 직접 LoginResponseDto를 생성합니다.
+        return new LoginResponseDto(
+                token,
+                false, // 일반 로그인은 항상 기존 회원이므로 false
+                LoginResponseDto.MemberInfo.from(member)
+        );
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        log.info("비밀번호 변경 시도: {}", email);
+        Member member = findByEmail(email);
+        if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
+            throw new InvalidPasswordException("기존 비밀번호가 일치하지 않습니다.");
+        }
+        member.changePassword(passwordEncoder.encode(newPassword));
+        log.info("비밀번호 변경 완료: {}", email);
+    }
+
+    @Override
+    public boolean isEmailAvailable(String email) {
+        return !memberRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean isNicknameAvailable(String nickname) {
+        return !memberRepository.existsByNickname(nickname);
+    }
+
+    @Override
+    public Member findByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자를 찾을 수 없습니다: " + email));
+    }
+
+    private void recordLoginHistory(Member member, String userAgent) {
+        String browser = parseBrowserFromUserAgent(userAgent);
+        LoginHistory loginHistory = loginHistoryRepository.findByMember(member)
+                .orElseGet(() -> new LoginHistory(null, member, LocalDateTime.now(), null, null));
+
+        loginHistory.updateLoginInfo(browser);
+        loginHistoryRepository.save(loginHistory);
+        log.debug("로그인 기록 저장 완료. 회원 ID: {}", member.getId());
+    }
+
+    private String parseBrowserFromUserAgent(String userAgent) {
+        if (userAgent == null || userAgent.isEmpty()) return "Unknown";
+        if (userAgent.contains("Chrome") && !userAgent.contains("Edg")) return "Chrome";
+        if (userAgent.contains("Edg")) return "Edge";
+        if (userAgent.contains("Safari") && !userAgent.contains("Chrome")) return "Safari";
+        if (userAgent.contains("Firefox")) return "Firefox";
+        if (userAgent.contains("MSIE") || userAgent.contains("Trident")) return "Internet Explorer";
+        return "Other";
+    }
+}
