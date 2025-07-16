@@ -6,8 +6,8 @@ import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
 import com.example.CineHive.entity.member.Gender;
 import com.example.CineHive.entity.member.Member;
 import com.example.CineHive.entity.member.ProviderType;
-import com.example.CineHive.exception.InvalidOAuthTokenException;
-import com.example.CineHive.exception.OAuthCommunicationException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.example.CineHive.util.JwtUtil;
 import jakarta.annotation.PostConstruct;
@@ -46,8 +46,11 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     public LoginResponseDto loginWithCode(ProviderType providerType, String code) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfo(code)
-                .onErrorMap(error -> new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.", error))
-                .switchIfEmpty(Mono.error(new InvalidOAuthTokenException("유효하지 않은 인가 코드입니다.")))
+                .onErrorMap(error -> {
+                    log.error("OAuth 통신 오류 발생 (인가 코드 사용)", error);
+                    return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+                })
+                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
                 .block();
         return processLogin(memberInfo);
     }
@@ -57,15 +60,18 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     public LoginResponseDto loginWithAccessToken(ProviderType providerType, String accessToken) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfoByAccessToken(accessToken)
-                .onErrorMap(error -> new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.", error))
-                .switchIfEmpty(Mono.error(new InvalidOAuthTokenException("유효하지 않은 액세스 토큰입니다.")))
+                .onErrorMap(error -> {
+                    log.error("OAuth 통신 오류 발생 (액세스 토큰 사용)", error);
+                    return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+                })
+                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
                 .block();
         return processLogin(memberInfo);
     }
 
     private LoginResponseDto processLogin(OAuth2MemberInfo oAuth2MemberInfo) {
         if (oAuth2MemberInfo == null || oAuth2MemberInfo.email() == null) {
-            throw new OAuthCommunicationException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)");
+            throw new BusinessException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
 
         boolean isNewMember = !memberRepository.existsByEmail(oAuth2MemberInfo.email());
@@ -88,10 +94,10 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
         Member newMember = Member.builder()
                 .email(oAuth2MemberInfo.email())
-                .password("OAUTH_MEMBER_NO_PASSWORD")
+                .password("OAUTH_MEMBER_NO_PASSWORD") // 소셜 로그인 회원은 별도 비밀번호 없음
                 .name(oAuth2MemberInfo.nickname())
                 .nickname(nickname)
-                .gender(Gender.OTHER)
+                .gender(Gender.OTHER) // 소셜 로그인 시 성별 정보는 기본값으로 설정
                 .genres(Collections.emptySet())
                 .provider(oAuth2MemberInfo.providerType())
                 .build();
@@ -111,7 +117,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private OAuth2Client getClient(ProviderType providerType) {
         OAuth2Client client = clientMap.get(providerType);
         if (client == null) {
-            throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다: " + providerType);
+            throw new BusinessException("지원하지 않는 소셜 로그인입니다: " + providerType, ErrorCode.INVALID_INPUT_VALUE);
         }
         return client;
     }
