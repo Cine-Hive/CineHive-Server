@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -45,7 +46,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     public LoginResponseDto loginWithCode(ProviderType providerType, String code) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfo(code)
-                .onErrorResume(error -> Mono.error(new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.")))
+                .onErrorMap(error -> new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.", error))
                 .switchIfEmpty(Mono.error(new InvalidOAuthTokenException("유효하지 않은 인가 코드입니다.")))
                 .block();
         return processLogin(memberInfo);
@@ -56,51 +57,49 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     public LoginResponseDto loginWithAccessToken(ProviderType providerType, String accessToken) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfoByAccessToken(accessToken)
-                .onErrorResume(error -> Mono.error(new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.")))
+                .onErrorMap(error -> new OAuthCommunicationException("소셜 프로필 정보를 가져오는 데 실패했습니다.", error))
                 .switchIfEmpty(Mono.error(new InvalidOAuthTokenException("유효하지 않은 액세스 토큰입니다.")))
                 .block();
         return processLogin(memberInfo);
     }
 
-    /**
-     * [공통 로직] 로그인/회원가입 처리 및 JWT 발급
-     */
-    private LoginResponseDto processLogin(OAuth2MemberInfo memberInfo) {
-        if (memberInfo == null) {
-            throw new OAuthCommunicationException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다.");
+    private LoginResponseDto processLogin(OAuth2MemberInfo oAuth2MemberInfo) {
+        if (oAuth2MemberInfo == null || oAuth2MemberInfo.email() == null) {
+            throw new OAuthCommunicationException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)");
         }
 
-        boolean isNewMember = !memberRepository.existsByEmail(memberInfo.email());
+        boolean isNewMember = !memberRepository.existsByEmail(oAuth2MemberInfo.email());
 
-        Member member = memberRepository.findByEmail(memberInfo.email())
-                .orElseGet(() -> registerNewMember(memberInfo));
+        Member member = memberRepository.findByEmail(oAuth2MemberInfo.email())
+                .orElseGet(() -> registerNewMember(oAuth2MemberInfo));
 
         String token = jwtUtil.generateToken(member.getEmail());
 
-        return LoginResponseDto.builder()
-                .token(token)
-                .isNewMember(isNewMember)
-                .member(new LoginResponseDto.MemberInfo(member))
-                .build();
+        return new LoginResponseDto(
+                token,
+                isNewMember,
+                LoginResponseDto.MemberInfo.from(member)
+        );
     }
 
-    private Member registerNewMember(OAuth2MemberInfo memberInfo) {
-        log.info("신규 소셜 회원 가입: {}", memberInfo.email());
-        String nickname = resolveNickname(memberInfo.nickname(), memberInfo.providerType());
+    private Member registerNewMember(OAuth2MemberInfo oAuth2MemberInfo) {
+        log.info("신규 소셜 회원 가입: {}", oAuth2MemberInfo.email());
+        String nickname = resolveUniqueNickname(oAuth2MemberInfo.nickname(), oAuth2MemberInfo.providerType());
 
         Member newMember = Member.builder()
-                .email(memberInfo.email())
+                .email(oAuth2MemberInfo.email())
                 .password("OAUTH_MEMBER_NO_PASSWORD")
+                .name(oAuth2MemberInfo.nickname())
                 .nickname(nickname)
-                .name(memberInfo.nickname())
                 .gender(Gender.OTHER)
-                .provider(memberInfo.providerType())
+                .genres(Collections.emptySet())
+                .provider(oAuth2MemberInfo.providerType())
                 .build();
 
         return memberRepository.save(newMember);
     }
 
-    private String resolveNickname(String nickname, ProviderType providerType) {
+    private String resolveUniqueNickname(String nickname, ProviderType providerType) {
         String resolvedNickname = nickname;
         int suffix = 1;
         while (memberRepository.existsByNickname(resolvedNickname)) {
