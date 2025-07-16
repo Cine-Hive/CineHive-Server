@@ -1,17 +1,34 @@
 package com.example.CineHive.mapper.member;
 
 import com.example.CineHive.dto.member.MemberRegisterRequestDto;
-import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.entity.member.Gender;
 import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.member.ProviderType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 
+/**
+ * 회원(Member) 관련 매퍼 클래스입니다.
+ * 이 클래스는 오직 요청 DTO(Request DTO)를 엔티티(Entity)로 변환하는 책임만 가집니다.
+ */
 public final class MemberMapper {
 
-    private MemberMapper() {} // 유틸리티 클래스 인스턴스화 방지
+    /**
+     * 유틸리티 클래스는 인스턴스화할 수 없습니다.
+     */
+    private MemberMapper() {
+        throw new IllegalStateException("유틸리티 클래스는 인스턴스화할 수 없습니다.");
+    }
 
+    /**
+     * 일반 회원가입 요청 DTO를 Member 엔티티로 변환합니다.
+     * 이 과정에서 비밀번호는 안전하게 암호화되며, 프로바이더는 'LOCAL'로 설정됩니다.
+     *
+     * @param dto             회원가입 요청 데이터
+     * @param passwordEncoder 비밀번호 암호화기
+     * @return 생성된 Member 엔티티
+     */
     public static Member toEntity(MemberRegisterRequestDto dto, PasswordEncoder passwordEncoder) {
         return Member.builder()
                 .email(dto.email())
@@ -20,16 +37,7 @@ public final class MemberMapper {
                 .nickname(dto.nickname())
                 .gender(Gender.valueOf(dto.gender().toUpperCase()))
                 .genres(new HashSet<>(dto.genres()))
-                .build();
-    }
-
-    public static LoginResponseDto toLoginResponseDto(Member member, String token) {
-        LoginResponseDto.MemberInfo memberInfo = new LoginResponseDto.MemberInfo(member);
-
-        return LoginResponseDto.builder()
-                .token(token)
-                .isNewMember(false) // 일반 로그인이므로 항상 기존 회원
-                .member(memberInfo)
+                .provider(ProviderType.LOCAL) // 일반 회원가입은 LOCAL 프로바이더로 명시
                 .build();
     }
 }
