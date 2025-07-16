@@ -23,6 +23,9 @@ public abstract class Media {
 
     private String title;
     private String originalTitle;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String overview;
     private String releaseDate;
     private Double voteAverage;
