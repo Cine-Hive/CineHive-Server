@@ -5,10 +5,8 @@ import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.member.MemberRegisterRequestDto;
 import com.example.CineHive.entity.member.LoginHistory;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.DuplicateEmailException;
-import com.example.CineHive.exception.DuplicateNicknameException;
-import com.example.CineHive.exception.InvalidPasswordException;
-import com.example.CineHive.exception.MemberNotFoundException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.member.MemberMapper;
 import com.example.CineHive.repository.member.LoginHistoryRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -41,10 +39,10 @@ public class MemberServiceImpl implements MemberService {
     public Member register(MemberRegisterRequestDto requestDto) {
         log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
         if (memberRepository.existsByEmail(requestDto.email())) {
-            throw new DuplicateEmailException("이미 사용 중인 이메일입니다: " + requestDto.email());
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         if (memberRepository.existsByNickname(requestDto.nickname())) {
-            throw new DuplicateNicknameException("이미 사용 중인 닉네임입니다: " + requestDto.nickname());
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
         Member member = MemberMapper.toEntity(requestDto, passwordEncoder);
@@ -58,10 +56,10 @@ public class MemberServiceImpl implements MemberService {
     public LoginResponseDto login(LoginRequestDto requestDto, String userAgent) {
         log.info("로그인 시도: {}", requestDto.email());
         Member member = memberRepository.findByEmail(requestDto.email())
-                .orElseThrow(() -> new MemberNotFoundException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(requestDto.password(), member.getPassword())) {
-            throw new InvalidPasswordException("이메일 또는 비밀번호가 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         recordLoginHistory(member, userAgent);
@@ -82,7 +80,10 @@ public class MemberServiceImpl implements MemberService {
         log.info("비밀번호 변경 시도: {}", email);
         Member member = findByEmail(email);
         if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
-            throw new InvalidPasswordException("기존 비밀번호가 일치하지 않습니다.");
+            // NOTE: '기존 비밀번호 불일치'는 로그인 실패와는 성격이 다르므로
+            //       'INVALID_CREDENTIALS' 대신 'INVALID_INPUT_VALUE'를 사용합니다.
+            //       더 명확한 에러를 위해 'PASSWORD_MISMATCH' 같은 ErrorCode를 추가하는 것도 좋은 방법입니다.
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
         member.changePassword(passwordEncoder.encode(newPassword));
         log.info("비밀번호 변경 완료: {}", email);
@@ -101,7 +102,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Member findByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private void recordLoginHistory(Member member, String userAgent) {
