@@ -7,6 +7,8 @@ import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.MediaType;
 import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.media.MediaMapper;
 import com.example.CineHive.service.admin.AdminHomeChartService;
 import com.example.CineHive.service.meta.PlatformMetadataService;
@@ -37,27 +39,30 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     @Override
     @Cacheable(value = "mediaDetails", key = "#mediaType + '_' + #id")
     public Mono<MediaDetailDto> getMediaDetail(Long id, String mediaType) {
-        MediaType type = MediaType.fromString(mediaType);
-        log.info("Fetching detail for {} with id {}", type, id);
+        MediaType type = parseMediaType(mediaType);
+        log.info("{} 상세 정보 조회 시작 (ID: {})", type, id);
 
-        return switch (type) {
+        Mono<MediaDetailDto> detailMono = switch (type) {
             case MOVIE -> tmdbApiClient.getMovieDetail(id).map(MediaMapper::toMediaDetailDto);
             case TV -> tmdbApiClient.getTvSeriesDetail(id).map(MediaMapper::toMediaDetailDto);
         };
+
+        return detailMono.onErrorMap(this::wrapClientException);
     }
 
     @Override
     @Cacheable(value = "mediaSearch", key = "#query + '_' + #page")
     public Mono<PagedResponse<MediaSummaryDto>> searchMedia(String query, int page) {
-        log.info("Searching media for query '{}' on page {}", query, page);
+        log.info("미디어 검색 시작 (쿼리: '{}', 페이지: {})", query, page);
         return tmdbApiClient.searchMulti(query, page)
-                .map(tmdbResponse -> MediaMapper.toSearchPagedResponseFromTmdb(tmdbResponse, page, DEFAULT_PAGE_SIZE));
+                .map(tmdbResponse -> MediaMapper.toSearchPagedResponseFromTmdb(tmdbResponse, page, DEFAULT_PAGE_SIZE))
+                .onErrorMap(this::wrapClientException);
     }
 
     @Override
     @Cacheable("chartSummary")
     public Mono<ChartSummaryResponse> getChartSummary() {
-        log.info("Fetching chart summary for home screen from database settings.");
+        log.info("홈 화면 차트 요약 정보 조회 시작 (DB 설정 기반)");
         List<ChartType> summaryChartTypes = adminHomeChartService.getHomeChartSettings().stream()
                 .map(HomeChartSetting::getChartType)
                 .toList();
@@ -76,26 +81,27 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     @Override
     @Cacheable(value = "curatedCharts", key = "#chartType.name() + '_' + #page")
     public Mono<PagedResponse<MediaChartDto>> getCuratedChart(ChartType chartType, int page) {
-        log.info("Fetching curated chart for {} on page {}", chartType.name(), page);
-        ChartStrategy strategy = chartStrategyFactory.getStrategy(chartType);
-        return strategy.fetchChart(tmdbApiClient, page);
+        log.info("큐레이션 차트 조회 시작 (타입: {}, 페이지: {})", chartType.name(), page);
+        ChartStrategy strategy = getChartStrategy(chartType);
+        return strategy.fetchChart(tmdbApiClient, page)
+                .onErrorMap(this::wrapClientException);
     }
 
     @Override
     @Cacheable(value = "genreCharts", key = "#mediaType + '_' + #genreId + '_' + #page")
     public Mono<PagedResponse<MediaChartDto>> getGenreChart(String mediaType, Long genreId, int page) {
-        log.info("Fetching genre chart for mediaType '{}', genreId '{}' on page {}", mediaType, genreId, page);
+        log.info("장르별 차트 조회 시작 (미디어 타입: '{}', 장르 ID: '{}', 페이지: {})", mediaType, genreId, page);
         ChartProperties props = ChartProperties.builder()
                 .genreId(String.valueOf(genreId))
                 .sortBy("popularity.desc")
                 .build();
-        return discoverMedia(MediaType.fromString(mediaType), props, page);
+        return discoverMedia(parseMediaType(mediaType), props, page);
     }
 
     @Override
     @Cacheable(value = "platformCharts", key = "#platform.name() + '_' + #page")
     public Mono<PagedResponse<MediaChartDto>> getPlatformChart(Platform platform, int page) {
-        log.info("Fetching platform chart for platform '{}' on page {}", platform.name(), page);
+        log.info("플랫폼별 차트 조회 시작 (플랫폼: '{}', 페이지: {})", platform.name(), page);
         ChartProperties props = ChartProperties.builder()
                 .networkId(String.valueOf(platform.getId()))
                 .sortBy("popularity.desc")
@@ -106,14 +112,12 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     @Override
     @Cacheable("filterMetadata")
     public Mono<FilterMetadataResponse> getFilterMetadata() {
-        log.info("Fetching filter metadata.");
+        log.info("필터 메타데이터 조회 시작");
         Mono<List<GenreOptionDto>> movieGenres = tmdbApiClient.getMovieGenres()
                 .map(res -> res.getGenres().stream().map(g -> new GenreOptionDto(g.getId(), g.getName())).toList());
         Mono<List<GenreOptionDto>> tvGenres = tmdbApiClient.getTvGenres()
                 .map(res -> res.getGenres().stream().map(g -> new GenreOptionDto(g.getId(), g.getName())).toList());
-
         Mono<List<PlatformOptionDto>> platforms = platformMetadataService.getPlatformOptions();
-
         Mono<List<SortOptionDto>> sortOptions = Mono.just(List.of(
                 new SortOptionDto("popularity.desc", "인기순"),
                 new SortOptionDto("vote_average.desc", "평점순"),
@@ -127,17 +131,21 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .tvGenres(tuple.getT2())
                         .platforms(tuple.getT3())
                         .sortOptions(tuple.getT4())
-                        .build());
+                        .build())
+                .onErrorMap(this::wrapClientException);
     }
 
+    //== Private Helper Methods ==//
+
     private Mono<PagedResponse<MediaChartDto>> discoverMedia(MediaType type, ChartProperties properties, int page) {
-        log.debug("Discovering {} with properties {} on page {}", type, properties, page);
-        return switch (type) {
+        log.debug("{} 탐색 시작 (속성: {}, 페이지: {})", type, properties, page);
+        Mono<PagedResponse<MediaChartDto>> discoveredMedia = switch (type) {
             case MOVIE -> tmdbApiClient.discoverMovies(page, properties)
                     .map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
             case TV -> tmdbApiClient.discoverTvSeries(page, properties)
                     .map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
         };
+        return discoveredMedia.onErrorMap(this::wrapClientException);
     }
 
     private Mono<ChartSection> createChartSection(ChartType chartType) {
@@ -148,5 +156,29 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .title(chartType.getDescription())
                         .content(content)
                         .build());
+    }
+
+    private MediaType parseMediaType(String mediaType) {
+        try {
+            return MediaType.fromString(mediaType);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_MEDIA_TYPE);
+        }
+    }
+
+    private ChartStrategy getChartStrategy(ChartType chartType) {
+        try {
+            return chartStrategyFactory.getStrategy(chartType);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.CHART_STRATEGY_NOT_FOUND);
+        }
+    }
+
+    private BusinessException wrapClientException(Throwable e) {
+        if (e instanceof BusinessException) {
+            return (BusinessException) e;
+        }
+        log.error("TMDB API 클라이언트 오류 발생", e);
+        return new BusinessException("TMDB API Error: " + e.getMessage(), ErrorCode.TMDB_API_ERROR);
     }
 }
