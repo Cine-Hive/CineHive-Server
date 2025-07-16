@@ -3,8 +3,6 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
 import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BookmarkAlreadyExistsException;
-import com.example.CineHive.exception.BookmarkNotFoundException;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
