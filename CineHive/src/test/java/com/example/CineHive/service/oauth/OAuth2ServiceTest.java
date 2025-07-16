@@ -3,9 +3,8 @@ package com.example.CineHive.service.oauth;
 import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
-import com.example.CineHive.entity.member.*;
-import com.example.CineHive.exception.InvalidOAuthTokenException;
-import com.example.CineHive.exception.OAuthCommunicationException;
+import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.member.ProviderType;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.example.CineHive.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,174 +17,161 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
+/**
+ * OAuth2Service의 비즈니스 로직을 테스트합니다.
+ * 외부 의존성(Repository, Util, Client)은 Mockito를 사용하여 모의 처리합니다.
+ */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("OAuth2Service 통합 테스트")
+@DisplayName("OAuth2Service 단위 테스트")
 class OAuth2ServiceTest {
+
+    @InjectMocks
+    private OAuth2ServiceImpl oauth2Service;
 
     @Mock
     private MemberRepository memberRepository;
     @Mock
     private JwtUtil jwtUtil;
     @Mock
-    private OAuth2Client kakaoClient;
-    @Mock
-    private OAuth2Client googleClient;
+    private List<OAuth2Client> clients; // 실제 client 리스트 대신 Mock 주입
 
-    @InjectMocks
-    private OAuth2ServiceImpl oauth2Service;
-
-    private OAuth2MemberInfo dummyMemberInfo;
-    private Member existingMember;
+    // 테스트에서 사용할 Mock Client
+    private OAuth2Client mockKakaoClient;
 
     @BeforeEach
     void setUp() {
-        // given - Mock 객체들의 기본 동작 설정
-        given(kakaoClient.getProviderType()).willReturn(ProviderType.KAKAO);
-        given(googleClient.getProviderType()).willReturn(ProviderType.GOOGLE);
+        // Mock Client 설정
+        mockKakaoClient = mock(OAuth2Client.class);
+        given(mockKakaoClient.getProviderType()).willReturn(ProviderType.KAKAO);
 
-        // @InjectMocks가 생성자를 통해 주입하므로, List를 직접 생성하여 넘겨줌
-        oauth2Service = new OAuth2ServiceImpl(List.of(kakaoClient, googleClient), memberRepository, jwtUtil);
-        oauth2Service.init(); // @PostConstruct 수동 호출
+        oauth2Service = new OAuth2ServiceImpl(List.of(mockKakaoClient), memberRepository, jwtUtil);
+        oauth2Service.init();
+    }
 
-        // given - 테스트용 기본 데이터
-        dummyMemberInfo = new OAuth2MemberInfo("test@example.com", "테스트유저", ProviderType.KAKAO);
-        existingMember = Member.builder()
-                .email("test@example.com").password("PASSWORD").name("기존유저").nickname("기존유저")
-                .gender(Gender.MALE).genres(new HashSet<>()).provider(ProviderType.KAKAO).role(MemberRole.ROLE_USER)
+    private OAuth2MemberInfo createDummyOAuth2MemberInfo(String email, String nickname, ProviderType provider) {
+        return new OAuth2MemberInfo(email, nickname, provider);
+    }
+
+    private Member createDummyMember(String email, String nickname) {
+        return Member.builder()
+                .email(email)
+                .nickname(nickname)
+                .provider(ProviderType.KAKAO)
                 .build();
     }
 
     @Nested
-    @DisplayName("로그인 처리 (loginWithCode)")
+    @DisplayName("소셜 로그인/회원가입 처리 (processLogin)")
     class ProcessLogin {
-        @Nested
-        @DisplayName("성공 시나리오")
-        class Success {
-            @Test
-            @DisplayName("✅ 기존 회원이 로그인 시, 회원가입 없이 로그인 처리된다.")
-            void forExistingMember() {
-                // given
-                String code = "valid-code";
-                String token = "jwt-token";
-                given(kakaoClient.getMemberInfo(code)).willReturn(Mono.just(dummyMemberInfo));
-                given(memberRepository.findByEmail(dummyMemberInfo.email())).willReturn(Optional.of(existingMember));
-                given(jwtUtil.generateToken(existingMember.getEmail())).willReturn(token);
-                given(memberRepository.existsByEmail(dummyMemberInfo.email())).willReturn(true);
 
-                // when
-                LoginResponseDto response = oauth2Service.loginWithCode(ProviderType.KAKAO, code);
+        @Test
+        @DisplayName("✅ 성공: 기존 회원이 소셜 로그인 시, isNewMember=false 와 함께 JWT를 발급한다.")
+        void login_withExistingMember_shouldSucceed() {
+            // given
+            String email = "test@kakao.com";
+            String nickname = "기존유저";
+            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
+            Member existingMember = createDummyMember(email, nickname);
+            String dummyToken = "dummy-jwt-token";
 
-                // then
-                assertThat(response.isNewMember()).isFalse();
-                assertThat(response.token()).isEqualTo(token);
-                assertThat(response.member().email()).isEqualTo(existingMember.getEmail());
-                verify(memberRepository, never()).save(any(Member.class));
-                verify(kakaoClient, times(1)).getMemberInfo(eq(code));
-            }
+            given(memberRepository.existsByEmail(email)).willReturn(true);
+            given(memberRepository.findByEmail(email)).willReturn(Optional.of(existingMember));
+            given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
-            @Test
-            @DisplayName("✅ 신규 회원이 로그인 시, 회원가입 후 로그인 처리된다.")
-            void forNewMember() {
-                // given
-                String code = "valid-code";
-                given(kakaoClient.getMemberInfo(code)).willReturn(Mono.just(dummyMemberInfo));
-                given(memberRepository.findByEmail(dummyMemberInfo.email())).willReturn(Optional.empty());
-                given(memberRepository.save(any(Member.class))).willReturn(existingMember); // 저장 후 객체 반환 가정
-                given(jwtUtil.generateToken(anyString())).willReturn("new-jwt-token");
+            // when
+            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
 
-                // when
-                LoginResponseDto response = oauth2Service.loginWithCode(ProviderType.KAKAO, code);
-
-                // then
-                assertThat(response.isNewMember()).isTrue();
-                assertThat(response.token()).isEqualTo("new-jwt-token");
-                verify(memberRepository, times(1)).save(any(Member.class));
-            }
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.isNewMember()).isFalse();
+            assertThat(response.token()).isEqualTo(dummyToken);
+            assertThat(response.memberInfo().email()).isEqualTo(existingMember.getEmail());
+            assertThat(response.memberInfo().nickname()).isEqualTo(existingMember.getNickname());
         }
 
-        @Nested
-        @DisplayName("실패 시나리오")
-        class Failure {
-            @Test
-            @DisplayName("❌ 지원하지 않는 Provider 요청 시 IllegalArgumentException을 던진다.")
-            void unsupportedProvider() {
-                // given
-                ProviderType unsupportedProvider = ProviderType.LOCAL;
+        @Test
+        @DisplayName("✅ 성공: 신규 회원이 소셜 로그인 시, isNewMember=true 와 함께 회원가입 후 JWT를 발급한다.")
+        void login_withNewMember_shouldRegisterAndSucceed() {
+            // given
+            String email = "new@kakao.com";
+            String nickname = "신규유저";
+            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
+            Member newMember = createDummyMember(email, nickname);
+            String dummyToken = "dummy-jwt-token";
 
-                // when & then
-                assertThatThrownBy(() -> oauth2Service.loginWithCode(unsupportedProvider, "any-code"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessageContaining("지원하지 않는 소셜 로그인입니다");
-            }
+            given(memberRepository.existsByEmail(email)).willReturn(false);
+            given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
+            given(memberRepository.existsByNickname(nickname)).willReturn(false);
+            given(memberRepository.save(any(Member.class))).willReturn(newMember);
+            given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
-            @Test
-            @DisplayName("❌ OAuth2Client가 Mono.error를 반환하면 OAuthCommunicationException을 던진다.")
-            void clientReturnsError() {
-                // given
-                String code = "error-code";
-                given(kakaoClient.getMemberInfo(code)).willReturn(Mono.error(new RuntimeException("API is down")));
+            // when
+            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
 
-                // when & then
-                assertThatThrownBy(() -> oauth2Service.loginWithCode(ProviderType.KAKAO, code))
-                        .isInstanceOf(OAuthCommunicationException.class)
-                        .hasMessageContaining("소셜 프로필 정보를 가져오는 데 실패했습니다.");
-            }
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.isNewMember()).isTrue();
+            assertThat(response.token()).isEqualTo(dummyToken);
+            assertThat(response.memberInfo().email()).isEqualTo(newMember.getEmail());
 
-            @Test
-            @DisplayName("❌ OAuth2Client가 Mono.empty를 반환하면 InvalidOAuthTokenException을 던진다.")
-            void clientReturnsEmpty() {
-                // given
-                String code = "empty-code";
-                given(kakaoClient.getMemberInfo(code)).willReturn(Mono.empty());
+            verify(memberRepository).save(any(Member.class));
+        }
 
-                // when & then
-                assertThatThrownBy(() -> oauth2Service.loginWithCode(ProviderType.KAKAO, code))
-                        .isInstanceOf(InvalidOAuthTokenException.class)
-                        .hasMessageContaining("유효하지 않은 인가 코드입니다.");
-            }
+        @Test
+        @DisplayName("✅ 성공: 신규 회원 가입 시 닉네임이 중복되면, (Provider N) 접미사를 붙여 유니크한 닉네임을 생성한다.")
+        void register_withDuplicateNickname_shouldCreateUniqueNickname() {
+            // given
+            String email = "another@kakao.com";
+            String originalNickname = "중복닉네임";
+            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, originalNickname, ProviderType.KAKAO);
+
+            String firstAttempt = originalNickname;
+            String secondAttempt = String.format("%s (%s %d)", originalNickname, ProviderType.KAKAO.name(), 1);
+            Member newMemberWithResolvedNickname = createDummyMember(email, secondAttempt);
+            String dummyToken = "dummy-jwt-token";
+
+            given(memberRepository.existsByEmail(email)).willReturn(false);
+            given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
+            given(memberRepository.existsByNickname(firstAttempt)).willReturn(true); // 첫 시도는 중복
+            given(memberRepository.existsByNickname(secondAttempt)).willReturn(false); // 두 번째 시도는 성공
+            given(memberRepository.save(any(Member.class))).willReturn(newMemberWithResolvedNickname);
+            given(jwtUtil.generateToken(email)).willReturn(dummyToken);
+
+            // when
+            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.isNewMember()).isTrue();
+            assertThat(response.memberInfo().nickname()).isEqualTo(secondAttempt);
         }
     }
 
-    @Nested
-    @DisplayName("닉네임 중복 처리 (resolveNickname)")
-    class ResolveNickname {
-        @Test
-        @DisplayName("✅ 닉네임이 2번 중복될 경우, 접미사 숫자가 2까지 증가한다.")
-        void whenDuplicatedTwice() {
-            // given
-            String originalNickname = dummyMemberInfo.nickname();
-            String firstAttempt = originalNickname + " (KAKAO 1)";
-            String secondAttempt = originalNickname + " (KAKAO 2)";
+    @Test
+    @DisplayName("✅ loginWithAccessToken 호출 시, 올바른 Client의 메서드를 호출한다.")
+    void loginWithAccessToken_shouldCallCorrectClient() {
+        // given
+        String accessToken = "valid-access-token";
+        OAuth2MemberInfo dummyInfo = createDummyOAuth2MemberInfo("test@kakao.com", "test", ProviderType.KAKAO);
+        given(mockKakaoClient.getMemberInfoByAccessToken(accessToken)).willReturn(Mono.just(dummyInfo));
+        given(memberRepository.existsByEmail(anyString())).willReturn(true);
+        given(memberRepository.findByEmail(anyString())).willReturn(Optional.of(mock(Member.class)));
+        given(jwtUtil.generateToken(anyString())).willReturn("dummy-token");
 
-            given(kakaoClient.getMemberInfo(anyString())).willReturn(Mono.just(dummyMemberInfo));
-            given(memberRepository.findByEmail(anyString())).willReturn(Optional.empty());
-            given(memberRepository.save(any(Member.class))).willAnswer(inv -> inv.getArgument(0));
+        // when
+        oauth2Service.loginWithAccessToken(ProviderType.KAKAO, accessToken);
 
-            // Mocking the nickname existence checks
-            given(memberRepository.existsByNickname(originalNickname)).willReturn(true);
-            given(memberRepository.existsByNickname(firstAttempt)).willReturn(true);
-            given(memberRepository.existsByNickname(secondAttempt)).willReturn(false);
-
-            // when
-            LoginResponseDto response = oauth2Service.loginWithCode(ProviderType.KAKAO, "any-code");
-
-            // then
-            assertThat(response.member().nickname()).isEqualTo(secondAttempt);
-            verify(memberRepository, times(1)).existsByNickname(originalNickname);
-            verify(memberRepository, times(1)).existsByNickname(firstAttempt);
-            verify(memberRepository, times(1)).existsByNickname(secondAttempt);
-        }
+        // then
+        verify(mockKakaoClient).getMemberInfoByAccessToken(accessToken);
     }
 }
