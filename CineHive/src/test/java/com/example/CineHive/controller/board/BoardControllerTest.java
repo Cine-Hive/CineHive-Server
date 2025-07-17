@@ -1,8 +1,8 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.dto.board.BoardSortType;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.member.*;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,12 +25,15 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * BoardController의 API 엔드포인트에 대한 통합 테스트입니다.
+ * 실제 데이터베이스와의 상호작용을 포함하여 컨트롤러의 동작을 검증합니다.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -59,17 +62,27 @@ class BoardControllerTest {
 
     private Member createAndSaveMember(String email, String nickname) {
         return memberRepository.save(Member.builder().email(email).password("password").name(nickname).nickname(nickname)
-                .gender(Gender.MALE).provider(ProviderType.LOCAL).role(MemberRole.ROLE_USER).build());
+                .gender(Gender.MALE).provider(ProviderType.LOCAL).build());
     }
 
-    // --- 1. 생성(Create) 테스트 ---
+    /**
+     * 게시글 생성(POST /api/v1/boards) API에 대한 테스트
+     */
     @Nested
     @DisplayName("게시글 생성 (POST /api/v1/boards)")
     class CreateBoard {
+        /**
+         * 게시글 생성 성공 시나리오
+         */
         @Nested
         @DisplayName("성공 시나리오")
-        @WithMockUser(username = "test@example.com", roles = "USER")
+        @WithMockUser(username = "test@example.com")
         class Success {
+            /**
+             * Given: 유효한 게시글 제목과 내용, 그리고 인증된 사용자 정보
+             * When: 게시글 생성 API를 호출하면
+             * Then: HTTP 201 Created 상태 코드와 함께 생성된 게시글 정보가 반환된다.
+             */
             @Test
             @DisplayName("✅ 유효한 데이터로 요청 시, 게시글이 생성되고 201 응답을 반환한다.")
             void createBoard_success() throws Exception {
@@ -84,12 +97,20 @@ class BoardControllerTest {
             }
         }
 
+        /**
+         * 게시글 생성 실패 시나리오
+         */
         @Nested
         @DisplayName("실패 시나리오")
         class Failure {
+            /**
+             * Given: 제목 또는 내용이 비어있는 요청 데이터
+             * When: 게시글 생성 API를 호출하면
+             * Then: HTTP 400 Bad Request 상태 코드를 반환한다.
+             */
             @ParameterizedTest
             @ValueSource(strings = {"", " "})
-            @WithMockUser(username = "test@example.com", roles = "USER")
+            @WithMockUser(username = "test@example.com")
             @DisplayName("❌ 제목 또는 내용이 비어있으면 400 Bad Request를 반환한다.")
             void createBoard_withBlankField_shouldFail(String blankValue) throws Exception {
                 // given
@@ -103,6 +124,11 @@ class BoardControllerTest {
                         .andExpect(status().isBadRequest());
             }
 
+            /**
+             * Given: 인증되지 않은 익명 사용자
+             * When: 게시글 생성 API를 호출하면
+             * Then: HTTP 401 Unauthorized 상태 코드를 반환한다.
+             */
             @Test
             @WithAnonymousUser
             @DisplayName("❌ 인증되지 않은 사용자가 요청하면 401 Unauthorized를 반환한다.")
@@ -117,11 +143,15 @@ class BoardControllerTest {
         }
     }
 
-    // --- 2. 조회(Read) 테스트 ---
+    /**
+     * 게시글 조회(GET /api/v1/boards, GET /api/v1/boards/{id}) API에 대한 테스트
+     */
     @Nested
-    @DisplayName("게시글 조회 (GET /api/v1/boards, GET /api/v1/boards/{id})")
+    @DisplayName("게시글 조회")
     class ReadBoard {
-
+        /**
+         * 게시글 상세 조회 테스트
+         */
         @Nested
         @DisplayName("상세 조회")
         class GetSingle {
@@ -145,10 +175,13 @@ class BoardControllerTest {
                 // when & then
                 mockMvc.perform(get("/api/v1/boards/99999"))
                         .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.error.message").value("해당 ID의 게시글을 찾을 수 없습니다: 99999"));
+                        .andExpect(jsonPath("$.error.message").value(ErrorCode.BOARD_NOT_FOUND.getMessage()));
             }
         }
 
+        /**
+         * 게시글 목록 조회 테스트
+         */
         @Nested
         @DisplayName("목록 조회")
         class GetList {
@@ -198,7 +231,9 @@ class BoardControllerTest {
         }
     }
 
-    // --- 3. 수정(Update) 테스트 ---
+    /**
+     * 게시글 수정(PUT /api/v1/boards/{id}) API에 대한 테스트
+     */
     @Nested
     @DisplayName("게시글 수정 (PUT /api/v1/boards/{id})")
     class UpdateBoard {
@@ -210,7 +245,7 @@ class BoardControllerTest {
 
         @Nested
         @DisplayName("성공 시나리오")
-        @WithMockUser(username = "test@example.com", roles = "USER")
+        @WithMockUser(username = "test@example.com")
         class Success {
             @Test
             @DisplayName("✅ 성공: 게시글 작성자가 수정 요청 시 200 응답과 함께 내용이 변경된다.")
@@ -238,7 +273,7 @@ class BoardControllerTest {
             }
 
             @Test
-            @WithMockUser(username = "other@example.com", roles = "USER")
+            @WithMockUser(username = "other@example.com")
             @DisplayName("❌ 실패: 권한 없는 사용자가 요청하면 403 Forbidden을 반환한다.")
             void updateBoard_withOtherUser_shouldFail() throws Exception {
                 Map<String, String> request = Map.of("brdTitle", "수정 시도", "brdContent", "권한 없음");
@@ -247,18 +282,20 @@ class BoardControllerTest {
             }
 
             @Test
-            @WithMockUser(username = "test@example.com", roles = "USER")
+            @WithMockUser(username = "test@example.com")
             @DisplayName("❌ 실패: 존재하지 않는 게시글 ID로 요청하면 404 Not Found를 반환한다.")
             void updateBoard_withNonExistentId_shouldFail() throws Exception {
                 Map<String, String> request = Map.of("brdTitle", "수정", "brdContent", "수정");
                 mockMvc.perform(put("/api/v1/boards/9999").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.error.message").value("해당 ID의 게시글을 찾을 수 없습니다: 9999"));
+                        .andExpect(jsonPath("$.error.message").value(ErrorCode.BOARD_NOT_FOUND.getMessage()));
             }
         }
     }
 
-    // --- 4. 삭제(Delete) 테스트 ---
+    /**
+     * 게시글 삭제(DELETE /api/v1/boards/{id}) API에 대한 테스트
+     */
     @Nested
     @DisplayName("게시글 삭제 (DELETE /api/v1/boards/{id})")
     class DeleteBoard {
@@ -270,7 +307,7 @@ class BoardControllerTest {
 
         @Nested
         @DisplayName("성공 시나리오")
-        @WithMockUser(username = "test@example.com", roles = "USER")
+        @WithMockUser(username = "test@example.com")
         class Success {
             @Test
             @DisplayName("✅ 성공: 게시글 작성자가 삭제 요청 시 200 응답과 함께 게시글이 삭제된다.")
@@ -288,7 +325,7 @@ class BoardControllerTest {
         @DisplayName("실패 시나리오")
         class Failure {
             @Test
-            @WithMockUser(username = "other@example.com", roles = "USER")
+            @WithMockUser(username = "other@example.com")
             @DisplayName("❌ 실패: 권한 없는 사용자가 요청하면 403 Forbidden을 반환한다.")
             void deleteBoard_withOtherUser_shouldFail() throws Exception {
                 mockMvc.perform(delete("/api/v1/boards/{id}", testBoard.getId()).with(csrf()))
@@ -304,12 +341,12 @@ class BoardControllerTest {
             }
 
             @Test
-            @WithMockUser(username = "test@example.com", roles = "USER")
+            @WithMockUser(username = "test@example.com")
             @DisplayName("❌ 실패: 존재하지 않는 게시글 ID로 요청하면 404 Not Found를 반환한다.")
             void deleteBoard_withNonExistentId_shouldFail() throws Exception {
                 mockMvc.perform(delete("/api/v1/boards/9999").with(csrf()))
                         .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.error.message", containsString("해당 ID의 게시글을 찾을 수 없습니다")));
+                        .andExpect(jsonPath("$.error.message").value(ErrorCode.BOARD_NOT_FOUND.getMessage()));
             }
         }
     }
