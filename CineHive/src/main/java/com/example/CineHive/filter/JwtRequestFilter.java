@@ -84,7 +84,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 log.warn("JWT 토큰 유효성 검증 실패: {}", e.getMessage());
             }
         }
-        
+
         filterChain.doFilter(request, response);
     }
 }
