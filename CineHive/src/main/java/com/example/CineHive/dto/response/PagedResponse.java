@@ -15,7 +15,7 @@ import java.util.List;
 public class PagedResponse<T> {
     private List<T> content;
     private int page;
-    private int size; // <-- size 필드 추가!
+    private int size;
     private long totalElements;
     private int totalPages;
     private boolean last;
@@ -24,7 +24,7 @@ public class PagedResponse<T> {
         return PagedResponse.<T>builder()
                 .content(Collections.emptyList())
                 .page(page)
-                .size(size) // <-- size 필드 설정 추가
+                .size(size)
                 .totalElements(0)
                 .totalPages(0)
                 .last(true)

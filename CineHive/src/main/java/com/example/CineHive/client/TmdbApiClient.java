@@ -2,7 +2,8 @@ package com.example.CineHive.client;
 
 import com.example.CineHive.dto.media.ChartProperties;
 import com.example.CineHive.dto.response.*;
-import com.example.CineHive.exception.TmdbApiException;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -211,11 +212,12 @@ public class TmdbApiClient {
 
     private Mono<Throwable> handleApiError(ClientResponse response, String path) {
         return response.bodyToMono(String.class)
-                .defaultIfEmpty("No response body")
+                .defaultIfEmpty("응답 본문 없음")
                 .flatMap(errorBody -> {
-                    log.error("TMDB API Error for path [{}], Status: {}, Body: {}",
+                    log.error("TMDB API 오류 발생. 경로: [{}], 상태 코드: {}, 응답 본문: {}",
                             path, response.statusCode(), errorBody);
-                    return Mono.error(new TmdbApiException("TMDB API 요청 실패: " + response.statusCode()));
+                    String errorMessage = String.format("TMDB API 요청 실패: 상태 코드 %s", response.statusCode());
+                    return Mono.error(new BusinessException(errorMessage, ErrorCode.TMDB_API_ERROR));
                 });
     }
 

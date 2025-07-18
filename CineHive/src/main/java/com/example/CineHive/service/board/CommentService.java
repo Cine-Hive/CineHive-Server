@@ -1,101 +1,50 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Comment;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.UserNotFoundException;
-import com.example.CineHive.mapper.CommentMapper;
-import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.CommentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.example.CineHive.dto.comment.CreateCommentRequest;
+import com.example.CineHive.dto.comment.UpdateCommentRequest;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Service
-public class CommentService {
+/**
+ * 댓글 관련 비즈니스 로직을 처리하는 서비스의 인터페이스입니다.
+ * 이 인터페이스는 댓글의 생성, 조회, 수정, 삭제 기능을 정의합니다.
+ */
+public interface CommentService {
 
-    @Autowired
-    private CommentRepository commentRepository;
+    /**
+     * 특정 게시물에 새로운 댓글을 추가합니다.
+     *
+     * @param boardId     댓글을 추가할 게시물의 ID
+     * @param request     생성할 댓글의 내용이 담긴 DTO
+     * @param memberEmail 댓글을 작성하는 회원의 이메일 (인증 정보)
+     * @return 생성된 댓글의 정보를 담은 DTO
+     */
+    CommentDto addComment(Long boardId, CreateCommentRequest request, String memberEmail);
 
-    @Autowired
-    private UserRepository userRepository;
+    /**
+     * 특정 게시물에 달린 모든 댓글을 조회합니다.
+     *
+     * @param boardId 댓글 목록을 조회할 게시물의 ID
+     * @return 해당 게시물의 댓글 DTO 리스트
+     */
+    List<CommentDto> getCommentsByBoard(Long boardId);
 
-    @Autowired
-    private BoardRepository boardRepository;
+    /**
+     * 기존 댓글의 내용을 수정합니다.
+     *
+     * @param commentId   수정할 댓글의 ID
+     * @param request     수정할 댓글의 내용이 담긴 DTO
+     * @param memberEmail 댓글을 수정하려는 회원의 이메일 (인증 및 소유권 검증용)
+     * @return 수정된 댓글의 정보를 담은 DTO
+     */
+    CommentDto updateComment(Long commentId, UpdateCommentRequest request, String memberEmail);
 
-    @Autowired
-    private CommentMapper commentMapper;
-
-    public CommentDto addComment(Long boardId, String memEmail, String content) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException("Board not found."));
-        User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        Comment comment = new Comment();
-        comment.setContent(content);
-        comment.setBoard(board);
-        comment.setUser(user);
-
-        Comment savedComment = commentRepository.save(comment);
-
-        // 댓글 수 증가
-        board.setCommentCount(board.getCommentCount() + 1);
-        boardRepository.save(board);
-
-        return commentMapper.toDTO(savedComment);
-    }
-
-    public List<CommentDto> getCommentsByBoard(Long boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found."));
-        List<Comment> comments = commentRepository.findByBoard(board);
-
-        return comments.stream()
-                .map(commentMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public void deleteComment(Long boardId, Long commentId, String memEmail) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found."));
-
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Commnet not found."));
-
-        if (!comment.getUser().getMemEmail().equals(memEmail)) {
-            throw new RuntimeException("댓글을 삭제할 권한이 없습니다.");
-        }
-
-        commentRepository.delete(comment);
-
-        // 댓글 수 감소
-        board.setCommentCount(board.getCommentCount() - 1);
-        boardRepository.save(board);
-    }
-
-
-    public CommentDto updateComment(Long boardId, Long commentId, CommentDto commentDto, String memEmail) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() ->new BoardNotFoundException("Board not found."));
-
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found."));
-
-        if (!comment.getUser().getMemEmail().equals(memEmail)) {
-            throw new RuntimeException("댓글을 수정할 권한이 없습니다.");
-        }
-
-        comment.setContent(commentDto.getContent());
-
-        Comment updatedComment = commentRepository.save(comment);
-
-        return commentMapper.toDTO(updatedComment);
-    }
-
+    /**
+     * 특정 댓글을 삭제합니다.
+     *
+     * @param commentId   삭제할 댓글의 ID
+     * @param memberEmail 댓글을 삭제하려는 회원의 이메일 (인증 및 소유권 검증용)
+     */
+    void deleteComment(Long commentId, String memberEmail);
 }

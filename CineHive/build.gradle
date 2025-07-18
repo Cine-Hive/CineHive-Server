@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.4.1'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'com.example'
@@ -21,41 +21,46 @@ configurations {
 
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	// --- 데이터 및 JPA ---
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// --- 웹 (리액티브 스택) ---
+	implementation 'org.springframework.boot:spring-boot-starter-web' // 서블릿 기반 웹 스택
+	implementation 'org.springframework.boot:spring-boot-starter-webflux' // 리액티브 웹 스택
+
+	// --- 보안 ---
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
-	implementation 'com.squareup.okhttp3:okhttp:4.10.0'
-	implementation 'org.springframework.security:spring-security-core'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// --- 유효성 검사 ---
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// --- 유틸리티 및 Lombok ---
 	compileOnly 'org.projectlombok:lombok'
-	implementation 'org.json:json:20210307'
-	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.json:json:20231013'
+	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+	// --- JWT ---
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+	// --- Swagger (springdoc) ---
+	//implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+	// --- 테스트 ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation 'org.projectlombok:lombok:1.18.24'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
-	implementation 'io.projectreactor:reactor-core'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-	implementation 'org.springdoc:springdoc-openapi-starter-common:2.5.0'
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework:spring-context'
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.11.2'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+	testImplementation 'com.h2database:h2'
 
 	// M1/M2 Mac용 (오류 로그 방지)
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.101.Final:osx-aarch_64'
 }
 

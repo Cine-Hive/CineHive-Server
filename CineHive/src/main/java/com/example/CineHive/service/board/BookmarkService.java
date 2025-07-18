@@ -1,76 +1,36 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.board.Bookmark;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.UserNotFoundException;
-import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+/**
+ * 게시글 북마크 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.
+ */
+public interface BookmarkService {
 
-import java.util.Optional;
+    /**
+     * 특정 게시글을 북마크에 추가합니다.
+     * @param boardId 북마크할 게시글의 ID
+     * @param memberEmail 북마크하는 회원의 이메일
+     */
+    void addBookmark(Long boardId, String memberEmail);
 
-@Service
-@RequiredArgsConstructor
-public class BookmarkService {
+    /**
+     * 특정 게시글의 북마크를 해제합니다.
+     * @param boardId 북마크를 해제할 게시글의 ID
+     * @param memberEmail 북마크를 해제하는 회원의 이메일
+     */
+    void removeBookmark(Long boardId, String memberEmail);
 
-    private final BookmarkRepository bookmarkRepository;
-    private final BoardRepository boardRepository;
-    private final UserRepository userRepository;
+    /**
+     * 특정 게시글의 북마크 개수를 조회합니다.
+     * @param boardId 조회할 게시글의 ID
+     * @return 북마크 개수
+     */
+    int getBookmarkCount(Long boardId);
 
-    @Transactional
-    public boolean addBookmark(String memEmail, Long boardId) {
-        User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
-
-        // 북마크가 이미 존재하지 않으면 새로운 북마크 추가
-        Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndBoard(user, board);
-        if (existingBookmark.isPresent()) {
-            return false;
-        } else {
-            Bookmark bookmark = new Bookmark();
-            bookmark.setUser(user);
-            bookmark.setBoard(board);
-            bookmarkRepository.save(bookmark);
-            // 북마크 수 갱신
-            board.updateBookmarkCount();
-            return true; // 북마크 추가 후 true 반환
-        }
-    }
-
-    @Transactional
-    public boolean removeBookmark(String memEmail, Long boardId) {
-        User user = userRepository.findByMemEmail(memEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + memEmail));
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException("Board not found with ID: " + boardId));
-
-        Optional<Bookmark> existingBookmark = bookmarkRepository.findByUserAndBoard(user, board);
-
-        if (existingBookmark.isPresent()) {
-            Bookmark bookmark = existingBookmark.get();
-            bookmarkRepository.delete(bookmark);
-
-            bookmarkRepository.flush();  // DB에 즉시 반영되도록 하는 함수
-
-            board.updateBookmarkCount();
-            boardRepository.save(board);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public int getBookmarkCount(Long boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Board not found"));
-        return board.getBookmarkCount();
-    }
-
+    /**
+     * 특정 사용자가 특정 게시글을 북마크했는지 확인합니다.
+     * @param boardId 확인할 게시글의 ID
+     * @param memberEmail 확인할 회원의 이메일
+     * @return 북마크 여부 (true/false)
+     */
+    boolean isBookmarkedByUser(Long boardId, String memberEmail);
 }

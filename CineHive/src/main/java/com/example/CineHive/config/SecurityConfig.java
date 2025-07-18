@@ -1,139 +1,106 @@
 package com.example.CineHive.config;
 
 import com.example.CineHive.filter.JwtRequestFilter;
+import com.example.CineHive.security.CustomAuthenticationEntryPoint;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    // 스웨거 문서 및 UI 관련 엔드포인트
-    private static final String[] SWAGGER_ENDPOINTS = {
-        "/v3/api-docs",
-        "/v3/api-docs/**",
-        "/v3/api-docs.yaml",
-        "/swagger-ui.html",
-        "/swagger-ui/**",
-        "/swagger-resources/**",
-        "/webjars/**",
-        "/swagger-config/**",
-        "/api-docs/**"
+    private final JwtRequestFilter jwtRequestFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    // Swagger UI 및 API 문서 접근을 위한 경로
+    private static final String[] SWAGGER_PATHS = {
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/webjars/**"
     };
-
-    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
-            // 관리자 API
-            "/api/v1/admin/settings/**",
-
-            //마이페이지 API
-            "/myInfo/**",
-
-            // 미디어 API
-            "/api/v1/media/**",
-
-            // 게시판 API
-            "/boards", "/boards/**",
-
-            // 즐겨찾기 API
-            "/bookmark/{boardId}", "/bookmark/{boardId}/count",
-
-            // 댓글 API
-            "/comment/{boardId}", "/comment/{boardId}/**",
-
-            // 좋아요/싫어요 API
-            "/like/{boardId}", "/like/{boardId}/count",
-            "/dislike/{boardId}", "/dislike/{boardId}/count",
-
-            // 신고 API
-            "/report/{boardId}",
-
-            // 감상평 API
-            "/reply", "/reply/**",
-            "/reply/bookmark/count", "/reply/bookmark/toggle",
-            "/reply/judge/count/dislike", "/reply/judge/count/like",
-            "/reply/judge/dislike", "/reply/judge/like",
-
-            // 인증 API
-            "/api/auth/kakao", "/api/auth/kakao/**",
-            "/api/auth/google", "/api/auth/google/**",
-            "/api/auth/naver", "/api/auth/naver/**",
-            "/login", "/register",
-            "/checkemail/{memEmail}", "/checknickname/{memNickname}"
-    );
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"))
-                        .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                        .frameOptions(frame -> frame.sameOrigin())
-                        .contentTypeOptions(contentType -> contentType.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions ->
+                        exceptions.authenticationEntryPoint(customAuthenticationEntryPoint)
                 )
+
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
-                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
+                        // --- 인증 없이 접근 허용 (Permit All) ---
+                        .requestMatchers(SWAGGER_PATHS).permitAll() // Swagger 경로 허용
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/check-email", "/api/v1/auth/check-nickname").permitAll()
+                        .requestMatchers("/api/v1/oauth2/**").permitAll()
+
+                        // --- GET 요청 중 대부분 허용 ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/banners").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
+
+                        // --- 특정 역할(Role)이 필요한 경우 ---
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        // --- 그 외 모든 요청은 인증 필요 ---
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                        .sessionFixation().migrateSession()
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(true)
-                );
 
-        http.addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * 비밀번호 암호화를 위한 PasswordEncoder Bean을 등록합니다.
+     * BCrypt 알고리즘을 사용합니다.
+     */
     @Bean
-    public BCryptPasswordEncoder bCrpytPasswordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * CORS(Cross-Origin Resource Sharing) 설정을 위한 Bean을 등록합니다.
+     * 다른 도메인에서의 요청을 허용하는 정책을 정의합니다.
+     */
     @Bean
-    public JwtRequestFilter jwtRequestFilter() {
-        return new JwtRequestFilter();
-    }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        return new CorsFilter(corsConfigurationSource());
-    }
-
-    @Bean
-    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration());
-        return source;
-    }
-
-    private CorsConfiguration corsConfiguration() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:8080",
-                "http://localhost:8081",
-                "https://cinehive.com"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "https://cinehive.com"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
-        return config;
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

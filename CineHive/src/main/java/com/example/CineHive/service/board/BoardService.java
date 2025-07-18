@@ -1,121 +1,46 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.BoardSearchDto;
-import com.example.CineHive.dto.board.CreateBoardDto;
-import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.exception.BoardNotFoundException;
-import com.example.CineHive.exception.UnauthorizedAccessException;
-import com.example.CineHive.exception.UserNotFoundException;
-import com.example.CineHive.mapper.BoardMapper;
-import com.example.CineHive.mapper.CommentMapper;
-import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.repository.board.BoardRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.example.CineHive.dto.board.*;
+import com.example.CineHive.dto.response.PagedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+public interface BoardService {
 
-@Service
-public class BoardService {
+    /**
+     * 새로운 게시글을 생성합니다.
+     * @param request 게시글 생성 요청 DTO
+     * @param memberEmail 작성자 회원 이메일
+     * @return 생성된 게시글 정보 DTO
+     */
+    BoardDto createBoard(CreateBoardRequest request, String memberEmail);
 
-    @Autowired
-    private BoardRepository boardRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private CommentMapper commentMapper;
+    /**
+     * 특정 ID의 게시글을 상세 조회합니다. 조회 시 조회수가 1 증가합니다.
+     * @param boardId 조회할 게시글 ID
+     * @return 조회된 게시글 정보 DTO
+     */
+    BoardDto getBoardById(Long boardId);
 
+    /**
+     * 특정 ID의 게시글을 수정합니다. 작성자 본인만 수정할 수 있습니다.
+     * @param boardId 수정할 게시글 ID
+     * @param request 게시글 수정 요청 DTO
+     * @param memberEmail 수정 요청자 회원 이메일
+     * @return 수정된 게시글 정보 DTO
+     */
+    BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail);
 
-    /*게시글 생성 */
-    public Board createBoard(CreateBoardDto createBoardDto) {
-        User user = userRepository.findByMemEmail(createBoardDto.getMemEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + createBoardDto.getMemEmail()));
+    /**
+     * 특정 ID의 게시글을 삭제합니다. 작성자 본인만 삭제할 수 있습니다.
+     * @param boardId 삭제할 게시글 ID
+     * @param memberEmail 삭제 요청자 회원 이메일
+     */
+    void deleteBoard(Long boardId, String memberEmail);
 
-        Board board = BoardMapper.toEntity(createBoardDto, user);
-
-        return boardRepository.save(board);
-    }
-
-    /*게시글 상세글 조회 */
-    public BoardDto getBoardPostId(Long postId) {
-        Board board = boardRepository.findById(postId)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
-
-        board.increaseViews();
-        boardRepository.save(board);
-
-        BoardDto boardDto = BoardMapper.convertToDto(board);
-
-        List<CommentDto> commentDtos = board.getComments().stream()
-                .map(commentMapper::toDTO)
-                .collect(Collectors.toList());
-        boardDto.setComments(commentDtos);
-
-        return boardDto;
-    }
-
-
-    /*게시글 수정 */
-    public Board updateBoard(Long id, String brdTitle, String brdContent, String memEmail) {
-        Optional<Board> optionalBoard = boardRepository.findById(id);
-        if (optionalBoard.isPresent()) {
-            Board board = optionalBoard.get();
-
-            if (!board.getUser().getMemEmail().equals(memEmail)) {
-                 new UnauthorizedAccessException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
-            }
-
-            board.setBrdTitle(brdTitle);
-            board.setBrdContent(brdContent);
-            return boardRepository.save(board);
-        } else {
-            throw new RuntimeException("게시글을 찾을 수 없습니다.");
-        }
-    }
-
-
-    /* 게시글 삭제 */
-    public Board deleteBoard(Long id, String memEmail) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
-
-        if (!board.getUser().getMemEmail().equals(memEmail)) {
-            throw new RuntimeException("사용자가 이 게시글을 삭제할 권한이 없습니다.");
-        }
-
-        boardRepository.delete(board);
-        return board;
-    }
-
-    /*게시글 전체 목록 조회 */
-    public List<GetListBoardDto> getAllBoard() {
-        List<Board> boards = boardRepository.findAll();
-        return boards.stream()
-                .map(board -> {
-                    GetListBoardDto dto = new GetListBoardDto();
-                    dto.setId(board.getId());
-                    dto.setBrdTitle(board.getBrdTitle());
-                    dto.setBrdContent(board.getBrdContent());
-                    dto.setMemNickname(board.getUser().getMemNickname());
-                    dto.setBrdRegDate(board.getBrdRegDate());
-                    dto.setLikeCount(board.getLikeCount());
-                    dto.setViews(board.getViews());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-    }
-
-
-    public List<BoardSearchDto> searchBoards(String keyword) {
-        List<Board> boards = boardRepository.searchByKeyword(keyword);
-        return boards.stream()
-                .map(BoardMapper::convertToSearchDto)
-                .collect(Collectors.toList());
-    }
+    /**
+     * 게시글 목록을 페이징하여 조회합니다.
+     * @return 클라이언트 친화적인 페이징 응답 DTO
+     */
+    PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort);
 }

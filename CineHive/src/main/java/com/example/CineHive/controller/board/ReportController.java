@@ -1,48 +1,71 @@
 package com.example.CineHive.controller.board;
 
+import com.example.CineHive.dto.report.ReportRequest;
+import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.service.board.ReportService;
-import com.example.CineHive.util.JwtTokenUtil;  // JwtTokenUtil로 변경
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Report Controller", description = "게시글의 신고하기 기능을 제공하는 API")
+import java.util.Map;
+
+@Tag(name = "Report Controller", description = "콘텐츠(게시글, 댓글) 신고 API")
 @RestController
-@RequestMapping("/report")
+@RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ReportController {
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    @Operation(summary = "신고하기 등록", description = "특정 게시글에 대해 사용자가 신고하기를 등록")
-    @PostMapping("/{boardId}")
-    public ResponseEntity<String> reportBoard(
+    /**
+     * 특정 게시글을 신고합니다.
+     * 한 사용자는 동일한 게시글을 한 번만 신고할 수 있습니다.
+     *
+     * @param boardId       신고할 게시글의 ID
+     * @param request       신고 사유를 담은 DTO
+     * @param userDetails   인증된 사용자 정보 (Spring Security가 자동으로 주입)
+     * @return 성공 메시지를 담은 ApiResponse
+     */
+    @Operation(summary = "게시글 신고", description = "특정 게시글을 신고합니다.")
+    @PostMapping("/boards/{boardId}/reports")
+    public ResponseEntity<ApiResponse<Map<String, String>>> reportBoard(
             @PathVariable Long boardId,
-            @RequestBody String reason,
-            HttpServletRequest request) {
+            @Valid @RequestBody ReportRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        reportService.reportBoard(boardId, request.reason(), userDetails.getUsername());
 
-        try {
-            String memEmail = jwtTokenUtil.extractUsername(token);
+        // 새로운 '신고' 리소스가 생성되었으므로 201 CREATED 상태 코드를 반환합니다.
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(Map.of("message", "게시글 신고가 정상적으로 접수되었습니다.")));
+    }
 
-            boolean isReported = reportService.reportBoard(memEmail, boardId, reason);
+    /**
+     * 특정 댓글을 신고합니다.
+     * 한 사용자는 동일한 댓글을 한 번만 신고할 수 있습니다.
+     *
+     * @param commentId     신고할 댓글의 ID
+     * @param request       신고 사유를 담은 DTO
+     * @param userDetails   인증된 사용자 정보 (Spring Security가 자동으로 주입)
+     * @return 성공 메시지를 담은 ApiResponse
+     */
+    @Operation(summary = "댓글 신고", description = "특정 댓글을 신고합니다.")
+    @PostMapping("/comments/{commentId}/reports")
+    public ResponseEntity<ApiResponse<Map<String, String>>> reportComment(
+            @PathVariable Long commentId,
+            @Valid @RequestBody ReportRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-            return isReported ? ResponseEntity.ok("Reported")
-                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Already Reported");
+        reportService.reportComment(commentId, request.reason(), userDetails.getUsername());
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(Map.of("message", "댓글 신고가 정상적으로 접수되었습니다.")));
     }
 }

@@ -1,108 +1,115 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.dto.board.*;
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.dto.board.BoardDto;
+import com.example.CineHive.dto.board.BoardSortType;
+import com.example.CineHive.dto.board.CreateBoardRequest;
+import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.board.UpdateBoardRequest;
+import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.service.board.BoardService;
-import com.example.CineHive.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
-@Tag(name = "Board Controller", description = "게시글 CRUD, 검색, 전체 조회 기능을 제공하는 API")
+@Tag(name = "Board Controller", description = "게시글 CRUD 및 조회 API")
+@Validated
 @RestController
-@RequestMapping("/boards")
+@RequestMapping("/api/v1/boards")
+@RequiredArgsConstructor
 public class BoardController {
 
-    @Autowired
-    private BoardService boardService;
+    private final BoardService boardService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
+    @Operation(summary = "게시글 생성",
+            description = "새로운 게시글을 등록합니다. 제목과 내용은 필수이며, 인증된 사용자의 정보가 작성자로 자동 등록됩니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 생성 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패 (제목 또는 내용 누락)", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
     @PostMapping
-    @Operation(summary = "게시글 글 등록", description = "게시판 기능에서 글 등록")
-    public ResponseEntity<Board> createBoard(@RequestBody CreateBoardDto createBoardDto, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        try {
-            String email = jwtTokenUtil.extractUsername(token);
-            createBoardDto.setMemEmail(email);
-            Board createdBoard = boardService.createBoard(createBoardDto);
-            return ResponseEntity.ok(createdBoard);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+    public ResponseEntity<ApiResponse<BoardDto>> createBoard(
+            @Valid @RequestBody CreateBoardRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        BoardDto createdBoard = boardService.createBoard(request, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdBoard));
     }
 
-    @Operation(summary = "게시글 상세 페이지", description = "등록한 게시글에 대한 상세 페이지")
+    @Operation(summary = "게시글 상세 조회",
+            description = "특정 ID를 가진 게시글의 상세 정보를 조회합니다. 이 API 호출 시 해당 게시글의 조회수가 1 증가합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDto> getDetailBoard(@PathVariable Long id) {
-        BoardDto boardDto = boardService.getBoardPostId(id);
-        if (boardDto != null) {
-            return ResponseEntity.ok(boardDto);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ApiResponse<BoardDto>> getBoardById(@PathVariable Long id) {
+        BoardDto boardDto = boardService.getBoardById(id);
+        return ResponseEntity.ok(ApiResponse.ok(boardDto));
     }
 
-    @Operation(summary = "게시글 글 수정", description = "사용자가 등록한 게시글에 대한 글을 수정")
+    @Operation(summary = "게시글 수정",
+            description = "자신이 작성한 게시글의 제목과 내용을 수정합니다. 타인의 게시글은 수정할 수 없습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "수정 권한이 없는 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
     @PutMapping("/{id}")
-    public ResponseEntity<Board> updateBoard(@PathVariable Long id,
-                                             @RequestBody UpdateBoardRequest updatedBoard,
-                                             HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        try {
-            String email = jwtTokenUtil.extractUsername(token);
-            updatedBoard.setMemEmail(email);
-            Board updatedBoardEntity = boardService.updateBoard(id, updatedBoard.getBrdTitle(),
-                    updatedBoard.getBrdContent(), updatedBoard.getMemEmail());
-            return ResponseEntity.ok(updatedBoardEntity);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+    public ResponseEntity<ApiResponse<BoardDto>> updateBoard(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateBoardRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        BoardDto updatedBoard = boardService.updateBoard(id, request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(updatedBoard));
     }
 
-    @Operation(summary = "게시글 글 삭제", description = "사용자가 등록한 게시글에 대한 삭제")
+    @Operation(summary = "게시글 삭제",
+            description = "자신이 작성한 게시글을 삭제합니다. 타인의 게시글은 삭제할 수 없습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "삭제 권한이 없는 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id, HttpServletRequest request) {
-        String token = jwtTokenUtil.extractTokenFromRequest(request);
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        try {
-            String email = jwtTokenUtil.extractUsername(token);
-            boardService.deleteBoard(id, email);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+    public ResponseEntity<ApiResponse<Map<String, String>>> deleteBoard(
+            @PathVariable Long id,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        boardService.deleteBoard(id, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "게시글이 성공적으로 삭제되었습니다.")));
     }
 
-    @Operation(summary = "게시글 리스트 조회", description = "사용자들이 등록한 게시글들의 전체 목록을 조회")
-    @GetMapping("/all")
-    public ResponseEntity<List<GetListBoardDto>> getBoards() {
-        List<GetListBoardDto> boards = boardService.getAllBoard();
-        return new ResponseEntity<>(boards, HttpStatus.OK);
-    }
-
-    @Operation(summary = "게시글 검색", description = "제목, 내용 및 닉네임을 포함하여 등록한 게시글을 모두 검색")
-    @GetMapping("/search")
-    public ResponseEntity<List<BoardSearchDto>> searchBoards(@RequestParam String keyword) {
-        List<BoardSearchDto> results = boardService.searchBoards(keyword);
-        return ResponseEntity.ok(results);
+    @Operation(summary = "게시글 목록 페이징 조회",
+            description = "게시글 목록을 페이징하여 조회합니다. 쿼리 파라미터를 통해 페이지 번호, 페이지 크기, 정렬 기준을 지정할 수 있습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공", content = @Content(schema = @Schema(implementation = PagedResponse.class)))
+    })
+    @GetMapping
+    public ResponseEntity<ApiResponse<PagedResponse<GetListBoardDto>>> getBoards(
+            @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "페이지당 게시글 수", example = "10")
+            @RequestParam(defaultValue = "10") @Min(1) int size,
+            @Parameter(description = "정렬 기준", schema = @Schema(implementation = BoardSortType.class), example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") BoardSortType sort) {
+        PagedResponse<GetListBoardDto> pagedResponse = boardService.getBoards(page, size, sort);
+        return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 }

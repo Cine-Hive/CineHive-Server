@@ -1,108 +1,109 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.user.User;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.example.CineHive.entity.BaseEntity;
+import com.example.CineHive.entity.member.Member;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-/*
-게시판 테이블
+/**
+ * 게시글을 나타내는 엔티티입니다.
+ * 이 엔티티는 데이터와 자체 상태 변경 로직에만 집중합니다.
  */
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class Board {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "boards")
+public class Board extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "board_id")
     private Long id;
 
-    private String memEmail;
+    @Column(nullable = false, length = 100)
     private String brdTitle;
+
+    @Lob
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String brdContent;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime brdRegDate;
-
-    private int views;
-
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BoardLike> likes; //좋아요 리스트
-
-    @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
-    private int likeCount; // 특정 게시글의 좋아요 갯수
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BoardDisLike> dislikes; //싫어요 리스트
+    private List<Comment> comments = new ArrayList<>();
 
-    @Column(name = "dislike_count", nullable = false, columnDefinition = "int default 0")
-    private int dislikeCount; //특정 게시글의 싫어요 갯수
+    @Column(nullable = false)
+    private int views = 0;
 
-    @Column(name = "report_count", nullable = false, columnDefinition = "int default 0")
-    private int reportCount; // 특정 게시글의 신고 갯수
+    @Column(nullable = false)
+    private int likeCount = 0;
 
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Report> reports; // 신고 목록
+    @Column(nullable = false)
+    private int dislikeCount = 0;
 
+    @Column(nullable = false)
+    private int bookmarkCount = 0;
 
-    @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "mem_id", referencedColumnName = "mem_id", nullable = false)
-    private User user;
+    @Column(nullable = false)
+    private int commentCount = 0;
 
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Bookmark> bookmarks; // 즐겨찾기 리스트
-
-    @Column(name = "bookmark_count", nullable = false, columnDefinition = "int default 0")
-    private int bookmarkCount; // 즐겨찾기 총 수
-
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments; // 댓글 리스트
-
-    @Column(name = "comment_count", nullable = false, columnDefinition = "int default 0")
-    private int commentCount; // 게시글의 댓글 총 수
-
-    @PrePersist
-    protected void onCreate() {
-        this.brdRegDate = LocalDateTime.now();
-        this.views = 0;
-        this.likeCount = 0;
-        this.dislikeCount = 0;
-        this.reportCount = 0;
-        this.bookmarkCount = 0;
-        this.commentCount = 0;
+    @Builder
+    public Board(String brdTitle, String brdContent, Member member) {
+        this.brdTitle = brdTitle;
+        this.brdContent = brdContent;
+        this.member = member;
     }
 
+    //== 비즈니스 로직 (엔티티가 스스로의 상태를 관리) ==//
 
-    // 북마크 수 업데이트 메소드
-    public void updateBookmarkCount() {
-        this.bookmarkCount = this.bookmarks != null ? this.bookmarks.size() : 0;
-    }
-
-    public void updateLikeCount() {
-        this.likeCount = this.likes != null ? this.likes.size() : 0;
-    }
-
-    public void updateDisLikeCount() {
-        this.dislikeCount = this.dislikes != null ? this.dislikes.size() : 0;
-    }
-
-    public int getDisLikeCount() {
-        return dislikeCount;
+    public void update(String title, String content) {
+        this.brdTitle = title;
+        this.brdContent = content;
     }
 
     public void increaseViews() {
         this.views++;
     }
 
-    public void increaseReportCount() {
-        this.reportCount++;
+    public void increaseBookmarkCount() {
+        this.bookmarkCount++;
+    }
+
+    public void decreaseBookmarkCount() {
+        if (this.bookmarkCount > 0) {
+            this.bookmarkCount--;
+        }
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void increaseDislikeCount() {
+        this.dislikeCount++;
+    }
+
+    public void decreaseDislikeCount() {
+        if (this.dislikeCount > 0) {
+            this.dislikeCount--;
+        }
+    }
+
+    public void updateCommentCount(int count) {
+        this.commentCount = count;
     }
 }
