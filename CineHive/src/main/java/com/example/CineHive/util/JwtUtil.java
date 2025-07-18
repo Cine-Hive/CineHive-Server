@@ -32,6 +32,16 @@ public class JwtUtil {
         return createToken(claims, email);
     }
 
+    /**
+     * JWT 토큰을 실제로 생성하는 내부 메서드
+     * 주어진 클레임(Claim)과 Subject(토큰 주체), 발급 시간, 만료 시간, 서명 정보를 포함하여 토큰을 빌드
+     *
+     * @param claims 토큰에 포함될 추가 클레임 (예: 사용자 역할, 권한 등)
+     * @param subject 토큰의 주체 (예: 사용자 ID 또는 이메일)
+     * @return 생성된 JWT 토큰 문자열
+     * @throws Exception 토큰 생성 중 오류 발생 시 예외를 던짐
+     */
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .claims(claims)
