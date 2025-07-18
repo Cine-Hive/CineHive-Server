@@ -1,7 +1,7 @@
 package com.example.CineHive.config;
 
 import com.example.CineHive.filter.JwtRequestFilter;
-import com.example.CineHive.security.CustomAuthenticationEntryPoint; // import 추가
+import com.example.CineHive.security.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,33 +41,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions ->
                         exceptions.authenticationEntryPoint(customAuthenticationEntryPoint)
                 )
 
-                // 5. HTTP 요청에 대한 인가 규칙 설정
                 .authorizeHttpRequests(authz -> authz
                         // --- 인증 없이 접근 허용 (Permit All) ---
                         .requestMatchers(SWAGGER_PATHS).permitAll() // Swagger 경로 허용
-                        .requestMatchers("/api/v1/members/register").permitAll()
-                        .requestMatchers("/api/v1/members/login").permitAll()
-                        .requestMatchers("/api/v1/members/check-email", "/api/v1/members/check-nickname").permitAll() // 중복 확인
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/check-email", "/api/v1/auth/check-nickname").permitAll()
                         .requestMatchers("/api/v1/oauth2/**").permitAll()
 
-                        // 미디어, 배너 조회 등 GET 요청은 대부분 허용
+                        // --- GET 요청 중 대부분 허용 ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/banners").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
 
-                        // 게시글/댓글 목록 조회, 상세 조회 등 GET 요청 허용
-                        .requestMatchers(HttpMethod.GET, "/api/v1/boards", "/api/v1/boards/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/boards/{boardId}/comments").permitAll()
-
+                        // --- 특정 역할(Role)이 필요한 경우 ---
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
+                        // --- 그 외 모든 요청은 인증 필요 ---
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -91,7 +93,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:8081", "https://cinehive.com"));
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "http://localhost:8081", "https://cinehive.com"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(true);
