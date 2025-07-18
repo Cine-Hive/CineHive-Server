@@ -4,6 +4,7 @@ import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Report;
 import com.example.CineHive.entity.board.ReportStatus;
 import com.example.CineHive.entity.member.*;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.ReportRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * AdminReportController의 API 엔드포인트에 대한 통합 테스트입니다.
+ * 관리자(ADMIN) 권한에 따른 신고 조회 및 처리 기능의 동작을 검증합니다.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -40,9 +46,6 @@ class AdminReportControllerTest {
     @Autowired
     private BoardRepository boardRepository;
 
-    private Member reporter; // 신고자
-    private Member reportedUser; // 피신고자
-    private Board reportedBoard; // 신고된 게시글
     private Report pendingReport; // 테스트용 대기 상태 신고
 
     @BeforeEach
@@ -51,11 +54,11 @@ class AdminReportControllerTest {
         boardRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
 
-        reporter = createMember("reporter@test.com", "신고자", MemberRole.ROLE_USER);
-        reportedUser = createMember("reported@test.com", "피신고자", MemberRole.ROLE_USER);
+        Member reporter = createMember("reporter@test.com", "신고자", MemberRole.ROLE_USER);
+        Member reportedUser = createMember("reported@test.com", "피신고자", MemberRole.ROLE_USER);
         createMember("admin@test.com", "관리자", MemberRole.ROLE_ADMIN); // 관리자 계정 생성
 
-        reportedBoard = boardRepository.save(Board.builder()
+        Board reportedBoard = boardRepository.save(Board.builder()
                 .member(reportedUser)
                 .brdTitle("신고 대상 게시글")
                 .brdContent("문제 내용")
@@ -75,6 +78,9 @@ class AdminReportControllerTest {
                 .build());
     }
 
+    /**
+     * 신고 처리(승인/거절) API에 대한 테스트
+     */
     @Nested
     @DisplayName("신고 처리 (승인/거절) 테스트")
     class ProcessReport {
@@ -88,7 +94,7 @@ class AdminReportControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("신고를 성공적으로 승인 처리했습니다."));
 
-            Report processedReport = reportRepository.findById(pendingReport.getId()).get();
+            Report processedReport = reportRepository.findById(pendingReport.getId()).orElseThrow();
             assertThat(processedReport.getStatus()).isEqualTo(ReportStatus.ACCEPTED);
         }
 
@@ -101,7 +107,7 @@ class AdminReportControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("신고를 성공적으로 기각 처리했습니다."));
 
-            Report processedReport = reportRepository.findById(pendingReport.getId()).get();
+            Report processedReport = reportRepository.findById(pendingReport.getId()).orElseThrow();
             assertThat(processedReport.getStatus()).isEqualTo(ReportStatus.REJECTED);
         }
 
@@ -115,6 +121,7 @@ class AdminReportControllerTest {
         }
 
         @Test
+        @WithAnonymousUser
         @DisplayName("❌ 실패(인증): 익명 사용자가 신고 처리를 시도하면 401 Unauthorized를 반환한다.")
         void processReport_byAnonymous_fail() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/reports/{reportId}/accept", pendingReport.getId())
@@ -124,7 +131,7 @@ class AdminReportControllerTest {
 
         @Test
         @WithMockUser(username = "admin@test.com", roles = "ADMIN")
-        @DisplayName("❌ 실패(400): 이미 처리된 신고를 다시 처리하려 하면 400 Bad Request를 반환한다.")
+        @DisplayName("❌ 실패(409): 이미 처리된 신고를 다시 처리하려 하면 409 Conflict를 반환한다.")
         void processReport_alreadyProcessed_fail() throws Exception {
             // given: 신고를 미리 승인 상태로 변경
             pendingReport.accept();
@@ -133,10 +140,14 @@ class AdminReportControllerTest {
             // when & then
             mockMvc.perform(patch("/api/v1/admin/reports/{reportId}/reject", pendingReport.getId())
                             .with(csrf()))
-                    .andExpect(status().isBadRequest()); // IllegalStateException은 400으로 처리
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.error.message").value(ErrorCode.REPORT_ALREADY_PROCESSED.getMessage()));
         }
     }
 
+    /**
+     * 신고 내역 조회 API에 대한 테스트
+     */
     @Nested
     @DisplayName("신고 내역 조회 테스트")
     class GetReports {
@@ -145,9 +156,13 @@ class AdminReportControllerTest {
         @WithMockUser(username = "admin@test.com", roles = "ADMIN")
         @DisplayName("✅ 성공: 관리자가 모든 신고 내역을 성공적으로 조회한다.")
         void getReports_byAdmin_success() throws Exception {
-            // PENDING 상태의 신고 하나 더 추가
-            reportRepository.save(Report.builder().reporter(reporter).board(reportedBoard).reason("스팸").build());
+            // given: PENDING 상태의 신고 하나 더 추가
+            Member reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
+            Member reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
+            Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
 
+            // when & then
             mockMvc.perform(get("/api/v1/admin/reports"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.length()").value(2));
@@ -157,11 +172,15 @@ class AdminReportControllerTest {
         @WithMockUser(username = "admin@test.com", roles = "ADMIN")
         @DisplayName("✅ 성공: 관리자가 'PENDING' 상태의 신고 내역만 필터링하여 조회한다.")
         void getReports_filterByStatus_success() throws Exception {
-            // 다른 상태의 신고 추가
-            Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(reportedBoard).reason("스팸").build());
+            // given: 다른 상태의 신고 추가
+            Member reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
+            Member reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
+            Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
             acceptedReport.accept();
             reportRepository.save(acceptedReport);
 
+            // when & then
             mockMvc.perform(get("/api/v1/admin/reports")
                             .param("status", "PENDING"))
                     .andExpect(status().isOk())
