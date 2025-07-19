@@ -53,8 +53,8 @@ public record CommentDto(
         }
 
         CommenterInfo commenterInfo = CommenterInfo.builder()
-                .memberId(comment.getMember().getId())
-                .nickname(comment.getMember().getNickname())
+                .memberId(comment.getUser().getId())
+                .nickname(comment.getUser().getNickname())
                 .build();
 
         return CommentDto.builder()

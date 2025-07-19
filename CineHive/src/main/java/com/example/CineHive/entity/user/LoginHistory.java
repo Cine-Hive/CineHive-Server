@@ -1,4 +1,4 @@
-package com.example.CineHive.entity.member;
+package com.example.CineHive.entity.user;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,7 +20,7 @@ public class LoginHistory {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private User user;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime firstLoginDate;
@@ -31,9 +31,9 @@ public class LoginHistory {
     @Column(length = 255)
     private String browser;
 
-    public LoginHistory(Long id, Member member, LocalDateTime firstLoginDate, LocalDateTime lastLoginDate, String browser) {
+    public LoginHistory(Long id, User user, LocalDateTime firstLoginDate, LocalDateTime lastLoginDate, String browser) {
         this.id = id;
-        this.member = member;
+        this.user = user;
         this.firstLoginDate = firstLoginDate;
         this.lastLoginDate = lastLoginDate;
         this.browser = browser;

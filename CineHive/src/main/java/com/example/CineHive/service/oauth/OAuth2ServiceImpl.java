@@ -3,9 +3,9 @@ package com.example.CineHive.service.oauth;
 import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
-import com.example.CineHive.entity.member.Gender;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -76,23 +76,23 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
         boolean isNewMember = !memberRepository.existsByEmail(oAuth2MemberInfo.email());
 
-        Member member = memberRepository.findByEmail(oAuth2MemberInfo.email())
+        User user = memberRepository.findByEmail(oAuth2MemberInfo.email())
                 .orElseGet(() -> registerNewMember(oAuth2MemberInfo));
 
-        String token = jwtUtil.generateToken(member.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
 
         return new LoginResponseDto(
                 token,
                 isNewMember,
-                LoginResponseDto.MemberInfo.from(member)
+                LoginResponseDto.MemberInfo.from(user)
         );
     }
 
-    private Member registerNewMember(OAuth2MemberInfo oAuth2MemberInfo) {
+    private User registerNewMember(OAuth2MemberInfo oAuth2MemberInfo) {
         log.info("신규 소셜 회원 가입: {}", oAuth2MemberInfo.email());
         String nickname = resolveUniqueNickname(oAuth2MemberInfo.nickname(), oAuth2MemberInfo.providerType());
 
-        Member newMember = Member.builder()
+        User newUser = User.builder()
                 .email(oAuth2MemberInfo.email())
                 .password("OAUTH_MEMBER_NO_PASSWORD") // 소셜 로그인 회원은 별도 비밀번호 없음
                 .name(oAuth2MemberInfo.nickname())
@@ -102,7 +102,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .provider(oAuth2MemberInfo.providerType())
                 .build();
 
-        return memberRepository.save(newMember);
+        return memberRepository.save(newUser);
     }
 
     private String resolveUniqueNickname(String nickname, ProviderType providerType) {

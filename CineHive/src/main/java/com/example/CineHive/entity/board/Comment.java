@@ -1,7 +1,7 @@
 package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.BaseEntity;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,7 +39,7 @@ public class Comment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private User user;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
@@ -49,13 +49,13 @@ public class Comment extends BaseEntity {
      * 댓글 생성을 위한 빌더입니다.
      * @param content 댓글 내용
      * @param board 댓글이 달릴 게시글 엔티티
-     * @param member 댓글을 작성한 회원 엔티티
+     * @param user 댓글을 작성한 회원 엔티티
      */
     @Builder
-    public Comment(String content, Board board, Member member) {
+    public Comment(String content, Board board, User user) {
         this.content = content;
         this.board = board;
-        this.member = member;
+        this.user = user;
     }
 
     //== 비즈니스 로직 (엔티티가 스스로의 상태를 관리) ==//

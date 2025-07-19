@@ -1,6 +1,6 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,7 +33,7 @@ public class Bookmark {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member; // private User user; -> private Member member;
+    private User user; // private User user; -> private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
@@ -41,12 +41,12 @@ public class Bookmark {
 
     /**
      * 북마크 생성을 위한 빌더입니다.
-     * @param member 북마크하는 회원 엔티티
+     * @param user 북마크하는 회원 엔티티
      * @param board 북마크의 대상이 되는 게시글 엔티티
      */
     @Builder
-    public Bookmark(Member member, Board board) {
-        this.member = member;
+    public Bookmark(User user, Board board) {
+        this.user = user;
         this.board = board;
     }
 }

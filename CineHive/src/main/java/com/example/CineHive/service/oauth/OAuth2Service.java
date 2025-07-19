@@ -1,7 +1,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.dto.member.LoginResponseDto;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 
 /**
  * 소셜 로그인 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.

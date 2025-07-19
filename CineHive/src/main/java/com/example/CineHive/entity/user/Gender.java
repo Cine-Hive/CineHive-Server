@@ -1,4 +1,4 @@
-package com.example.CineHive.entity.member;
+package com.example.CineHive.entity.user;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

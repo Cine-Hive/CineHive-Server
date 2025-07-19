@@ -2,7 +2,7 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -42,7 +42,7 @@ class BookmarkServiceTest {
     @InjectMocks
     private BookmarkServiceImpl bookmarkService;
 
-    private Member testMember;
+    private User testUser;
     private Board testBoard;
     private final Long testBoardId = 1L;
     private final String testMemberEmail = "test@example.com";
@@ -50,12 +50,12 @@ class BookmarkServiceTest {
     @BeforeEach
     void setUp() {
         // 테스트용 사용자(북마크 행위자) 생성
-        testMember = Member.builder()
+        testUser = User.builder()
                 .email(testMemberEmail)
                 .build();
 
         // 테스트용 게시글 작성자 생성
-        Member boardAuthor = Member.builder()
+        User boardAuthor = User.builder()
                 .email("author@example.com")
                 .build();
 
@@ -78,9 +78,9 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크를 성공적으로 추가한다.")
         void addBookmark_success() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testMember, testBoard)).willReturn(false);
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(false);
 
             // when
             bookmarkService.addBookmark(testBoardId, testMemberEmail);
@@ -93,9 +93,9 @@ class BookmarkServiceTest {
         @DisplayName("❌ 실패: 이미 북마크한 경우 BusinessException(BOOKMARK_ALREADY_EXISTS)을 던진다.")
         void addBookmark_fail_alreadyExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testMember, testBoard)).willReturn(true);
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(true);
 
             // when
             BusinessException exception = assertThrows(BusinessException.class, () ->
@@ -115,16 +115,16 @@ class BookmarkServiceTest {
 
         @BeforeEach
         void setUp() {
-            testBookmark = Bookmark.builder().member(testMember).board(testBoard).build();
+            testBookmark = Bookmark.builder().member(testUser).board(testBoard).build();
         }
 
         @Test
         @DisplayName("✅ 성공: 북마크를 성공적으로 제거한다.")
         void removeBookmark_success() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.findByMemberAndBoard(testMember, testBoard)).willReturn(Optional.of(testBookmark));
+            given(bookmarkRepository.findByMemberAndBoard(testUser, testBoard)).willReturn(Optional.of(testBookmark));
 
             // when
             bookmarkService.removeBookmark(testBoardId, testMemberEmail);
@@ -137,9 +137,9 @@ class BookmarkServiceTest {
         @DisplayName("❌ 실패: 북마크가 존재하지 않는 경우 BusinessException(BOOKMARK_NOT_FOUND)을 던진다.")
         void removeBookmark_fail_notFound() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.findByMemberAndBoard(testMember, testBoard)).willReturn(Optional.empty());
+            given(bookmarkRepository.findByMemberAndBoard(testUser, testBoard)).willReturn(Optional.empty());
 
             // when
             BusinessException exception = assertThrows(BusinessException.class, () ->
@@ -160,9 +160,9 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크가 존재할 때 true를 반환한다.")
         void isBookmarkedByUser_returnsTrue_whenExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testMember, testBoard)).willReturn(true);
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(true);
 
             // when
             boolean result = bookmarkService.isBookmarkedByUser(testBoardId, testMemberEmail);
@@ -175,9 +175,9 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크가 존재하지 않을 때 false를 반환한다.")
         void isBookmarkedByUser_returnsFalse_whenNotExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testMember));
+            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testMember, testBoard)).willReturn(false);
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(false);
 
             // when
             boolean result = bookmarkService.isBookmarkedByUser(testBoardId, testMemberEmail);

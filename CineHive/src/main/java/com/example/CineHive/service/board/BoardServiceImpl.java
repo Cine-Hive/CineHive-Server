@@ -3,7 +3,7 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.dto.board.*;
 import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.BoardMapper;
@@ -28,12 +28,12 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public BoardDto createBoard(CreateBoardRequest request, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
 
         Board board = Board.builder()
                 .brdTitle(request.brdTitle())
                 .brdContent(request.brdContent())
-                .member(member)
+                .member(user)
                 .build();
 
         Board savedBoard = boardRepository.save(board);
@@ -51,11 +51,11 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
         // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(board, member);
+        verifyBoardOwnership(board, user);
 
         board.update(request.brdTitle(), request.brdContent());
         return BoardMapper.toBoardDto(board);
@@ -64,11 +64,11 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void deleteBoard(Long boardId, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
         // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(board, member);
+        verifyBoardOwnership(board, user);
 
         boardRepository.delete(board);
     }
@@ -95,7 +95,7 @@ public class BoardServiceImpl implements BoardService {
      * @param email 찾을 회원의 이메일
      * @return 찾아낸 Member 엔티티
      */
-    private Member findMemberByEmail(String email) {
+    private User findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
@@ -114,10 +114,10 @@ public class BoardServiceImpl implements BoardService {
      * 게시글의 소유자와 현재 요청을 보낸 회원이 일치하는지 확인합니다.
      * 일치하지 않으면 BusinessException을 발생시킵니다.
      * @param board 검증할 게시글 엔티티
-     * @param member 검증할 회원 엔티티
+     * @param user 검증할 회원 엔티티
      */
-    private void verifyBoardOwnership(Board board, Member member) {
-        if (!board.getMember().equals(member)) {
+    private void verifyBoardOwnership(Board board, User user) {
+        if (!board.getUser().equals(user)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
     }

@@ -3,7 +3,7 @@ package com.example.CineHive.client;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
 import com.example.CineHive.dto.oauth.google.GoogleTokenResponse;
 import com.example.CineHive.dto.oauth.google.GoogleUserResponse;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

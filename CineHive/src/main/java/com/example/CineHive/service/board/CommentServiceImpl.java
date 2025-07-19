@@ -5,7 +5,7 @@ import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.CommentMapper;
@@ -36,12 +36,12 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentDto addComment(Long boardId, CreateCommentRequest request, String memberEmail) {
         Board board = findBoardById(boardId);
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
 
         Comment comment = Comment.builder()
                 .content(request.content())
                 .board(board)
-                .member(member)
+                .member(user)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
@@ -61,10 +61,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentDto updateComment(Long commentId, UpdateCommentRequest request, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Comment comment = findCommentById(commentId);
 
-        verifyCommentOwnership(comment, member);
+        verifyCommentOwnership(comment, user);
         comment.update(request.content());
 
         return CommentMapper.toDto(comment);
@@ -73,16 +73,16 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Long commentId, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Comment comment = findCommentById(commentId);
 
-        verifyCommentOwnership(comment, member);
+        verifyCommentOwnership(comment, user);
         commentRepository.delete(comment);
     }
 
     //== Private Helper Methods ==//
 
-    private Member findMemberByEmail(String email) {
+    private User findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
@@ -97,8 +97,8 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
 
-    private void verifyCommentOwnership(Comment comment, Member member) {
-        if (!comment.getMember().equals(member)) {
+    private void verifyCommentOwnership(Comment comment, User user) {
+        if (!comment.getUser().equals(user)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
     }

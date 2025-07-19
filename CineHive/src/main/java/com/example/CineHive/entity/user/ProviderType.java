@@ -1,4 +1,4 @@
-package com.example.CineHive.entity.member;
+package com.example.CineHive.entity.user;
 
 import com.example.CineHive.config.converter.StringValueConvertible; // [추가] import
 import com.fasterxml.jackson.annotation.JsonCreator;

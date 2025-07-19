@@ -1,4 +1,4 @@
-package com.example.CineHive.entity.member;
+package com.example.CineHive.entity.user;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -17,7 +17,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "members")
-public class Member {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,10 +58,10 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MemberRole role;
+    private UserRole role;
 
     @Builder
-    public Member(String email, String password, String name, String nickname, Gender gender, Set<String> genres, ProviderType provider, MemberRole role) {
+    public User(String email, String password, String name, String nickname, Gender gender, Set<String> genres, ProviderType provider, UserRole role) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -70,7 +70,7 @@ public class Member {
         this.type = "일반";
         this.genres = (genres != null) ? genres : new HashSet<>();
         this.provider = (provider != null) ? provider : ProviderType.LOCAL;
-        this.role = (role != null) ? role : MemberRole.ROLE_USER; // 기본값으로 USER 설정
+        this.role = (role != null) ? role : UserRole.ROLE_USER; // 기본값으로 USER 설정
     }
 
     public void changePassword(String newPassword) {

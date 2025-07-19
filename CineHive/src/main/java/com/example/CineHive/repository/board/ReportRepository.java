@@ -4,7 +4,7 @@ import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 import com.example.CineHive.entity.board.Report;
 import com.example.CineHive.entity.board.ReportStatus;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +23,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param board    신고 대상 게시글 엔티티
      * @return 신고 내역이 존재하면 true, 그렇지 않으면 false
      */
-    boolean existsByReporterAndBoard(Member reporter, Board board);
+    boolean existsByReporterAndBoard(User reporter, Board board);
 
     /**
      * 특정 사용자가 특정 댓글을 신고했는지 확인합니다.
@@ -32,7 +32,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param comment  신고 대상 댓글 엔티티
      * @return 신고 내역이 존재하면 true, 그렇지 않으면 false
      */
-    boolean existsByReporterAndComment(Member reporter, Comment comment);
+    boolean existsByReporterAndComment(User reporter, Comment comment);
 
     /**
      * 특정 상태(예: PENDING, ACCEPTED)의 모든 신고 내역을 조회합니다.

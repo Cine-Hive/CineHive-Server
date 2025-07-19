@@ -1,10 +1,9 @@
 package com.example.CineHive.dto.member;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 로그인 성공 시 클라이언트에 반환되는 데이터를 담는 DTO입니다.
@@ -50,17 +49,17 @@ public record LoginResponseDto(
          * Member 엔티티로부터 MemberInfo DTO를 생성하는 정적 팩토리 메서드입니다.
          * 생성자 대신 정적 팩토리 메서드를 사용하여 "변환"의 의도를 명확히 합니다.
          *
-         * @param member 원본 Member 엔티티
+         * @param user 원본 Member 엔티티
          * @return 변환된 MemberInfo DTO
          */
-        public static MemberInfo from(Member member) {
+        public static MemberInfo from(User user) {
             return new MemberInfo(
-                    member.getId(),
-                    member.getEmail(),
-                    member.getName(),
-                    member.getNickname(),
-                    member.getGender() != null ? member.getGender().name() : null, // Null-safe 처리
-                    member.getGenres() // Set<String> 타입이므로 그대로 전달
+                    user.getId(),
+                    user.getEmail(),
+                    user.getName(),
+                    user.getNickname(),
+                    user.getGender() != null ? user.getGender().name() : null, // Null-safe 처리
+                    user.getGenres() // Set<String> 타입이므로 그대로 전달
             );
         }
     }

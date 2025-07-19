@@ -2,10 +2,10 @@ package com.example.CineHive.repository.board;
 
 import com.example.CineHive.config.JpaAuditingConfig;
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.member.Gender;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.entity.member.MemberRole;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.UserRole;
+import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.repository.member.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,8 +29,8 @@ class BoardRepositoryTest {
     @Autowired
     private MemberRepository memberRepository;
 
-    private Member user1;
-    private Member user2;
+    private User user1;
+    private User user2;
 
     @BeforeEach
     void setUp() {
@@ -62,15 +62,15 @@ class BoardRepositoryTest {
                 .build());
     }
 
-    private Member createAndSaveMember(String email, String nickname) {
-        return memberRepository.save(Member.builder()
+    private User createAndSaveMember(String email, String nickname) {
+        return memberRepository.save(User.builder()
                 .email(email)
                 .password("password")
                 .name(nickname)
                 .nickname(nickname)
                 .gender(Gender.MALE)
                 .provider(ProviderType.LOCAL)
-                .role(MemberRole.ROLE_USER)
+                .role(UserRole.ROLE_USER)
                 .build());
     }
 
@@ -113,7 +113,7 @@ class BoardRepositoryTest {
 
         // then
         assertThat(results).hasSize(2);
-        assertThat(results).allMatch(board -> board.getMember().getNickname().equals(keyword));
+        assertThat(results).allMatch(board -> board.getUser().getNickname().equals(keyword));
     }
 
     @Test

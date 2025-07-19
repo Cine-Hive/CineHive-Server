@@ -2,7 +2,7 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -31,21 +31,21 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional
     public void addBookmark(Long boardId, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
-        if (bookmarkRepository.existsByMemberAndBoard(member, board)) {
+        if (bookmarkRepository.existsByMemberAndBoard(user, board)) {
             throw new BusinessException(ErrorCode.BOOKMARK_ALREADY_EXISTS);
         }
 
         Bookmark bookmark = Bookmark.builder()
-                .member(member)
+                .member(user)
                 .board(board)
                 .build();
         bookmarkRepository.save(bookmark);
 
         board.increaseBookmarkCount();
-        log.info("Member {} bookmarked board {}", member.getId(), board.getId());
+        log.info("Member {} bookmarked board {}", user.getId(), board.getId());
     }
 
     /**
@@ -57,16 +57,16 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional
     public void removeBookmark(Long boardId, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
 
-        Bookmark bookmark = bookmarkRepository.findByMemberAndBoard(member, board)
+        Bookmark bookmark = bookmarkRepository.findByMemberAndBoard(user, board)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOOKMARK_NOT_FOUND));
 
         bookmarkRepository.delete(bookmark);
 
         board.decreaseBookmarkCount();
-        log.info("Member {} removed bookmark from board {}", member.getId(), board.getId());
+        log.info("Member {} removed bookmark from board {}", user.getId(), board.getId());
     }
 
     /**
@@ -92,14 +92,14 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional(readOnly = true)
     public boolean isBookmarkedByUser(Long boardId, String memberEmail) {
-        Member member = findMemberByEmail(memberEmail);
+        User user = findMemberByEmail(memberEmail);
         Board board = findBoardById(boardId);
-        return bookmarkRepository.existsByMemberAndBoard(member, board);
+        return bookmarkRepository.existsByMemberAndBoard(user, board);
     }
 
     //== Private Helper Methods ==//
 
-    private Member findMemberByEmail(String email) {
+    private User findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }

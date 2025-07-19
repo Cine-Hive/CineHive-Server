@@ -3,7 +3,7 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Comment;
 import com.example.CineHive.entity.board.Report;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -28,11 +28,11 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public void reportBoard(Long boardId, String reason, String reporterEmail) {
-        Member reporter = findMemberByEmail(reporterEmail);
+        User reporter = findMemberByEmail(reporterEmail);
         Board board = findBoardById(boardId);
 
         // 자신의 게시글은 신고할 수 없음
-        if (board.getMember().equals(reporter)) {
+        if (board.getUser().equals(reporter)) {
             throw new BusinessException(ErrorCode.SELF_REPORT_NOT_ALLOWED);
         }
 
@@ -54,11 +54,11 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public void reportComment(Long commentId, String reason, String reporterEmail) {
-        Member reporter = findMemberByEmail(reporterEmail);
+        User reporter = findMemberByEmail(reporterEmail);
         Comment comment = findCommentById(commentId);
 
         // 자신의 댓글은 신고할 수 없음
-        if (comment.getMember().equals(reporter)) {
+        if (comment.getUser().equals(reporter)) {
             throw new BusinessException(ErrorCode.SELF_REPORT_NOT_ALLOWED);
         }
 
@@ -79,7 +79,7 @@ public class ReportServiceImpl implements ReportService {
 
     //== Private Helper Methods ==//
 
-    private Member findMemberByEmail(String email) {
+    private User findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }

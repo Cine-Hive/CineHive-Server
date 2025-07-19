@@ -1,7 +1,7 @@
 package com.example.CineHive.client;
 
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 import reactor.core.publisher.Mono;
 
 /**

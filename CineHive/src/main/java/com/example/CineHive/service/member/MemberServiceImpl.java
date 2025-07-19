@@ -3,8 +3,8 @@ package com.example.CineHive.service.member;
 import com.example.CineHive.dto.member.LoginRequestDto;
 import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.member.MemberRegisterRequestDto;
-import com.example.CineHive.entity.member.LoginHistory;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.LoginHistory;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.member.MemberMapper;
@@ -36,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public Member register(MemberRegisterRequestDto requestDto) {
+    public User register(MemberRegisterRequestDto requestDto) {
         log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
         if (memberRepository.existsByEmail(requestDto.email())) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -45,32 +45,32 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
-        Member member = MemberMapper.toEntity(requestDto, passwordEncoder);
-        Member savedMember = memberRepository.save(member);
-        log.info("회원 가입이 완료되었습니다. 회원 ID: {}", savedMember.getId());
-        return savedMember;
+        User user = MemberMapper.toEntity(requestDto, passwordEncoder);
+        User savedUser = memberRepository.save(user);
+        log.info("회원 가입이 완료되었습니다. 회원 ID: {}", savedUser.getId());
+        return savedUser;
     }
 
     @Override
     @Transactional
     public LoginResponseDto login(LoginRequestDto requestDto, String userAgent) {
         log.info("로그인 시도: {}", requestDto.email());
-        Member member = memberRepository.findByEmail(requestDto.email())
+        User user = memberRepository.findByEmail(requestDto.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
-        if (!passwordEncoder.matches(requestDto.password(), member.getPassword())) {
+        if (!passwordEncoder.matches(requestDto.password(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        recordLoginHistory(member, userAgent);
+        recordLoginHistory(user, userAgent);
 
-        String token = jwtUtil.generateToken(member.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
         log.info("로그인 성공: {}", requestDto.email());
 
         return new LoginResponseDto(
                 token,
                 false, // 일반 로그인은 항상 기존 회원이므로 false
-                LoginResponseDto.MemberInfo.from(member)
+                LoginResponseDto.MemberInfo.from(user)
         );
     }
 
@@ -78,14 +78,14 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) {
         log.info("비밀번호 변경 시도: {}", email);
-        Member member = findByEmail(email);
-        if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
+        User user = findByEmail(email);
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             // NOTE: '기존 비밀번호 불일치'는 로그인 실패와는 성격이 다르므로
             //       'INVALID_CREDENTIALS' 대신 'INVALID_INPUT_VALUE'를 사용합니다.
             //       더 명확한 에러를 위해 'PASSWORD_MISMATCH' 같은 ErrorCode를 추가하는 것도 좋은 방법입니다.
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
-        member.changePassword(passwordEncoder.encode(newPassword));
+        user.changePassword(passwordEncoder.encode(newPassword));
         log.info("비밀번호 변경 완료: {}", email);
     }
 
@@ -100,19 +100,19 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Member findByEmail(String email) {
+    public User findByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private void recordLoginHistory(Member member, String userAgent) {
+    private void recordLoginHistory(User user, String userAgent) {
         String browser = parseBrowserFromUserAgent(userAgent);
-        LoginHistory loginHistory = loginHistoryRepository.findByMember(member)
-                .orElseGet(() -> new LoginHistory(null, member, LocalDateTime.now(), null, null));
+        LoginHistory loginHistory = loginHistoryRepository.findByMember(user)
+                .orElseGet(() -> new LoginHistory(null, user, LocalDateTime.now(), null, null));
 
         loginHistory.updateLoginInfo(browser);
         loginHistoryRepository.save(loginHistory);
-        log.debug("로그인 기록 저장 완료. 회원 ID: {}", member.getId());
+        log.debug("로그인 기록 저장 완료. 회원 ID: {}", user.getId());
     }
 
     private String parseBrowserFromUserAgent(String userAgent) {

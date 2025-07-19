@@ -2,7 +2,7 @@ package com.example.CineHive.controller.board;
 
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
-import com.example.CineHive.entity.member.*;
+import com.example.CineHive.entity.user.*;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -38,9 +38,9 @@ class BookmarkControllerTest {
     @Autowired
     private BookmarkRepository bookmarkRepository;
 
-    private Member boardOwner;
-    private Member bookmarker;
-    private Member anotherUser;
+    private User boardOwner;
+    private User bookmarker;
+    private User anotherUser;
     private Board testBoard;
 
     @BeforeEach
@@ -60,15 +60,15 @@ class BookmarkControllerTest {
                 .build());
     }
 
-    private Member createMember(String email, String nickname) {
-        return memberRepository.save(Member.builder()
+    private User createMember(String email, String nickname) {
+        return memberRepository.save(User.builder()
                 .email(email)
                 .password("password")
                 .name(nickname)
                 .nickname(nickname)
                 .gender(Gender.MALE)
                 .provider(ProviderType.LOCAL)
-                .role(MemberRole.ROLE_USER)
+                .role(UserRole.ROLE_USER)
                 .build());
     }
 

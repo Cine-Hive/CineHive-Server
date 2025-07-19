@@ -1,7 +1,7 @@
 package com.example.CineHive.service.account;
 
 import com.example.CineHive.dto.account.AccountInfoResponseDto;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException; // BusinessException import
 import com.example.CineHive.exception.ErrorCode;       // ErrorCode import
 import com.example.CineHive.repository.board.BoardRepository;
@@ -37,37 +37,37 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountInfoResponseDto getAccountInfo(String email) {
-        Member member = findMemberByEmail(email);
-        return AccountInfoResponseDto.from(member);
+        User user = findMemberByEmail(email);
+        return AccountInfoResponseDto.from(user);
     }
 
     @Override
     @Transactional
     public void changeNickname(String email, String newNickname) {
-        Member member = findMemberByEmail(email);
-        if (memberRepository.existsByNickname(newNickname) && !member.getNickname().equals(newNickname)) {
+        User user = findMemberByEmail(email);
+        if (memberRepository.existsByNickname(newNickname) && !user.getNickname().equals(newNickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
-        member.changeNickname(newNickname);
+        user.changeNickname(newNickname);
         log.info("Member {} changed nickname to {}", email, newNickname);
     }
 
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) {
-        Member member = findMemberByEmail(email);
-        if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
+        User user = findMemberByEmail(email);
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
-        member.changePassword(passwordEncoder.encode(newPassword));
+        user.changePassword(passwordEncoder.encode(newPassword));
         log.info("Member {} changed password.", email);
     }
 
     @Override
     @Transactional
     public void updateGenres(String email, List<String> genres) {
-        Member member = findMemberByEmail(email);
-        member.updateGenres(new HashSet<>(genres));
+        User user = findMemberByEmail(email);
+        user.updateGenres(new HashSet<>(genres));
         log.info("Member {} updated genres.", email);
     }
 
@@ -93,7 +93,7 @@ public class AccountServiceImpl implements AccountService {
      * @return Member 엔티티
      * @throws BusinessException 해당 이메일의 회원이 없을 경우
      */
-    private Member findMemberByEmail(String email) {
+    private User findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     return new BusinessException(ErrorCode.MEMBER_NOT_FOUND);

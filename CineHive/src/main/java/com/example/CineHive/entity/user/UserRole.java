@@ -1,4 +1,4 @@
-package com.example.CineHive.entity.member;
+package com.example.CineHive.entity.user;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum MemberRole {
+public enum UserRole {
 
     ROLE_USER("ROLE_USER", "일반 사용자"),
     ROLE_ADMIN("ROLE_ADMIN", "관리자");

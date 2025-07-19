@@ -3,8 +3,8 @@ package com.example.CineHive.service.oauth;
 import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.example.CineHive.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,8 +62,8 @@ class OAuth2ServiceTest {
         return new OAuth2MemberInfo(email, nickname, provider);
     }
 
-    private Member createDummyMember(String email, String nickname) {
-        return Member.builder()
+    private User createDummyMember(String email, String nickname) {
+        return User.builder()
                 .email(email)
                 .nickname(nickname)
                 .provider(ProviderType.KAKAO)
@@ -81,11 +81,11 @@ class OAuth2ServiceTest {
             String email = "test@kakao.com";
             String nickname = "기존유저";
             OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
-            Member existingMember = createDummyMember(email, nickname);
+            User existingUser = createDummyMember(email, nickname);
             String dummyToken = "dummy-jwt-token";
 
             given(memberRepository.existsByEmail(email)).willReturn(true);
-            given(memberRepository.findByEmail(email)).willReturn(Optional.of(existingMember));
+            given(memberRepository.findByEmail(email)).willReturn(Optional.of(existingUser));
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
@@ -95,8 +95,8 @@ class OAuth2ServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.isNewMember()).isFalse();
             assertThat(response.token()).isEqualTo(dummyToken);
-            assertThat(response.memberInfo().email()).isEqualTo(existingMember.getEmail());
-            assertThat(response.memberInfo().nickname()).isEqualTo(existingMember.getNickname());
+            assertThat(response.memberInfo().email()).isEqualTo(existingUser.getEmail());
+            assertThat(response.memberInfo().nickname()).isEqualTo(existingUser.getNickname());
         }
 
         @Test
@@ -106,13 +106,13 @@ class OAuth2ServiceTest {
             String email = "new@kakao.com";
             String nickname = "신규유저";
             OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
-            Member newMember = createDummyMember(email, nickname);
+            User newUser = createDummyMember(email, nickname);
             String dummyToken = "dummy-jwt-token";
 
             given(memberRepository.existsByEmail(email)).willReturn(false);
             given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
             given(memberRepository.existsByNickname(nickname)).willReturn(false);
-            given(memberRepository.save(any(Member.class))).willReturn(newMember);
+            given(memberRepository.save(any(User.class))).willReturn(newUser);
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
@@ -122,9 +122,9 @@ class OAuth2ServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.isNewMember()).isTrue();
             assertThat(response.token()).isEqualTo(dummyToken);
-            assertThat(response.memberInfo().email()).isEqualTo(newMember.getEmail());
+            assertThat(response.memberInfo().email()).isEqualTo(newUser.getEmail());
 
-            verify(memberRepository).save(any(Member.class));
+            verify(memberRepository).save(any(User.class));
         }
 
         @Test
@@ -137,14 +137,14 @@ class OAuth2ServiceTest {
 
             String firstAttempt = originalNickname;
             String secondAttempt = String.format("%s (%s %d)", originalNickname, ProviderType.KAKAO.name(), 1);
-            Member newMemberWithResolvedNickname = createDummyMember(email, secondAttempt);
+            User newUserWithResolvedNickname = createDummyMember(email, secondAttempt);
             String dummyToken = "dummy-jwt-token";
 
             given(memberRepository.existsByEmail(email)).willReturn(false);
             given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
             given(memberRepository.existsByNickname(firstAttempt)).willReturn(true); // 첫 시도는 중복
             given(memberRepository.existsByNickname(secondAttempt)).willReturn(false); // 두 번째 시도는 성공
-            given(memberRepository.save(any(Member.class))).willReturn(newMemberWithResolvedNickname);
+            given(memberRepository.save(any(User.class))).willReturn(newUserWithResolvedNickname);
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
@@ -165,7 +165,7 @@ class OAuth2ServiceTest {
         OAuth2MemberInfo dummyInfo = createDummyOAuth2MemberInfo("test@kakao.com", "test", ProviderType.KAKAO);
         given(mockKakaoClient.getMemberInfoByAccessToken(accessToken)).willReturn(Mono.just(dummyInfo));
         given(memberRepository.existsByEmail(anyString())).willReturn(true);
-        given(memberRepository.findByEmail(anyString())).willReturn(Optional.of(mock(Member.class)));
+        given(memberRepository.findByEmail(anyString())).willReturn(Optional.of(mock(User.class)));
         given(jwtUtil.generateToken(anyString())).willReturn("dummy-token");
 
         // when

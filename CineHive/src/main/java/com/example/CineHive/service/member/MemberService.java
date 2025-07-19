@@ -3,7 +3,7 @@ package com.example.CineHive.service.member;
 import com.example.CineHive.dto.member.LoginRequestDto;
 import com.example.CineHive.dto.member.LoginResponseDto;
 import com.example.CineHive.dto.member.MemberRegisterRequestDto;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 
 /**
  * 회원 관련 비즈니스 로직을 정의하는 서비스 인터페이스입니다.
@@ -15,7 +15,7 @@ public interface MemberService {
      * @param requestDto 회원가입 정보 DTO
      * @return 생성된 Member 엔티티
      */
-    Member register(MemberRegisterRequestDto requestDto);
+    User register(MemberRegisterRequestDto requestDto);
 
     /**
      * 일반 로그인을 처리하고 JWT 토큰을 발급합니다.
@@ -52,5 +52,5 @@ public interface MemberService {
      * @param email 조회할 이메일
      * @return 조회된 Member 엔티티
      */
-    Member findByEmail(String email);
+    User findByEmail(String email);
 }

@@ -3,7 +3,7 @@ package com.example.CineHive.controller.admin;
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Report;
 import com.example.CineHive.entity.board.ReportStatus;
-import com.example.CineHive.entity.member.*;
+import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.ReportRepository;
@@ -54,9 +54,9 @@ class AdminReportControllerTest {
         boardRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
 
-        Member reporter = createMember("reporter@test.com", "신고자", MemberRole.ROLE_USER);
-        Member reportedUser = createMember("reported@test.com", "피신고자", MemberRole.ROLE_USER);
-        createMember("admin@test.com", "관리자", MemberRole.ROLE_ADMIN); // 관리자 계정 생성
+        User reporter = createMember("reporter@test.com", "신고자", UserRole.ROLE_USER);
+        User reportedUser = createMember("reported@test.com", "피신고자", UserRole.ROLE_USER);
+        createMember("admin@test.com", "관리자", UserRole.ROLE_ADMIN); // 관리자 계정 생성
 
         Board reportedBoard = boardRepository.save(Board.builder()
                 .member(reportedUser)
@@ -71,8 +71,8 @@ class AdminReportControllerTest {
                 .build());
     }
 
-    private Member createMember(String email, String nickname, MemberRole role) {
-        return memberRepository.save(Member.builder()
+    private User createMember(String email, String nickname, UserRole role) {
+        return memberRepository.save(User.builder()
                 .email(email).password("password").name(nickname).nickname(nickname)
                 .gender(Gender.MALE).provider(ProviderType.LOCAL).role(role)
                 .build());
@@ -157,8 +157,8 @@ class AdminReportControllerTest {
         @DisplayName("✅ 성공: 관리자가 모든 신고 내역을 성공적으로 조회한다.")
         void getReports_byAdmin_success() throws Exception {
             // given: PENDING 상태의 신고 하나 더 추가
-            Member reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
-            Member reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
+            User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
+            User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
             Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
             reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
 
@@ -173,8 +173,8 @@ class AdminReportControllerTest {
         @DisplayName("✅ 성공: 관리자가 'PENDING' 상태의 신고 내역만 필터링하여 조회한다.")
         void getReports_filterByStatus_success() throws Exception {
             // given: 다른 상태의 신고 추가
-            Member reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
-            Member reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
+            User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
+            User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
             Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
             Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
             acceptedReport.accept();

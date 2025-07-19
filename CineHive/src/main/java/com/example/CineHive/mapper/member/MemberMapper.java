@@ -1,9 +1,9 @@
 package com.example.CineHive.mapper.member;
 
 import com.example.CineHive.dto.member.MemberRegisterRequestDto;
-import com.example.CineHive.entity.member.Gender;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.ProviderType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
@@ -29,8 +29,8 @@ public final class MemberMapper {
      * @param passwordEncoder 비밀번호 암호화기
      * @return 생성된 Member 엔티티
      */
-    public static Member toEntity(MemberRegisterRequestDto dto, PasswordEncoder passwordEncoder) {
-        return Member.builder()
+    public static User toEntity(MemberRegisterRequestDto dto, PasswordEncoder passwordEncoder) {
+        return User.builder()
                 .email(dto.email())
                 .password(passwordEncoder.encode(dto.password()))
                 .name(dto.name())

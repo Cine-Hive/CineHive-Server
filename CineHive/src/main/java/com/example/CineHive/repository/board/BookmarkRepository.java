@@ -2,7 +2,7 @@ package com.example.CineHive.repository.board;
 
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.Bookmark;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,20 +21,20 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
      * 특정 회원과 게시글에 해당하는 북마크 정보가 존재하는지 확인합니다.
      * count 쿼리보다 효율적인 exists 쿼리를 사용합니다.
      *
-     * @param member 확인할 회원 엔티티
+     * @param user 확인할 회원 엔티티
      * @param board  확인할 게시글 엔티티
      * @return 북마크가 존재하면 true, 그렇지 않으면 false
      */
-    boolean existsByMemberAndBoard(Member member, Board board);
+    boolean existsByMemberAndBoard(User user, Board board);
 
     /**
      * 특정 회원과 게시글로 북마크 정보를 조회합니다.
      *
-     * @param member 조회할 회원 엔티티
+     * @param user 조회할 회원 엔티티
      * @param board  조회할 게시글 엔티티
      * @return 존재할 경우 북마크 정보를 담은 Optional, 존재하지 않을 경우 빈 Optional
      */
-    Optional<Bookmark> findByMemberAndBoard(Member member, Board board);
+    Optional<Bookmark> findByMemberAndBoard(User user, Board board);
 
     /**
      * 특정 게시글에 대한 모든 북마크의 개수를 조회합니다.

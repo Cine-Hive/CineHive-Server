@@ -1,10 +1,9 @@
 package com.example.CineHive.service.security;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -42,16 +41,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     /**
      * Member 엔티티를 Spring Security가 사용하는 UserDetails 객체로 변환합니다.
      *
-     * @param member 데이터베이스에서 조회한 Member 엔티티
+     * @param user 데이터베이스에서 조회한 Member 엔티티
      * @return UserDetails 객체
      */
-    private UserDetails createLoginMember(Member member) {
+    private UserDetails createLoginMember(User user) {
         // Spring Security의 User 클래스를 사용합니다.
         // 생성자: new User(username, password, authorities)
         // 현재는 별도의 권한(Role)이 없으므로 빈 컬렉션을 전달합니다.
-        return new User(
-                member.getEmail(),
-                member.getPassword(),
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
                 Collections.emptyList() // TODO: 추후 권한(Role) 기능 추가 시 수정 필요
         );
     }

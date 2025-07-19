@@ -1,7 +1,7 @@
 package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.BaseEntity;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -35,7 +35,7 @@ public class Board extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private User user;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -56,10 +56,10 @@ public class Board extends BaseEntity {
     private int commentCount = 0;
 
     @Builder
-    public Board(String brdTitle, String brdContent, Member member) {
+    public Board(String brdTitle, String brdContent, User user) {
         this.brdTitle = brdTitle;
         this.brdContent = brdContent;
-        this.member = member;
+        this.user = user;
     }
 
     //== 비즈니스 로직 (엔티티가 스스로의 상태를 관리) ==//

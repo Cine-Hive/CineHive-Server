@@ -2,7 +2,7 @@ package com.example.CineHive.repository.board;
 
 import com.example.CineHive.entity.board.Board;
 import com.example.CineHive.entity.board.BoardLike;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,20 +20,20 @@ public interface LikeRepository extends JpaRepository<BoardLike, Long> {
     /**
      * 특정 회원과 게시글에 해당하는 '좋아요' 정보가 존재하는지 확인합니다.
      *
-     * @param member 확인할 회원 엔티티
+     * @param user 확인할 회원 엔티티
      * @param board  확인할 게시글 엔티티
      * @return '좋아요'가 존재하면 true, 그렇지 않으면 false
      */
-    boolean existsByMemberAndBoard(Member member, Board board);
+    boolean existsByMemberAndBoard(User user, Board board);
 
     /**
      * 특정 회원과 게시글로 '좋아요' 정보를 조회합니다.
      *
-     * @param member 조회할 회원 엔티티
+     * @param user 조회할 회원 엔티티
      * @param board  조회할 게시글 엔티티
      * @return 존재할 경우 '좋아요' 정보를 담은 Optional, 존재하지 않을 경우 빈 Optional
      */
-    Optional<BoardLike> findByMemberAndBoard(Member member, Board board);
+    Optional<BoardLike> findByMemberAndBoard(User user, Board board);
 
     /**
      * 특정 게시글에 대한 모든 '좋아요'의 개수를 조회합니다.

@@ -1,7 +1,7 @@
 package com.example.CineHive.entity.board;
 
 import com.example.CineHive.entity.BaseEntity;
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,7 +20,7 @@ public class Report extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
-    private Member reporter; // 신고자 (user -> reporter)
+    private User reporter; // 신고자 (user -> reporter)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id") // nullable = true
@@ -38,7 +38,7 @@ public class Report extends BaseEntity {
     private ReportStatus status;
 
     @Builder
-    public Report(Member reporter, Board board, Comment comment, String reason) {
+    public Report(User reporter, Board board, Comment comment, String reason) {
         this.reporter = reporter;
         this.board = board;
         this.comment = comment;

@@ -1,6 +1,6 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,15 +19,15 @@ public class BoardDislike {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
 
     @Builder
-    public BoardDislike(Member member, Board board) {
-        this.member = member;
+    public BoardDislike(User user, Board board) {
+        this.user = user;
         this.board = board;
     }
 }

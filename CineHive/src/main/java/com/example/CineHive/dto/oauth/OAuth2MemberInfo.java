@@ -1,6 +1,6 @@
 package com.example.CineHive.dto.oauth;
 
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 
 /**
  * 다양한 OAuth2 제공업체로부터 받은 사용자 정보를

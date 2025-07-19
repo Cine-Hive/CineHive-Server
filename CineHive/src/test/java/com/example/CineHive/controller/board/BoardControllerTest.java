@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.member.*;
+import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -49,19 +49,19 @@ class BoardControllerTest {
     @Autowired
     private BoardRepository boardRepository;
 
-    private Member testMember;
-    private Member otherMember;
+    private User testUser;
+    private User otherUser;
 
     @BeforeEach
     void setUp() {
         boardRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
-        testMember = createAndSaveMember("test@example.com", "테스트유저");
-        otherMember = createAndSaveMember("other@example.com", "다른유저");
+        testUser = createAndSaveMember("test@example.com", "테스트유저");
+        otherUser = createAndSaveMember("other@example.com", "다른유저");
     }
 
-    private Member createAndSaveMember(String email, String nickname) {
-        return memberRepository.save(Member.builder().email(email).password("password").name(nickname).nickname(nickname)
+    private User createAndSaveMember(String email, String nickname) {
+        return memberRepository.save(User.builder().email(email).password("password").name(nickname).nickname(nickname)
                 .gender(Gender.MALE).provider(ProviderType.LOCAL).build());
     }
 
@@ -93,7 +93,7 @@ class BoardControllerTest {
                 mockMvc.perform(post("/api/v1/boards").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.data.brdTitle").value("새 제목"))
-                        .andExpect(jsonPath("$.data.memNickname").value(testMember.getNickname()));
+                        .andExpect(jsonPath("$.data.memNickname").value(testUser.getNickname()));
             }
         }
 
@@ -159,7 +159,7 @@ class BoardControllerTest {
             @DisplayName("✅ 성공: 게시글 ID로 상세 조회 시 200 응답과 함께 조회수가 1 증가한다.")
             void getBoardById_success() throws Exception {
                 // given
-                Board board = boardRepository.save(Board.builder().member(testMember).brdTitle("조회용").brdContent("내용").build());
+                Board board = boardRepository.save(Board.builder().member(testUser).brdTitle("조회용").brdContent("내용").build());
                 int initialViews = board.getViews();
 
                 // when & then
@@ -187,7 +187,7 @@ class BoardControllerTest {
         class GetList {
             @BeforeEach
             void setUpList() {
-                IntStream.range(0, 20).forEach(i -> boardRepository.save(Board.builder().member(otherMember).brdTitle("목록 " + i).brdContent("내용").build()));
+                IntStream.range(0, 20).forEach(i -> boardRepository.save(Board.builder().member(otherUser).brdTitle("목록 " + i).brdContent("내용").build()));
             }
 
             @Test
@@ -208,7 +208,7 @@ class BoardControllerTest {
             @DisplayName("✅ 성공: 정렬(sort) 파라미터가 정상 동작한다.")
             void getBoardList_withSort() throws Exception {
                 // given
-                Board mostViewedBoard = boardRepository.save(Board.builder().member(testMember).brdTitle("조회수 1등").brdContent("인기글").build());
+                Board mostViewedBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("조회수 1등").brdContent("인기글").build());
                 mostViewedBoard.increaseViews();
                 boardRepository.save(mostViewedBoard);
 
@@ -240,7 +240,7 @@ class BoardControllerTest {
         private Board testBoard;
         @BeforeEach
         void setUp() {
-            testBoard = boardRepository.save(Board.builder().member(testMember).brdTitle("원본").brdContent("원본").build());
+            testBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("원본").brdContent("원본").build());
         }
 
         @Nested
@@ -302,7 +302,7 @@ class BoardControllerTest {
         private Board testBoard;
         @BeforeEach
         void setUp() {
-            testBoard = boardRepository.save(Board.builder().member(testMember).brdTitle("삭제용").brdContent("삭제용").build());
+            testBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("삭제용").brdContent("삭제용").build());
         }
 
         @Nested

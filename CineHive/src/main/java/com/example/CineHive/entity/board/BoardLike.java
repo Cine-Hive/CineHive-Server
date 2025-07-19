@@ -1,6 +1,6 @@
 package com.example.CineHive.entity.board;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -32,7 +32,7 @@ public class BoardLike {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
@@ -40,12 +40,12 @@ public class BoardLike {
 
     /**
      * '좋아요' 생성을 위한 빌더입니다.
-     * @param member '좋아요'를 누른 회원 엔티티
+     * @param user '좋아요'를 누른 회원 엔티티
      * @param board '좋아요'의 대상이 되는 게시글 엔티티
      */
     @Builder
-    public BoardLike(Member member, Board board) {
-        this.member = member;
+    public BoardLike(User user, Board board) {
+        this.user = user;
         this.board = board;
     }
 }

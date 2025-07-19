@@ -1,6 +1,6 @@
 package com.example.CineHive.dto.account;
 
-import com.example.CineHive.entity.member.Member;
+import com.example.CineHive.entity.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -16,14 +16,14 @@ public record AccountInfoResponseDto(
         String gender,
         List<String> genres
 ) {
-    public static AccountInfoResponseDto from(Member member) {
+    public static AccountInfoResponseDto from(User user) {
         return AccountInfoResponseDto.builder()
-                .id(member.getId())
-                .email(member.getEmail())
-                .name(member.getName())
-                .nickname(member.getNickname())
-                .gender(member.getGender().name())
-                .genres(member.getGenres().stream().toList())
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .gender(user.getGender().name())
+                .genres(user.getGenres().stream().toList())
                 .build();
     }
 }
