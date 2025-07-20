@@ -1,4 +1,4 @@
-package com.example.CineHive.mapper.member;
+package com.example.CineHive.mapper.user;
 
 import com.example.CineHive.dto.auth.RegisterRequest;
 import com.example.CineHive.entity.media.Genre;
@@ -10,25 +10,25 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.stream.Collectors;
 
 /**
- * 회원(Member) 관련 매퍼 클래스입니다.
+ * 사용자(User) 관련 매퍼 클래스입니다.
  * 이 클래스는 오직 요청 DTO(Request DTO)를 엔티티(Entity)로 변환하는 책임만 가집니다.
  */
-public final class MemberMapper {
+public final class UserMapper {
 
     /**
      * 유틸리티 클래스는 인스턴스화할 수 없습니다.
      */
-    private MemberMapper() {
+    private UserMapper() {
         throw new IllegalStateException("유틸리티 클래스는 인스턴스화할 수 없습니다.");
     }
 
     /**
-     * 일반 회원가입 요청 DTO를 Member 엔티티로 변환합니다.
+     * 일반 회원가입 요청 DTO를 User 엔티티로 변환합니다.
      * 이 과정에서 비밀번호는 안전하게 암호화되며, 프로바이더는 'LOCAL'로 설정됩니다.
      *
      * @param dto             회원가입 요청 데이터
      * @param passwordEncoder 비밀번호 암호화기
-     * @return 생성된 Member 엔티티
+     * @return 생성된 User 엔티티
      */
     public static User toEntity(RegisterRequest dto, PasswordEncoder passwordEncoder) {
         return User.builder()
@@ -38,7 +38,7 @@ public final class MemberMapper {
                 .nickname(dto.nickname())
                 .gender(Gender.valueOf(dto.gender().toUpperCase()))
                 .genres(dto.genres().stream()
-                        .map(Genre::valueOf)
+                        .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
                         .collect(Collectors.toSet()))
                 .provider(ProviderType.LOCAL)
                 .build();
