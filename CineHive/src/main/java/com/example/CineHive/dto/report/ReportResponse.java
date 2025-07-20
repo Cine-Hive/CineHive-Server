@@ -36,7 +36,7 @@ public record ReportResponse(
      * @param report 변환할 Report 엔티티
      * @return 변환된 ReportResponse DTO
      */
-    public static ReportResponse fromEntity(Report report) {
+    public static ReportResponse from(Report report) {
         Long contentId;
         String type;
 
