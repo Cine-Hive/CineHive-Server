@@ -1,6 +1,6 @@
 package com.example.CineHive.mapper.member;
 
-import com.example.CineHive.dto.user.MemberRegisterRequestDto;
+import com.example.CineHive.dto.auth.RegisterRequestDto;
 import com.example.CineHive.entity.media.Genre;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;
@@ -30,7 +30,7 @@ public final class MemberMapper {
      * @param passwordEncoder 비밀번호 암호화기
      * @return 생성된 Member 엔티티
      */
-    public static User toEntity(MemberRegisterRequestDto dto, PasswordEncoder passwordEncoder) {
+    public static User toEntity(RegisterRequestDto dto, PasswordEncoder passwordEncoder) {
         return User.builder()
                 .email(dto.email())
                 .password(passwordEncoder.encode(dto.password()))

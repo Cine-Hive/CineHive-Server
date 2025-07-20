@@ -1,10 +1,10 @@
 package com.example.CineHive.controller.member;
 
-import com.example.CineHive.dto.user.LoginRequestDto;
-import com.example.CineHive.dto.user.MemberRegisterRequestDto;
+import com.example.CineHive.dto.auth.LoginRequestDto;
+import com.example.CineHive.dto.auth.RegisterRequestDto;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
-import com.example.CineHive.dto.user.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponseDto;
 import com.example.CineHive.service.member.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,7 +34,7 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류 또는 중복된 이메일/닉네임", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody MemberRegisterRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody RegisterRequestDto requestDto) {
         memberService.register(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(Map.of("message", "회원가입이 성공적으로 완료되었습니다.")));

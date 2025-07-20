@@ -1,8 +1,8 @@
 package com.example.CineHive.service.member;
 
-import com.example.CineHive.dto.user.LoginRequestDto;
-import com.example.CineHive.dto.user.LoginResponseDto;
-import com.example.CineHive.dto.user.MemberRegisterRequestDto;
+import com.example.CineHive.dto.auth.LoginRequestDto;
+import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.RegisterRequestDto;
 import com.example.CineHive.entity.user.User;
 
 /**
@@ -15,7 +15,7 @@ public interface MemberService {
      * @param requestDto 회원가입 정보 DTO
      * @return 생성된 Member 엔티티
      */
-    User register(MemberRegisterRequestDto requestDto);
+    User register(RegisterRequestDto requestDto);
 
     /**
      * 일반 로그인을 처리하고 JWT 토큰을 발급합니다.

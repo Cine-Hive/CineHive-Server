@@ -1,8 +1,8 @@
 package com.example.CineHive.service.member;
 
-import com.example.CineHive.dto.user.LoginRequestDto;
-import com.example.CineHive.dto.user.LoginResponseDto;
-import com.example.CineHive.dto.user.MemberRegisterRequestDto;
+import com.example.CineHive.dto.auth.LoginRequestDto;
+import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.RegisterRequestDto;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
@@ -36,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public User register(MemberRegisterRequestDto requestDto) {
+    public User register(RegisterRequestDto requestDto) {
         log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
         if (memberRepository.existsByEmail(requestDto.email())) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);

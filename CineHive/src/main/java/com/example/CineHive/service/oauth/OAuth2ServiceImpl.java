@@ -1,7 +1,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.OAuth2Client;
-import com.example.CineHive.dto.user.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponseDto;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;

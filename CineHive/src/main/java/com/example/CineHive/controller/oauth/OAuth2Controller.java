@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.oauth;
 
-import com.example.CineHive.dto.user.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponseDto;
 import com.example.CineHive.dto.oauth.AccessTokenRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.entity.user.ProviderType;
