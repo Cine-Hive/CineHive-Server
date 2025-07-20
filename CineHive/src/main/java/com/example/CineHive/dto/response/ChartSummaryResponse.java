@@ -1,5 +1,6 @@
 package com.example.CineHive.dto.response;
 
+import com.example.CineHive.dto.media.ChartSection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 

@@ -1,11 +1,8 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.client.TmdbApiClient;
+import com.example.CineHive.dto.media.*;
 import com.example.CineHive.entity.setting.HomeChartSetting;
-import com.example.CineHive.dto.media.ChartProperties;
-import com.example.CineHive.dto.media.ChartType;
-import com.example.CineHive.dto.media.MediaType;
-import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
