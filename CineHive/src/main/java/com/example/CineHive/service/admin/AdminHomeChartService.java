@@ -1,6 +1,6 @@
 package com.example.CineHive.service.admin;
 
-import com.example.CineHive.dto.admin.HomeChartSettingDto;
+import com.example.CineHive.dto.admin.HomeChartSettingRequestDto;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.entity.setting.HomeChartSetting;
 
@@ -28,5 +28,5 @@ public interface AdminHomeChartService {
      * 이 메서드가 호출되면 'chartSummary' 캐시가 삭제됩니다.
      * @param settings 새로운 차트 설정 DTO 목록
      */
-    void updateHomeChartSettings(List<HomeChartSettingDto> settings);
+    void updateHomeChartSettings(List<HomeChartSettingRequestDto> settings);
 }
