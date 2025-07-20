@@ -31,7 +31,7 @@ public class AdminReportServiceImpl implements AdminReportService {
             reports = reportRepository.findByStatus(status);
         }
         return reports.stream()
-                .map(ReportResponse::fromEntity)
+                .map(ReportResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +45,7 @@ public class AdminReportServiceImpl implements AdminReportService {
         }
 
         report.accept();
-        log.info("Report {} has been accepted by admin.", reportId);
+        log.info("관리자에 의해 신고(ID: {})가 승인 처리되었습니다.", reportId);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class AdminReportServiceImpl implements AdminReportService {
         }
 
         report.reject();
-        log.info("Report {} has been rejected by admin.", reportId);
+        log.info("관리자에 의해 신고(ID: {})가 기각 처리되었습니다.", reportId);
     }
 
     private Report findReportById(Long reportId) {
