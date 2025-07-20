@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "로그인 요청 DTO")
-public record LoginRequestDto(
+public record LoginRequest(
         @Schema(description = "사용자 이메일", example = "test@example.com")
         @NotBlank(message = "이메일은 필수입니다.")
         @Email

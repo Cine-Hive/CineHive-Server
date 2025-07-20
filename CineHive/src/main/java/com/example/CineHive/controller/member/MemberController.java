@@ -1,10 +1,10 @@
 package com.example.CineHive.controller.member;
 
-import com.example.CineHive.dto.auth.LoginRequestDto;
-import com.example.CineHive.dto.auth.RegisterRequestDto;
+import com.example.CineHive.dto.auth.LoginRequest;
+import com.example.CineHive.dto.auth.RegisterRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
-import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.service.member.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,7 +34,7 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류 또는 중복된 이메일/닉네임", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody RegisterRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody RegisterRequest requestDto) {
         memberService.register(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(Map.of("message", "회원가입이 성공적으로 완료되었습니다.")));
@@ -46,12 +46,12 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 이메일 또는 비밀번호", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> login(
-            @Valid @RequestBody LoginRequestDto requestDto,
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest requestDto,
             HttpServletRequest request) { // User-Agent 추출을 위해 request 사용
 
         String userAgent = request.getHeader("User-Agent");
-        LoginResponseDto response = memberService.login(requestDto, userAgent);
+        LoginResponse response = memberService.login(requestDto, userAgent);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }

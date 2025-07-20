@@ -1,8 +1,8 @@
 package com.example.CineHive.service.member;
 
-import com.example.CineHive.dto.auth.LoginRequestDto;
-import com.example.CineHive.dto.auth.LoginResponseDto;
-import com.example.CineHive.dto.auth.RegisterRequestDto;
+import com.example.CineHive.dto.auth.LoginRequest;
+import com.example.CineHive.dto.auth.LoginResponse;
+import com.example.CineHive.dto.auth.RegisterRequest;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
@@ -36,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public User register(RegisterRequestDto requestDto) {
+    public User register(RegisterRequest requestDto) {
         log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
         if (memberRepository.existsByEmail(requestDto.email())) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -53,7 +53,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public LoginResponseDto login(LoginRequestDto requestDto, String userAgent) {
+    public LoginResponse login(LoginRequest requestDto, String userAgent) {
         log.info("로그인 시도: {}", requestDto.email());
         User user = memberRepository.findByEmail(requestDto.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
@@ -67,10 +67,10 @@ public class MemberServiceImpl implements MemberService {
         String token = jwtUtil.generateToken(user.getEmail());
         log.info("로그인 성공: {}", requestDto.email());
 
-        return new LoginResponseDto(
+        return new LoginResponse(
                 token,
                 false, // 일반 로그인은 항상 기존 회원이므로 false
-                LoginResponseDto.MemberInfo.from(user)
+                LoginResponse.MemberInfo.from(user)
         );
     }
 

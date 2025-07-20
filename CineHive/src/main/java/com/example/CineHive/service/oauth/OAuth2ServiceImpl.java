@@ -1,7 +1,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.OAuth2Client;
-import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;
@@ -43,7 +43,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     @Override
     @Transactional
-    public LoginResponseDto loginWithCode(ProviderType providerType, String code) {
+    public LoginResponse loginWithCode(ProviderType providerType, String code) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfo(code)
                 .onErrorMap(error -> {
@@ -57,7 +57,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     @Override
     @Transactional
-    public LoginResponseDto loginWithAccessToken(ProviderType providerType, String accessToken) {
+    public LoginResponse loginWithAccessToken(ProviderType providerType, String accessToken) {
         OAuth2Client client = getClient(providerType);
         OAuth2MemberInfo memberInfo = client.getMemberInfoByAccessToken(accessToken)
                 .onErrorMap(error -> {
@@ -69,7 +69,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         return processLogin(memberInfo);
     }
 
-    private LoginResponseDto processLogin(OAuth2MemberInfo oAuth2MemberInfo) {
+    private LoginResponse processLogin(OAuth2MemberInfo oAuth2MemberInfo) {
         if (oAuth2MemberInfo == null || oAuth2MemberInfo.email() == null) {
             throw new BusinessException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
@@ -81,10 +81,10 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
         String token = jwtUtil.generateToken(user.getEmail());
 
-        return new LoginResponseDto(
+        return new LoginResponse(
                 token,
                 isNewMember,
-                LoginResponseDto.MemberInfo.from(user)
+                LoginResponse.MemberInfo.from(user)
         );
     }
 

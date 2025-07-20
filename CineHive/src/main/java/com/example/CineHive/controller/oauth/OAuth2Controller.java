@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.oauth;
 
-import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.AccessTokenRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.entity.user.ProviderType;
@@ -69,13 +69,13 @@ public class OAuth2Controller {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "외부 소셜 API 서버 통신 실패", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @GetMapping("/{platform}/callback")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> handleCallback(
+    public ResponseEntity<ApiResponse<LoginResponse>> handleCallback(
             @Parameter(description = "소셜 로그인 플랫폼", example = "kakao")
             @PathVariable ProviderType platform,
             @Parameter(description = "플랫폼으로부터 발급받은 인가 코드")
             @RequestParam @NotBlank(message = "인가 코드는 필수입니다.") String code) {
 
-        LoginResponseDto loginResponse = oauth2Service.loginWithCode(platform, code);
+        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code);
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
 
@@ -87,12 +87,12 @@ public class OAuth2Controller {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "외부 소셜 API 서버 통신 실패", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @PostMapping("/app/login/{platform}")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> loginFromApp(
+    public ResponseEntity<ApiResponse<LoginResponse>> loginFromApp(
             @Parameter(description = "소셜 로그인 플랫폼", example = "kakao")
             @PathVariable ProviderType platform,
             @Valid @RequestBody AccessTokenRequest request) {
 
-        LoginResponseDto loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken());
+        LoginResponse loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken());
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
 }

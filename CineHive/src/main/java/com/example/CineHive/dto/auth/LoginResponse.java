@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Schema(description = "로그인 성공 응답 DTO")
-public record LoginResponseDto(
+public record LoginResponse(
         @Schema(description = "JWT 액세스 토큰")
         String token,
         @Schema(description = "신규 회원 여부")

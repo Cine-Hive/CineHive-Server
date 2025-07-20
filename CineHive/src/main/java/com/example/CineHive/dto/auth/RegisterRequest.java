@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 @Schema(description = "회원가입 요청 DTO")
-public record RegisterRequestDto(
+public record RegisterRequest(
         @Schema(description = "이메일", example = "newuser@example.com")
         @NotBlank @Email
         String email,

@@ -1,7 +1,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.OAuth2Client;
-import com.example.CineHive.dto.auth.LoginResponseDto;
+import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.ProviderType;
@@ -89,7 +89,7 @@ class OAuth2ServiceTest {
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
-            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
+            LoginResponse response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
 
             // then
             assertThat(response).isNotNull();
@@ -116,7 +116,7 @@ class OAuth2ServiceTest {
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
-            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
+            LoginResponse response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
 
             // then
             assertThat(response).isNotNull();
@@ -148,7 +148,7 @@ class OAuth2ServiceTest {
             given(jwtUtil.generateToken(email)).willReturn(dummyToken);
 
             // when
-            LoginResponseDto response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
+            LoginResponse response = oauth2Service.loginWithAccessToken(ProviderType.KAKAO, "any-access-token");
 
             // then
             assertThat(response).isNotNull();
