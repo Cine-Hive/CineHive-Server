@@ -6,6 +6,7 @@ import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.entity.setting.HomeChartSetting;
 import com.example.CineHive.repository.setting.HomeChartSettingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,5 +49,6 @@ public class AdminHomeChartServiceImpl implements AdminHomeChartService {
                 .collect(Collectors.toList());
 
         homeChartSettingRepository.saveAll(newSettings);
+        log.info("관리자에 의해 홈 화면 차트 설정이 업데이트되었습니다. 총 {}개의 차트가 설정되었습니다.", newSettings.size());
     }
 }
