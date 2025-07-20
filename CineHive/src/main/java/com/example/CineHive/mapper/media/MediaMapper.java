@@ -10,7 +10,12 @@ import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+/**
+ * 외부 API(TMDB) 응답 객체를 내부에서 사용하는 DTO로 변환하는 유틸리티 클래스입니다.
+ */
 @Slf4j
 public final class MediaMapper {
 
@@ -18,241 +23,227 @@ public final class MediaMapper {
         // 유틸리티 클래스이므로 인스턴스화 방지
     }
 
-    public static MediaDetailResponse toMediaDetailDto(TmdbMovieDetailResponse tmdbDetail) {
-        if (tmdbDetail == null) return null;
+    // --- Public Mapper Methods ---
+
+    /**
+     * TMDB 영화 상세 응답을 MediaDetailResponse DTO로 변환합니다.
+     */
+    public static MediaDetailResponse toDetailResponse(TmdbMovieDetailResponse tmdb) {
+        if (tmdb == null) return null;
         return MediaDetailResponse.builder()
-                .id(tmdbDetail.getId())
-                .title(tmdbDetail.getTitle())
-                .originalTitle(tmdbDetail.getOriginal_title())
-                .overview(tmdbDetail.getOverview())
-                .releaseDate(parseLocalDate(tmdbDetail.getRelease_date()))
-                .posterPath(tmdbDetail.getPoster_path())
-                .backdropPath(tmdbDetail.getBackdrop_path())
-                .voteAverage(tmdbDetail.getVote_average())
-                .voteCount(tmdbDetail.getVote_count())
-                .popularity(tmdbDetail.getPopularity())
-                .isAnimation(isAnimation(tmdbDetail.getGenre_ids()))
-                .genres(toGenreDtoList(tmdbDetail.getGenres()))
-                .cast(toCastDtoList(tmdbDetail.getCredits()))
-                .directors(toDirectorDtoList(tmdbDetail.getCredits()))
-                .videos(toVideoDtoList(tmdbDetail.getVideos()))
-                .images(toImageDtoList(tmdbDetail.getImages()))
-                .recommendations(toMovieSummaryList(tmdbDetail.getRecommendations()))
-                .similar(toMovieSummaryList(tmdbDetail.getSimilar()))
-                .keywords(toKeywordDtoList(tmdbDetail.getKeywords()))
-                .watchProviders(toWatchProvidersDto(tmdbDetail.getWatchProviders()))
+                .id(tmdb.id())
+                .title(tmdb.title())
+                .originalTitle(tmdb.originalTitle())
+                .overview(tmdb.overview())
+                .releaseDate(parseLocalDate(tmdb.releaseDate()))
+                .posterPath(tmdb.posterPath())
+                .backdropPath(tmdb.backdropPath())
+                .voteAverage(tmdb.voteAverage())
+                .voteCount(tmdb.voteCount())
+                .popularity(tmdb.popularity())
+                .isAnimation(isAnimation(tmdb.genres()))
+                .genres(toGenreOptions(tmdb.genres()))
+                .cast(toCreditResponses(tmdb.credits(), "Actor"))
+                .directors(toCreditResponses(tmdb.credits(), "Director"))
+                .videos(toVideoInfos(tmdb.videos()))
+                .images(toImageInfos(tmdb.images()))
+                .recommendations(toSummaryResponses(tmdb.recommendations(), MediaMapper::toSummaryResponse))
+                .similar(toSummaryResponses(tmdb.similar(), MediaMapper::toSummaryResponse))
+                .keywords(toKeywordInfos(tmdb.keywords()))
+                .watchProviders(toWatchProviderInfo(tmdb.watchProviders()))
                 .build();
     }
 
-    public static MediaDetailResponse toMediaDetailDto(TmdbTvSeriesDetailResponse tmdbDetail) {
-        if (tmdbDetail == null) return null;
+    /**
+     * TMDB TV 시리즈 상세 응답을 MediaDetailResponse DTO로 변환합니다.
+     */
+    public static MediaDetailResponse toDetailResponse(TmdbTvSeriesDetailResponse tmdb) {
+        if (tmdb == null) return null;
         return MediaDetailResponse.builder()
-                .id(tmdbDetail.getId())
-                .title(tmdbDetail.getName())
-                .originalTitle(tmdbDetail.getOriginal_name())
-                .overview(tmdbDetail.getOverview())
-                .releaseDate(parseLocalDate(tmdbDetail.getFirst_air_date()))
-                .posterPath(tmdbDetail.getPoster_path())
-                .backdropPath(tmdbDetail.getBackdrop_path())
-                .voteAverage(tmdbDetail.getVote_average())
-                .voteCount(tmdbDetail.getVote_count())
-                .popularity(tmdbDetail.getPopularity())
-                .isAnimation(isAnimation(tmdbDetail.getGenre_ids()))
-                .genres(toGenreDtoList(tmdbDetail.getGenres()))
-                .cast(toCastDtoList(tmdbDetail.getCredits()))
-                .directors(toDirectorDtoList(tmdbDetail.getCredits()))
-                .videos(toVideoDtoList(tmdbDetail.getVideos()))
-                .images(toImageDtoList(tmdbDetail.getImages()))
-                .recommendations(toTvSummaryList(tmdbDetail.getRecommendations()))
-                .similar(toTvSummaryList(tmdbDetail.getSimilar()))
-                .keywords(toKeywordDtoList(tmdbDetail.getKeywords()))
-                .watchProviders(toWatchProvidersDto(tmdbDetail.getWatchProviders()))
+                .id(tmdb.id())
+                .title(tmdb.name())
+                .originalTitle(tmdb.originalName())
+                .overview(tmdb.overview())
+                .releaseDate(parseLocalDate(tmdb.firstAirDate()))
+                .posterPath(tmdb.posterPath())
+                .backdropPath(tmdb.backdropPath())
+                .voteAverage(tmdb.voteAverage())
+                .voteCount(tmdb.voteCount())
+                .popularity(tmdb.popularity())
+                .isAnimation(isAnimation(tmdb.genres()))
+                .genres(toGenreOptions(tmdb.genres()))
+                .cast(toCreditResponses(tmdb.credits(), "Actor"))
+                .directors(toCreditResponses(tmdb.credits(), "Director"))
+                .videos(toVideoInfos(tmdb.videos()))
+                .images(toImageInfos(tmdb.images()))
+                .recommendations(toSummaryResponses(tmdb.recommendations(), MediaMapper::toSummaryResponse))
+                .similar(toSummaryResponses(tmdb.similar(), MediaMapper::toSummaryResponse))
+                .keywords(toKeywordInfos(tmdb.keywords()))
+                .watchProviders(toWatchProviderInfo(tmdb.watchProviders()))
                 .build();
     }
 
-    public static PagedResponse<MediaChartResponse> toMovieChartPagedResponseFromTmdb(
-            TmdbPagedResponse<TmdbMovieResponse> tmdbResponse, int requestedPage, int size) {
-
-        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.empty(requestedPage, size);
+    /**
+     * TMDB의 페이징된 응답을 우리 시스템의 PagedResponse로 변환하는 제네릭 메서드입니다.
+     * @param tmdbResponse TMDB의 페이징 응답
+     * @param mapper 각 항목을 변환할 매핑 함수
+     * @param <T> TMDB 응답 항목 타입
+     * @param <R> 우리 시스템 DTO 타입
+     * @return 변환된 PagedResponse
+     */
+    public static <T, R> PagedResponse<R> toPagedResponse(TmdbPagedResponse<T> tmdbResponse, Function<T, R> mapper) {
+        if (tmdbResponse == null || tmdbResponse.results() == null) {
+            return PagedResponse.empty(1, 20); // 기본 페이지, 사이즈
         }
 
-        List<MediaChartResponse> chartDtos = tmdbResponse.getResults().stream()
-                .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
+        List<R> content = tmdbResponse.results().stream()
+                .map(mapper)
                 .toList();
 
-        // 생성자가 아닌 빌더를 사용하거나, AllArgsConstructor로 생성된 생성자를 사용합니다.
-        return new PagedResponse<>(chartDtos, tmdbResponse.getPage(), size,
-                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
-                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
-    }
-
-    public static PagedResponse<MediaChartResponse> toTvChartPagedResponseFromTmdb(
-            TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse, int requestedPage, int size) {
-
-        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.empty(requestedPage, size);
-        }
-
-        List<MediaChartResponse> chartDtos = tmdbResponse.getResults().stream()
-                .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
-                .toList();
-
-        return new PagedResponse<>(chartDtos, tmdbResponse.getPage(), size,
-                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
-                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
-    }
-
-    public static PagedResponse<MediaSummaryResponse> toSearchPagedResponseFromTmdb(
-            TmdbPagedResponse<TmdbMultiSearchResponse> tmdbResponse, int requestedPage, int size) {
-
-        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.empty(requestedPage, size);
-        }
-
-        List<MediaSummaryResponse> summaryDtos = tmdbResponse.getResults().stream()
-                .filter(result -> "movie".equals(result.getMedia_type()) || "tv".equals(result.getMedia_type()))
-                .map(MediaMapper::toMediaSummaryDto)
-                .toList();
-
-        return new PagedResponse<>(summaryDtos, tmdbResponse.getPage(), size,
-                tmdbResponse.getTotal_results(), tmdbResponse.getTotal_pages(),
-                tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
-    }
-
-    private static MediaChartResponse toMediaChartDto(TmdbMovieResponse movie) {
-        return MediaChartResponse.builder()
-                .mediaId(movie.getId())
-                .title(movie.getTitle())
-                .posterPath(movie.getPoster_path())
-                .voteAverage(movie.getVote_average())
-                .isAnimation(isAnimation(movie.getGenre_ids()))
-                .build();
-    }
-
-    private static MediaChartResponse toMediaChartDto(TmdbTvSeriesResponse tv) {
-        return MediaChartResponse.builder()
-                .mediaId(tv.getId())
-                .title(tv.getName())
-                .posterPath(tv.getPoster_path())
-                .voteAverage(tv.getVote_average())
-                .isAnimation(isAnimation(tv.getGenre_ids()))
-                .build();
-    }
-
-    private static MediaSummaryResponse toMediaSummaryDto(TmdbMultiSearchResponse searchResult) {
-        String title = "movie".equals(searchResult.getMedia_type())
-                ? searchResult.getTitle()
-                : searchResult.getName();
-
-        return MediaSummaryResponse.builder()
-                .id(searchResult.getId())
-                .title(title)
-                .posterPath(searchResult.getPoster_path())
-                .voteAverage(searchResult.getVote_average())
-                .isAnimation(isAnimation(searchResult.getGenre_ids()))
-                .build();
-    }
-
-    // --- 상세 정보의 하위 리스트 매핑 메서드 (변경 없음) ---
-    // (이하 toGenreDtoList, toCastDtoList 등의 메서드는 이전과 동일합니다)
-
-    private static List<GenreDto> toGenreDtoList(List<TmdbGenreResponse> genres) {
-        if (genres == null) return Collections.emptyList();
-        return genres.stream().map(g -> new GenreDto(g.getId(), g.getName())).toList();
-    }
-
-    private static List<CastDto> toCastDtoList(TmdbCreditsResponse credits) {
-        if (credits == null || credits.getCast() == null) return Collections.emptyList();
-        return credits.getCast().stream()
-                .limit(10)
-                .map(c -> new CastDto(c.getId(), c.getName(), c.getCharacter(), c.getProfile_path()))
-                .toList();
-    }
-
-    private static List<DirectorDto> toDirectorDtoList(TmdbCreditsResponse credits) {
-        if (credits == null || credits.getCrew() == null) return Collections.emptyList();
-        return credits.getCrew().stream()
-                .filter(c -> "Director".equals(c.getJob()))
-                .map(c -> new DirectorDto(c.getId(), c.getName(), c.getProfile_path()))
-                .toList();
-    }
-
-    private static List<VideoInfo> toVideoDtoList(TmdbVideosResponse videos) {
-        if (videos == null || videos.getResults() == null) return Collections.emptyList();
-        return videos.getResults().stream()
-                .map(v -> new VideoInfo(v.getName(), v.getKey(), v.getSite(), v.getType()))
-                .toList();
-    }
-
-    private static List<ImageInfo> toImageDtoList(TmdbImagesResponse images) {
-        if (images == null || images.getBackdrops() == null) return Collections.emptyList();
-        return images.getBackdrops().stream()
-                .limit(10)
-                .map(i -> new ImageInfo(i.getFile_path(), i.getAspect_ratio(), i.getHeight(), i.getWidth(), i.getVote_average(), i.getVote_count()))
-                .toList();
-    }
-
-    private static List<MediaSummaryResponse> toMovieSummaryList(TmdbPagedResponse<TmdbMovieResponse> response) {
-        if (response == null || response.getResults() == null) return Collections.emptyList();
-        return response.getResults().stream()
-                .limit(10)
-                .map(movie -> MediaSummaryResponse.builder()
-                        .id(movie.getId())
-                        .title(movie.getTitle())
-                        .posterPath(movie.getPoster_path())
-                        .voteAverage(movie.getVote_average())
-                        .isAnimation(isAnimation(movie.getGenre_ids()))
-                        .build())
-                .toList();
-    }
-
-    private static List<MediaSummaryResponse> toTvSummaryList(TmdbPagedResponse<TmdbTvSeriesResponse> response) {
-        if (response == null || response.getResults() == null) return Collections.emptyList();
-        return response.getResults().stream()
-                .limit(10)
-                .map(tv -> MediaSummaryResponse.builder()
-                        .id(tv.getId())
-                        .title(tv.getName())
-                        .posterPath(tv.getPoster_path())
-                        .voteAverage(tv.getVote_average())
-                        .isAnimation(isAnimation(tv.getGenre_ids()))
-                        .build())
-                .toList();
-    }
-
-    private static List<KeywordInfo> toKeywordDtoList(TmdbKeywordsResponse keywords) {
-        if (keywords == null) return Collections.emptyList();
-        List<TmdbKeywordResponse> keywordList = Optional.ofNullable(keywords.getKeywords()).orElse(keywords.getResults());
-        if (keywordList == null) return Collections.emptyList();
-        return keywordList.stream()
-                .map(k -> new KeywordInfo(k.getId(), k.getName()))
-                .toList();
-    }
-
-    private static WatchProviderInfo toWatchProvidersDto(TmdbWatchProvidersResponse providers) {
-        if (providers == null || providers.getResults() == null) return new WatchProviderInfo();
-        TmdbCountryWatchProvidersResponse countryProviders = providers.getResults().get("KR");
-        if (countryProviders == null) return new WatchProviderInfo();
-        return new WatchProviderInfo(
-                countryProviders.getLink(),
-                toProviderDtoList(countryProviders.getFlatrate()),
-                toProviderDtoList(countryProviders.getRent()),
-                toProviderDtoList(countryProviders.getBuy())
+        return new PagedResponse<>(
+                content,
+                tmdbResponse.page() - 1, // TMDB는 1부터 시작, 우리는 0부터 시작
+                content.size(),
+                (long) tmdbResponse.totalResults(),
+                tmdbResponse.totalPages(),
+                tmdbResponse.page() >= tmdbResponse.totalPages()
         );
     }
 
-    private static List<ProviderDto> toProviderDtoList(List<TmdbProviderResponse> providers) {
-        if (providers == null) return Collections.emptyList();
-        return providers.stream()
-                .map(p -> new ProviderDto(p.getProvider_id(), p.getProvider_name(), p.getLogo_path(), p.getDisplay_priority()))
+    // --- Private Helper Methods ---
+
+    public static MediaSummaryResponse toSummaryResponse(TmdbMovieResponse movie) {
+        return MediaSummaryResponse.builder()
+                .id(movie.id())
+                .title(movie.title())
+                .posterPath(movie.posterPath())
+                .voteAverage(movie.voteAverage())
+                .isAnimation(isAnimationById(movie.genreIds()))
+                .build();
+    }
+
+    public static MediaSummaryResponse toSummaryResponse(TmdbTvSeriesResponse tv) {
+        return MediaSummaryResponse.builder()
+                .id(tv.id())
+                .title(tv.name())
+                .posterPath(tv.posterPath())
+                .voteAverage(tv.voteAverage())
+                .isAnimation(isAnimationById(tv.genreIds()))
+                .build();
+    }
+
+    public static MediaSummaryResponse toSummaryResponse(TmdbMultiSearchResponse multi) {
+        return MediaSummaryResponse.builder()
+                .id(multi.id())
+                .title(multi.getUnifiedTitle())
+                .posterPath(multi.posterPath())
+                .voteAverage(multi.voteAverage())
+                .isAnimation(isAnimationById(multi.genreIds()))
+                .build();
+    }
+
+    private static List<GenreOption> toGenreOptions(List<TmdbGenreResponse> genres) {
+        if (genres == null) return Collections.emptyList();
+        return genres.stream()
+                .map(g -> new GenreOption(g.id().longValue(), g.name()))
                 .toList();
     }
 
+    private static List<CreditResponse> toCreditResponses(TmdbCreditsResponse credits, String job) {
+        if (credits == null) return Collections.emptyList();
 
-    // --- 유틸리티 메서드 ---
+        Stream<CreditResponse> stream = Stream.empty();
+        if ("Director".equals(job) && credits.crew() != null) {
+            stream = credits.crew().stream()
+                    .filter(c -> "Director".equals(c.job()))
+                    .map(c -> CreditResponse.builder()
+                            .personId(c.id())
+                            .name(c.name())
+                            .job(c.job())
+                            .profilePath(c.profilePath())
+                            .build());
+        } else if ("Actor".equals(job) && credits.cast() != null) {
+            stream = credits.cast().stream()
+                    .limit(10) // 배우는 10명으로 제한
+                    .map(c -> CreditResponse.builder()
+                            .personId(c.id())
+                            .name(c.name())
+                            .job("Actor")
+                            .character(c.character())
+                            .profilePath(c.profilePath())
+                            .build());
+        }
+        return stream.toList();
+    }
 
-    private static boolean isAnimation(List<Long> genreIds) {
+    private static List<VideoInfo> toVideoInfos(TmdbVideosResponse videos) {
+        if (videos == null || videos.results() == null) return Collections.emptyList();
+        return videos.results().stream()
+                .map(v -> new VideoInfo(v.name(), v.key(), v.site(), v.type()))
+                .toList();
+    }
+
+    private static List<ImageInfo> toImageInfos(TmdbImagesResponse images) {
+        if (images == null || images.backdrops() == null) return Collections.emptyList();
+        return images.backdrops().stream()
+                .limit(10)
+                .map(i -> ImageInfo.builder()
+                        .filePath(i.filePath())
+                        .aspectRatio(i.aspectRatio())
+                        .height(i.height())
+                        .width(i.width())
+                        .voteAverage(i.voteAverage())
+                        .voteCount(i.voteCount())
+                        .build())
+                .toList();
+    }
+
+    private static <T> List<MediaSummaryResponse> toSummaryResponses(TmdbPagedResponse<T> response, Function<T, MediaSummaryResponse> mapper) {
+        if (response == null || response.results() == null) return Collections.emptyList();
+        return response.results().stream()
+                .limit(10)
+                .map(mapper)
+                .toList();
+    }
+
+    private static List<KeywordInfo> toKeywordInfos(TmdbKeywordsResponse keywords) {
+        if (keywords == null) return Collections.emptyList();
+        return Optional.ofNullable(keywords.getUnifiedKeywords()).orElse(Collections.emptyList())
+                .stream()
+                .map(k -> new KeywordInfo(k.id(), k.name()))
+                .toList();
+    }
+
+    private static WatchProviderInfo toWatchProviderInfo(TmdbWatchProvidersResponse providers) {
+        if (providers == null || providers.results() == null) return null;
+        TmdbCountryWatchProvidersResponse krProviders = providers.results().get("KR");
+        if (krProviders == null) return null;
+
+        return WatchProviderInfo.builder()
+                .link(krProviders.link())
+                .flatrate(toProviderOptions(krProviders.flatrate()))
+                .rent(toProviderOptions(krProviders.rent()))
+                .buy(toProviderOptions(krProviders.buy()))
+                .build();
+    }
+
+    private static List<WatchProviderInfo.ProviderOption> toProviderOptions(List<TmdbProviderResponse> providers) {
+        if (providers == null) return Collections.emptyList();
+        return providers.stream()
+                .map(p -> WatchProviderInfo.ProviderOption.builder()
+                        .providerId(p.providerId())
+                        .providerName(p.providerName())
+                        .logoPath(p.logoPath())
+                        .displayPriority(p.displayPriority())
+                        .build())
+                .toList();
+    }
+
+    private static boolean isAnimation(List<TmdbGenreResponse> genres) {
+        return genres != null && genres.stream().anyMatch(g -> g.id() == 16);
+    }
+
+    private static boolean isAnimationById(List<Long> genreIds) {
         return genreIds != null && genreIds.contains(16L);
     }
 
@@ -263,7 +254,7 @@ public final class MediaMapper {
         try {
             return LocalDate.parse(dateString);
         } catch (DateTimeParseException e) {
-            log.warn("Failed to parse date string: {}", dateString);
+            log.warn("날짜 문자열 파싱 실패: {}", dateString);
             return null;
         }
     }
