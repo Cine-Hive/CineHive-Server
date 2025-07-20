@@ -8,7 +8,7 @@ import com.example.CineHive.entity.post.Comment;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.mapper.CommentMapper;
+import com.example.CineHive.mapper.post.CommentMapper;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.CommentRepository;
 import com.example.CineHive.repository.member.MemberRepository;
