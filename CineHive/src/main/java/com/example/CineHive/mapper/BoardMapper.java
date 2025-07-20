@@ -1,7 +1,7 @@
 package com.example.CineHive.mapper;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.GetListBoardDto;
+import com.example.CineHive.dto.post.PostDto;
+import com.example.CineHive.dto.post.PostSummaryDto;
 import com.example.CineHive.entity.post.Post;
 
 import java.util.stream.Collectors;
@@ -10,8 +10,8 @@ public final class BoardMapper {
 
     private BoardMapper() {}
 
-    public static BoardDto toBoardDto(Post post) {
-        return BoardDto.builder()
+    public static PostDto toBoardDto(Post post) {
+        return PostDto.builder()
                 .id(post.getId())
                 .brdTitle(post.getBrdTitle())
                 .brdContent(post.getBrdContent())
@@ -28,8 +28,8 @@ public final class BoardMapper {
                 .build();
     }
 
-    public static GetListBoardDto toListDto(Post post) {
-        return GetListBoardDto.builder()
+    public static PostSummaryDto toListDto(Post post) {
+        return PostSummaryDto.builder()
                 .id(post.getId())
                 .brdTitle(post.getBrdTitle())
                 .memNickname(post.getUser().getNickname())

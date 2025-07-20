@@ -1,6 +1,6 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.board.*;
+import com.example.CineHive.dto.post.*;
 import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.User;
@@ -27,7 +27,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public BoardDto createBoard(CreateBoardRequest request, String memberEmail) {
+    public PostDto createBoard(CreatePostRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
 
         Post post = Post.builder()
@@ -42,7 +42,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public BoardDto getBoardById(Long boardId) {
+    public PostDto getBoardById(Long boardId) {
         Post post = findBoardById(boardId);
         post.increaseViews(); // 조회수 증가는 그대로 유지
         return BoardMapper.toBoardDto(post);
@@ -50,7 +50,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail) {
+    public PostDto updateBoard(Long boardId, UpdatePostRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
         Post post = findBoardById(boardId);
 
@@ -74,11 +74,11 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort) {
+    public PagedResponse<PostSummaryDto> getBoards(int page, int size, PostSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
         Page<Post> boardPage = boardRepository.findAll(pageable);
 
-        return PagedResponse.<GetListBoardDto>builder()
+        return PagedResponse.<PostSummaryDto>builder()
                 .content(boardPage.getContent().stream().map(BoardMapper::toListDto).toList())
                 .page(boardPage.getNumber() + 1)
                 .size(boardPage.getSize())

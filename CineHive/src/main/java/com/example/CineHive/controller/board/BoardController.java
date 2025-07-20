@@ -1,10 +1,10 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.dto.board.BoardDto;
-import com.example.CineHive.dto.board.BoardSortType;
-import com.example.CineHive.dto.board.CreateBoardRequest;
-import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.dto.board.UpdateBoardRequest;
+import com.example.CineHive.dto.post.PostDto;
+import com.example.CineHive.dto.post.PostSortType;
+import com.example.CineHive.dto.post.CreatePostRequest;
+import com.example.CineHive.dto.post.PostSummaryDto;
+import com.example.CineHive.dto.post.UpdatePostRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.service.board.BoardService;
@@ -38,45 +38,45 @@ public class BoardController {
     @Operation(summary = "게시글 생성",
             description = "새로운 게시글을 등록합니다. 제목과 내용은 필수이며, 인증된 사용자의 정보가 작성자로 자동 등록됩니다.")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 생성 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 생성 성공", content = @Content(schema = @Schema(implementation = PostDto.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패 (제목 또는 내용 누락)", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<ApiResponse<BoardDto>> createBoard(
-            @Valid @RequestBody CreateBoardRequest request,
+    public ResponseEntity<ApiResponse<PostDto>> createBoard(
+            @Valid @RequestBody CreatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        BoardDto createdBoard = boardService.createBoard(request, userDetails.getUsername());
+        PostDto createdBoard = boardService.createBoard(request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdBoard));
     }
 
     @Operation(summary = "게시글 상세 조회",
             description = "특정 ID를 가진 게시글의 상세 정보를 조회합니다. 이 API 호출 시 해당 게시글의 조회수가 1 증가합니다.")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공", content = @Content(schema = @Schema(implementation = PostDto.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BoardDto>> getBoardById(@PathVariable Long id) {
-        BoardDto boardDto = boardService.getBoardById(id);
-        return ResponseEntity.ok(ApiResponse.ok(boardDto));
+    public ResponseEntity<ApiResponse<PostDto>> getBoardById(@PathVariable Long id) {
+        PostDto postDto = boardService.getBoardById(id);
+        return ResponseEntity.ok(ApiResponse.ok(postDto));
     }
 
     @Operation(summary = "게시글 수정",
             description = "자신이 작성한 게시글의 제목과 내용을 수정합니다. 타인의 게시글은 수정할 수 없습니다.")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공", content = @Content(schema = @Schema(implementation = BoardDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공", content = @Content(schema = @Schema(implementation = PostDto.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 유효성 검증 실패", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "수정 권한이 없는 사용자", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BoardDto>> updateBoard(
+    public ResponseEntity<ApiResponse<PostDto>> updateBoard(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateBoardRequest request,
+            @Valid @RequestBody UpdatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        BoardDto updatedBoard = boardService.updateBoard(id, request, userDetails.getUsername());
+        PostDto updatedBoard = boardService.updateBoard(id, request, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(updatedBoard));
     }
 
@@ -102,14 +102,14 @@ public class BoardController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공", content = @Content(schema = @Schema(implementation = PagedResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<PagedResponse<GetListBoardDto>>> getBoards(
+    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryDto>>> getBoards(
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "페이지당 게시글 수", example = "10")
             @RequestParam(defaultValue = "10") @Min(1) int size,
-            @Parameter(description = "정렬 기준", schema = @Schema(implementation = BoardSortType.class), example = "LATEST")
-            @RequestParam(defaultValue = "LATEST") BoardSortType sort) {
-        PagedResponse<GetListBoardDto> pagedResponse = boardService.getBoards(page, size, sort);
+            @Parameter(description = "정렬 기준", schema = @Schema(implementation = PostSortType.class), example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") PostSortType sort) {
+        PagedResponse<PostSummaryDto> pagedResponse = boardService.getBoards(page, size, sort);
         return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 }
