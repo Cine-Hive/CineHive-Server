@@ -2,7 +2,7 @@ package com.example.CineHive.controller.admin;
 
 import com.example.CineHive.dto.admin.HomeChartSettingRequest;
 import com.example.CineHive.dto.media.ChartType;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
 import com.example.CineHive.service.admin.AdminHomeChartService;
 import io.swagger.v3.oas.annotations.Operation;

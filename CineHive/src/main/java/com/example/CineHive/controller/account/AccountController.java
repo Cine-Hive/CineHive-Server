@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.account;
 
 import com.example.CineHive.dto.account.*;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.service.account.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

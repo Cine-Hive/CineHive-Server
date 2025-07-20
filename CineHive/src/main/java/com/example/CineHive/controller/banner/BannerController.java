@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.banner;
 
 import com.example.CineHive.dto.banner.BannerResponse;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
 import com.example.CineHive.service.banner.BannerService;
 import io.swagger.v3.oas.annotations.Operation;

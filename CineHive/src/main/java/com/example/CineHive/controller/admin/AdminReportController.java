@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.admin;
 
 import com.example.CineHive.dto.report.ReportResponse;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.service.admin.AdminReportService;
 import io.swagger.v3.oas.annotations.Operation;

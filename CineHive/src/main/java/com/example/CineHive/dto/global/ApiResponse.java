@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.global;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

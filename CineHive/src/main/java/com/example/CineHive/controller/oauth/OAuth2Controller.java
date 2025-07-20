@@ -2,7 +2,7 @@ package com.example.CineHive.controller.oauth;
 
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.AccessTokenRequest;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.service.oauth.OAuth2Service; // 구현체가 아닌 인터페이스를 import
 import io.swagger.v3.oas.annotations.Operation;

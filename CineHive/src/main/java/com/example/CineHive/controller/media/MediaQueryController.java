@@ -1,5 +1,6 @@
 package com.example.CineHive.controller.media;
 
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.Platform;
 import com.example.CineHive.dto.response.*;

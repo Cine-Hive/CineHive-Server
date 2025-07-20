@@ -5,7 +5,7 @@ import com.example.CineHive.dto.post.PostSortType;
 import com.example.CineHive.dto.post.CreatePostRequest;
 import com.example.CineHive.dto.post.PostSummaryResponse;
 import com.example.CineHive.dto.post.UpdatePostRequest;
-import com.example.CineHive.dto.response.ApiResponse;
+import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.response.PagedResponse;
 import com.example.CineHive.service.board.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
