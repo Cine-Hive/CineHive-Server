@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.board;
+package com.example.CineHive.dto.post;
 
 import com.example.CineHive.dto.comment.CommentDto;
 import lombok.Builder;
@@ -6,11 +6,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-public record BoardDto(
+public record PostDto(
         Long id,
-        String brdTitle,
-        String brdContent,
-        String memNickname,
+        String title,
+        String content,
+        String userNickname,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         int views,
