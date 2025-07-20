@@ -1,9 +1,9 @@
-package com.example.CineHive.service.board;
+package com.example.CineHive.service.post;
 
 import com.example.CineHive.dto.post.*;
 import com.example.CineHive.dto.tmdb.PagedResponse;
 
-public interface BoardService {
+public interface PostService {
 
     /**
      * 새로운 게시글을 생성합니다.

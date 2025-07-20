@@ -1,4 +1,4 @@
-package com.example.CineHive.service.board;
+package com.example.CineHive.service.post;
 
 import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;

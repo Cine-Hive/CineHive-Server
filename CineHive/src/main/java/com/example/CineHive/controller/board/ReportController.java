@@ -2,7 +2,7 @@ package com.example.CineHive.controller.board;
 
 import com.example.CineHive.dto.report.ReportRequest;
 import com.example.CineHive.dto.global.ApiResponse;
-import com.example.CineHive.service.board.ReportService;
+import com.example.CineHive.service.post.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

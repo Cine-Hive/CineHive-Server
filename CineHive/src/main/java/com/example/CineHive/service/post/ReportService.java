@@ -1,4 +1,4 @@
-package com.example.CineHive.service.board;
+package com.example.CineHive.service.post;
 
 /**
  * 사용자의 콘텐츠 신고 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.

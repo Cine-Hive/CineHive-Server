@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
 import com.example.CineHive.dto.global.ApiResponse;
-import com.example.CineHive.service.board.LikeService;
+import com.example.CineHive.service.post.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

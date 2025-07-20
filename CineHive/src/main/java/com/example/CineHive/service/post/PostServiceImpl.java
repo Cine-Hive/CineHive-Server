@@ -1,4 +1,4 @@
-package com.example.CineHive.service.board;
+package com.example.CineHive.service.post;
 
 import com.example.CineHive.dto.post.*;
 import com.example.CineHive.dto.tmdb.PagedResponse;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class BoardServiceImpl implements BoardService {
+public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;

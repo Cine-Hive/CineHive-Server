@@ -7,7 +7,7 @@ import com.example.CineHive.dto.post.PostSummaryResponse;
 import com.example.CineHive.dto.post.UpdatePostRequest;
 import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.tmdb.PagedResponse;
-import com.example.CineHive.service.board.BoardService;
+import com.example.CineHive.service.post.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,7 +33,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BoardController {
 
-    private final BoardService boardService;
+    private final PostService postService;
 
     @Operation(summary = "게시글 생성",
             description = "새로운 게시글을 등록합니다. 제목과 내용은 필수이며, 인증된 사용자의 정보가 작성자로 자동 등록됩니다.")
@@ -46,7 +46,7 @@ public class BoardController {
     public ResponseEntity<ApiResponse<PostDetailResponse>> createBoard(
             @Valid @RequestBody CreatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        PostDetailResponse createdBoard = boardService.createBoard(request, userDetails.getUsername());
+        PostDetailResponse createdBoard = postService.createBoard(request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdBoard));
     }
 
@@ -58,7 +58,7 @@ public class BoardController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> getBoardById(@PathVariable Long id) {
-        PostDetailResponse postDetailResponse = boardService.getBoardById(id);
+        PostDetailResponse postDetailResponse = postService.getBoardById(id);
         return ResponseEntity.ok(ApiResponse.ok(postDetailResponse));
     }
 
@@ -76,7 +76,7 @@ public class BoardController {
             @PathVariable Long id,
             @Valid @RequestBody UpdatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        PostDetailResponse updatedBoard = boardService.updateBoard(id, request, userDetails.getUsername());
+        PostDetailResponse updatedBoard = postService.updateBoard(id, request, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(updatedBoard));
     }
 
@@ -92,7 +92,7 @@ public class BoardController {
     public ResponseEntity<ApiResponse<Map<String, String>>> deleteBoard(
             @PathVariable Long id,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        boardService.deleteBoard(id, userDetails.getUsername());
+        postService.deleteBoard(id, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "게시글이 성공적으로 삭제되었습니다.")));
     }
 
@@ -109,7 +109,7 @@ public class BoardController {
             @RequestParam(defaultValue = "10") @Min(1) int size,
             @Parameter(description = "정렬 기준", schema = @Schema(implementation = PostSortType.class), example = "LATEST")
             @RequestParam(defaultValue = "LATEST") PostSortType sort) {
-        PagedResponse<PostSummaryResponse> pagedResponse = boardService.getBoards(page, size, sort);
+        PagedResponse<PostSummaryResponse> pagedResponse = postService.getBoards(page, size, sort);
         return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 }

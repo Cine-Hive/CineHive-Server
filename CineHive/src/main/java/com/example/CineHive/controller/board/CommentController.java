@@ -4,7 +4,7 @@ import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
 import com.example.CineHive.dto.global.ApiResponse;
-import com.example.CineHive.service.board.CommentService;
+import com.example.CineHive.service.post.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
