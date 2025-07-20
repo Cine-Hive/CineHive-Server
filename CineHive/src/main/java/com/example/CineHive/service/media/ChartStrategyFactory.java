@@ -13,25 +13,23 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class ChartStrategyFactory {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
-
     public ChartStrategy getStrategy(ChartType chartType) {
         return switch (chartType) {
             // 기본 영화 차트
-            case POPULAR_MOVIES -> (client, page) -> client.getPopularMovies(page).map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case TOP_RATED_MOVIES -> (client, page) -> client.getTopRatedMovies(page).map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case UPCOMING_MOVIES -> (client, page) -> client.getUpcomingMovies(page).map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case NOW_PLAYING_MOVIES -> (client, page) -> client.getNowPlayingMovies(page).map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
+            case POPULAR_MOVIES -> (client, page) -> client.getPopularMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case TOP_RATED_MOVIES -> (client, page) -> client.getTopRatedMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case UPCOMING_MOVIES -> (client, page) -> client.getUpcomingMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case NOW_PLAYING_MOVIES -> (client, page) -> client.getNowPlayingMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
 
             // 기본 TV 시리즈 차트
-            case POPULAR_TV -> (client, page) -> client.getPopularTvSeries(page).map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case TOP_RATED_TV -> (client, page) -> client.getTopRatedTvSeries(page).map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case ON_THE_AIR_TV -> (client, page) -> client.getOnTheAirTvSeries(page).map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case AIRING_TODAY_TV -> (client, page) -> client.getAiringTodayTvSeries(page).map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
+            case POPULAR_TV -> (client, page) -> client.getPopularTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case TOP_RATED_TV -> (client, page) -> client.getTopRatedTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case ON_THE_AIR_TV -> (client, page) -> client.getOnTheAirTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case AIRING_TODAY_TV -> (client, page) -> client.getAiringTodayTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
 
             // 트렌드 차트
-            case TRENDING_MOVIES_WEEK -> (client, page) -> client.getTrendingMovies("week", page).map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
-            case TRENDING_TV_WEEK -> (client, page) -> client.getTrendingTv("week", page).map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
+            case TRENDING_MOVIES_WEEK -> (client, page) -> client.getTrendingMovies("week", page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case TRENDING_TV_WEEK -> (client, page) -> client.getTrendingTv("week", page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
 
             // Discover API 기반 차트
             case ACTION_BLOCKBUSTERS -> createDiscoverMovieStrategy(ChartProperties.builder().genreId("28").sortBy("vote_average.desc").build());
@@ -70,8 +68,6 @@ public class ChartStrategyFactory {
             case SPACE_OPERA -> createDiscoverMovieStrategy(ChartProperties.builder().genreId("878").keywordId("4379-space-opera").sortBy("vote_average.desc").build());
             case HBO_MASTERPIECE_SERIES -> createDiscoverTvStrategy(ChartProperties.builder().networkId("49").sortBy("vote_average.desc").build());
             case NETFLIX_ORIGINAL_SERIES -> createDiscoverTvStrategy(ChartProperties.builder().networkId("213").sortBy("popularity.desc").build());
-
-            // --- 신규 차트 로직 ---
             case APPLE_TV_ORIGINALS -> createDiscoverTvStrategy(ChartProperties.builder().networkId("2552").sortBy("popularity.desc").build());
             case DISNEY_PLUS_ORIGINALS -> createDiscoverTvStrategy(ChartProperties.builder().networkId("2739").sortBy("popularity.desc").build());
             case Y2K_MOVIES_POPULAR -> createDiscoverMovieStrategy(ChartProperties.builder()
@@ -112,11 +108,11 @@ public class ChartStrategyFactory {
 
     private ChartStrategy createDiscoverMovieStrategy(ChartProperties props) {
         return (client, page) -> client.discoverMovies(page, props)
-                .map(res -> MediaMapper.toMovieChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
+                .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
     }
 
     private ChartStrategy createDiscoverTvStrategy(ChartProperties props) {
         return (client, page) -> client.discoverTvSeries(page, props)
-                .map(res -> MediaMapper.toTvChartPagedResponseFromTmdb(res, page, DEFAULT_PAGE_SIZE));
+                .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
     }
 }
