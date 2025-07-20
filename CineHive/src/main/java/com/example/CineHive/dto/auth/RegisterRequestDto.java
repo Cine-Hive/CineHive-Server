@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.user;
+package com.example.CineHive.dto.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 @Schema(description = "회원가입 요청 DTO")
-public record MemberRegisterRequestDto(
+public record RegisterRequestDto(
         @Schema(description = "이메일", example = "newuser@example.com")
         @NotBlank @Email
         String email,
@@ -30,6 +30,6 @@ public record MemberRegisterRequestDto(
         @NotBlank @Pattern(regexp = "MALE|FEMALE|OTHER")
         String gender,
 
-        @Schema(description = "선호 장르 목록", example = "[\"액션\", \"코미디\"]")
+        @Schema(description = "선호 장르 목록", example = "[\"ACTION\", \"COMEDY\"]")
         List<String> genres
 ) {}
