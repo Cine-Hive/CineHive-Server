@@ -1,4 +1,4 @@
-package com.example.CineHive.service.post;
+package com.example.CineHive.service.report;
 
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.post.Comment;
