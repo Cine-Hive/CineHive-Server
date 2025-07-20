@@ -5,7 +5,7 @@ import com.example.CineHive.dto.auth.RegisterRequest;
 import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.global.ErrorResponse;
 import com.example.CineHive.dto.auth.LoginResponse;
-import com.example.CineHive.service.member.MemberService;
+import com.example.CineHive.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,7 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MemberController {
 
-    private final MemberService memberService;
+    private final UserService userService;
 
     @Operation(summary = "회원가입", description = "새로운 회원을 시스템에 등록합니다.")
     @ApiResponses({
@@ -35,7 +35,7 @@ public class MemberController {
     })
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody RegisterRequest requestDto) {
-        memberService.register(requestDto);
+        userService.register(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(Map.of("message", "회원가입이 성공적으로 완료되었습니다.")));
     }
@@ -51,7 +51,7 @@ public class MemberController {
             HttpServletRequest request) { // User-Agent 추출을 위해 request 사용
 
         String userAgent = request.getHeader("User-Agent");
-        LoginResponse response = memberService.login(requestDto, userAgent);
+        LoginResponse response = userService.login(requestDto, userAgent);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -60,7 +60,7 @@ public class MemberController {
     @ApiResponses(@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "확인 성공"))
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam String email) {
-        boolean isAvailable = memberService.isEmailAvailable(email);
+        boolean isAvailable = userService.isEmailAvailable(email);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("isAvailable", isAvailable)));
     }
 
@@ -68,7 +68,7 @@ public class MemberController {
     @ApiResponses(@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "확인 성공"))
     @GetMapping("/check-nickname")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkNickname(@RequestParam String nickname) {
-        boolean isAvailable = memberService.isNicknameAvailable(nickname);
+        boolean isAvailable = userService.isNicknameAvailable(nickname);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("isAvailable", isAvailable)));
     }
 }
