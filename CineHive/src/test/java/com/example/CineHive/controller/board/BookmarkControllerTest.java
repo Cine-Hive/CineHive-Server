@@ -5,7 +5,7 @@ import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.BookmarkRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +32,7 @@ class BookmarkControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
     @Autowired
     private PostRepository postRepository;
     @Autowired
@@ -47,7 +47,7 @@ class BookmarkControllerTest {
     void setUp() {
         bookmarkRepository.deleteAllInBatch();
         postRepository.deleteAllInBatch();
-        memberRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         boardOwner = createMember("owner@example.com", "boardOwner");
         bookmarker = createMember("bookmarker@example.com", "bookmarker");
@@ -61,7 +61,7 @@ class BookmarkControllerTest {
     }
 
     private User createMember(String email, String nickname) {
-        return memberRepository.save(User.builder()
+        return userRepository.save(User.builder()
                 .email(email)
                 .password("password")
                 .name(nickname)

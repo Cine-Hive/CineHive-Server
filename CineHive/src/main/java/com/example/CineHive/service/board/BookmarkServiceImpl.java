@@ -7,7 +7,7 @@ import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.BookmarkRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookmarkServiceImpl implements BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final PostRepository postRepository;
 
     /**
@@ -100,7 +100,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     //== Private Helper Methods ==//
 
     private User findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

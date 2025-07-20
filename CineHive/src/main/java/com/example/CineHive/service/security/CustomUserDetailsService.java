@@ -2,7 +2,7 @@ package com.example.CineHive.service.security;
 
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,7 +20,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
 
     /**
      * 사용자 이름(여기서는 이메일)을 기반으로 사용자 정보를 로드합니다.
@@ -33,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return memberRepository.findByEmail(username)
+        return userRepository.findByEmail(username)
                 .map(this::createLoginMember)
                 .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
     }

@@ -11,7 +11,7 @@ import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.post.CommentMapper;
 import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.CommentRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final PostRepository postRepository;
 
     @Override
@@ -83,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
     //== Private Helper Methods ==//
 
     private User findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

@@ -1,4 +1,4 @@
-package com.example.CineHive.repository.member;
+package com.example.CineHive.repository.user;
 
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
@@ -14,11 +14,9 @@ import java.util.Optional;
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
 
     /**
-     * 특정 회원의 로그인 기록을 조회합니다.
-     * 한 회원은 하나의 로그인 기록만 가지는 것을 전제로 하므로 Optional로 반환합니다.
-     *
-     * @param user 조회할 회원 엔티티
-     * @return 존재할 경우 해당 회원의 LoginHistory를 담은 Optional, 존재하지 않을 경우 빈 Optional
+     * 특정 사용자의 로그인 기록을 조회합니다.
+     * @param user 조회할 사용자 엔티티
+     * @return 해당 사용자의 LoginHistory를 담은 Optional 객체
      */
-    Optional<LoginHistory> findByMember(User user);
+    Optional<LoginHistory> findByUser(User user);
 }

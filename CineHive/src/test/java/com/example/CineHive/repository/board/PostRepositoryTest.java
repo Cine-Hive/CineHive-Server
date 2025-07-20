@@ -6,7 +6,7 @@ import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.UserRole;
 import com.example.CineHive.entity.user.ProviderType;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class PostRepositoryTest {
     private PostRepository postRepository;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     private User user1;
     private User user2;
@@ -36,7 +36,7 @@ class PostRepositoryTest {
     void setUp() {
         // 테스트 전 데이터 정리
         postRepository.deleteAll();
-        memberRepository.deleteAll();
+        userRepository.deleteAll();
 
         // 테스트용 사용자 생성
         user1 = createAndSaveMember("user1@test.com", "테스터1");
@@ -63,7 +63,7 @@ class PostRepositoryTest {
     }
 
     private User createAndSaveMember(String email, String nickname) {
-        return memberRepository.save(User.builder()
+        return userRepository.save(User.builder()
                 .email(email)
                 .password("password")
                 .name(nickname)

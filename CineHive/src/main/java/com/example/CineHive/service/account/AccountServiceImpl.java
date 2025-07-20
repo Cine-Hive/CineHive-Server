@@ -9,7 +9,7 @@ import com.example.CineHive.repository.post.BookmarkRepository;
 import com.example.CineHive.repository.post.CommentRepository;
 import com.example.CineHive.repository.post.DislikeRepository;
 import com.example.CineHive.repository.post.LikeRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +25,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AccountServiceImpl implements AccountService {
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     // 회원 탈퇴 시 연관 데이터 삭제를 위한 리포지토리들
@@ -45,7 +45,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public void changeNickname(String email, String newNickname) {
         User user = findMemberByEmail(email);
-        if (memberRepository.existsByNickname(newNickname) && !user.getNickname().equals(newNickname)) {
+        if (userRepository.existsByNickname(newNickname) && !user.getNickname().equals(newNickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
         user.changeNickname(newNickname);
@@ -83,7 +83,7 @@ public class AccountServiceImpl implements AccountService {
         postRepository.deleteByMember_Email(email);
 
         // 마지막으로 회원 정보 삭제
-        memberRepository.deleteByEmail(email);
+        userRepository.deleteByEmail(email);
         log.info("Successfully deleted account for member: {}", email);
     }
 
@@ -94,7 +94,7 @@ public class AccountServiceImpl implements AccountService {
      * @throws BusinessException 해당 이메일의 회원이 없을 경우
      */
     private User findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     return new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
                 });

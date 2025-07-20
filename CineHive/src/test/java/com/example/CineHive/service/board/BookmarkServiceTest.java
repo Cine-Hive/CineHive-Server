@@ -7,7 +7,7 @@ import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.BookmarkRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +35,7 @@ class BookmarkServiceTest {
     @Mock
     private BookmarkRepository bookmarkRepository;
     @Mock
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
     @Mock
     private PostRepository postRepository;
 
@@ -78,7 +78,7 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크를 성공적으로 추가한다.")
         void addBookmark_success() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 
@@ -93,7 +93,7 @@ class BookmarkServiceTest {
         @DisplayName("❌ 실패: 이미 북마크한 경우 BusinessException(BOOKMARK_ALREADY_EXISTS)을 던진다.")
         void addBookmark_fail_alreadyExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
@@ -122,7 +122,7 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크를 성공적으로 제거한다.")
         void removeBookmark_success() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.of(testBookmark));
 
@@ -137,7 +137,7 @@ class BookmarkServiceTest {
         @DisplayName("❌ 실패: 북마크가 존재하지 않는 경우 BusinessException(BOOKMARK_NOT_FOUND)을 던진다.")
         void removeBookmark_fail_notFound() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.empty());
 
@@ -160,7 +160,7 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크가 존재할 때 true를 반환한다.")
         void isBookmarkedByUser_returnsTrue_whenExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
@@ -175,7 +175,7 @@ class BookmarkServiceTest {
         @DisplayName("✅ 성공: 북마크가 존재하지 않을 때 false를 반환한다.")
         void isBookmarkedByUser_returnsFalse_whenNotExists() {
             // given
-            given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
+            given(userRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
             given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 

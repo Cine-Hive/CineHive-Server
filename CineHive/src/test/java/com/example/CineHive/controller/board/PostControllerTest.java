@@ -4,7 +4,7 @@ import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.PostRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +45,7 @@ class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
     @Autowired
     private PostRepository postRepository;
 
@@ -55,13 +55,13 @@ class PostControllerTest {
     @BeforeEach
     void setUp() {
         postRepository.deleteAllInBatch();
-        memberRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
         testUser = createAndSaveMember("test@example.com", "테스트유저");
         otherUser = createAndSaveMember("other@example.com", "다른유저");
     }
 
     private User createAndSaveMember(String email, String nickname) {
-        return memberRepository.save(User.builder().email(email).password("password").name(nickname).nickname(nickname)
+        return userRepository.save(User.builder().email(email).password("password").name(nickname).nickname(nickname)
                 .gender(Gender.MALE).provider(ProviderType.LOCAL).build());
     }
 

@@ -8,8 +8,8 @@ import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.user.UserMapper;
-import com.example.CineHive.repository.member.LoginHistoryRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.LoginHistoryRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @Transactional(readOnly = true)
 public class MemberServiceImpl implements MemberService {
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final LoginHistoryRepository loginHistoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -38,15 +38,15 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public User register(RegisterRequest requestDto) {
         log.info("새로운 회원 가입을 시작합니다. 이메일: {}", requestDto.email());
-        if (memberRepository.existsByEmail(requestDto.email())) {
+        if (userRepository.existsByEmail(requestDto.email())) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
-        if (memberRepository.existsByNickname(requestDto.nickname())) {
+        if (userRepository.existsByNickname(requestDto.nickname())) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
         User user = UserMapper.toEntity(requestDto, passwordEncoder);
-        User savedUser = memberRepository.save(user);
+        User savedUser = userRepository.save(user);
         log.info("회원 가입이 완료되었습니다. 회원 ID: {}", savedUser.getId());
         return savedUser;
     }
@@ -55,7 +55,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public LoginResponse login(LoginRequest requestDto, String userAgent) {
         log.info("로그인 시도: {}", requestDto.email());
-        User user = memberRepository.findByEmail(requestDto.email())
+        User user = userRepository.findByEmail(requestDto.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(requestDto.password(), user.getPassword())) {
@@ -91,17 +91,17 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public boolean isEmailAvailable(String email) {
-        return !memberRepository.existsByEmail(email);
+        return !userRepository.existsByEmail(email);
     }
 
     @Override
     public boolean isNicknameAvailable(String nickname) {
-        return !memberRepository.existsByNickname(nickname);
+        return !userRepository.existsByNickname(nickname);
     }
 
     @Override
     public User findByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

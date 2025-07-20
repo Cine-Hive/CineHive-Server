@@ -8,7 +8,7 @@ import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.DislikeRepository;
 import com.example.CineHive.repository.post.LikeRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class LikeServiceImpl implements LikeService {
 
     private final LikeRepository likeRepository;
     private final DislikeRepository dislikeRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final PostRepository postRepository;
 
     @Override
@@ -76,7 +76,7 @@ public class LikeServiceImpl implements LikeService {
     //== Private Helper Methods ==//
 
     private User findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

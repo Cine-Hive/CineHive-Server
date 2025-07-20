@@ -8,7 +8,7 @@ import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final List<OAuth2Client> clients;
     private Map<ProviderType, OAuth2Client> clientMap;
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
     @PostConstruct
@@ -74,9 +74,9 @@ public class OAuth2ServiceImpl implements OAuth2Service {
             throw new BusinessException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
 
-        boolean isNewMember = !memberRepository.existsByEmail(oAuth2UserInfo.email());
+        boolean isNewMember = !userRepository.existsByEmail(oAuth2UserInfo.email());
 
-        User user = memberRepository.findByEmail(oAuth2UserInfo.email())
+        User user = userRepository.findByEmail(oAuth2UserInfo.email())
                 .orElseGet(() -> registerNewMember(oAuth2UserInfo));
 
         String token = jwtUtil.generateToken(user.getEmail());
@@ -102,13 +102,13 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .provider(oAuth2UserInfo.providerType())
                 .build();
 
-        return memberRepository.save(newUser);
+        return userRepository.save(newUser);
     }
 
     private String resolveUniqueNickname(String nickname, ProviderType providerType) {
         String resolvedNickname = nickname;
         int suffix = 1;
-        while (memberRepository.existsByNickname(resolvedNickname)) {
+        while (userRepository.existsByNickname(resolvedNickname)) {
             resolvedNickname = String.format("%s (%s %d)", nickname, providerType.name(), suffix++);
         }
         return resolvedNickname;

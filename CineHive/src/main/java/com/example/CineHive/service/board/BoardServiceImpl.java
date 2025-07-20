@@ -8,7 +8,7 @@ import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.post.PostMapper;
 import com.example.CineHive.repository.board.PostRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoardServiceImpl implements BoardService {
 
     private final PostRepository postRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -96,7 +96,7 @@ public class BoardServiceImpl implements BoardService {
      * @return 찾아낸 Member 엔티티
      */
     private User findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
