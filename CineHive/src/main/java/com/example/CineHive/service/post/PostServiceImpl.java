@@ -1,13 +1,17 @@
 package com.example.CineHive.service.post;
 
-import com.example.CineHive.dto.post.*;
-import com.example.CineHive.dto.tmdb.PagedResponse;
+import com.example.CineHive.dto.global.PagedResponse;
+import com.example.CineHive.dto.post.CreatePostRequest;
+import com.example.CineHive.dto.post.PostDetailResponse;
+import com.example.CineHive.dto.post.PostSortType;
+import com.example.CineHive.dto.post.PostSummaryResponse;
+import com.example.CineHive.dto.post.UpdatePostRequest;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.post.PostMapper;
-import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.PostRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,96 +31,77 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostDetailResponse createBoard(CreatePostRequest request, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
+    public PostDetailResponse createPost(CreatePostRequest request, String userEmail) {
+        User user = findUserByEmail(userEmail);
 
         Post post = Post.builder()
-                .brdTitle(request.brdTitle())
-                .brdContent(request.brdContent())
-                .member(user)
+                .title(request.title())
+                .content(request.content())
+                .user(user)
                 .build();
 
         Post savedPost = postRepository.save(post);
-        return PostMapper.toBoardDto(savedPost);
+        return PostMapper.toDetailResponse(savedPost);
     }
 
     @Override
     @Transactional
-    public PostDetailResponse getBoardById(Long boardId) {
-        Post post = findBoardById(boardId);
-        post.increaseViews(); // 조회수 증가는 그대로 유지
-        return PostMapper.toBoardDto(post);
+    public PostDetailResponse getPostById(Long postId) {
+        Post post = findPostById(postId);
+        post.increaseViews();
+        return PostMapper.toDetailResponse(post);
     }
 
     @Override
     @Transactional
-    public PostDetailResponse updateBoard(Long boardId, UpdatePostRequest request, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
-        Post post = findBoardById(boardId);
+    public PostDetailResponse updatePost(Long postId, UpdatePostRequest request, String userEmail) {
+        User user = findUserByEmail(userEmail);
+        Post post = findPostById(postId);
 
-        // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(post, user);
+        verifyPostOwnership(post, user);
 
-        post.update(request.brdTitle(), request.brdContent());
-        return PostMapper.toBoardDto(post);
+        post.update(request.title(), request.content());
+        return PostMapper.toDetailResponse(post);
     }
 
     @Override
     @Transactional
-    public void deleteBoard(Long boardId, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
-        Post post = findBoardById(boardId);
+    public void deletePost(Long postId, String userEmail) {
+        User user = findUserByEmail(userEmail);
+        Post post = findPostById(postId);
 
-        // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(post, user);
+        verifyPostOwnership(post, user);
 
         postRepository.delete(post);
     }
 
     @Override
-    public PagedResponse<PostSummaryResponse> getBoards(int page, int size, PostSortType sort) {
+    public PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort) {
+        // 클라이언트가 1페이지를 요청하면, Spring Data JPA는 0페이지를 조회해야 합니다.
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
-        Page<Post> boardPage = postRepository.findAll(pageable);
+        Page<Post> postPage = postRepository.findAll(pageable);
 
-        return PagedResponse.<PostSummaryResponse>builder()
-                .content(boardPage.getContent().stream().map(PostMapper::toListDto).toList())
-                .page(boardPage.getNumber() + 1)
-                .size(boardPage.getSize())
-                .totalElements(boardPage.getTotalElements())
-                .totalPages(boardPage.getTotalPages())
-                .last(boardPage.isLast())
-                .build();
+        return new PagedResponse<>(
+                postPage.getContent().stream().map(PostMapper::toSummaryResponse).toList(),
+                postPage.getNumber(),
+                postPage.getSize(),
+                postPage.getTotalElements(),
+                postPage.getTotalPages(),
+                postPage.isLast()
+        );
     }
 
-    //== private 헬퍼 메서드 ==//
-
-    /**
-     * 이메일을 사용하여 회원을 찾고, 없으면 BusinessException을 발생시킵니다.
-     * @param email 찾을 회원의 이메일
-     * @return 찾아낸 Member 엔티티
-     */
-    private User findMemberByEmail(String email) {
+    private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    /**
-     * ID를 사용하여 게시글을 찾고, 없으면 BusinessException을 발생시킵니다.
-     * @param boardId 찾을 게시글의 ID
-     * @return 찾아낸 Board 엔티티
-     */
-    private Post findBoardById(Long boardId) {
-        return postRepository.findById(boardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+    private Post findPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
-    /**
-     * 게시글의 소유자와 현재 요청을 보낸 회원이 일치하는지 확인합니다.
-     * 일치하지 않으면 BusinessException을 발생시킵니다.
-     * @param post 검증할 게시글 엔티티
-     * @param user 검증할 회원 엔티티
-     */
-    private void verifyBoardOwnership(Post post, User user) {
+    private void verifyPostOwnership(Post post, User user) {
         if (!post.getUser().equals(user)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
