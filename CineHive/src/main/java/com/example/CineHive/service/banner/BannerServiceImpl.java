@@ -8,12 +8,14 @@ import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.banner.BannerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,14 +49,14 @@ public class BannerServiceImpl implements BannerService {
                 .isActive(request.isActive())
                 .build();
         Banner savedBanner = bannerRepository.save(banner);
+        log.info("새로운 배너가 생성되었습니다. ID: {}, 제목: {}", savedBanner.getId(), savedBanner.getTitle());
         return BannerAdminResponse.from(savedBanner);
     }
 
     @Override
     @Transactional
     public BannerAdminResponse updateBanner(Long bannerId, BannerAdminRequest request) {
-        Banner banner = bannerRepository.findById(bannerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BANNER_NOT_FOUND));
+        Banner banner = findBannerById(bannerId);
 
         banner.update(
                 request.title(),
@@ -64,15 +66,20 @@ public class BannerServiceImpl implements BannerService {
                 request.displayOrder(),
                 request.isActive()
         );
-        return BannerAdminResponse.from(banner); // 수정 후 DTO로 변환하여 반환
+        log.info("배너 정보가 수정되었습니다. ID: {}", bannerId);
+        return BannerAdminResponse.from(banner);
     }
 
     @Override
     @Transactional
     public void deleteBanner(Long bannerId) {
-        if (!bannerRepository.existsById(bannerId)) {
-            throw new BusinessException(ErrorCode.BANNER_NOT_FOUND);
-        }
-        bannerRepository.deleteById(bannerId);
+        Banner banner = findBannerById(bannerId);
+        bannerRepository.delete(banner);
+        log.info("배너가 삭제되었습니다. ID: {}", bannerId);
+    }
+
+    private Banner findBannerById(Long bannerId) {
+        return bannerRepository.findById(bannerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BANNER_NOT_FOUND));
     }
 }
