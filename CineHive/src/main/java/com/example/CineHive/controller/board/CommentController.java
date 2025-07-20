@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.dto.comment.CommentDto;
+import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
 import com.example.CineHive.dto.response.ApiResponse;
@@ -29,31 +29,31 @@ public class CommentController {
 
     @Operation(summary = "댓글 작성", description = "특정 게시글에 새로운 댓글을 등록합니다.")
     @PostMapping
-    public ResponseEntity<ApiResponse<CommentDto>> addComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> addComment(
             @PathVariable Long boardId,
             @Valid @RequestBody CreateCommentRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        CommentDto createdComment = commentService.addComment(boardId, request, userDetails.getUsername());
+        CommentResponse createdComment = commentService.addComment(boardId, request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdComment));
     }
 
     @Operation(summary = "게시글의 모든 댓글 조회", description = "특정 게시글에 달린 모든 댓글 목록을 조회합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CommentDto>>> getCommentsByBoard(@PathVariable Long boardId) {
-        List<CommentDto> comments = commentService.getCommentsByBoard(boardId);
+    public ResponseEntity<ApiResponse<List<CommentResponse>>> getCommentsByBoard(@PathVariable Long boardId) {
+        List<CommentResponse> comments = commentService.getCommentsByBoard(boardId);
         return ResponseEntity.ok(ApiResponse.ok(comments));
     }
 
     @Operation(summary = "댓글 수정", description = "자신이 작성한 댓글의 내용을 수정합니다.")
     @PutMapping("/{commentId}")
-    public ResponseEntity<ApiResponse<CommentDto>> updateComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @PathVariable Long boardId, // boardId는 경로에 있지만, 권한 검증 등에 사용될 수 있으므로 유지
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        CommentDto updatedComment = commentService.updateComment(commentId, request, userDetails.getUsername());
+        CommentResponse updatedComment = commentService.updateComment(commentId, request, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(updatedComment));
     }
 

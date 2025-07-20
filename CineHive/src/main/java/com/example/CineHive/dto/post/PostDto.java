@@ -1,6 +1,6 @@
 package com.example.CineHive.dto.post;
 
-import com.example.CineHive.dto.comment.CommentDto;
+import com.example.CineHive.dto.comment.CommentResponse;
 import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,5 +17,5 @@ public record PostDto(
         int likeCount,
         int dislikeCount,
         int bookmarkCount,
-        List<CommentDto> comments
+        List<CommentResponse> comments
 ) {}

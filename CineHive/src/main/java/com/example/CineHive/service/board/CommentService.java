@@ -1,6 +1,6 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.comment.CommentDto;
+import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
 
@@ -20,7 +20,7 @@ public interface CommentService {
      * @param memberEmail 댓글을 작성하는 회원의 이메일 (인증 정보)
      * @return 생성된 댓글의 정보를 담은 DTO
      */
-    CommentDto addComment(Long boardId, CreateCommentRequest request, String memberEmail);
+    CommentResponse addComment(Long boardId, CreateCommentRequest request, String memberEmail);
 
     /**
      * 특정 게시물에 달린 모든 댓글을 조회합니다.
@@ -28,7 +28,7 @@ public interface CommentService {
      * @param boardId 댓글 목록을 조회할 게시물의 ID
      * @return 해당 게시물의 댓글 DTO 리스트
      */
-    List<CommentDto> getCommentsByBoard(Long boardId);
+    List<CommentResponse> getCommentsByBoard(Long boardId);
 
     /**
      * 기존 댓글의 내용을 수정합니다.
@@ -38,7 +38,7 @@ public interface CommentService {
      * @param memberEmail 댓글을 수정하려는 회원의 이메일 (인증 및 소유권 검증용)
      * @return 수정된 댓글의 정보를 담은 DTO
      */
-    CommentDto updateComment(Long commentId, UpdateCommentRequest request, String memberEmail);
+    CommentResponse updateComment(Long commentId, UpdateCommentRequest request, String memberEmail);
 
     /**
      * 특정 댓글을 삭제합니다.

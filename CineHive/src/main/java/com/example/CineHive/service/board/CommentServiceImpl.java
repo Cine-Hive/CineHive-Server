@@ -1,6 +1,6 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.dto.comment.CommentDto;
+import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
 import com.example.CineHive.entity.post.Post;
@@ -34,7 +34,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentDto addComment(Long boardId, CreateCommentRequest request, String memberEmail) {
+    public CommentResponse addComment(Long boardId, CreateCommentRequest request, String memberEmail) {
         Post post = findBoardById(boardId);
         User user = findMemberByEmail(memberEmail);
 
@@ -49,7 +49,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> getCommentsByBoard(Long boardId) {
+    public List<CommentResponse> getCommentsByBoard(Long boardId) {
         // 게시글이 존재하는지 먼저 확인
         findBoardById(boardId);
         List<Comment> comments = commentRepository.findByBoard_Id(boardId);
@@ -60,7 +60,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentDto updateComment(Long commentId, UpdateCommentRequest request, String memberEmail) {
+    public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
         Comment comment = findCommentById(commentId);
 
