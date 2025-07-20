@@ -1,6 +1,7 @@
 package com.example.CineHive.controller.media;
 
 import com.example.CineHive.dto.global.ApiResponse;
+import com.example.CineHive.dto.global.ErrorResponse;
 import com.example.CineHive.dto.media.ChartSummaryResponse;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.Platform;
@@ -37,10 +38,10 @@ public class MediaQueryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{mediaType}/{id}")
-    public ResponseEntity<ApiResponse<MediaDetailDto>> getMediaDetail(
+    public ResponseEntity<ApiResponse<MediaDetailResponse>> getMediaDetail(
             @Parameter(description = "미디어 타입 (`movie` 또는 `tv`)", example = "movie") @PathVariable String mediaType,
             @Parameter(description = "TMDB의 고유 미디어 ID", example = "550") @PathVariable Long id) {
-        MediaDetailDto result = mediaQueryService.getMediaDetail(id, mediaType).block();
+        MediaDetailResponse result = mediaQueryService.getMediaDetail(id, mediaType).block();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -51,9 +52,9 @@ public class MediaQueryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaSummaryDto>>> searchMedia(
+    public ResponseEntity<ApiResponse<PagedResponse<MediaSummaryResponse>>> searchMedia(
             @RequestParam @NotBlank String query, @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaSummaryDto> result = mediaQueryService.searchMedia(query, page).block();
+        PagedResponse<MediaSummaryResponse> result = mediaQueryService.searchMedia(query, page).block();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -76,12 +77,12 @@ public class MediaQueryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/charts/{chartType}")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartDto>>> getCuratedChart(
+    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getCuratedChart(
             @Parameter(description = "조회할 차트의 종류", schema = @Schema(implementation = ChartType.class))
             @PathVariable String chartType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType type = ChartType.fromString(chartType.toUpperCase());
-        PagedResponse<MediaChartDto> result = mediaQueryService.getCuratedChart(type, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(type, page).block();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -92,11 +93,11 @@ public class MediaQueryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/charts/genres/{genreId}")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartDto>>> getGenreChart(
+    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getGenreChart(
             @Parameter(description = "TMDB 장르 ID", example = "28") @PathVariable Long genreId,
             @Parameter(description = "미디어 타입 (`movie` 또는 `tv`)", example = "movie") @RequestParam(defaultValue = "movie") String mediaType,
             @Parameter(description = "페이지 번호", example = "1") @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartDto> result = mediaQueryService.getGenreChart(mediaType, genreId, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getGenreChart(mediaType, genreId, page).block();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -108,11 +109,11 @@ public class MediaQueryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/charts/platforms/{platform}")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartDto>>> getPlatformChart(
+    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getPlatformChart(
             @Parameter(description = "조회할 플랫폼의 이름 (예: NETFLIX)", schema = @Schema(implementation = Platform.class))
             @PathVariable Platform platform,
             @Parameter(description = "페이지 번호", example = "1") @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartDto> result = mediaQueryService.getPlatformChart(platform, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getPlatformChart(platform, page).block();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 

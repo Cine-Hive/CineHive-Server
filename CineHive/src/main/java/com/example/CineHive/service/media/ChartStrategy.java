@@ -1,7 +1,7 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.client.TmdbApiClient;
-import com.example.CineHive.dto.response.MediaChartDto;
+import com.example.CineHive.dto.response.MediaChartResponse;
 import com.example.CineHive.dto.response.PagedResponse;
 import reactor.core.publisher.Mono;
 
@@ -13,5 +13,5 @@ public interface ChartStrategy {
      * @param page 요청할 페이지 번호
      * @return 페이지 정보가 포함된 MediaChartDto의 Mono
      */
-    Mono<PagedResponse<MediaChartDto>> fetchChart(TmdbApiClient apiClient, int page);
+    Mono<PagedResponse<MediaChartResponse>> fetchChart(TmdbApiClient apiClient, int page);
 }

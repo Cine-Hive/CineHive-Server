@@ -18,7 +18,7 @@ public interface MediaQueryService {
      * @param mediaType 미디어 타입 ("movie" 또는 "tv")
      * @return 상세 정보를 담은 MediaDetailDto의 Mono 객체
      */
-    Mono<MediaDetailDto> getMediaDetail(Long id, String mediaType);
+    Mono<MediaDetailResponse> getMediaDetail(Long id, String mediaType);
 
     /**
      * 주어진 검색어로 미디어(영화, TV 통합)를 검색합니다.
@@ -26,7 +26,7 @@ public interface MediaQueryService {
      * @param page 조회할 페이지 번호
      * @return 검색 결과 목록을 담은 PagedResponse의 Mono 객체
      */
-    Mono<PagedResponse<MediaSummaryDto>> searchMedia(String query, int page);
+    Mono<PagedResponse<MediaSummaryResponse>> searchMedia(String query, int page);
 
     /**
      * 서버에서 동적으로 정의한 홈 화면용 차트 요약 목록을 조회합니다.
@@ -40,7 +40,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse의 Mono 객체
      */
-    Mono<PagedResponse<MediaChartDto>> getCuratedChart(ChartType chartType, int page);
+    Mono<PagedResponse<MediaChartResponse>> getCuratedChart(ChartType chartType, int page);
 
     /**
      * 특정 장르의 미디어 목록을 조회합니다.
@@ -49,7 +49,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse의 Mono 객체
      */
-    Mono<PagedResponse<MediaChartDto>> getGenreChart(String mediaType, Long genreId, int page);
+    Mono<PagedResponse<MediaChartResponse>> getGenreChart(String mediaType, Long genreId, int page);
 
     /**
      * 특정 스트리밍 플랫폼의 TV 시리즈 목록을 조회합니다.
@@ -57,7 +57,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse의 Mono 객체
      */
-    Mono<PagedResponse<MediaChartDto>> getPlatformChart(Platform platform, int page);
+    Mono<PagedResponse<MediaChartResponse>> getPlatformChart(Platform platform, int page);
 
     /**
      * 클라이언트 필터 UI 구성을 위한 메타데이터를 조회합니다.

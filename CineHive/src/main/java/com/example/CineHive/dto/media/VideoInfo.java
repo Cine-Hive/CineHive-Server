@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.media;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VideoDto {
+public class VideoInfo {
     private String name;
     private String key;
     private String site;

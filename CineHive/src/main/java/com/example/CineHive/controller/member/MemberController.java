@@ -3,7 +3,7 @@ package com.example.CineHive.controller.member;
 import com.example.CineHive.dto.auth.LoginRequest;
 import com.example.CineHive.dto.auth.RegisterRequest;
 import com.example.CineHive.dto.global.ApiResponse;
-import com.example.CineHive.dto.response.ErrorResponse;
+import com.example.CineHive.dto.global.ErrorResponse;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.service.member.MemberService;
 import io.swagger.v3.oas.annotations.Operation;

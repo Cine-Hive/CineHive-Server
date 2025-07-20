@@ -1,5 +1,7 @@
 package com.example.CineHive.mapper.media;
 
+import com.example.CineHive.dto.global.PagedResponse;
+import com.example.CineHive.dto.media.*;
 import com.example.CineHive.dto.response.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,9 +18,9 @@ public final class MediaMapper {
         // 유틸리티 클래스이므로 인스턴스화 방지
     }
 
-    public static MediaDetailDto toMediaDetailDto(TmdbMovieDetailResponse tmdbDetail) {
+    public static MediaDetailResponse toMediaDetailDto(TmdbMovieDetailResponse tmdbDetail) {
         if (tmdbDetail == null) return null;
-        return MediaDetailDto.builder()
+        return MediaDetailResponse.builder()
                 .id(tmdbDetail.getId())
                 .title(tmdbDetail.getTitle())
                 .originalTitle(tmdbDetail.getOriginal_title())
@@ -42,9 +44,9 @@ public final class MediaMapper {
                 .build();
     }
 
-    public static MediaDetailDto toMediaDetailDto(TmdbTvSeriesDetailResponse tmdbDetail) {
+    public static MediaDetailResponse toMediaDetailDto(TmdbTvSeriesDetailResponse tmdbDetail) {
         if (tmdbDetail == null) return null;
-        return MediaDetailDto.builder()
+        return MediaDetailResponse.builder()
                 .id(tmdbDetail.getId())
                 .title(tmdbDetail.getName())
                 .originalTitle(tmdbDetail.getOriginal_name())
@@ -68,14 +70,14 @@ public final class MediaMapper {
                 .build();
     }
 
-    public static PagedResponse<MediaChartDto> toMovieChartPagedResponseFromTmdb(
+    public static PagedResponse<MediaChartResponse> toMovieChartPagedResponseFromTmdb(
             TmdbPagedResponse<TmdbMovieResponse> tmdbResponse, int requestedPage, int size) {
 
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
             return PagedResponse.empty(requestedPage, size);
         }
 
-        List<MediaChartDto> chartDtos = tmdbResponse.getResults().stream()
+        List<MediaChartResponse> chartDtos = tmdbResponse.getResults().stream()
                 .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
                 .toList();
 
@@ -85,14 +87,14 @@ public final class MediaMapper {
                 tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
-    public static PagedResponse<MediaChartDto> toTvChartPagedResponseFromTmdb(
+    public static PagedResponse<MediaChartResponse> toTvChartPagedResponseFromTmdb(
             TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse, int requestedPage, int size) {
 
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
             return PagedResponse.empty(requestedPage, size);
         }
 
-        List<MediaChartDto> chartDtos = tmdbResponse.getResults().stream()
+        List<MediaChartResponse> chartDtos = tmdbResponse.getResults().stream()
                 .map(MediaMapper::toMediaChartDto) // isLiked 파라미터 제거
                 .toList();
 
@@ -101,14 +103,14 @@ public final class MediaMapper {
                 tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
-    public static PagedResponse<MediaSummaryDto> toSearchPagedResponseFromTmdb(
+    public static PagedResponse<MediaSummaryResponse> toSearchPagedResponseFromTmdb(
             TmdbPagedResponse<TmdbMultiSearchResponse> tmdbResponse, int requestedPage, int size) {
 
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
             return PagedResponse.empty(requestedPage, size);
         }
 
-        List<MediaSummaryDto> summaryDtos = tmdbResponse.getResults().stream()
+        List<MediaSummaryResponse> summaryDtos = tmdbResponse.getResults().stream()
                 .filter(result -> "movie".equals(result.getMedia_type()) || "tv".equals(result.getMedia_type()))
                 .map(MediaMapper::toMediaSummaryDto)
                 .toList();
@@ -118,8 +120,8 @@ public final class MediaMapper {
                 tmdbResponse.getPage() >= tmdbResponse.getTotal_pages());
     }
 
-    private static MediaChartDto toMediaChartDto(TmdbMovieResponse movie) {
-        return MediaChartDto.builder()
+    private static MediaChartResponse toMediaChartDto(TmdbMovieResponse movie) {
+        return MediaChartResponse.builder()
                 .mediaId(movie.getId())
                 .title(movie.getTitle())
                 .posterPath(movie.getPoster_path())
@@ -128,8 +130,8 @@ public final class MediaMapper {
                 .build();
     }
 
-    private static MediaChartDto toMediaChartDto(TmdbTvSeriesResponse tv) {
-        return MediaChartDto.builder()
+    private static MediaChartResponse toMediaChartDto(TmdbTvSeriesResponse tv) {
+        return MediaChartResponse.builder()
                 .mediaId(tv.getId())
                 .title(tv.getName())
                 .posterPath(tv.getPoster_path())
@@ -138,12 +140,12 @@ public final class MediaMapper {
                 .build();
     }
 
-    private static MediaSummaryDto toMediaSummaryDto(TmdbMultiSearchResponse searchResult) {
+    private static MediaSummaryResponse toMediaSummaryDto(TmdbMultiSearchResponse searchResult) {
         String title = "movie".equals(searchResult.getMedia_type())
                 ? searchResult.getTitle()
                 : searchResult.getName();
 
-        return MediaSummaryDto.builder()
+        return MediaSummaryResponse.builder()
                 .id(searchResult.getId())
                 .title(title)
                 .posterPath(searchResult.getPoster_path())
@@ -176,26 +178,26 @@ public final class MediaMapper {
                 .toList();
     }
 
-    private static List<VideoDto> toVideoDtoList(TmdbVideosResponse videos) {
+    private static List<VideoInfo> toVideoDtoList(TmdbVideosResponse videos) {
         if (videos == null || videos.getResults() == null) return Collections.emptyList();
         return videos.getResults().stream()
-                .map(v -> new VideoDto(v.getName(), v.getKey(), v.getSite(), v.getType()))
+                .map(v -> new VideoInfo(v.getName(), v.getKey(), v.getSite(), v.getType()))
                 .toList();
     }
 
-    private static List<ImageDto> toImageDtoList(TmdbImagesResponse images) {
+    private static List<ImageInfo> toImageDtoList(TmdbImagesResponse images) {
         if (images == null || images.getBackdrops() == null) return Collections.emptyList();
         return images.getBackdrops().stream()
                 .limit(10)
-                .map(i -> new ImageDto(i.getFile_path(), i.getAspect_ratio(), i.getHeight(), i.getWidth(), i.getVote_average(), i.getVote_count()))
+                .map(i -> new ImageInfo(i.getFile_path(), i.getAspect_ratio(), i.getHeight(), i.getWidth(), i.getVote_average(), i.getVote_count()))
                 .toList();
     }
 
-    private static List<MediaSummaryDto> toMovieSummaryList(TmdbPagedResponse<TmdbMovieResponse> response) {
+    private static List<MediaSummaryResponse> toMovieSummaryList(TmdbPagedResponse<TmdbMovieResponse> response) {
         if (response == null || response.getResults() == null) return Collections.emptyList();
         return response.getResults().stream()
                 .limit(10)
-                .map(movie -> MediaSummaryDto.builder()
+                .map(movie -> MediaSummaryResponse.builder()
                         .id(movie.getId())
                         .title(movie.getTitle())
                         .posterPath(movie.getPoster_path())
@@ -205,11 +207,11 @@ public final class MediaMapper {
                 .toList();
     }
 
-    private static List<MediaSummaryDto> toTvSummaryList(TmdbPagedResponse<TmdbTvSeriesResponse> response) {
+    private static List<MediaSummaryResponse> toTvSummaryList(TmdbPagedResponse<TmdbTvSeriesResponse> response) {
         if (response == null || response.getResults() == null) return Collections.emptyList();
         return response.getResults().stream()
                 .limit(10)
-                .map(tv -> MediaSummaryDto.builder()
+                .map(tv -> MediaSummaryResponse.builder()
                         .id(tv.getId())
                         .title(tv.getName())
                         .posterPath(tv.getPoster_path())
@@ -219,20 +221,20 @@ public final class MediaMapper {
                 .toList();
     }
 
-    private static List<KeywordDto> toKeywordDtoList(TmdbKeywordsResponse keywords) {
+    private static List<KeywordInfo> toKeywordDtoList(TmdbKeywordsResponse keywords) {
         if (keywords == null) return Collections.emptyList();
         List<TmdbKeywordResponse> keywordList = Optional.ofNullable(keywords.getKeywords()).orElse(keywords.getResults());
         if (keywordList == null) return Collections.emptyList();
         return keywordList.stream()
-                .map(k -> new KeywordDto(k.getId(), k.getName()))
+                .map(k -> new KeywordInfo(k.getId(), k.getName()))
                 .toList();
     }
 
-    private static WatchProvidersDto toWatchProvidersDto(TmdbWatchProvidersResponse providers) {
-        if (providers == null || providers.getResults() == null) return new WatchProvidersDto();
+    private static WatchProviderInfo toWatchProvidersDto(TmdbWatchProvidersResponse providers) {
+        if (providers == null || providers.getResults() == null) return new WatchProviderInfo();
         TmdbCountryWatchProvidersResponse countryProviders = providers.getResults().get("KR");
-        if (countryProviders == null) return new WatchProvidersDto();
-        return new WatchProvidersDto(
+        if (countryProviders == null) return new WatchProviderInfo();
+        return new WatchProviderInfo(
                 countryProviders.getLink(),
                 toProviderDtoList(countryProviders.getFlatrate()),
                 toProviderDtoList(countryProviders.getRent()),

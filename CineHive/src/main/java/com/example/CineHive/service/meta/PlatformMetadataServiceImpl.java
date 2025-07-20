@@ -2,8 +2,8 @@ package com.example.CineHive.service.meta;
 
 import com.example.CineHive.client.TmdbApiClient;
 import com.example.CineHive.dto.media.Platform;
-import com.example.CineHive.dto.response.LogoDto;
-import com.example.CineHive.dto.response.PlatformOptionDto;
+import com.example.CineHive.dto.media.LogoInfo;
+import com.example.CineHive.dto.media.PlatformOption;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class PlatformMetadataServiceImpl implements PlatformMetadataService {
 
     @Override
     @Cacheable("platformMetadata")
-    public Mono<List<PlatformOptionDto>> getPlatformOptions() {
+    public Mono<List<PlatformOption>> getPlatformOptions() {
         log.info("TMDB에서 모든 플랫폼 메타데이터를 가져와 캐시합니다.");
 
         return Flux.fromArray(Platform.values())
@@ -43,14 +43,14 @@ public class PlatformMetadataServiceImpl implements PlatformMetadataService {
      * @param platform 정보를 가져올 Platform Enum 상수
      * @return 상세 정보가 포함된 PlatformOptionDto의 Mono
      */
-    private Mono<PlatformOptionDto> fetchPlatformDetails(Platform platform) {
+    private Mono<PlatformOption> fetchPlatformDetails(Platform platform) {
         return tmdbApiClient.getNetworkImages(platform.getId())
                 .map(tmdbResponse -> {
-                    List<LogoDto> logos = tmdbResponse.getLogos().stream()
-                            .map(logo -> new LogoDto(logo.getFilePath(), logo.getFileType()))
+                    List<LogoInfo> logos = tmdbResponse.getLogos().stream()
+                            .map(logo -> new LogoInfo(logo.getFilePath(), logo.getFileType()))
                             .collect(Collectors.toList());
 
-                    return new PlatformOptionDto(platform.name(), platform.getDisplayName(), logos);
+                    return new PlatformOption(platform.name(), platform.getDisplayName(), logos);
                 });
     }
 
