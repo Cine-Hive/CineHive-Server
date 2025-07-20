@@ -35,7 +35,7 @@ public class AccountController {
     @PatchMapping("/nickname")
     public ResponseEntity<ApiResponse<Map<String, String>>> changeNickname(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody NicknameChangeRequestDto requestDto) {
+            @Valid @RequestBody UpdateNicknameRequestDto requestDto) {
         accountService.changeNickname(userDetails.getUsername(), requestDto.nickname());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "닉네임이 성공적으로 변경되었습니다.")));
     }
@@ -44,7 +44,7 @@ public class AccountController {
     @PatchMapping("/password")
     public ResponseEntity<ApiResponse<Map<String, String>>> changePassword(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody PasswordChangeRequestDto requestDto) {
+            @Valid @RequestBody UpdatePasswordRequestDto requestDto) {
         accountService.changePassword(userDetails.getUsername(), requestDto.oldPassword(), requestDto.newPassword());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다.")));
     }
@@ -53,7 +53,7 @@ public class AccountController {
     @PutMapping("/genres")
     public ResponseEntity<ApiResponse<Map<String, String>>> updateGenres(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody GenresUpdateRequestDto requestDto) {
+            @RequestBody UpdateGenresRequestDto requestDto) {
         accountService.updateGenres(userDetails.getUsername(), requestDto.genres());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "선호 장르가 성공적으로 수정되었습니다.")));
     }
