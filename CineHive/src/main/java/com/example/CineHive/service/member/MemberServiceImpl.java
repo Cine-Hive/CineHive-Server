@@ -7,7 +7,7 @@ import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.mapper.member.MemberMapper;
+import com.example.CineHive.mapper.user.UserMapper;
 import com.example.CineHive.repository.member.LoginHistoryRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.example.CineHive.util.JwtUtil;
@@ -45,7 +45,7 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
-        User user = MemberMapper.toEntity(requestDto, passwordEncoder);
+        User user = UserMapper.toEntity(requestDto, passwordEncoder);
         User savedUser = memberRepository.save(user);
         log.info("회원 가입이 완료되었습니다. 회원 ID: {}", savedUser.getId());
         return savedUser;
