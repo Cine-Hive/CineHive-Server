@@ -6,7 +6,7 @@ import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.mapper.BoardMapper;
+import com.example.CineHive.mapper.post.PostMapper;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class BoardServiceImpl implements BoardService {
                 .build();
 
         Post savedPost = boardRepository.save(post);
-        return BoardMapper.toBoardDto(savedPost);
+        return PostMapper.toBoardDto(savedPost);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class BoardServiceImpl implements BoardService {
     public PostDetailResponse getBoardById(Long boardId) {
         Post post = findBoardById(boardId);
         post.increaseViews(); // 조회수 증가는 그대로 유지
-        return BoardMapper.toBoardDto(post);
+        return PostMapper.toBoardDto(post);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class BoardServiceImpl implements BoardService {
         verifyBoardOwnership(post, user);
 
         post.update(request.brdTitle(), request.brdContent());
-        return BoardMapper.toBoardDto(post);
+        return PostMapper.toBoardDto(post);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class BoardServiceImpl implements BoardService {
         Page<Post> boardPage = boardRepository.findAll(pageable);
 
         return PagedResponse.<PostSummaryResponse>builder()
-                .content(boardPage.getContent().stream().map(BoardMapper::toListDto).toList())
+                .content(boardPage.getContent().stream().map(PostMapper::toListDto).toList())
                 .page(boardPage.getNumber() + 1)
                 .size(boardPage.getSize())
                 .totalElements(boardPage.getTotalElements())
