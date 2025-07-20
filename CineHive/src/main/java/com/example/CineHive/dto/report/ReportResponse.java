@@ -16,7 +16,7 @@ public record ReportResponse(
         @Schema(description = "신고된 콘텐츠의 ID (게시글 또는 댓글 ID)")
         Long reportedContentId,
 
-        @Schema(description = "신고된 콘텐츠의 타입", example = "BOARD")
+        @Schema(description = "신고된 콘텐츠의 타입", example = "POST")
         String contentType,
 
         @Schema(description = "신고 사유")
@@ -42,7 +42,7 @@ public record ReportResponse(
 
         if (report.getPost() != null) {
             contentId = report.getPost().getId();
-            type = "BOARD";
+            type = "POST"; // "BOARD" -> "POST" 로 변경
         } else if (report.getComment() != null) {
             contentId = report.getComment().getId();
             type = "COMMENT";

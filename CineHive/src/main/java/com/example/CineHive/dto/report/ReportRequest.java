@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * 콘텐츠(게시글, 댓글 등) 신고 시 클라이언트로부터 받는 요청 데이터를 담는 DTO입니다.
+ * 콘텐츠(게시글, 댓글 등) 신고를 위한 요청 데이터를 담는 DTO입니다.
  */
 @Schema(description = "콘텐츠 신고 요청 DTO")
 public record ReportRequest(
