@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum UserRole {
 
-    ROLE_USER("ROLE_USER", "일반 사용자"),
-    ROLE_ADMIN("ROLE_ADMIN", "관리자");
+    ROLE_USER("일반 사용자"), // key 필드 제거
+    ROLE_ADMIN("관리자");    // key 필드 제거
 
-    private final String key;
+    // key 필드와 생성자에서 key 부분 삭제
     private final String description;
 }
