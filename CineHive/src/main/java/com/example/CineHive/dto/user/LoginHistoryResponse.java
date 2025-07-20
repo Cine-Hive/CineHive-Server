@@ -1,12 +1,13 @@
 package com.example.CineHive.dto.user;
 
 import com.example.CineHive.entity.user.LoginHistory;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "로그인 이력 응답 DTO")
-public record LoginHistoryDto(
+/**
+ * 로그인 이력 정보를 담는 응답 DTO입니다.
+ */
+public record LoginHistoryResponse(
         Long id,
         Long userId,
         String userNickname,
@@ -14,8 +15,8 @@ public record LoginHistoryDto(
         LocalDateTime updatedAt,
         String browser
 ) {
-    public static LoginHistoryDto from(LoginHistory loginHistory) {
-        return new LoginHistoryDto(
+    public static LoginHistoryResponse from(LoginHistory loginHistory) {
+        return new LoginHistoryResponse(
                 loginHistory.getId(),
                 loginHistory.getUser().getId(),
                 loginHistory.getUser().getNickname(),
