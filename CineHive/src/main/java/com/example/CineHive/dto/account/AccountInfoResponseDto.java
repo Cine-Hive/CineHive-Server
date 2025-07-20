@@ -1,6 +1,7 @@
 package com.example.CineHive.dto.account;
 
 import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.media.Genre;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -23,7 +24,9 @@ public record AccountInfoResponseDto(
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .gender(user.getGender().name())
-                .genres(user.getGenres().stream().toList())
+                .genres(user.getGenres().stream()
+                        .map(Genre::getKoreanName)
+                        .toList())
                 .build();
     }
 }

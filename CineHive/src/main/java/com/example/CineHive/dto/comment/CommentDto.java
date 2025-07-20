@@ -1,6 +1,6 @@
 package com.example.CineHive.dto.comment;
 
-import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.entity.post.Comment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -59,7 +59,7 @@ public record CommentDto(
 
         return CommentDto.builder()
                 .id(comment.getId())
-                .boardId(comment.getBoard().getId())
+                .boardId(comment.getPost().getId())
                 .commenter(commenterInfo)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())

@@ -1,7 +1,7 @@
 package com.example.CineHive.repository.board;
 
 import com.example.CineHive.config.JpaAuditingConfig;
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.UserRole;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Import(JpaAuditingConfig.class)
 @DisplayName("BoardRepository 테스트")
-class BoardRepositoryTest {
+class PostRepositoryTest {
 
     @Autowired
     private BoardRepository boardRepository;
@@ -43,19 +43,19 @@ class BoardRepositoryTest {
         user2 = createAndSaveMember("user2@test.com", "테스터2");
 
         // 테스트용 게시글 데이터 생성 및 저장
-        boardRepository.save(Board.builder()
+        boardRepository.save(Post.builder()
                 .brdTitle("JPA는 정말 신기해요")
                 .brdContent("Spring Boot와 JPA를 배우고 있습니다.")
                 .member(user1)
                 .build());
 
-        boardRepository.save(Board.builder()
+        boardRepository.save(Post.builder()
                 .brdTitle("오늘의 점심 메뉴는?")
                 .brdContent("김치찌개가 땡기네요. Spring 롤백 기능 최고!")
                 .member(user1)
                 .build());
 
-        boardRepository.save(Board.builder()
+        boardRepository.save(Post.builder()
                 .brdTitle("리액트(React) 질문 있습니다.")
                 .brdContent("리액트에서 상태 관리는 어떻게 하나요?")
                 .member(user2)
@@ -81,7 +81,7 @@ class BoardRepositoryTest {
         String keyword = "JPA";
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).hasSize(1);
@@ -95,7 +95,7 @@ class BoardRepositoryTest {
         String keyword = "김치찌개";
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).hasSize(1);
@@ -109,7 +109,7 @@ class BoardRepositoryTest {
         String keyword = "테스터1";
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).hasSize(2);
@@ -123,7 +123,7 @@ class BoardRepositoryTest {
         String keyword = "Spring";
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).hasSize(2);
@@ -136,7 +136,7 @@ class BoardRepositoryTest {
         String keyword = "react"; // 원문은 'React'
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).hasSize(1);
@@ -150,7 +150,7 @@ class BoardRepositoryTest {
         String keyword = "존재하지 않는 키워드";
 
         // when
-        List<Board> results = boardRepository.searchByKeyword(keyword);
+        List<Post> results = boardRepository.searchByKeyword(keyword);
 
         // then
         assertThat(results).isEmpty();

@@ -2,7 +2,7 @@ package com.example.CineHive.mapper;
 
 import com.example.CineHive.dto.board.BoardDto;
 import com.example.CineHive.dto.board.GetListBoardDto;
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.post.Post;
 
 import java.util.stream.Collectors;
 
@@ -10,33 +10,33 @@ public final class BoardMapper {
 
     private BoardMapper() {}
 
-    public static BoardDto toBoardDto(Board board) {
+    public static BoardDto toBoardDto(Post post) {
         return BoardDto.builder()
-                .id(board.getId())
-                .brdTitle(board.getBrdTitle())
-                .brdContent(board.getBrdContent())
-                .memNickname(board.getUser().getNickname())
-                .createdAt(board.getCreatedAt())
-                .updatedAt(board.getUpdatedAt())
-                .views(board.getViews())
-                .likeCount(board.getLikeCount())
-                .dislikeCount(board.getDislikeCount())
-                .bookmarkCount(board.getBookmarkCount())
-                .comments(board.getComments().stream()
+                .id(post.getId())
+                .brdTitle(post.getBrdTitle())
+                .brdContent(post.getBrdContent())
+                .memNickname(post.getUser().getNickname())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .views(post.getViews())
+                .likeCount(post.getLikeCount())
+                .dislikeCount(post.getDislikeCount())
+                .bookmarkCount(post.getBookmarkCount())
+                .comments(post.getComments().stream()
                         .map(CommentMapper::toDto)
                         .collect(Collectors.toList()))
                 .build();
     }
 
-    public static GetListBoardDto toListDto(Board board) {
+    public static GetListBoardDto toListDto(Post post) {
         return GetListBoardDto.builder()
-                .id(board.getId())
-                .brdTitle(board.getBrdTitle())
-                .memNickname(board.getUser().getNickname())
-                .createdAt(board.getCreatedAt())
-                .views(board.getViews())
-                .likeCount(board.getLikeCount())
-                .commentCount(board.getCommentCount())
+                .id(post.getId())
+                .brdTitle(post.getBrdTitle())
+                .memNickname(post.getUser().getNickname())
+                .createdAt(post.getCreatedAt())
+                .views(post.getViews())
+                .likeCount(post.getLikeCount())
+                .commentCount(post.getCommentCount())
                 .build();
     }
 }

@@ -1,6 +1,6 @@
 package com.example.CineHive.repository.board;
 
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.post.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +14,7 @@ import java.util.List;
  * 기본적인 CRUD 외에 복잡한 쿼리가 필요한 경우 JPQL을 사용하여 메서드를 정의합니다.
  */
 @Repository
-public interface BoardRepository extends JpaRepository<Board, Long> {
+public interface BoardRepository extends JpaRepository<Post, Long> {
 
     /**
      * 키워드를 사용하여 게시글을 검색합니다.
@@ -24,11 +24,11 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
      * @param keyword 검색할 키워드 문자열
      * @return 검색 조건에 맞는 게시글 엔티티의 리스트
      */
-    @Query("SELECT b FROM Board b JOIN b.member m WHERE " +
+    @Query("SELECT b FROM Post b JOIN b.member m WHERE " +
             "LOWER(b.brdTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR b.brdContent LIKE CONCAT('%', :keyword, '%') " +
             "OR LOWER(m.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Board> searchByKeyword(@Param("keyword") String keyword);
+    List<Post> searchByKeyword(@Param("keyword") String keyword);
 
     /**
      * 특정 회원이 작성한 모든 게시글을 데이터베이스에서 삭제합니다.
@@ -38,6 +38,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
      * @param email 삭제할 게시글들의 작성자 이메일
      */
     @Modifying
-    @Query("DELETE FROM Board b WHERE b.member.email = :email")
+    @Query("DELETE FROM Post b WHERE b.member.email = :email")
     void deleteByMember_Email(@Param("email") String email);
 }

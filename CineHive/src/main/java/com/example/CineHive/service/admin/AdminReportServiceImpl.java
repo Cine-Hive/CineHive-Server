@@ -1,8 +1,8 @@
 package com.example.CineHive.service.admin;
 
 import com.example.CineHive.dto.report.ReportResponse;
-import com.example.CineHive.entity.board.Report;
-import com.example.CineHive.entity.board.ReportStatus;
+import com.example.CineHive.entity.post.Report;
+import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.ReportRepository;

@@ -1,6 +1,6 @@
 package com.example.CineHive.mapper;
 
-import com.example.CineHive.dto.member.LoginHistoryDto;
+import com.example.CineHive.dto.user.LoginHistoryDto;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 

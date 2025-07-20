@@ -1,7 +1,7 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Bookmark;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -43,7 +43,7 @@ class BookmarkServiceTest {
     private BookmarkServiceImpl bookmarkService;
 
     private User testUser;
-    private Board testBoard;
+    private Post testPost;
     private final Long testBoardId = 1L;
     private final String testMemberEmail = "test@example.com";
 
@@ -60,14 +60,14 @@ class BookmarkServiceTest {
                 .build();
 
         // 테스트용 게시글 생성 (빌더 사용)
-        testBoard = Board.builder()
+        testPost = Post.builder()
                 .brdTitle("테스트 게시글")
                 .brdContent("테스트 내용입니다.")
                 .member(boardAuthor)
                 .build();
 
         // ReflectionTestUtils를 사용하여 엔티티의 ID를 테스트용으로 설정
-        ReflectionTestUtils.setField(testBoard, "id", testBoardId);
+        ReflectionTestUtils.setField(testPost, "id", testBoardId);
     }
 
     @Nested
@@ -79,8 +79,8 @@ class BookmarkServiceTest {
         void addBookmark_success() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(false);
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 
             // when
             bookmarkService.addBookmark(testBoardId, testMemberEmail);
@@ -94,8 +94,8 @@ class BookmarkServiceTest {
         void addBookmark_fail_alreadyExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(true);
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
             // when
             BusinessException exception = assertThrows(BusinessException.class, () ->
@@ -115,7 +115,7 @@ class BookmarkServiceTest {
 
         @BeforeEach
         void setUp() {
-            testBookmark = Bookmark.builder().member(testUser).board(testBoard).build();
+            testBookmark = Bookmark.builder().member(testUser).board(testPost).build();
         }
 
         @Test
@@ -123,8 +123,8 @@ class BookmarkServiceTest {
         void removeBookmark_success() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.findByMemberAndBoard(testUser, testBoard)).willReturn(Optional.of(testBookmark));
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.of(testBookmark));
 
             // when
             bookmarkService.removeBookmark(testBoardId, testMemberEmail);
@@ -138,8 +138,8 @@ class BookmarkServiceTest {
         void removeBookmark_fail_notFound() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.findByMemberAndBoard(testUser, testBoard)).willReturn(Optional.empty());
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.empty());
 
             // when
             BusinessException exception = assertThrows(BusinessException.class, () ->
@@ -161,8 +161,8 @@ class BookmarkServiceTest {
         void isBookmarkedByUser_returnsTrue_whenExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(true);
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
             // when
             boolean result = bookmarkService.isBookmarkedByUser(testBoardId, testMemberEmail);
@@ -176,8 +176,8 @@ class BookmarkServiceTest {
         void isBookmarkedByUser_returnsFalse_whenNotExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testBoard));
-            given(bookmarkRepository.existsByMemberAndBoard(testUser, testBoard)).willReturn(false);
+            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 
             // when
             boolean result = bookmarkService.isBookmarkedByUser(testBoardId, testMemberEmail);

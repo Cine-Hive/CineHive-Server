@@ -1,7 +1,7 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.BoardLike;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.PostDislike;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -28,49 +28,49 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     public void addLike(Long boardId, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
-        if (likeRepository.existsByMemberAndBoard(user, board)) {
+        if (likeRepository.existsByMemberAndBoard(user, post)) {
             throw new BusinessException(ErrorCode.LIKE_ALREADY_EXISTS);
         }
 
         // '싫어요'를 누른 상태였다면 '싫어요'를 취소하고, 게시글의 '싫어요' 카운트를 1 감소시킴
-        dislikeRepository.findByMemberAndBoard(user, board).ifPresent(dislike -> {
+        dislikeRepository.findByMemberAndBoard(user, post).ifPresent(dislike -> {
             dislikeRepository.delete(dislike);
-            board.decreaseDislikeCount();
-            log.info("Member {}'s dislike for board {} was removed to add a like.", user.getId(), board.getId());
+            post.decreaseDislikeCount();
+            log.info("Member {}'s dislike for board {} was removed to add a like.", user.getId(), post.getId());
         });
 
-        BoardLike like = BoardLike.builder()
+        PostDislike like = PostDislike.builder()
                 .member(user)
-                .board(board)
+                .board(post)
                 .build();
         likeRepository.save(like);
 
-        board.increaseLikeCount();
-        log.info("Member {} liked board {}", user.getId(), board.getId());
+        post.increaseLikeCount();
+        log.info("Member {} liked board {}", user.getId(), post.getId());
     }
 
     @Override
     @Transactional
     public void removeLike(Long boardId, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
-        BoardLike like = likeRepository.findByMemberAndBoard(user, board)
+        PostDislike like = likeRepository.findByMemberAndBoard(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND));
 
         likeRepository.delete(like);
 
-        board.decreaseLikeCount();
-        log.info("Member {} removed like from board {}", user.getId(), board.getId());
+        post.decreaseLikeCount();
+        log.info("Member {} removed like from board {}", user.getId(), post.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
     public int getLikeCount(Long boardId) {
-        Board board = findBoardById(boardId);
-        return board.getLikeCount();
+        Post post = findBoardById(boardId);
+        return post.getLikeCount();
     }
 
     //== Private Helper Methods ==//
@@ -80,7 +80,7 @@ public class LikeServiceImpl implements LikeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private Board findBoardById(Long boardId) {
+    private Post findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }

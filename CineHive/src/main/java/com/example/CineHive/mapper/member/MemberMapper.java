@@ -1,12 +1,13 @@
 package com.example.CineHive.mapper.member;
 
-import com.example.CineHive.dto.member.MemberRegisterRequestDto;
+import com.example.CineHive.dto.user.MemberRegisterRequestDto;
+import com.example.CineHive.entity.media.Genre;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.ProviderType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * 회원(Member) 관련 매퍼 클래스입니다.
@@ -36,8 +37,10 @@ public final class MemberMapper {
                 .name(dto.name())
                 .nickname(dto.nickname())
                 .gender(Gender.valueOf(dto.gender().toUpperCase()))
-                .genres(new HashSet<>(dto.genres()))
-                .provider(ProviderType.LOCAL) // 일반 회원가입은 LOCAL 프로바이더로 명시
+                .genres(dto.genres().stream()
+                        .map(Genre::valueOf)
+                        .collect(Collectors.toSet()))
+                .provider(ProviderType.LOCAL)
                 .build();
     }
 }

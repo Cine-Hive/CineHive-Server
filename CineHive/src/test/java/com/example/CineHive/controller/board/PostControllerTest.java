@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("BoardController 통합 테스트")
-class BoardControllerTest {
+class PostControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -70,7 +70,7 @@ class BoardControllerTest {
      */
     @Nested
     @DisplayName("게시글 생성 (POST /api/v1/boards)")
-    class CreateBoard {
+    class CreatePost {
         /**
          * 게시글 생성 성공 시나리오
          */
@@ -148,7 +148,7 @@ class BoardControllerTest {
      */
     @Nested
     @DisplayName("게시글 조회")
-    class ReadBoard {
+    class ReadPost {
         /**
          * 게시글 상세 조회 테스트
          */
@@ -159,13 +159,13 @@ class BoardControllerTest {
             @DisplayName("✅ 성공: 게시글 ID로 상세 조회 시 200 응답과 함께 조회수가 1 증가한다.")
             void getBoardById_success() throws Exception {
                 // given
-                Board board = boardRepository.save(Board.builder().member(testUser).brdTitle("조회용").brdContent("내용").build());
-                int initialViews = board.getViews();
+                Post post = boardRepository.save(Post.builder().member(testUser).brdTitle("조회용").brdContent("내용").build());
+                int initialViews = post.getViews();
 
                 // when & then
-                mockMvc.perform(get("/api/v1/boards/{id}", board.getId()))
+                mockMvc.perform(get("/api/v1/boards/{id}", post.getId()))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data.id").value(board.getId()))
+                        .andExpect(jsonPath("$.data.id").value(post.getId()))
                         .andExpect(jsonPath("$.data.views").value(initialViews + 1));
             }
 
@@ -187,7 +187,7 @@ class BoardControllerTest {
         class GetList {
             @BeforeEach
             void setUpList() {
-                IntStream.range(0, 20).forEach(i -> boardRepository.save(Board.builder().member(otherUser).brdTitle("목록 " + i).brdContent("내용").build()));
+                IntStream.range(0, 20).forEach(i -> boardRepository.save(Post.builder().member(otherUser).brdTitle("목록 " + i).brdContent("내용").build()));
             }
 
             @Test
@@ -208,9 +208,9 @@ class BoardControllerTest {
             @DisplayName("✅ 성공: 정렬(sort) 파라미터가 정상 동작한다.")
             void getBoardList_withSort() throws Exception {
                 // given
-                Board mostViewedBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("조회수 1등").brdContent("인기글").build());
-                mostViewedBoard.increaseViews();
-                boardRepository.save(mostViewedBoard);
+                Post mostViewedPost = boardRepository.save(Post.builder().member(testUser).brdTitle("조회수 1등").brdContent("인기글").build());
+                mostViewedPost.increaseViews();
+                boardRepository.save(mostViewedPost);
 
                 // when & then
                 mockMvc.perform(get("/api/v1/boards").param("sort", "VIEWS"))
@@ -236,11 +236,11 @@ class BoardControllerTest {
      */
     @Nested
     @DisplayName("게시글 수정 (PUT /api/v1/boards/{id})")
-    class UpdateBoard {
-        private Board testBoard;
+    class UpdatePost {
+        private Post testPost;
         @BeforeEach
         void setUp() {
-            testBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("원본").brdContent("원본").build());
+            testPost = boardRepository.save(Post.builder().member(testUser).brdTitle("원본").brdContent("원본").build());
         }
 
         @Nested
@@ -254,7 +254,7 @@ class BoardControllerTest {
                 Map<String, String> request = Map.of("brdTitle", "수정된 제목", "brdContent", "수정된 내용");
 
                 // when & then
-                mockMvc.perform(put("/api/v1/boards/{id}", testBoard.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
+                mockMvc.perform(put("/api/v1/boards/{id}", testPost.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.brdTitle").value("수정된 제목"));
             }
@@ -268,7 +268,7 @@ class BoardControllerTest {
             @DisplayName("❌ 실패: 인증되지 않은 사용자가 요청하면 401 Unauthorized를 반환한다.")
             void updateBoard_withAnonymousUser_shouldFail() throws Exception {
                 Map<String, String> request = Map.of("brdTitle", "수정", "brdContent", "수정");
-                mockMvc.perform(put("/api/v1/boards/{id}", testBoard.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
+                mockMvc.perform(put("/api/v1/boards/{id}", testPost.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isUnauthorized());
             }
 
@@ -277,7 +277,7 @@ class BoardControllerTest {
             @DisplayName("❌ 실패: 권한 없는 사용자가 요청하면 403 Forbidden을 반환한다.")
             void updateBoard_withOtherUser_shouldFail() throws Exception {
                 Map<String, String> request = Map.of("brdTitle", "수정 시도", "brdContent", "권한 없음");
-                mockMvc.perform(put("/api/v1/boards/{id}", testBoard.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
+                mockMvc.perform(put("/api/v1/boards/{id}", testPost.getId()).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isForbidden());
             }
 
@@ -298,11 +298,11 @@ class BoardControllerTest {
      */
     @Nested
     @DisplayName("게시글 삭제 (DELETE /api/v1/boards/{id})")
-    class DeleteBoard {
-        private Board testBoard;
+    class DeletePost {
+        private Post testPost;
         @BeforeEach
         void setUp() {
-            testBoard = boardRepository.save(Board.builder().member(testUser).brdTitle("삭제용").brdContent("삭제용").build());
+            testPost = boardRepository.save(Post.builder().member(testUser).brdTitle("삭제용").brdContent("삭제용").build());
         }
 
         @Nested
@@ -313,11 +313,11 @@ class BoardControllerTest {
             @DisplayName("✅ 성공: 게시글 작성자가 삭제 요청 시 200 응답과 함께 게시글이 삭제된다.")
             void deleteBoard_success() throws Exception {
                 // when & then
-                mockMvc.perform(delete("/api/v1/boards/{id}", testBoard.getId()).with(csrf()))
+                mockMvc.perform(delete("/api/v1/boards/{id}", testPost.getId()).with(csrf()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.message").value("게시글이 성공적으로 삭제되었습니다."));
 
-                assertThat(boardRepository.findById(testBoard.getId())).isEmpty();
+                assertThat(boardRepository.findById(testPost.getId())).isEmpty();
             }
         }
 
@@ -328,7 +328,7 @@ class BoardControllerTest {
             @WithMockUser(username = "other@example.com")
             @DisplayName("❌ 실패: 권한 없는 사용자가 요청하면 403 Forbidden을 반환한다.")
             void deleteBoard_withOtherUser_shouldFail() throws Exception {
-                mockMvc.perform(delete("/api/v1/boards/{id}", testBoard.getId()).with(csrf()))
+                mockMvc.perform(delete("/api/v1/boards/{id}", testPost.getId()).with(csrf()))
                         .andExpect(status().isForbidden());
             }
 
@@ -336,7 +336,7 @@ class BoardControllerTest {
             @WithAnonymousUser
             @DisplayName("❌ 실패: 인증되지 않은 사용자가 요청하면 401 Unauthorized를 반환한다.")
             void deleteBoard_withAnonymousUser_shouldFail() throws Exception {
-                mockMvc.perform(delete("/api/v1/boards/{id}", testBoard.getId()).with(csrf()))
+                mockMvc.perform(delete("/api/v1/boards/{id}", testPost.getId()).with(csrf()))
                         .andExpect(status().isUnauthorized());
             }
 

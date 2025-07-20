@@ -1,6 +1,6 @@
 package com.example.CineHive.service.oauth;
 
-import com.example.CineHive.dto.member.LoginResponseDto;
+import com.example.CineHive.dto.user.LoginResponseDto;
 import com.example.CineHive.entity.user.ProviderType;
 
 /**

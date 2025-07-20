@@ -1,10 +1,10 @@
 package com.example.CineHive.controller.member;
 
-import com.example.CineHive.dto.member.LoginRequestDto;
-import com.example.CineHive.dto.member.MemberRegisterRequestDto;
+import com.example.CineHive.dto.user.LoginRequestDto;
+import com.example.CineHive.dto.user.MemberRegisterRequestDto;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
-import com.example.CineHive.dto.member.LoginResponseDto;
+import com.example.CineHive.dto.user.LoginResponseDto;
 import com.example.CineHive.service.member.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -2,7 +2,7 @@ package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.board.*;
 import com.example.CineHive.dto.response.PagedResponse;
-import com.example.CineHive.entity.board.Board;
+import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -30,53 +30,53 @@ public class BoardServiceImpl implements BoardService {
     public BoardDto createBoard(CreateBoardRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
 
-        Board board = Board.builder()
+        Post post = Post.builder()
                 .brdTitle(request.brdTitle())
                 .brdContent(request.brdContent())
                 .member(user)
                 .build();
 
-        Board savedBoard = boardRepository.save(board);
-        return BoardMapper.toBoardDto(savedBoard);
+        Post savedPost = boardRepository.save(post);
+        return BoardMapper.toBoardDto(savedPost);
     }
 
     @Override
     @Transactional
     public BoardDto getBoardById(Long boardId) {
-        Board board = findBoardById(boardId);
-        board.increaseViews(); // 조회수 증가는 그대로 유지
-        return BoardMapper.toBoardDto(board);
+        Post post = findBoardById(boardId);
+        post.increaseViews(); // 조회수 증가는 그대로 유지
+        return BoardMapper.toBoardDto(post);
     }
 
     @Override
     @Transactional
     public BoardDto updateBoard(Long boardId, UpdateBoardRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
         // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(board, user);
+        verifyBoardOwnership(post, user);
 
-        board.update(request.brdTitle(), request.brdContent());
-        return BoardMapper.toBoardDto(board);
+        post.update(request.brdTitle(), request.brdContent());
+        return BoardMapper.toBoardDto(post);
     }
 
     @Override
     @Transactional
     public void deleteBoard(Long boardId, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
         // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
-        verifyBoardOwnership(board, user);
+        verifyBoardOwnership(post, user);
 
-        boardRepository.delete(board);
+        boardRepository.delete(post);
     }
 
     @Override
     public PagedResponse<GetListBoardDto> getBoards(int page, int size, BoardSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
-        Page<Board> boardPage = boardRepository.findAll(pageable);
+        Page<Post> boardPage = boardRepository.findAll(pageable);
 
         return PagedResponse.<GetListBoardDto>builder()
                 .content(boardPage.getContent().stream().map(BoardMapper::toListDto).toList())
@@ -105,7 +105,7 @@ public class BoardServiceImpl implements BoardService {
      * @param boardId 찾을 게시글의 ID
      * @return 찾아낸 Board 엔티티
      */
-    private Board findBoardById(Long boardId) {
+    private Post findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
@@ -113,11 +113,11 @@ public class BoardServiceImpl implements BoardService {
     /**
      * 게시글의 소유자와 현재 요청을 보낸 회원이 일치하는지 확인합니다.
      * 일치하지 않으면 BusinessException을 발생시킵니다.
-     * @param board 검증할 게시글 엔티티
+     * @param post 검증할 게시글 엔티티
      * @param user 검증할 회원 엔티티
      */
-    private void verifyBoardOwnership(Board board, User user) {
-        if (!board.getUser().equals(user)) {
+    private void verifyBoardOwnership(Post post, User user) {
+        if (!post.getUser().equals(user)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
     }

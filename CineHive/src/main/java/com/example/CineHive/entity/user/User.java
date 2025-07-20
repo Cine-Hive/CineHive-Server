@@ -1,18 +1,19 @@
 package com.example.CineHive.entity.user;
 
-import com.example.CineHive.entity.BaseEntity; // 경로 수정
+import com.example.CineHive.entity.BaseEntity;
 import com.example.CineHive.entity.media.Genre;
-import com.example.CineHive.entity.user.UserType; // 올바른 UserType import
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-// import org.hibernate.usertype.UserType; // 이 줄은 삭제
 
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * 서비스의 사용자(회원)를 나타내는 핵심 엔티티입니다.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -42,7 +43,7 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserType type; // 이제 오류가 발생하지 않음
+    private UserType type;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
@@ -65,20 +66,32 @@ public class User extends BaseEntity {
         this.name = name;
         this.nickname = nickname;
         this.gender = gender;
-        this.type = UserType.GENERAL; // 이제 오류가 발생하지 않음
+        this.type = UserType.GENERAL;
         this.genres = (genres != null) ? genres : new HashSet<>();
         this.provider = (provider != null) ? provider : ProviderType.LOCAL;
         this.role = (role != null) ? role : UserRole.ROLE_USER;
     }
 
+    /**
+     * 사용자의 비밀번호를 변경합니다.
+     * @param newPassword 새 비밀번호 (암호화된 상태여야 함)
+     */
     public void changePassword(String newPassword) {
         this.password = newPassword;
     }
 
+    /**
+     * 사용자의 닉네임을 변경합니다.
+     * @param newNickname 새 닉네임
+     */
     public void changeNickname(String newNickname) {
         this.nickname = newNickname;
     }
 
+    /**
+     * 사용자의 선호 장르를 업데이트합니다.
+     * @param newGenres 새로운 선호 장르 Set
+     */
     public void updateGenres(Set<Genre> newGenres) {
         this.genres.clear();
         if (newGenres != null) {

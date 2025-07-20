@@ -1,7 +1,7 @@
 package com.example.CineHive.mapper;
 
 import com.example.CineHive.dto.comment.CommentDto;
-import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.entity.post.Comment;
 
 public final class CommentMapper {
 

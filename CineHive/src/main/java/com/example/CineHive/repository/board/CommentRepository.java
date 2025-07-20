@@ -1,6 +1,6 @@
 package com.example.CineHive.repository.board;
 
-import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.entity.post.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

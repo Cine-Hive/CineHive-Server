@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.board;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Bookmark;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.repository.board.BoardRepository;
 import com.example.CineHive.repository.board.BookmarkRepository;
@@ -41,7 +41,7 @@ class BookmarkControllerTest {
     private User boardOwner;
     private User bookmarker;
     private User anotherUser;
-    private Board testBoard;
+    private Post testPost;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +53,7 @@ class BookmarkControllerTest {
         bookmarker = createMember("bookmarker@example.com", "bookmarker");
         anotherUser = createMember("another@example.com", "anotherUser");
 
-        testBoard = boardRepository.save(Board.builder()
+        testPost = boardRepository.save(Post.builder()
                 .brdTitle("테스트 게시글")
                 .brdContent("내용")
                 .member(boardOwner)
@@ -80,24 +80,24 @@ class BookmarkControllerTest {
         @Test
         @DisplayName("✅ 성공: 사용자가 게시글을 성공적으로 북마크한다.")
         void addBookmark_success() throws Exception {
-            mockMvc.perform(post("/api/v1/boards/{boardId}/bookmarks", testBoard.getId())
+            mockMvc.perform(post("/api/v1/boards/{boardId}/bookmarks", testPost.getId())
                             .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("게시글을 북마크했습니다."));
 
-            Board boardAfterBookmark = boardRepository.findById(testBoard.getId()).get();
-            assertThat(boardAfterBookmark.getBookmarkCount()).isEqualTo(1);
-            assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testBoard)).isTrue();
+            Post postAfterBookmark = boardRepository.findById(testPost.getId()).get();
+            assertThat(postAfterBookmark.getBookmarkCount()).isEqualTo(1);
+            assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testPost)).isTrue();
         }
 
         @Test
         @DisplayName("❌ 실패(409): 이미 북마크한 게시글을 다시 북마크하면 409 Conflict를 반환한다.")
         void addBookmark_fail_alreadyExists() throws Exception {
-            bookmarkRepository.save(new Bookmark(bookmarker, testBoard));
-            testBoard.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testBoard);
+            bookmarkRepository.save(new Bookmark(bookmarker, testPost));
+            testPost.increaseBookmarkCount();
+            boardRepository.saveAndFlush(testPost);
 
-            mockMvc.perform(post("/api/v1/boards/{boardId}/bookmarks", testBoard.getId())
+            mockMvc.perform(post("/api/v1/boards/{boardId}/bookmarks", testPost.getId())
                             .with(csrf()))
                     .andExpect(status().isConflict());
         }
@@ -110,22 +110,22 @@ class BookmarkControllerTest {
 
         @BeforeEach
         void setUp() {
-            bookmarkRepository.save(new Bookmark(bookmarker, testBoard));
-            testBoard.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testBoard);
+            bookmarkRepository.save(new Bookmark(bookmarker, testPost));
+            testPost.increaseBookmarkCount();
+            boardRepository.saveAndFlush(testPost);
         }
 
         @Test
         @DisplayName("✅ 성공: 사용자가 북마크한 게시글을 성공적으로 취소한다.")
         void removeBookmark_success() throws Exception {
-            mockMvc.perform(delete("/api/v1/boards/{boardId}/bookmarks", testBoard.getId())
+            mockMvc.perform(delete("/api/v1/boards/{boardId}/bookmarks", testPost.getId())
                             .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("북마크를 취소했습니다."));
 
-            Board boardAfterRemove = boardRepository.findById(testBoard.getId()).get();
-            assertThat(boardAfterRemove.getBookmarkCount()).isEqualTo(0);
-            assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testBoard)).isFalse();
+            Post postAfterRemove = boardRepository.findById(testPost.getId()).get();
+            assertThat(postAfterRemove.getBookmarkCount()).isEqualTo(0);
+            assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testPost)).isFalse();
         }
     }
 
@@ -136,15 +136,15 @@ class BookmarkControllerTest {
 
         @BeforeEach
         void setUp() {
-            bookmarkRepository.save(new Bookmark(bookmarker, testBoard));
-            testBoard.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testBoard);
+            bookmarkRepository.save(new Bookmark(bookmarker, testPost));
+            testPost.increaseBookmarkCount();
+            boardRepository.saveAndFlush(testPost);
         }
 
         @Test
         @DisplayName("❌ 실패(404): 북마크하지 않은 게시글의 북마크를 취소하면 404 Not Found를 반환한다.")
         void removeBookmark_fail_notFound() throws Exception {
-            mockMvc.perform(delete("/api/v1/boards/{boardId}/bookmarks", testBoard.getId())
+            mockMvc.perform(delete("/api/v1/boards/{boardId}/bookmarks", testPost.getId())
                             .with(csrf()))
                     .andExpect(status().isNotFound());
         }
@@ -157,11 +157,11 @@ class BookmarkControllerTest {
         @Test
         @DisplayName("✅ 성공: 북마크 개수를 정확히 반환한다.")
         void getBookmarkCount_success() throws Exception {
-            bookmarkRepository.save(new Bookmark(bookmarker, testBoard));
-            testBoard.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testBoard);
+            bookmarkRepository.save(new Bookmark(bookmarker, testPost));
+            testPost.increaseBookmarkCount();
+            boardRepository.saveAndFlush(testPost);
 
-            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/count", testBoard.getId()))
+            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/count", testPost.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.bookmarkCount").value(1));
         }
@@ -170,9 +170,9 @@ class BookmarkControllerTest {
         @WithMockUser(username = "bookmarker@example.com", roles = "USER")
         @DisplayName("✅ 성공: 사용자가 북마크한 경우 isBookmarked가 true로 반환된다.")
         void getBookmarkStatus_success_whenBookmarked() throws Exception {
-            bookmarkRepository.save(new Bookmark(bookmarker, testBoard));
+            bookmarkRepository.save(new Bookmark(bookmarker, testPost));
 
-            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testBoard.getId()))
+            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testPost.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.isBookmarked").value(true));
         }
@@ -181,7 +181,7 @@ class BookmarkControllerTest {
         @WithMockUser(username = "bookmarker@example.com", roles = "USER")
         @DisplayName("✅ 성공: 사용자가 북마크하지 않은 경우 isBookmarked가 false로 반환된다.")
         void getBookmarkStatus_success_whenNotBookmarked() throws Exception {
-            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testBoard.getId()))
+            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testPost.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.isBookmarked").value(false));
         }
@@ -189,7 +189,7 @@ class BookmarkControllerTest {
         @Test
         @DisplayName("✅ 성공: 인증되지 않은 사용자가 상태 조회를 시도하면 200 OK와 함께 false를 반환한다.")
         void getBookmarkStatus_forAnonymousUser() throws Exception {
-            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testBoard.getId()))
+            mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/status", testPost.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.isBookmarked").value(false));
         }

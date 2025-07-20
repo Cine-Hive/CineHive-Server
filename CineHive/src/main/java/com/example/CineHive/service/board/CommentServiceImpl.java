@@ -3,8 +3,8 @@ package com.example.CineHive.service.board;
 import com.example.CineHive.dto.comment.CommentDto;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Comment;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.Comment;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -35,12 +35,12 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentDto addComment(Long boardId, CreateCommentRequest request, String memberEmail) {
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
         User user = findMemberByEmail(memberEmail);
 
         Comment comment = Comment.builder()
                 .content(request.content())
-                .board(board)
+                .board(post)
                 .member(user)
                 .build();
 
@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private Board findBoardById(Long boardId) {
+    private Post findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }

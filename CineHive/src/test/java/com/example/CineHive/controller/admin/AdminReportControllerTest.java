@@ -1,8 +1,8 @@
 package com.example.CineHive.controller.admin;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Report;
-import com.example.CineHive.entity.board.ReportStatus;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.Report;
+import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.board.BoardRepository;
@@ -58,7 +58,7 @@ class AdminReportControllerTest {
         User reportedUser = createMember("reported@test.com", "피신고자", UserRole.ROLE_USER);
         createMember("admin@test.com", "관리자", UserRole.ROLE_ADMIN); // 관리자 계정 생성
 
-        Board reportedBoard = boardRepository.save(Board.builder()
+        Post reportedPost = boardRepository.save(Post.builder()
                 .member(reportedUser)
                 .brdTitle("신고 대상 게시글")
                 .brdContent("문제 내용")
@@ -66,7 +66,7 @@ class AdminReportControllerTest {
 
         pendingReport = reportRepository.save(Report.builder()
                 .reporter(reporter)
-                .board(reportedBoard)
+                .board(reportedPost)
                 .reason("부적절한 내용")
                 .build());
     }
@@ -159,8 +159,8 @@ class AdminReportControllerTest {
             // given: PENDING 상태의 신고 하나 더 추가
             User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
             User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
-            Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
-            reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
+            Post anotherPost = boardRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            reportRepository.save(Report.builder().reporter(reporter).board(anotherPost).reason("스팸").build());
 
             // when & then
             mockMvc.perform(get("/api/v1/admin/reports"))
@@ -175,8 +175,8 @@ class AdminReportControllerTest {
             // given: 다른 상태의 신고 추가
             User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
             User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
-            Board anotherBoard = boardRepository.save(Board.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
-            Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(anotherBoard).reason("스팸").build());
+            Post anotherPost = boardRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(anotherPost).reason("스팸").build());
             acceptedReport.accept();
             reportRepository.save(acceptedReport);
 

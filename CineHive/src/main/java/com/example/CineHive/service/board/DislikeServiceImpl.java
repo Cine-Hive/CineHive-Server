@@ -1,7 +1,7 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.BoardDislike;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.PostLike;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -28,49 +28,49 @@ public class DislikeServiceImpl implements DislikeService {
     @Transactional
     public void addDislike(Long boardId, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
-        if (dislikeRepository.existsByMemberAndBoard(user, board)) {
+        if (dislikeRepository.existsByMemberAndBoard(user, post)) {
             throw new BusinessException(ErrorCode.DISLIKE_ALREADY_EXISTS);
         }
 
         // '좋아요'를 누른 상태였다면 '좋아요'를 취소하고, 게시글의 '좋아요' 카운트를 1 감소시킴
-        likeRepository.findByMemberAndBoard(user, board).ifPresent(like -> {
+        likeRepository.findByMemberAndBoard(user, post).ifPresent(like -> {
             likeRepository.delete(like);
-            board.decreaseLikeCount();
-            log.info("Member {}'s like for board {} was removed to add a dislike.", user.getId(), board.getId());
+            post.decreaseLikeCount();
+            log.info("Member {}'s like for board {} was removed to add a dislike.", user.getId(), post.getId());
         });
 
-        BoardDislike dislike = BoardDislike.builder()
+        PostLike dislike = PostLike.builder()
                 .member(user)
-                .board(board)
+                .board(post)
                 .build();
         dislikeRepository.save(dislike);
 
-        board.increaseDislikeCount();
-        log.info("Member {} disliked board {}", user.getId(), board.getId());
+        post.increaseDislikeCount();
+        log.info("Member {} disliked board {}", user.getId(), post.getId());
     }
 
     @Override
     @Transactional
     public void removeDislike(Long boardId, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
-        BoardDislike dislike = dislikeRepository.findByMemberAndBoard(user, board)
+        PostLike dislike = dislikeRepository.findByMemberAndBoard(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
 
         dislikeRepository.delete(dislike);
 
-        board.decreaseDislikeCount();
-        log.info("Member {} removed dislike from board {}", user.getId(), board.getId());
+        post.decreaseDislikeCount();
+        log.info("Member {} removed dislike from board {}", user.getId(), post.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
     public int getDislikeCount(Long boardId) {
-        Board board = findBoardById(boardId);
-        return board.getDislikeCount();
+        Post post = findBoardById(boardId);
+        return post.getDislikeCount();
     }
 
     //== Private Helper Methods ==//
@@ -80,7 +80,7 @@ public class DislikeServiceImpl implements DislikeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private Board findBoardById(Long boardId) {
+    private Post findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }

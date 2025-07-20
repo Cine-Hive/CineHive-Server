@@ -1,8 +1,8 @@
 package com.example.CineHive.service.board;
 
-import com.example.CineHive.entity.board.Board;
-import com.example.CineHive.entity.board.Comment;
-import com.example.CineHive.entity.board.Report;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.post.Comment;
+import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -29,26 +29,26 @@ public class ReportServiceImpl implements ReportService {
     @Transactional
     public void reportBoard(Long boardId, String reason, String reporterEmail) {
         User reporter = findMemberByEmail(reporterEmail);
-        Board board = findBoardById(boardId);
+        Post post = findBoardById(boardId);
 
         // 자신의 게시글은 신고할 수 없음
-        if (board.getUser().equals(reporter)) {
+        if (post.getUser().equals(reporter)) {
             throw new BusinessException(ErrorCode.SELF_REPORT_NOT_ALLOWED);
         }
 
         // 중복 신고 방지
-        if (reportRepository.existsByReporterAndBoard(reporter, board)) {
+        if (reportRepository.existsByReporterAndBoard(reporter, post)) {
             throw new BusinessException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
         Report report = Report.builder()
                 .reporter(reporter)
-                .board(board)
+                .board(post)
                 .reason(reason)
                 .build();
 
         reportRepository.save(report);
-        log.info("Member {} reported board {}", reporter.getId(), board.getId());
+        log.info("Member {} reported board {}", reporter.getId(), post.getId());
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ReportServiceImpl implements ReportService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private Board findBoardById(Long boardId) {
+    private Post findBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
