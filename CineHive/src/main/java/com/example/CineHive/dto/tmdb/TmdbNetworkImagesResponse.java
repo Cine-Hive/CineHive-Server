@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.tmdb;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

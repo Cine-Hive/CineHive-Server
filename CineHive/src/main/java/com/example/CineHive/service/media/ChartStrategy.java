@@ -1,8 +1,8 @@
 package com.example.CineHive.service.media;
 
 import com.example.CineHive.client.TmdbApiClient;
-import com.example.CineHive.dto.response.MediaChartResponse;
-import com.example.CineHive.dto.response.PagedResponse;
+import com.example.CineHive.dto.tmdb.MediaChartResponse;
+import com.example.CineHive.dto.tmdb.PagedResponse;
 import reactor.core.publisher.Mono;
 
 @FunctionalInterface

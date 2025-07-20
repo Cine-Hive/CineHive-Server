@@ -5,7 +5,6 @@ import com.example.CineHive.dto.global.ErrorResponse;
 import com.example.CineHive.dto.media.ChartSummaryResponse;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.media.Platform;
-import com.example.CineHive.dto.response.*;
 import com.example.CineHive.service.media.MediaQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

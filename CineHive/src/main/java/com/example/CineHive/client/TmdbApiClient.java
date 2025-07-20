@@ -1,7 +1,7 @@
 package com.example.CineHive.client;
 
 import com.example.CineHive.dto.media.ChartProperties;
-import com.example.CineHive.dto.response.*;
+import com.example.CineHive.dto.tmdb.*;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;

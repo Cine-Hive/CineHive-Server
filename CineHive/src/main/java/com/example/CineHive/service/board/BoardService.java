@@ -1,7 +1,7 @@
 package com.example.CineHive.service.board;
 
 import com.example.CineHive.dto.post.*;
-import com.example.CineHive.dto.response.PagedResponse;
+import com.example.CineHive.dto.tmdb.PagedResponse;
 
 public interface BoardService {
 

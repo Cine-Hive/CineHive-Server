@@ -1,30 +1,22 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.tmdb;
 
 import lombok.Data;
 
 import java.util.List;
 
 @Data
-public class TmdbMultiSearchResponse {
+public class TmdbTvSeriesResponse {
     private Long id;
-    private String media_type; // "movie" or "tv"
-
-    // 영화 필드
-    private String title;
-    private String original_title;
-    private String release_date;
-
-    // TV 시리즈 필드
     private String name;
     private String original_name;
-    private String first_air_date;
-
-    // 공통 필드
     private String overview;
+    private String first_air_date;
     private Double vote_average;
     private Integer vote_count;
     private Double popularity;
     private String poster_path;
     private String backdrop_path;
     private List<Long> genre_ids;
+    private Integer number_of_seasons;
+    private Integer number_of_episodes;
 }

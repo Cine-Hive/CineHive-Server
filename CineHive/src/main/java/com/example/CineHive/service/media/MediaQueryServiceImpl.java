@@ -2,7 +2,7 @@ package com.example.CineHive.service.media;
 
 import com.example.CineHive.client.TmdbApiClient;
 import com.example.CineHive.dto.media.*;
-import com.example.CineHive.dto.response.MediaChartResponse;
+import com.example.CineHive.dto.tmdb.MediaChartResponse;
 import com.example.CineHive.entity.setting.HomeChartSetting;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;

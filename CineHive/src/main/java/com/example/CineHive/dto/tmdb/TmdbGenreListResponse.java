@@ -1,0 +1,10 @@
+package com.example.CineHive.dto.tmdb;
+
+import java.util.List;
+
+/**
+ * TMDB API의 장르 목록 응답을 담는 DTO입니다.
+ */
+public record TmdbGenreListResponse(
+        List<TmdbGenreResponse> genres
+) {}

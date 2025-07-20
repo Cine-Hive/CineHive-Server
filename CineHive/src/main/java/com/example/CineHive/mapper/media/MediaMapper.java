@@ -2,7 +2,7 @@ package com.example.CineHive.mapper.media;
 
 import com.example.CineHive.dto.global.PagedResponse;
 import com.example.CineHive.dto.media.*;
-import com.example.CineHive.dto.response.*;
+import com.example.CineHive.dto.tmdb.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;

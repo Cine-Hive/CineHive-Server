@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.tmdb;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TmdbCastResponse {
+public class TmdbCrewResponse {
     private Long id;
     private String name;
+    private String job;
     private String profile_path;
-    private String character;
-    private Integer order;
 }

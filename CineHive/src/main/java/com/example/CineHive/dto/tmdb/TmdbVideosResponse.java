@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.response;
+package com.example.CineHive.dto.tmdb;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TmdbImagesResponse {
-    private List<TmdbImageResponse> backdrops;
-    private List<TmdbImageResponse> posters;
+public class TmdbVideosResponse {
+    private List<TmdbVideoResponse> results;
 }
