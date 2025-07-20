@@ -1,13 +1,13 @@
 package com.example.CineHive.service.post;
 
 import com.example.CineHive.entity.post.Post;
-import com.example.CineHive.entity.post.PostLike;
+import com.example.CineHive.entity.post.PostDislike;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.post.DislikeRepository;
 import com.example.CineHive.repository.post.LikeRepository;
+import com.example.CineHive.repository.post.PostRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,62 +26,59 @@ public class DislikeServiceImpl implements DislikeService {
 
     @Override
     @Transactional
-    public void addDislike(Long boardId, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
-        Post post = findBoardById(boardId);
+    public void addDislike(Long postId, String userEmail) {
+        User user = findUserByEmail(userEmail);
+        Post post = findPostById(postId);
 
-        if (dislikeRepository.existsByMemberAndBoard(user, post)) {
+        if (dislikeRepository.existsByUserAndPost(user, post)) {
             throw new BusinessException(ErrorCode.DISLIKE_ALREADY_EXISTS);
         }
 
-        // '좋아요'를 누른 상태였다면 '좋아요'를 취소하고, 게시글의 '좋아요' 카운트를 1 감소시킴
-        likeRepository.findByMemberAndBoard(user, post).ifPresent(like -> {
+        likeRepository.findByUserAndPost(user, post).ifPresent(like -> {
             likeRepository.delete(like);
             post.decreaseLikeCount();
-            log.info("Member {}'s like for board {} was removed to add a dislike.", user.getId(), post.getId());
+            log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소하고 '싫어요'를 추가했습니다.", user.getId(), post.getId());
         });
 
-        PostLike dislike = PostLike.builder()
-                .member(user)
-                .board(post)
+        PostDislike dislike = PostDislike.builder()
+                .user(user)
+                .post(post)
                 .build();
         dislikeRepository.save(dislike);
 
         post.increaseDislikeCount();
-        log.info("Member {} disliked board {}", user.getId(), post.getId());
+        log.info("사용자 ID: {}가 게시글 ID: {}에 '싫어요'를 눌렀습니다.", user.getId(), post.getId());
     }
 
     @Override
     @Transactional
-    public void removeDislike(Long boardId, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
-        Post post = findBoardById(boardId);
+    public void removeDislike(Long postId, String userEmail) {
+        User user = findUserByEmail(userEmail);
+        Post post = findPostById(postId);
 
-        PostLike dislike = dislikeRepository.findByMemberAndBoard(user, post)
+        PostDislike dislike = dislikeRepository.findByUserAndPost(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
 
         dislikeRepository.delete(dislike);
 
         post.decreaseDislikeCount();
-        log.info("Member {} removed dislike from board {}", user.getId(), post.getId());
+        log.info("사용자 ID: {}가 게시글 ID: {}의 '싫어요'를 취소했습니다.", user.getId(), post.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public int getDislikeCount(Long boardId) {
-        Post post = findBoardById(boardId);
+    public int getDislikeCount(Long postId) {
+        Post post = findPostById(postId);
         return post.getDislikeCount();
     }
 
-    //== Private Helper Methods ==//
-
-    private User findMemberByEmail(String email) {
+    private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    private Post findBoardById(Long boardId) {
-        return postRepository.findById(boardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+    private Post findPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 }
