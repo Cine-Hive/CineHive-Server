@@ -6,9 +6,9 @@ import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.CommentRepository;
-import com.example.CineHive.repository.board.ReportRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.CommentRepository;
+import com.example.CineHive.repository.post.ReportRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final MemberRepository memberRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
     private final CommentRepository commentRepository;
 
     @Override
@@ -85,7 +85,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private Post findBoardById(Long boardId) {
-        return boardRepository.findById(boardId)
+        return postRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 

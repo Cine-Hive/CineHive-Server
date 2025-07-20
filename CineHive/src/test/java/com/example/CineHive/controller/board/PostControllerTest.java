@@ -3,7 +3,7 @@ package com.example.CineHive.controller.board;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
+import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,14 +47,14 @@ class PostControllerTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
 
     private User testUser;
     private User otherUser;
 
     @BeforeEach
     void setUp() {
-        boardRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
         testUser = createAndSaveMember("test@example.com", "테스트유저");
         otherUser = createAndSaveMember("other@example.com", "다른유저");
@@ -159,7 +159,7 @@ class PostControllerTest {
             @DisplayName("✅ 성공: 게시글 ID로 상세 조회 시 200 응답과 함께 조회수가 1 증가한다.")
             void getBoardById_success() throws Exception {
                 // given
-                Post post = boardRepository.save(Post.builder().member(testUser).brdTitle("조회용").brdContent("내용").build());
+                Post post = postRepository.save(Post.builder().member(testUser).brdTitle("조회용").brdContent("내용").build());
                 int initialViews = post.getViews();
 
                 // when & then
@@ -187,7 +187,7 @@ class PostControllerTest {
         class GetList {
             @BeforeEach
             void setUpList() {
-                IntStream.range(0, 20).forEach(i -> boardRepository.save(Post.builder().member(otherUser).brdTitle("목록 " + i).brdContent("내용").build()));
+                IntStream.range(0, 20).forEach(i -> postRepository.save(Post.builder().member(otherUser).brdTitle("목록 " + i).brdContent("내용").build()));
             }
 
             @Test
@@ -208,9 +208,9 @@ class PostControllerTest {
             @DisplayName("✅ 성공: 정렬(sort) 파라미터가 정상 동작한다.")
             void getBoardList_withSort() throws Exception {
                 // given
-                Post mostViewedPost = boardRepository.save(Post.builder().member(testUser).brdTitle("조회수 1등").brdContent("인기글").build());
+                Post mostViewedPost = postRepository.save(Post.builder().member(testUser).brdTitle("조회수 1등").brdContent("인기글").build());
                 mostViewedPost.increaseViews();
-                boardRepository.save(mostViewedPost);
+                postRepository.save(mostViewedPost);
 
                 // when & then
                 mockMvc.perform(get("/api/v1/boards").param("sort", "VIEWS"))
@@ -240,7 +240,7 @@ class PostControllerTest {
         private Post testPost;
         @BeforeEach
         void setUp() {
-            testPost = boardRepository.save(Post.builder().member(testUser).brdTitle("원본").brdContent("원본").build());
+            testPost = postRepository.save(Post.builder().member(testUser).brdTitle("원본").brdContent("원본").build());
         }
 
         @Nested
@@ -302,7 +302,7 @@ class PostControllerTest {
         private Post testPost;
         @BeforeEach
         void setUp() {
-            testPost = boardRepository.save(Post.builder().member(testUser).brdTitle("삭제용").brdContent("삭제용").build());
+            testPost = postRepository.save(Post.builder().member(testUser).brdTitle("삭제용").brdContent("삭제용").build());
         }
 
         @Nested
@@ -317,7 +317,7 @@ class PostControllerTest {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.message").value("게시글이 성공적으로 삭제되었습니다."));
 
-                assertThat(boardRepository.findById(testPost.getId())).isEmpty();
+                assertThat(postRepository.findById(testPost.getId())).isEmpty();
             }
         }
 

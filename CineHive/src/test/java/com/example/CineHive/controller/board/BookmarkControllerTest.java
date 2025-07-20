@@ -3,8 +3,8 @@ package com.example.CineHive.controller.board;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.*;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ class BookmarkControllerTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
     @Autowired
     private BookmarkRepository bookmarkRepository;
 
@@ -46,14 +46,14 @@ class BookmarkControllerTest {
     @BeforeEach
     void setUp() {
         bookmarkRepository.deleteAllInBatch();
-        boardRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
 
         boardOwner = createMember("owner@example.com", "boardOwner");
         bookmarker = createMember("bookmarker@example.com", "bookmarker");
         anotherUser = createMember("another@example.com", "anotherUser");
 
-        testPost = boardRepository.save(Post.builder()
+        testPost = postRepository.save(Post.builder()
                 .brdTitle("테스트 게시글")
                 .brdContent("내용")
                 .member(boardOwner)
@@ -85,7 +85,7 @@ class BookmarkControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("게시글을 북마크했습니다."));
 
-            Post postAfterBookmark = boardRepository.findById(testPost.getId()).get();
+            Post postAfterBookmark = postRepository.findById(testPost.getId()).get();
             assertThat(postAfterBookmark.getBookmarkCount()).isEqualTo(1);
             assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testPost)).isTrue();
         }
@@ -95,7 +95,7 @@ class BookmarkControllerTest {
         void addBookmark_fail_alreadyExists() throws Exception {
             bookmarkRepository.save(new Bookmark(bookmarker, testPost));
             testPost.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testPost);
+            postRepository.saveAndFlush(testPost);
 
             mockMvc.perform(post("/api/v1/boards/{boardId}/bookmarks", testPost.getId())
                             .with(csrf()))
@@ -112,7 +112,7 @@ class BookmarkControllerTest {
         void setUp() {
             bookmarkRepository.save(new Bookmark(bookmarker, testPost));
             testPost.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testPost);
+            postRepository.saveAndFlush(testPost);
         }
 
         @Test
@@ -123,7 +123,7 @@ class BookmarkControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.message").value("북마크를 취소했습니다."));
 
-            Post postAfterRemove = boardRepository.findById(testPost.getId()).get();
+            Post postAfterRemove = postRepository.findById(testPost.getId()).get();
             assertThat(postAfterRemove.getBookmarkCount()).isEqualTo(0);
             assertThat(bookmarkRepository.existsByMemberAndBoard(bookmarker, testPost)).isFalse();
         }
@@ -138,7 +138,7 @@ class BookmarkControllerTest {
         void setUp() {
             bookmarkRepository.save(new Bookmark(bookmarker, testPost));
             testPost.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testPost);
+            postRepository.saveAndFlush(testPost);
         }
 
         @Test
@@ -159,7 +159,7 @@ class BookmarkControllerTest {
         void getBookmarkCount_success() throws Exception {
             bookmarkRepository.save(new Bookmark(bookmarker, testPost));
             testPost.increaseBookmarkCount();
-            boardRepository.saveAndFlush(testPost);
+            postRepository.saveAndFlush(testPost);
 
             mockMvc.perform(get("/api/v1/boards/{boardId}/bookmarks/count", testPost.getId()))
                     .andExpect(status().isOk())

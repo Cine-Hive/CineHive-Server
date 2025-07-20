@@ -5,8 +5,8 @@ import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
     private final MemberRepository memberRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
 
     /**
      * 특정 게시글에 북마크를 추가합니다.
@@ -105,7 +105,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     private Post findBoardById(Long boardId) {
-        return boardRepository.findById(boardId)
+        return postRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 }

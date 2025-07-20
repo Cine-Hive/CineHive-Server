@@ -9,8 +9,8 @@ import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.post.CommentMapper;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.CommentRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.CommentRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
 
     @Override
     @Transactional
@@ -88,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private Post findBoardById(Long boardId) {
-        return boardRepository.findById(boardId)
+        return postRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 

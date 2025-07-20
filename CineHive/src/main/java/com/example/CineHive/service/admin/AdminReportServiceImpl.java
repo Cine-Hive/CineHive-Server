@@ -5,7 +5,7 @@ import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.ReportRepository;
+import com.example.CineHive.repository.post.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -4,11 +4,11 @@ import com.example.CineHive.dto.account.AccountInfoResponse;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException; // BusinessException import
 import com.example.CineHive.exception.ErrorCode;       // ErrorCode import
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
-import com.example.CineHive.repository.board.CommentRepository;
-import com.example.CineHive.repository.board.DislikeRepository;
-import com.example.CineHive.repository.board.LikeRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.BookmarkRepository;
+import com.example.CineHive.repository.post.CommentRepository;
+import com.example.CineHive.repository.post.DislikeRepository;
+import com.example.CineHive.repository.post.LikeRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class AccountServiceImpl implements AccountService {
     private final DislikeRepository disLikeRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
 
     @Override
     public AccountInfoResponse getAccountInfo(String email) {
@@ -80,7 +80,7 @@ public class AccountServiceImpl implements AccountService {
         likeRepository.deleteByMember_Email(email);
         disLikeRepository.deleteByMember_Email(email);
         commentRepository.deleteByMember_Email(email);
-        boardRepository.deleteByMember_Email(email);
+        postRepository.deleteByMember_Email(email);
 
         // 마지막으로 회원 정보 삭제
         memberRepository.deleteByEmail(email);

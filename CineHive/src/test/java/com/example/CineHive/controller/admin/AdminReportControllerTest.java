@@ -5,8 +5,8 @@ import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.ReportRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.ReportRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,21 +44,21 @@ class AdminReportControllerTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
 
     private Report pendingReport; // 테스트용 대기 상태 신고
 
     @BeforeEach
     void setUp() {
         reportRepository.deleteAllInBatch();
-        boardRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
 
         User reporter = createMember("reporter@test.com", "신고자", UserRole.ROLE_USER);
         User reportedUser = createMember("reported@test.com", "피신고자", UserRole.ROLE_USER);
         createMember("admin@test.com", "관리자", UserRole.ROLE_ADMIN); // 관리자 계정 생성
 
-        Post reportedPost = boardRepository.save(Post.builder()
+        Post reportedPost = postRepository.save(Post.builder()
                 .member(reportedUser)
                 .brdTitle("신고 대상 게시글")
                 .brdContent("문제 내용")
@@ -159,7 +159,7 @@ class AdminReportControllerTest {
             // given: PENDING 상태의 신고 하나 더 추가
             User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
             User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
-            Post anotherPost = boardRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            Post anotherPost = postRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
             reportRepository.save(Report.builder().reporter(reporter).board(anotherPost).reason("스팸").build());
 
             // when & then
@@ -175,7 +175,7 @@ class AdminReportControllerTest {
             // given: 다른 상태의 신고 추가
             User reporter = memberRepository.findByEmail("reporter@test.com").orElseThrow();
             User reportedUser = memberRepository.findByEmail("reported@test.com").orElseThrow();
-            Post anotherPost = boardRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
+            Post anotherPost = postRepository.save(Post.builder().member(reportedUser).brdTitle("다른 게시글").brdContent("내용").build());
             Report acceptedReport = reportRepository.save(Report.builder().reporter(reporter).board(anotherPost).reason("스팸").build());
             acceptedReport.accept();
             reportRepository.save(acceptedReport);

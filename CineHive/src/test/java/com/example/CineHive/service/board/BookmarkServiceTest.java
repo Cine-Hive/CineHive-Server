@@ -5,8 +5,8 @@ import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.BookmarkRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +37,7 @@ class BookmarkServiceTest {
     @Mock
     private MemberRepository memberRepository;
     @Mock
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
 
     @InjectMocks
     private BookmarkServiceImpl bookmarkService;
@@ -79,7 +79,7 @@ class BookmarkServiceTest {
         void addBookmark_success() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 
             // when
@@ -94,7 +94,7 @@ class BookmarkServiceTest {
         void addBookmark_fail_alreadyExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
             // when
@@ -123,7 +123,7 @@ class BookmarkServiceTest {
         void removeBookmark_success() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.of(testBookmark));
 
             // when
@@ -138,7 +138,7 @@ class BookmarkServiceTest {
         void removeBookmark_fail_notFound() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.findByMemberAndBoard(testUser, testPost)).willReturn(Optional.empty());
 
             // when
@@ -161,7 +161,7 @@ class BookmarkServiceTest {
         void isBookmarkedByUser_returnsTrue_whenExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(true);
 
             // when
@@ -176,7 +176,7 @@ class BookmarkServiceTest {
         void isBookmarkedByUser_returnsFalse_whenNotExists() {
             // given
             given(memberRepository.findByEmail(testMemberEmail)).willReturn(Optional.of(testUser));
-            given(boardRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
+            given(postRepository.findById(testBoardId)).willReturn(Optional.of(testPost));
             given(bookmarkRepository.existsByMemberAndBoard(testUser, testPost)).willReturn(false);
 
             // when

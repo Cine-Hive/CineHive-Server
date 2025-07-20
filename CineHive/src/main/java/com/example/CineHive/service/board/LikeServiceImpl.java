@@ -5,9 +5,9 @@ import com.example.CineHive.entity.post.PostDislike;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.DislikeRepository;
-import com.example.CineHive.repository.board.LikeRepository;
+import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.DislikeRepository;
+import com.example.CineHive.repository.post.LikeRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final DislikeRepository dislikeRepository;
     private final MemberRepository memberRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
 
     @Override
     @Transactional
@@ -81,7 +81,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     private Post findBoardById(Long boardId) {
-        return boardRepository.findById(boardId)
+        return postRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 }

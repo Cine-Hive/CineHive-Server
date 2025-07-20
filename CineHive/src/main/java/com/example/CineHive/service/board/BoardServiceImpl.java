@@ -7,7 +7,7 @@ import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.post.PostMapper;
-import com.example.CineHive.repository.board.BoardRepository;
+import com.example.CineHive.repository.board.PostRepository;
 import com.example.CineHive.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class BoardServiceImpl implements BoardService {
 
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
     @Override
@@ -36,7 +36,7 @@ public class BoardServiceImpl implements BoardService {
                 .member(user)
                 .build();
 
-        Post savedPost = boardRepository.save(post);
+        Post savedPost = postRepository.save(post);
         return PostMapper.toBoardDto(savedPost);
     }
 
@@ -70,13 +70,13 @@ public class BoardServiceImpl implements BoardService {
         // 게시글 소유권 검증 로직을 서비스 레이어에서 명시적으로 처리
         verifyBoardOwnership(post, user);
 
-        boardRepository.delete(post);
+        postRepository.delete(post);
     }
 
     @Override
     public PagedResponse<PostSummaryResponse> getBoards(int page, int size, PostSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
-        Page<Post> boardPage = boardRepository.findAll(pageable);
+        Page<Post> boardPage = postRepository.findAll(pageable);
 
         return PagedResponse.<PostSummaryResponse>builder()
                 .content(boardPage.getContent().stream().map(PostMapper::toListDto).toList())
@@ -106,7 +106,7 @@ public class BoardServiceImpl implements BoardService {
      * @return 찾아낸 Board 엔티티
      */
     private Post findBoardById(Long boardId) {
-        return boardRepository.findById(boardId)
+        return postRepository.findById(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
     }
 
