@@ -1,17 +1,11 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbCreditsResponse {
-    private List<TmdbCastResponse> cast;
-    private List<TmdbCrewResponse> crew;
-}
+/**
+ * TMDB API의 크레딧(출연진 및 제작진) 정보 전체를 담는 DTO입니다.
+ */
+public record TmdbCreditsResponse(
+        List<TmdbCastResponse> cast,
+        List<TmdbCrewResponse> crew
+) {}

@@ -1,20 +1,21 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbImageResponse {
-    private Double aspect_ratio;
-    private Integer height;
-    private String iso_639_1;
-    private String file_path;
-    private Double vote_average;
-    private Integer vote_count;
-    private Integer width;
-}
+/**
+ * TMDB API의 개별 이미지 정보를 담는 DTO입니다.
+ */
+public record TmdbImageResponse(
+        @JsonProperty("aspect_ratio")
+        Double aspectRatio,
+        Integer height,
+        @JsonProperty("iso_639_1")
+        String iso_639_1,
+        @JsonProperty("file_path")
+        String filePath,
+        @JsonProperty("vote_average")
+        Double voteAverage,
+        @JsonProperty("vote_count")
+        Integer voteCount,
+        Integer width
+) {}

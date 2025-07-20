@@ -1,17 +1,14 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbCrewResponse {
-    private Long id;
-    private String name;
-    private String job;
-    private String profile_path;
-}
+/**
+ * TMDB API의 개별 제작진(Crew) 정보를 담는 DTO입니다.
+ */
+public record TmdbCrewResponse(
+        Long id,
+        String name,
+        String job,
+        @JsonProperty("profile_path")
+        String profilePath
+) {}

@@ -1,22 +1,28 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.Data;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
-@Data
-public class TmdbTvSeriesResponse {
-    private Long id;
-    private String name;
-    private String original_name;
-    private String overview;
-    private String first_air_date;
-    private Double vote_average;
-    private Integer vote_count;
-    private Double popularity;
-    private String poster_path;
-    private String backdrop_path;
-    private List<Long> genre_ids;
-    private Integer number_of_seasons;
-    private Integer number_of_episodes;
-}
+/**
+ * TMDB API의 TV 시리즈 요약 정보 응답을 담는 DTO입니다.
+ */
+public record TmdbTvSeriesResponse(
+        Long id,
+        String name,
+        @JsonProperty("original_name")
+        String originalName,
+        String overview,
+        @JsonProperty("first_air_date")
+        String firstAirDate,
+        @JsonProperty("vote_average")
+        Double voteAverage,
+        @JsonProperty("vote_count")
+        Integer voteCount,
+        Double popularity,
+        @JsonProperty("poster_path")
+        String posterPath,
+        @JsonProperty("backdrop_path")
+        String backdropPath,
+        @JsonProperty("genre_ids")
+        List<Long> genreIds
+) {}

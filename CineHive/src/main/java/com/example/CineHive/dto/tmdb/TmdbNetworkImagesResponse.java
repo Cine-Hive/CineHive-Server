@@ -1,14 +1,11 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class TmdbNetworkImagesResponse {
-    private Long id;
-    private List<TmdbLogoResponse> logos;
-}
+/**
+ * TMDB API의 방송사 이미지 목록 응답을 담는 DTO입니다.
+ */
+public record TmdbNetworkImagesResponse(
+        Long id,
+        List<TmdbLogoResponse> logos
+) {}

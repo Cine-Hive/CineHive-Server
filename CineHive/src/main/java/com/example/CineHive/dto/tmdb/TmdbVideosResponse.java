@@ -1,16 +1,10 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbVideosResponse {
-    private List<TmdbVideoResponse> results;
-}
+/**
+ * TMDB API의 비디오(예고편 등) 목록 응답을 담는 DTO입니다.
+ */
+public record TmdbVideosResponse(
+        List<TmdbVideoResponse> results
+) {}

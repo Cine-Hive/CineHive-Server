@@ -1,17 +1,17 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbProviderResponse {
-    private Long provider_id;
-    private String provider_name;
-    private String logo_path;
-    private Integer display_priority;
-}
+/**
+ * TMDB API의 개별 시청 플랫폼(Provider) 정보를 담는 DTO입니다.
+ */
+public record TmdbProviderResponse(
+        @JsonProperty("provider_id")
+        Long providerId,
+        @JsonProperty("provider_name")
+        String providerName,
+        @JsonProperty("logo_path")
+        String logoPath,
+        @JsonProperty("display_priority")
+        Integer displayPriority
+) {}

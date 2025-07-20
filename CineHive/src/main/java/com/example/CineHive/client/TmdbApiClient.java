@@ -166,12 +166,12 @@ public class TmdbApiClient {
     }
 
     // --- 메타데이터 API ---
-    public Mono<TmdbGenreListResponse> getMovieGenres() {
-        return get("/genre/movie/list", TmdbGenreListResponse.class, new LinkedMultiValueMap<>());
+    public Mono<TmdbGenresResponse> getMovieGenres() {
+        return get("/genre/movie/list", TmdbGenresResponse.class, new LinkedMultiValueMap<>());
     }
 
-    public Mono<TmdbGenreListResponse> getTvGenres() {
-        return get("/genre/tv/list", TmdbGenreListResponse.class, new LinkedMultiValueMap<>());
+    public Mono<TmdbGenresResponse> getTvGenres() {
+        return get("/genre/tv/list", TmdbGenresResponse.class, new LinkedMultiValueMap<>());
     }
 
     public Mono<TmdbNetworkImagesResponse> getNetworkImages(Long networkId) {

@@ -1,21 +1,16 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbVideoResponse {
-    private String id;
-    private String name;
-    private String key;
-    private String site;
-    private Integer size;
-    private String type;
-    private Boolean official;
-    private String published_at;
-}
+/**
+ * TMDB API의 개별 비디오 정보를 담는 DTO입니다.
+ */
+public record TmdbVideoResponse(
+        String name,
+        String key, // YouTube video key
+        String site,
+        String type, // e.g., "Trailer", "Teaser"
+        boolean official,
+        @JsonProperty("published_at")
+        String publishedAt
+) {}

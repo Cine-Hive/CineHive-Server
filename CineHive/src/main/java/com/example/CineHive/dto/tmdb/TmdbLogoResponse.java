@@ -1,17 +1,13 @@
 package com.example.CineHive.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class TmdbLogoResponse {
-    @JsonProperty("file_path")
-    private String filePath;
-
-    @JsonProperty("file_type")
-    private String fileType; // ".svg" 또는 ".png"
-}
+/**
+ * TMDB API의 로고 정보를 담는 DTO입니다.
+ */
+public record TmdbLogoResponse(
+        @JsonProperty("file_path")
+        String filePath,
+        @JsonProperty("file_type")
+        String fileType
+) {}

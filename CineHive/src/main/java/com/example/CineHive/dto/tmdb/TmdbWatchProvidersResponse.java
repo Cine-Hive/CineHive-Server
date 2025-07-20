@@ -1,16 +1,11 @@
 package com.example.CineHive.dto.tmdb;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.Map;
 
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class TmdbWatchProvidersResponse {
-    private Map<String, TmdbCountryWatchProvidersResponse> results;
-}
+/**
+ * TMDB API의 시청 가능 플랫폼 전체 응답을 담는 DTO입니다.
+ * 국가별로 시청 정보가 Map 형태로 제공됩니다.
+ */
+public record TmdbWatchProvidersResponse(
+        Map<String, TmdbCountryWatchProvidersResponse> results
+) {}
