@@ -18,6 +18,6 @@ public final class CommentMapper {
      * @return 변환된 CommentResponse
      */
     public static CommentResponse toResponse(Comment comment) {
-        return CommentResponse.fromEntity(comment);
+        return CommentResponse.from(comment);
     }
 }

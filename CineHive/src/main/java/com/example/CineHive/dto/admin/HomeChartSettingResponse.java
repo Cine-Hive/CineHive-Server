@@ -19,7 +19,7 @@ public record HomeChartSettingResponse(
     public static HomeChartSettingResponse from(HomeChartSetting entity) {
         return new HomeChartSettingResponse(
                 entity.getChartType(),
-                entity.getChartType().getDescription(), // Enum의 한글 설명을 포함
+                entity.getChartType().getDescription(),
                 entity.getDisplayOrder()
         );
     }

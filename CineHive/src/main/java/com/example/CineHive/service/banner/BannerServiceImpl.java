@@ -1,6 +1,7 @@
 package com.example.CineHive.service.banner;
 
 import com.example.CineHive.dto.banner.BannerAdminRequest;
+import com.example.CineHive.dto.banner.BannerAdminResponse;
 import com.example.CineHive.dto.banner.BannerResponse;
 import com.example.CineHive.entity.banner.Banner;
 import com.example.CineHive.exception.BusinessException;
@@ -13,10 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * BannerService 인터페이스의 구현체입니다.
- * 메인 화면 배너와 관련된 실제 비즈니스 로직을 처리합니다.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,61 +21,55 @@ public class BannerServiceImpl implements BannerService {
 
     private final BannerRepository bannerRepository;
 
-    // =================================================================
-    // == 사용자용 로직 (User-facing Logic)
-    // =================================================================
-
     @Override
     public List<BannerResponse> findActiveBanners() {
         return bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc().stream()
-                .map(BannerResponse::fromEntity)
+                .map(BannerResponse::from)
                 .collect(Collectors.toList());
     }
 
-    // =================================================================
-    // == 관리자용 로직 (Admin-facing Logic)
-    // =================================================================
-
     @Override
-    public List<Banner> findAllBannersForAdmin() {
-        return bannerRepository.findAll();
+    public List<BannerAdminResponse> findAllBannersForAdmin() {
+        return bannerRepository.findAll().stream()
+                .map(BannerAdminResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public Banner createBanner(BannerAdminRequest requestDto) {
+    public BannerAdminResponse createBanner(BannerAdminRequest request) {
         Banner banner = Banner.builder()
-                .title(requestDto.title())
-                .subtitle(requestDto.subtitle())
-                .imageUrl(requestDto.imageUrl())
-                .linkUrl(requestDto.linkUrl())
-                .displayOrder(requestDto.displayOrder())
-                .isActive(requestDto.isActive())
+                .title(request.title())
+                .subtitle(request.subtitle())
+                .imageUrl(request.imageUrl())
+                .linkUrl(request.linkUrl())
+                .displayOrder(request.displayOrder())
+                .isActive(request.isActive())
                 .build();
-        return bannerRepository.save(banner);
+        Banner savedBanner = bannerRepository.save(banner);
+        return BannerAdminResponse.from(savedBanner);
     }
 
     @Override
     @Transactional
-    public Banner updateBanner(Long bannerId, BannerAdminRequest requestDto) {
+    public BannerAdminResponse updateBanner(Long bannerId, BannerAdminRequest request) {
         Banner banner = bannerRepository.findById(bannerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BANNER_NOT_FOUND));
 
         banner.update(
-                requestDto.title(),
-                requestDto.subtitle(),
-                requestDto.imageUrl(),
-                requestDto.linkUrl(),
-                requestDto.displayOrder(),
-                requestDto.isActive()
+                request.title(),
+                request.subtitle(),
+                request.imageUrl(),
+                request.linkUrl(),
+                request.displayOrder(),
+                request.isActive()
         );
-        return banner;
+        return BannerAdminResponse.from(banner); // 수정 후 DTO로 변환하여 반환
     }
 
     @Override
     @Transactional
     public void deleteBanner(Long bannerId) {
-        // 삭제하려는 배너가 존재하는지 먼저 확인
         if (!bannerRepository.existsById(bannerId)) {
             throw new BusinessException(ErrorCode.BANNER_NOT_FOUND);
         }
