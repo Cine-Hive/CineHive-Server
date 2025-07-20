@@ -27,7 +27,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public PostDto createBoard(CreatePostRequest request, String memberEmail) {
+    public PostDetailResponse createBoard(CreatePostRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
 
         Post post = Post.builder()
@@ -42,7 +42,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public PostDto getBoardById(Long boardId) {
+    public PostDetailResponse getBoardById(Long boardId) {
         Post post = findBoardById(boardId);
         post.increaseViews(); // 조회수 증가는 그대로 유지
         return BoardMapper.toBoardDto(post);
@@ -50,7 +50,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public PostDto updateBoard(Long boardId, UpdatePostRequest request, String memberEmail) {
+    public PostDetailResponse updateBoard(Long boardId, UpdatePostRequest request, String memberEmail) {
         User user = findMemberByEmail(memberEmail);
         Post post = findBoardById(boardId);
 

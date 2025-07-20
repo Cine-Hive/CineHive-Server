@@ -1,6 +1,6 @@
 package com.example.CineHive.mapper;
 
-import com.example.CineHive.dto.post.PostDto;
+import com.example.CineHive.dto.post.PostDetailResponse;
 import com.example.CineHive.dto.post.PostSummaryDto;
 import com.example.CineHive.entity.post.Post;
 
@@ -10,8 +10,8 @@ public final class BoardMapper {
 
     private BoardMapper() {}
 
-    public static PostDto toBoardDto(Post post) {
-        return PostDto.builder()
+    public static PostDetailResponse toBoardDto(Post post) {
+        return PostDetailResponse.builder()
                 .id(post.getId())
                 .brdTitle(post.getBrdTitle())
                 .brdContent(post.getBrdContent())

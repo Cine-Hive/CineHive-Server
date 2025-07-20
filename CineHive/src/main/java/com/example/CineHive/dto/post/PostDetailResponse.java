@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-public record PostDto(
+public record PostDetailResponse(
         Long id,
         String title,
         String content,
