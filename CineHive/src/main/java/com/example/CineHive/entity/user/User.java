@@ -1,27 +1,27 @@
 package com.example.CineHive.entity.user;
 
+import com.example.CineHive.entity.BaseEntity; // 경로 수정
+import com.example.CineHive.entity.media.Genre;
+import com.example.CineHive.entity.user.UserType; // 올바른 UserType import
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+// import org.hibernate.usertype.UserType; // 이 줄은 삭제
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
-@Table(name = "members")
-public class User {
+@Table(name = "users")
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_id")
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -40,17 +40,15 @@ public class User {
     @Column(nullable = false)
     private Gender gender;
 
-    @Column(nullable = false, length = 20)
-    private String type;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime registeredAt;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserType type; // 이제 오류가 발생하지 않음
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "member_genres", joinColumns = @JoinColumn(name = "member_id"))
+    @CollectionTable(name = "user_genres", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
     @Column(name = "genre")
-    private Set<String> genres = new HashSet<>();
+    private Set<Genre> genres = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -61,16 +59,16 @@ public class User {
     private UserRole role;
 
     @Builder
-    public User(String email, String password, String name, String nickname, Gender gender, Set<String> genres, ProviderType provider, UserRole role) {
+    public User(String email, String password, String name, String nickname, Gender gender, Set<Genre> genres, ProviderType provider, UserRole role) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.nickname = nickname;
         this.gender = gender;
-        this.type = "일반";
+        this.type = UserType.GENERAL; // 이제 오류가 발생하지 않음
         this.genres = (genres != null) ? genres : new HashSet<>();
         this.provider = (provider != null) ? provider : ProviderType.LOCAL;
-        this.role = (role != null) ? role : UserRole.ROLE_USER; // 기본값으로 USER 설정
+        this.role = (role != null) ? role : UserRole.ROLE_USER;
     }
 
     public void changePassword(String newPassword) {
@@ -81,7 +79,7 @@ public class User {
         this.nickname = newNickname;
     }
 
-    public void updateGenres(Set<String> newGenres) {
+    public void updateGenres(Set<Genre> newGenres) {
         this.genres.clear();
         if (newGenres != null) {
             this.genres.addAll(newGenres);
