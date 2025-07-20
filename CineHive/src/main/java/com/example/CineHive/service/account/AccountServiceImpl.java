@@ -8,7 +8,7 @@ import com.example.CineHive.entity.media.Genre;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.post.*; // post 패키지로 변경
+import com.example.CineHive.repository.post.*;
 import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,6 @@ public class AccountServiceImpl implements AccountService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 회원 탈퇴 시 연관 데이터 삭제를 위한 리포지토리들
     private final BookmarkRepository bookmarkRepository;
     private final DislikeRepository dislikeRepository;
     private final LikeRepository likeRepository;
@@ -50,7 +49,7 @@ public class AccountServiceImpl implements AccountService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
         user.changeNickname(newNickname);
-        log.info("User {} changed nickname to {}", email, newNickname);
+        log.info("사용자({}), 닉네임을 '{}'(으)로 변경했습니다.", email, newNickname);
     }
 
     @Override
@@ -61,7 +60,7 @@ public class AccountServiceImpl implements AccountService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         user.changePassword(passwordEncoder.encode(request.newPassword()));
-        log.info("User {} changed password.", email);
+        log.info("사용자({}), 비밀번호를 변경했습니다.", email);
     }
 
     @Override
@@ -72,24 +71,22 @@ public class AccountServiceImpl implements AccountService {
                 .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
                 .collect(Collectors.toSet());
         user.updateGenres(newGenres);
-        log.info("User {} updated genres.", email);
+        log.info("사용자({}), 선호 장르를 업데이트했습니다.", email);
     }
 
     @Override
     @Transactional
     public void deleteAccount(String email) {
-        log.warn("Deleting all data for user: {}", email);
+        log.warn("사용자({})의 모든 데이터를 삭제합니다. (회원 탈퇴)", email);
 
-        // 리팩토링된 리포지토리 메서드 호출
         bookmarkRepository.deleteAllByUserEmail(email);
-
         likeRepository.deleteAllByUserEmail(email);
         dislikeRepository.deleteAllByUserEmail(email);
         commentRepository.deleteAllByUser_Email(email);
         postRepository.deleteAllByUserEmail(email);
-
         userRepository.deleteByEmail(email);
-        log.info("Successfully deleted account for user: {}", email);
+
+        log.info("사용자({}) 계정이 성공적으로 삭제되었습니다.", email);
     }
 
     private User findUserByEmail(String email) {
