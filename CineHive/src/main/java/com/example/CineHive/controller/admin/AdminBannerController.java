@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.admin;
 
 import com.example.CineHive.entity.banner.Banner;
-import com.example.CineHive.dto.banner.BannerAdminRequestDto;
+import com.example.CineHive.dto.banner.BannerAdminRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
 import com.example.CineHive.service.banner.BannerService;
@@ -47,7 +47,7 @@ public class AdminBannerController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<ApiResponse<Banner>> createBanner(@Valid @RequestBody BannerAdminRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Banner>> createBanner(@Valid @RequestBody BannerAdminRequest requestDto) {
         return ResponseEntity.ok(ApiResponse.ok(bannerService.createBanner(requestDto)));
     }
 
@@ -61,7 +61,7 @@ public class AdminBannerController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 배너 ID", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/{bannerId}")
-    public ResponseEntity<ApiResponse<Banner>> updateBanner(@PathVariable Long bannerId, @Valid @RequestBody BannerAdminRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Banner>> updateBanner(@PathVariable Long bannerId, @Valid @RequestBody BannerAdminRequest requestDto) {
         return ResponseEntity.ok(ApiResponse.ok(bannerService.updateBanner(bannerId, requestDto)));
     }
 

@@ -1,7 +1,7 @@
 package com.example.CineHive.service.banner;
 
-import com.example.CineHive.dto.banner.BannerAdminRequestDto;
-import com.example.CineHive.dto.banner.BannerResponseDto;
+import com.example.CineHive.dto.banner.BannerAdminRequest;
+import com.example.CineHive.dto.banner.BannerResponse;
 import com.example.CineHive.entity.banner.Banner;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public interface BannerService {
      * 활성화된 모든 배너를 조회합니다.
      * @return 활성화된 배너 정보 DTO 리스트
      */
-    List<BannerResponseDto> findActiveBanners();
+    List<BannerResponse> findActiveBanners();
 
     // 관리자용 로직
     /**
@@ -30,7 +30,7 @@ public interface BannerService {
      * @param requestDto 생성할 배너의 정보를 담은 요청 DTO
      * @return 생성된 배너 엔티티
      */
-    Banner createBanner(BannerAdminRequestDto requestDto);
+    Banner createBanner(BannerAdminRequest requestDto);
 
     /**
      * [관리자용] 기존 배너의 정보를 수정합니다.
@@ -38,7 +38,7 @@ public interface BannerService {
      * @param requestDto 수정할 배너의 새로운 정보
      * @return 수정된 배너 엔티티
      */
-    Banner updateBanner(Long bannerId, BannerAdminRequestDto requestDto);
+    Banner updateBanner(Long bannerId, BannerAdminRequest requestDto);
 
     /**
      * [관리자용] 특정 배너를 삭제합니다.

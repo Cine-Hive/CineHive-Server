@@ -1,6 +1,6 @@
 package com.example.CineHive.service.account;
 
-import com.example.CineHive.dto.account.AccountInfoResponseDto;
+import com.example.CineHive.dto.account.AccountInfoResponse;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException; // BusinessException import
 import com.example.CineHive.exception.ErrorCode;       // ErrorCode import
@@ -36,9 +36,9 @@ public class AccountServiceImpl implements AccountService {
     private final BoardRepository boardRepository;
 
     @Override
-    public AccountInfoResponseDto getAccountInfo(String email) {
+    public AccountInfoResponse getAccountInfo(String email) {
         User user = findMemberByEmail(email);
-        return AccountInfoResponseDto.from(user);
+        return AccountInfoResponse.from(user);
     }
 
     @Override

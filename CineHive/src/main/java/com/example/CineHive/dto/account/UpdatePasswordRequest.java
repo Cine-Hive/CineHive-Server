@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "비밀번호 변경 요청 DTO")
-public record UpdatePasswordRequestDto(
+public record UpdatePasswordRequest(
         @Schema(description = "기존 비밀번호", example = "password123")
         @NotBlank
         String oldPassword,

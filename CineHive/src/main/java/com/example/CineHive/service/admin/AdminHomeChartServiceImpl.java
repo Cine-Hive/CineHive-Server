@@ -1,6 +1,6 @@
 package com.example.CineHive.service.admin;
 
-import com.example.CineHive.dto.admin.HomeChartSettingRequestDto;
+import com.example.CineHive.dto.admin.HomeChartSettingRequest;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.entity.setting.HomeChartSetting;
 import com.example.CineHive.repository.setting.HomeChartSettingRepository;
@@ -33,7 +33,7 @@ public class AdminHomeChartServiceImpl implements AdminHomeChartService { // 인
     @Override // @Override 어노테이션 추가
     @Transactional // 클래스 레벨의 readOnly=true를 덮어쓰기 위해 필요합니다.
     @CacheEvict(value = "chartSummary", allEntries = true)
-    public void updateHomeChartSettings(List<HomeChartSettingRequestDto> settings) {
+    public void updateHomeChartSettings(List<HomeChartSettingRequest> settings) {
         // 기존 설정을 모두 삭제
         homeChartSettingRepository.deleteAllInBatch();
 

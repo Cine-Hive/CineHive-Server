@@ -1,6 +1,6 @@
 package com.example.CineHive.service.account;
 
-import com.example.CineHive.dto.account.AccountInfoResponseDto;
+import com.example.CineHive.dto.account.AccountInfoResponse;
 import java.util.List;
 
 /**
@@ -14,7 +14,7 @@ public interface AccountService {
      * @param email 사용자의 이메일 (Principal)
      * @return 계정 정보를 담은 DTO
      */
-    AccountInfoResponseDto getAccountInfo(String email);
+    AccountInfoResponse getAccountInfo(String email);
 
     /**
      * 사용자의 닉네임을 변경합니다.

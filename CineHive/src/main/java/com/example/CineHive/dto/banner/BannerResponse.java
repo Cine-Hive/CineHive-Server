@@ -10,7 +10,7 @@ import lombok.Builder;
  */
 @Schema(description = "사용자용 배너 정보 응답 DTO")
 @Builder
-public record BannerResponseDto(
+public record BannerResponse(
         @Schema(description = "배너 고유 ID")
         Long id,
 
@@ -33,12 +33,12 @@ public record BannerResponseDto(
      * @param banner 변환할 Banner 엔티티
      * @return 변환된 BannerResponseDto
      */
-    public static BannerResponseDto fromEntity(Banner banner) {
+    public static BannerResponse fromEntity(Banner banner) {
         if (banner == null) {
             return null;
         }
 
-        return BannerResponseDto.builder()
+        return BannerResponse.builder()
                 .id(banner.getId())
                 .title(banner.getTitle())
                 .subtitle(banner.getSubtitle())

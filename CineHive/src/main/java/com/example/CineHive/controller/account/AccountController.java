@@ -25,9 +25,9 @@ public class AccountController {
 
     @Operation(summary = "내 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<AccountInfoResponseDto>> getMyInfo(
+    public ResponseEntity<ApiResponse<AccountInfoResponse>> getMyInfo(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        AccountInfoResponseDto accountInfo = accountService.getAccountInfo(userDetails.getUsername());
+        AccountInfoResponse accountInfo = accountService.getAccountInfo(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(accountInfo));
     }
 
@@ -35,7 +35,7 @@ public class AccountController {
     @PatchMapping("/nickname")
     public ResponseEntity<ApiResponse<Map<String, String>>> changeNickname(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateNicknameRequestDto requestDto) {
+            @Valid @RequestBody UpdateNicknameRequest requestDto) {
         accountService.changeNickname(userDetails.getUsername(), requestDto.nickname());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "닉네임이 성공적으로 변경되었습니다.")));
     }
@@ -44,7 +44,7 @@ public class AccountController {
     @PatchMapping("/password")
     public ResponseEntity<ApiResponse<Map<String, String>>> changePassword(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdatePasswordRequestDto requestDto) {
+            @Valid @RequestBody UpdatePasswordRequest requestDto) {
         accountService.changePassword(userDetails.getUsername(), requestDto.oldPassword(), requestDto.newPassword());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다.")));
     }
@@ -53,7 +53,7 @@ public class AccountController {
     @PutMapping("/genres")
     public ResponseEntity<ApiResponse<Map<String, String>>> updateGenres(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UpdateGenresRequestDto requestDto) {
+            @RequestBody UpdateGenresRequest requestDto) {
         accountService.updateGenres(userDetails.getUsername(), requestDto.genres());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "선호 장르가 성공적으로 수정되었습니다.")));
     }

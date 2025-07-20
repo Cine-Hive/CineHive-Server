@@ -9,7 +9,7 @@ import java.util.List;
 
 @Schema(description = "내 정보 조회 응답 DTO")
 @Builder
-public record AccountInfoResponseDto(
+public record AccountInfoResponse(
         @Schema(description = "회원 고유 ID")
         Long id,
         @Schema(description = "이메일")
@@ -23,8 +23,8 @@ public record AccountInfoResponseDto(
         @Schema(description = "선호 장르 목록")
         List<String> genres
 ) {
-    public static AccountInfoResponseDto from(User user) {
-        return AccountInfoResponseDto.builder()
+    public static AccountInfoResponse from(User user) {
+        return AccountInfoResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())

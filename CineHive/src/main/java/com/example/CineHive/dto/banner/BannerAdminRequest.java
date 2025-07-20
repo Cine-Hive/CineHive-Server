@@ -9,7 +9,7 @@ import org.hibernate.validator.constraints.URL;
  * 관리자가 배너를 생성하거나 수정할 때 사용하는 요청 DTO입니다.
  */
 @Schema(description = "관리자용 배너 생성/수정 요청 DTO")
-public record BannerAdminRequestDto(
+public record BannerAdminRequest(
         @Schema(description = "배너의 메인 제목", example = "CineHive 여름 특별 상영회")
         @NotBlank(message = "제목은 필수 입력 값입니다.")
         String title,

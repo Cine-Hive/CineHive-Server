@@ -1,7 +1,7 @@
 package com.example.CineHive.service.banner;
 
-import com.example.CineHive.dto.banner.BannerAdminRequestDto;
-import com.example.CineHive.dto.banner.BannerResponseDto;
+import com.example.CineHive.dto.banner.BannerAdminRequest;
+import com.example.CineHive.dto.banner.BannerResponse;
 import com.example.CineHive.entity.banner.Banner;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
@@ -29,9 +29,9 @@ public class BannerServiceImpl implements BannerService {
     // =================================================================
 
     @Override
-    public List<BannerResponseDto> findActiveBanners() {
+    public List<BannerResponse> findActiveBanners() {
         return bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc().stream()
-                .map(BannerResponseDto::fromEntity)
+                .map(BannerResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
@@ -46,7 +46,7 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
-    public Banner createBanner(BannerAdminRequestDto requestDto) {
+    public Banner createBanner(BannerAdminRequest requestDto) {
         Banner banner = Banner.builder()
                 .title(requestDto.title())
                 .subtitle(requestDto.subtitle())
@@ -60,7 +60,7 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
-    public Banner updateBanner(Long bannerId, BannerAdminRequestDto requestDto) {
+    public Banner updateBanner(Long bannerId, BannerAdminRequest requestDto) {
         Banner banner = bannerRepository.findById(bannerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BANNER_NOT_FOUND));
 

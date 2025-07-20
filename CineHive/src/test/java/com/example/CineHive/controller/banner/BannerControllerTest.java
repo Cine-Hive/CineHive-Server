@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.banner;
 
-import com.example.CineHive.dto.banner.BannerResponseDto;
+import com.example.CineHive.dto.banner.BannerResponse;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.service.banner.BannerService;
@@ -45,9 +45,9 @@ class BannerControllerTest {
     @DisplayName("✅ 성공: 활성화된 배너가 있을 경우, 200 OK와 함께 배너 목록을 반환한다.")
     void getActiveBanners_success_withContent() throws Exception {
         // given
-        BannerResponseDto banner1 = new BannerResponseDto(1L, "배너 제목 1", "부제 1", "/img1.jpg", "/link1");
-        BannerResponseDto banner2 = new BannerResponseDto(2L, "배너 제목 2", "부제 2", "/img2.jpg", "/link2");
-        List<BannerResponseDto> dummyBanners = List.of(banner1, banner2);
+        BannerResponse banner1 = new BannerResponse(1L, "배너 제목 1", "부제 1", "/img1.jpg", "/link1");
+        BannerResponse banner2 = new BannerResponse(2L, "배너 제목 2", "부제 2", "/img2.jpg", "/link2");
+        List<BannerResponse> dummyBanners = List.of(banner1, banner2);
 
         given(bannerService.findActiveBanners()).willReturn(dummyBanners);
 

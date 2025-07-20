@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
  * 관리자가 홈 화면에 표시될 차트와 순서를 설정하기 위한 요청 DTO입니다.
  */
 @Schema(description = "홈 화면 차트 설정 요청 DTO")
-public record HomeChartSettingRequestDto(
+public record HomeChartSettingRequest(
         @Schema(description = "홈 화면에 표시할 차트의 종류")
         @NotNull(message = "차트 타입(chartType)은 필수입니다.")
         ChartType chartType,

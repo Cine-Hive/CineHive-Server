@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.admin;
 
-import com.example.CineHive.dto.admin.HomeChartSettingRequestDto;
+import com.example.CineHive.dto.admin.HomeChartSettingRequest;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.ErrorResponse;
@@ -35,10 +35,10 @@ public class AdminHomeChartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HomeChartSettingRequestDto>>> getHomeChartSettings() {
-        List<HomeChartSettingRequestDto> settings = adminHomeChartService.getHomeChartSettings().stream()
+    public ResponseEntity<ApiResponse<List<HomeChartSettingRequest>>> getHomeChartSettings() {
+        List<HomeChartSettingRequest> settings = adminHomeChartService.getHomeChartSettings().stream()
                 .map(entity -> {
-                    var dto = new HomeChartSettingRequestDto();
+                    var dto = new HomeChartSettingRequest();
                     dto.setChartType(entity.getChartType());
                     dto.setDisplayOrder(entity.getDisplayOrder());
                     return dto;
@@ -67,7 +67,7 @@ public class AdminHomeChartController {
             required = true,
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = HomeChartSettingRequestDto.class),
+                    schema = @Schema(implementation = HomeChartSettingRequest.class),
                     examples = @ExampleObject(
                             name = "차트 설정 예시",
                             value = """
@@ -92,7 +92,7 @@ public class AdminHomeChartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping
-    public ResponseEntity<ApiResponse<Void>> updateHomeChartSettings(@Valid @RequestBody List<HomeChartSettingRequestDto> settings) { // @Valid 추가
+    public ResponseEntity<ApiResponse<Void>> updateHomeChartSettings(@Valid @RequestBody List<HomeChartSettingRequest> settings) { // @Valid 추가
         adminHomeChartService.updateHomeChartSettings(settings);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
