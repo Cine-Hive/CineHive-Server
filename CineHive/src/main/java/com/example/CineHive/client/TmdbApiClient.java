@@ -17,6 +17,10 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * TMDB (The Movie Database) API와의 통신을 담당하는 클라이언트입니다.
+ * WebClient를 사용하여 비동기 방식으로 API를 호출합니다.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -88,69 +92,66 @@ public class TmdbApiClient {
 
     // --- 기본 영화 차트 API ---
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getPopularMovies(int page) {
-        return getPagedResponse("/movie/popular", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/movie/popular", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getTopRatedMovies(int page) {
-        return getPagedResponse("/movie/top_rated", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/movie/top_rated", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getUpcomingMovies(int page) {
-        return getPagedResponse("/movie/upcoming", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/movie/upcoming", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getNowPlayingMovies(int page) {
-        return getPagedResponse("/movie/now_playing", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/movie/now_playing", page);
     }
 
     // --- 기본 TV 시리즈 차트 API ---
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getPopularTvSeries(int page) {
-        return getPagedResponse("/tv/popular", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/tv/popular", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getTopRatedTvSeries(int page) {
-        return getPagedResponse("/tv/top_rated", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/tv/top_rated", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getOnTheAirTvSeries(int page) {
-        return getPagedResponse("/tv/on_the_air", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/tv/on_the_air", page);
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getAiringTodayTvSeries(int page) {
-        return getPagedResponse("/tv/airing_today", page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/tv/airing_today", page);
     }
 
     // --- 트렌드 API ---
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getTrendingMovies(String timeWindow, int page) {
-        return getPagedResponse("/trending/movie/" + timeWindow, page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/trending/movie/" + timeWindow, page);
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getTrendingTv(String timeWindow, int page) {
-        return getPagedResponse("/trending/tv/" + timeWindow, page, new ParameterizedTypeReference<>() {});
+        return getPagedResponse("/trending/tv/" + timeWindow, page);
     }
 
     // --- 상세 정보 API ---
     public Mono<TmdbMovieDetailResponse> getMovieDetail(Long movieId) {
-        String path = "/movie/" + movieId;
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
         params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
-        return get(path, TmdbMovieDetailResponse.class, params);
+        return get("/movie/" + movieId, TmdbMovieDetailResponse.class, params);
     }
 
     public Mono<TmdbTvSeriesDetailResponse> getTvSeriesDetail(Long tvId) {
-        String path = "/tv/" + tvId;
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
         params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
-        return get(path, TmdbTvSeriesDetailResponse.class, params);
+        return get("/tv/" + tvId, TmdbTvSeriesDetailResponse.class, params);
     }
 
     // --- 검색 API ---
     public Mono<TmdbPagedResponse<TmdbMultiSearchResponse>> searchMulti(String query, int page) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(QUERY_PARAM, query);
-        params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
         return get("/search/multi", new ParameterizedTypeReference<>() {}, params);
     }
 
@@ -175,36 +176,36 @@ public class TmdbApiClient {
     }
 
     public Mono<TmdbNetworkImagesResponse> getNetworkImages(Long networkId) {
-        String path = "/network/" + networkId + "/images";
-        return get(path, TmdbNetworkImagesResponse.class, new LinkedMultiValueMap<>());
+        return get("/network/" + networkId + "/images", TmdbNetworkImagesResponse.class, new LinkedMultiValueMap<>());
     }
 
     // --- Private Helper Methods ---
 
-    private <T> Mono<TmdbPagedResponse<T>> getPagedResponse(String path, int page, ParameterizedTypeReference<TmdbPagedResponse<T>> typeRef) {
+    private <T> Mono<TmdbPagedResponse<T>> getPagedResponse(String path, int page) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
-        return get(path, typeRef, params);
+        return get(path, new ParameterizedTypeReference<>() {}, params);
     }
 
     private MultiValueMap<String, String> buildDiscoverParams(int page, ChartProperties props) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
-        addQueryParamIfPresent(params, SORT_BY_PARAM, props.getSortBy());
-        addQueryParamIfPresent(params, WITH_GENRES_PARAM, props.getGenreId());
-        addQueryParamIfPresent(params, WITH_COMPANIES_PARAM, props.getCompanyId());
-        addQueryParamIfPresent(params, WITH_ORIGIN_COUNTRY_PARAM, props.getOriginCountry());
-        addQueryParamIfPresent(params, WITH_KEYWORDS_PARAM, props.getKeywordId());
-        addQueryParamIfPresent(params, WITH_NETWORKS_PARAM, props.getNetworkId());
-        addQueryParamIfPresent(params, WITH_ORIGINAL_LANGUAGE_PARAM, props.getWithOriginalLanguage());
-        addQueryParamIfPresent(params, RELEASE_DATE_GTE_PARAM, props.getReleaseDateGte());
-        addQueryParamIfPresent(params, RELEASE_DATE_LTE_PARAM, props.getReleaseDateLte());
-        addQueryParamIfPresent(params, FIRST_AIR_DATE_GTE_PARAM, props.getFirstAirDateGte());
-        addQueryParamIfPresent(params, FIRST_AIR_DATE_LTE_PARAM, props.getFirstAirDateLte());
-        addQueryParamIfPresent(params, WITH_CAST_PARAM, props.getWithCast());
-        addQueryParamIfPresent(params, WITH_NUMBER_OF_SEASONS_PARAM, props.getNumberOfSeasons());
 
-        if (props.getSortBy() != null && props.getSortBy().contains("vote_average")) {
+        addQueryParamIfPresent(params, SORT_BY_PARAM, props.sortBy());
+        addQueryParamIfPresent(params, WITH_GENRES_PARAM, props.genreId());
+        addQueryParamIfPresent(params, WITH_COMPANIES_PARAM, props.companyId());
+        addQueryParamIfPresent(params, WITH_ORIGIN_COUNTRY_PARAM, props.originCountry());
+        addQueryParamIfPresent(params, WITH_KEYWORDS_PARAM, props.keywordId());
+        addQueryParamIfPresent(params, WITH_NETWORKS_PARAM, props.networkId());
+        addQueryParamIfPresent(params, WITH_ORIGINAL_LANGUAGE_PARAM, props.withOriginalLanguage());
+        addQueryParamIfPresent(params, RELEASE_DATE_GTE_PARAM, props.releaseDateGte());
+        addQueryParamIfPresent(params, RELEASE_DATE_LTE_PARAM, props.releaseDateLte());
+        addQueryParamIfPresent(params, FIRST_AIR_DATE_GTE_PARAM, props.firstAirDateGte());
+        addQueryParamIfPresent(params, FIRST_AIR_DATE_LTE_PARAM, props.firstAirDateLte());
+        addQueryParamIfPresent(params, WITH_CAST_PARAM, props.withCast());
+        addQueryParamIfPresent(params, WITH_NUMBER_OF_SEASONS_PARAM, props.numberOfSeasons());
+
+        if (props.sortBy() != null && props.sortBy().contains("vote_average")) {
             params.add(VOTE_COUNT_GTE_PARAM, MIN_VOTE_COUNT_FOR_RATING_SORT);
         }
         return params;
