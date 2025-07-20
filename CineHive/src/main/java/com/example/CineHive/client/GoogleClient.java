@@ -1,6 +1,6 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.google.GoogleTokenResponse;
 import com.example.CineHive.dto.oauth.google.GoogleUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
@@ -35,14 +35,14 @@ public class GoogleClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getMemberInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toMemberInfo);
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
                 .map(this::toMemberInfo);
     }
@@ -74,9 +74,9 @@ public class GoogleClient implements OAuth2Client {
                 .bodyToMono(GoogleUserResponse.class);
     }
 
-    private OAuth2MemberInfo toMemberInfo(GoogleUserResponse userResponse) {
+    private OAuth2UserInfo toMemberInfo(GoogleUserResponse userResponse) {
         log.debug("Google User Info: {}", userResponse);
-        return new OAuth2MemberInfo(
+        return new OAuth2UserInfo(
                 userResponse.email(),
                 userResponse.name(),
                 getProviderType()

@@ -2,7 +2,7 @@ package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.dto.auth.LoginResponse;
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.repository.member.MemberRepository;
@@ -58,8 +58,8 @@ class OAuth2ServiceTest {
         oauth2Service.init();
     }
 
-    private OAuth2MemberInfo createDummyOAuth2MemberInfo(String email, String nickname, ProviderType provider) {
-        return new OAuth2MemberInfo(email, nickname, provider);
+    private OAuth2UserInfo createDummyOAuth2MemberInfo(String email, String nickname, ProviderType provider) {
+        return new OAuth2UserInfo(email, nickname, provider);
     }
 
     private User createDummyMember(String email, String nickname) {
@@ -80,7 +80,7 @@ class OAuth2ServiceTest {
             // given
             String email = "test@kakao.com";
             String nickname = "기존유저";
-            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
+            OAuth2UserInfo oAuth2UserInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
             User existingUser = createDummyMember(email, nickname);
             String dummyToken = "dummy-jwt-token";
 
@@ -105,7 +105,7 @@ class OAuth2ServiceTest {
             // given
             String email = "new@kakao.com";
             String nickname = "신규유저";
-            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
+            OAuth2UserInfo oAuth2UserInfo = createDummyOAuth2MemberInfo(email, nickname, ProviderType.KAKAO);
             User newUser = createDummyMember(email, nickname);
             String dummyToken = "dummy-jwt-token";
 
@@ -133,7 +133,7 @@ class OAuth2ServiceTest {
             // given
             String email = "another@kakao.com";
             String originalNickname = "중복닉네임";
-            OAuth2MemberInfo oAuth2MemberInfo = createDummyOAuth2MemberInfo(email, originalNickname, ProviderType.KAKAO);
+            OAuth2UserInfo oAuth2UserInfo = createDummyOAuth2MemberInfo(email, originalNickname, ProviderType.KAKAO);
 
             String firstAttempt = originalNickname;
             String secondAttempt = String.format("%s (%s %d)", originalNickname, ProviderType.KAKAO.name(), 1);
@@ -162,7 +162,7 @@ class OAuth2ServiceTest {
     void loginWithAccessToken_shouldCallCorrectClient() {
         // given
         String accessToken = "valid-access-token";
-        OAuth2MemberInfo dummyInfo = createDummyOAuth2MemberInfo("test@kakao.com", "test", ProviderType.KAKAO);
+        OAuth2UserInfo dummyInfo = createDummyOAuth2MemberInfo("test@kakao.com", "test", ProviderType.KAKAO);
         given(mockKakaoClient.getMemberInfoByAccessToken(accessToken)).willReturn(Mono.just(dummyInfo));
         given(memberRepository.existsByEmail(anyString())).willReturn(true);
         given(memberRepository.findByEmail(anyString())).willReturn(Optional.of(mock(User.class)));

@@ -1,53 +1,47 @@
 package com.example.CineHive.dto.oauth.kakao;
 
+import com.example.CineHive.dto.oauth.OAuth2Response;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.user.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * 카카오 사용자 정보 요청에 대한 전체 응답 DTO
- */
 public record KakaoUserResponse(
         Long id,
-
         @JsonProperty("connected_at")
         String connectedAt,
-
         @JsonProperty("kakao_account")
         KakaoAccount kakaoAccount
-) {
-    /**
-     * 카카오 계정 정보
-     */
+) implements OAuth2Response {
+
     public record KakaoAccount(
             @JsonProperty("has_email")
             Boolean hasEmail,
-
             @JsonProperty("email_needs_agreement")
             Boolean emailNeedsAgreement,
-
             @JsonProperty("is_email_valid")
             Boolean isEmailValid,
-
             @JsonProperty("is_email_verified")
             Boolean isEmailVerified,
-
             String email,
-
             Profile profile
     ) {}
 
-    /**
-     * 카카오 프로필 정보
-     */
     public record Profile(
             String nickname,
-
             @JsonProperty("thumbnail_image_url")
             String thumbnailImageUrl,
-
             @JsonProperty("profile_image_url")
             String profileImageUrl,
-
             @JsonProperty("is_default_image")
             Boolean isDefaultImage
     ) {}
+
+    @Override
+    public OAuth2UserInfo toUserInfo(ProviderType providerType) {
+        return new OAuth2UserInfo(
+                this.kakaoAccount().email(),
+                this.kakaoAccount().profile().nickname(),
+                providerType
+        );
+    }
 }

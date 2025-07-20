@@ -74,11 +74,11 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public PagedResponse<PostSummaryDto> getBoards(int page, int size, PostSortType sort) {
+    public PagedResponse<PostSummaryResponse> getBoards(int page, int size, PostSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
         Page<Post> boardPage = boardRepository.findAll(pageable);
 
-        return PagedResponse.<PostSummaryDto>builder()
+        return PagedResponse.<PostSummaryResponse>builder()
                 .content(boardPage.getContent().stream().map(BoardMapper::toListDto).toList())
                 .page(boardPage.getNumber() + 1)
                 .size(boardPage.getSize())

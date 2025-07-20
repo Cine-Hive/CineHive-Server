@@ -3,7 +3,7 @@ package com.example.CineHive.controller.board;
 import com.example.CineHive.dto.post.PostDetailResponse;
 import com.example.CineHive.dto.post.PostSortType;
 import com.example.CineHive.dto.post.CreatePostRequest;
-import com.example.CineHive.dto.post.PostSummaryDto;
+import com.example.CineHive.dto.post.PostSummaryResponse;
 import com.example.CineHive.dto.post.UpdatePostRequest;
 import com.example.CineHive.dto.response.ApiResponse;
 import com.example.CineHive.dto.response.PagedResponse;
@@ -102,14 +102,14 @@ public class BoardController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공", content = @Content(schema = @Schema(implementation = PagedResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryDto>>> getBoards(
+    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> getBoards(
             @Parameter(description = "페이지 번호 (1부터 시작)", example = "1")
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "페이지당 게시글 수", example = "10")
             @RequestParam(defaultValue = "10") @Min(1) int size,
             @Parameter(description = "정렬 기준", schema = @Schema(implementation = PostSortType.class), example = "LATEST")
             @RequestParam(defaultValue = "LATEST") PostSortType sort) {
-        PagedResponse<PostSummaryDto> pagedResponse = boardService.getBoards(page, size, sort);
+        PagedResponse<PostSummaryResponse> pagedResponse = boardService.getBoards(page, size, sort);
         return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 }

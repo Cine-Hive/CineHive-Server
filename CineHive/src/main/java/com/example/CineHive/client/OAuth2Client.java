@@ -1,6 +1,6 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.entity.user.ProviderType;
 import reactor.core.publisher.Mono;
 
@@ -24,12 +24,12 @@ public interface OAuth2Client {
      * 이 메서드는 내부적으로 다음 단계를 수행합니다:
      * 1. 인가 코드로 액세스 토큰 요청
      * 2. 발급받은 액세스 토큰으로 사용자 정보 요청
-     * 3. 받은 정보를 표준 {@link OAuth2MemberInfo} 객체로 변환
+     * 3. 받은 정보를 표준 {@link OAuth2UserInfo} 객체로 변환
      *
      * @param code 소셜 로그인 제공업체의 리다이렉션을 통해 발급받은 인가 코드
      * @return 비동기적으로 반환될 표준화된 회원 정보 {@code Mono} 객체
      */
-    Mono<OAuth2MemberInfo> getMemberInfo(String code);
+    Mono<OAuth2UserInfo> getMemberInfo(String code);
 
     /**
      * [앱 기반 로그인용]
@@ -40,5 +40,5 @@ public interface OAuth2Client {
      * @param accessToken 클라이언트 앱에서 직접 전달받은 유효한 액세스 토큰
      * @return 비동기적으로 반환될 표준화된 회원 정보 {@code Mono} 객체
      */
-    Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken);
+    Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken);
 }

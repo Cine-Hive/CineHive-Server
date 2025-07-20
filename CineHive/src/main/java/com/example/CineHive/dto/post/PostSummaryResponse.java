@@ -4,7 +4,7 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record PostSummaryDto(
+public record PostSummaryResponse(
         Long id,
         String title,
         String userNickname,

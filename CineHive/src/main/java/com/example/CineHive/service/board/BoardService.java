@@ -40,5 +40,5 @@ public interface BoardService {
      * 게시글 목록을 페이징하여 조회합니다.
      * @return 클라이언트 친화적인 페이징 응답 DTO
      */
-    PagedResponse<PostSummaryDto> getBoards(int page, int size, PostSortType sort);
+    PagedResponse<PostSummaryResponse> getBoards(int page, int size, PostSortType sort);
 }

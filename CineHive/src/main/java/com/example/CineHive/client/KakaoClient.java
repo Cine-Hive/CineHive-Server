@@ -1,6 +1,6 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.kakao.KakaoTokenResponse;
 import com.example.CineHive.dto.oauth.kakao.KakaoUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
@@ -33,14 +33,14 @@ public class KakaoClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getMemberInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toMemberInfo);
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
                 .map(this::toMemberInfo);
     }
@@ -71,9 +71,9 @@ public class KakaoClient implements OAuth2Client {
                 .bodyToMono(KakaoUserResponse.class);
     }
 
-    private OAuth2MemberInfo toMemberInfo(KakaoUserResponse userResponse) {
+    private OAuth2UserInfo toMemberInfo(KakaoUserResponse userResponse) {
         log.debug("Kakao User Info: {}", userResponse);
-        return new OAuth2MemberInfo(
+        return new OAuth2UserInfo(
                 userResponse.kakaoAccount().email(),
                 userResponse.kakaoAccount().profile().nickname(),
                 getProviderType()

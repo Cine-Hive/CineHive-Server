@@ -1,6 +1,6 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.naver.NaverTokenResponse;
 import com.example.CineHive.dto.oauth.naver.NaverUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
@@ -32,14 +32,14 @@ public class NaverClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getMemberInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toMemberInfo);
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
                 .map(this::toMemberInfo);
     }
@@ -69,9 +69,9 @@ public class NaverClient implements OAuth2Client {
                 .bodyToMono(NaverUserResponse.class);
     }
 
-    private OAuth2MemberInfo toMemberInfo(NaverUserResponse userResponse) {
+    private OAuth2UserInfo toMemberInfo(NaverUserResponse userResponse) {
         log.debug("Naver User Info: {}", userResponse);
-        return new OAuth2MemberInfo(
+        return new OAuth2UserInfo(
                 userResponse.response().email(),
                 userResponse.response().nickname(),
                 getProviderType()
