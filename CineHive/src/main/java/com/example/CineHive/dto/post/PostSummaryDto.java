@@ -1,13 +1,13 @@
-package com.example.CineHive.dto.board;
+package com.example.CineHive.dto.post;
 
 import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record GetListBoardDto(
+public record PostSummaryDto(
         Long id,
-        String brdTitle,
-        String memNickname,
+        String title,
+        String userNickname,
         LocalDateTime createdAt,
         int views,
         int likeCount,
