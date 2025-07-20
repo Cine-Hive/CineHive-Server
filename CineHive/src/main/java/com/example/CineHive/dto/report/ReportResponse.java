@@ -1,7 +1,7 @@
 package com.example.CineHive.dto.report;
 
-import com.example.CineHive.entity.board.Report;
-import com.example.CineHive.entity.board.ReportStatus;
+import com.example.CineHive.entity.post.Report;
+import com.example.CineHive.entity.post.ReportStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -40,8 +40,8 @@ public record ReportResponse(
         Long contentId;
         String type;
 
-        if (report.getBoard() != null) {
-            contentId = report.getBoard().getId();
+        if (report.getPost() != null) {
+            contentId = report.getPost().getId();
             type = "BOARD";
         } else if (report.getComment() != null) {
             contentId = report.getComment().getId();
