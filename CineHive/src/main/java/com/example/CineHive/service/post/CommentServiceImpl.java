@@ -3,14 +3,14 @@ package com.example.CineHive.service.post;
 import com.example.CineHive.dto.comment.CommentResponse;
 import com.example.CineHive.dto.comment.CreateCommentRequest;
 import com.example.CineHive.dto.comment.UpdateCommentRequest;
-import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.post.Comment;
+import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.mapper.post.CommentMapper;
-import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.mapper.comment.CommentMapper;
 import com.example.CineHive.repository.post.CommentRepository;
+import com.example.CineHive.repository.post.PostRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 /**
  * CommentService 인터페이스의 구현체입니다.
- * 실제 데이터베이스와 상호작용하며 댓글 관련 비즈니스 로직을 수행합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,62 +33,63 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponse addComment(Long boardId, CreateCommentRequest request, String memberEmail) {
-        Post post = findBoardById(boardId);
-        User user = findMemberByEmail(memberEmail);
+    public CommentResponse addComment(Long postId, CreateCommentRequest request, String userEmail) {
+        Post post = findPostById(postId);
+        User user = findUserByEmail(userEmail);
 
         Comment comment = Comment.builder()
                 .content(request.content())
-                .board(post)
-                .member(user)
+                .post(post)
+                .user(user)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
-        return CommentMapper.toDto(savedComment);
+        return CommentMapper.toResponse(savedComment);
     }
 
     @Override
-    public List<CommentResponse> getCommentsByBoard(Long boardId) {
-        // 게시글이 존재하는지 먼저 확인
-        findBoardById(boardId);
-        List<Comment> comments = commentRepository.findByBoard_Id(boardId);
+    public List<CommentResponse> getCommentsByPost(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        List<Comment> comments = commentRepository.findByPost_Id(postId);
         return comments.stream()
-                .map(CommentMapper::toDto)
+                .map(CommentMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
+    public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, String userEmail) {
+        User user = findUserByEmail(userEmail);
         Comment comment = findCommentById(commentId);
 
         verifyCommentOwnership(comment, user);
         comment.update(request.content());
 
-        return CommentMapper.toDto(comment);
+        return CommentMapper.toResponse(comment);
     }
+
+
 
     @Override
     @Transactional
-    public void deleteComment(Long commentId, String memberEmail) {
-        User user = findMemberByEmail(memberEmail);
+    public void deleteComment(Long commentId, String userEmail) {
+        User user = findUserByEmail(userEmail);
         Comment comment = findCommentById(commentId);
 
         verifyCommentOwnership(comment, user);
         commentRepository.delete(comment);
     }
 
-    //== Private Helper Methods ==//
-
-    private User findMemberByEmail(String email) {
+    private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    private Post findBoardById(Long boardId) {
-        return postRepository.findById(boardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+    private Post findPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
     private Comment findCommentById(Long commentId) {
