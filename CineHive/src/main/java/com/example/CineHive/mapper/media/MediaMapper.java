@@ -110,6 +110,49 @@ public final class MediaMapper {
         );
     }
 
+    /**
+     * TMDB의 페이징 응답을 순위 정보가 포함된 MediaChartResponse의 PagedResponse로 변환합니다.
+     * @param tmdbResponse TMDB의 페이징 응답
+     * @param mapper 각 항목을 MediaSummaryResponse로 변환할 함수
+     * @param <T> TMDB 응답 항목 타입 (TmdbMovieResponse 또는 TmdbTvSeriesResponse)
+     * @return 변환된 PagedResponse<MediaChartResponse>
+     */
+    public static <T> PagedResponse<MediaChartResponse> toChartPagedResponse(
+            TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
+
+        if (tmdbResponse == null || tmdbResponse.results() == null) {
+            return PagedResponse.empty(1, 20);
+        }
+
+        // 순위(rank)를 매기기 위해 AtomicInteger 사용
+        java.util.concurrent.atomic.AtomicInteger ranker = new java.util.concurrent.atomic.AtomicInteger(
+                (tmdbResponse.page() - 1) * 20 // 페이지 번호에 맞춰 시작 순위 계산
+        );
+
+        List<MediaChartResponse> content = tmdbResponse.results().stream()
+                .map(item -> {
+                    MediaSummaryResponse summary = mapper.apply(item);
+                    return MediaChartResponse.builder()
+                            .mediaId(summary.id())
+                            .title(summary.title())
+                            .posterPath(summary.posterPath())
+                            .voteAverage(summary.voteAverage())
+                            .isAnimation(summary.isAnimation())
+                            .rank(ranker.incrementAndGet())
+                            .build();
+                })
+                .toList();
+
+        return new PagedResponse<>(
+                content,
+                tmdbResponse.page() - 1,
+                content.size(),
+                (long) tmdbResponse.totalResults(),
+                tmdbResponse.totalPages(),
+                tmdbResponse.page() >= tmdbResponse.totalPages()
+        );
+    }
+
     // --- Private Helper Methods ---
 
     public static MediaSummaryResponse toSummaryResponse(TmdbMovieResponse movie) {
