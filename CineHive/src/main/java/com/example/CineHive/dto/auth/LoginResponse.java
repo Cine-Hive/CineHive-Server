@@ -12,12 +12,12 @@ public record LoginResponse(
         @Schema(description = "JWT 액세스 토큰")
         String token,
         @Schema(description = "신규 회원 여부")
-        boolean isNewMember,
+        boolean isNewUser,
         @Schema(description = "로그인한 회원 정보")
-        UserInfo userInfo // 이름 변경
+        UserInfo userInfo
 ) {
     @Schema(description = "로그인한 회원의 상세 정보")
-    public record UserInfo( // 이름 변경
+    public record UserInfo(
                             Long id,
                             String email,
                             String name,
@@ -31,7 +31,7 @@ public record LoginResponse(
                     user.getEmail(),
                     user.getName(),
                     user.getNickname(),
-                    user.getGender() != null ? user.getGender().getDescription() : null, // 한글 이름으로 변경
+                    user.getGender() != null ? user.getGender().getDescription() : null,
                     user.getGenres().stream()
                             .map(Genre::getKoreanName)
                             .collect(Collectors.toSet())
