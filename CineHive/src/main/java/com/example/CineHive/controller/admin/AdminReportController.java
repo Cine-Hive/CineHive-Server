@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Admin Report Controller", description = "신고 관리 API")
+/**
+ * 관리자의 신고 관리 API 컨트롤러입니다.
+ */
+@Tag(name = "Admin Report Controller", description = "신고 관리 API (관리자 전용)")
 @RestController
 @RequestMapping("/api/v1/admin/reports")
 @RequiredArgsConstructor
@@ -22,7 +25,8 @@ public class AdminReportController {
 
     private final AdminReportService adminReportService;
 
-    @Operation(summary = "신고 내역 조회")
+    @Operation(summary = "신고 내역 조회",
+            description = "모든 신고 내역을 조회합니다. `status` 쿼리 파라미터를 사용하여 특정 상태(PENDING, ACCEPTED, REJECTED)의 신고만 필터링할 수 있습니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ReportResponse>>> getReports(
             @Parameter(description = "필터링할 신고 상태 (생략 시 전체 조회)")
@@ -32,7 +36,8 @@ public class AdminReportController {
         return ResponseEntity.ok(ApiResponse.ok(reports));
     }
 
-    @Operation(summary = "신고 승인")
+    @Operation(summary = "신고 승인",
+            description = "특정 신고를 '승인(ACCEPTED)' 처리합니다. 아직 처리되지 않은(PENDING) 신고에 대해서만 유효합니다.")
     @PatchMapping("/{reportId}/accept")
     public ResponseEntity<ApiResponse<MessageResponse>> acceptReport(
             @Parameter(description = "처리할 신고의 ID") @PathVariable Long reportId) {
@@ -41,7 +46,8 @@ public class AdminReportController {
         return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("신고를 성공적으로 승인 처리했습니다.")));
     }
 
-    @Operation(summary = "신고 기각")
+    @Operation(summary = "신고 기각",
+            description = "특정 신고를 '기각(REJECTED)' 처리합니다. 아직 처리되지 않은(PENDING) 신고에 대해서만 유효합니다.")
     @PatchMapping("/{reportId}/reject")
     public ResponseEntity<ApiResponse<MessageResponse>> rejectReport(
             @Parameter(description = "처리할 신고의 ID") @PathVariable Long reportId) {

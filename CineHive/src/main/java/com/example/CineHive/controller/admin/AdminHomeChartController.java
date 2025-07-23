@@ -29,24 +29,24 @@ public class AdminHomeChartController {
 
     private final AdminHomeChartService adminHomeChartService;
 
-    @Operation(summary = "홈 화면 차트 설정 조회")
+    @Operation(summary = "홈 화면 차트 설정 조회",
+            description = "현재 홈 화면에 표시되도록 설정된 차트 목록과 순서를 조회합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<HomeChartSettingResponse>>> getHomeChartSettings() {
         List<HomeChartSettingResponse> settings = adminHomeChartService.getHomeChartSettings();
         return ResponseEntity.ok(ApiResponse.ok(settings));
     }
 
-    @Operation(summary = "선택 가능한 모든 차트 타입 조회")
+    @Operation(summary = "선택 가능한 모든 차트 타입 조회",
+            description = "관리자가 홈 화면 차트로 설정할 수 있는 모든 `ChartType` 목록을 제공합니다.")
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<ChartType>>> getAvailableChartTypes() {
         List<ChartType> chartTypes = adminHomeChartService.getAvailableChartTypes();
         return ResponseEntity.ok(ApiResponse.ok(chartTypes));
     }
 
-    @Operation(
-            summary = "홈 화면 차트 설정 업데이트",
-            description = "홈 화면에 표시될 차트 목록 전체를 새로 업데이트합니다. 요청 본문에 포함된 목록으로 기존의 모든 설정이 대체(Overwrite)됩니다."
-    )
+    @Operation(summary = "홈 화면 차트 설정 업데이트",
+            description = "홈 화면에 표시될 차트 목록 전체를 새로 업데이트합니다. 요청 본문에 포함된 목록으로 기존의 모든 설정이 대체(Overwrite)됩니다.")
     @RequestBody(
             description = "업데이트할 홈 화면 차트 설정 목록",
             required = true,

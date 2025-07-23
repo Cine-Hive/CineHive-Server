@@ -32,7 +32,13 @@ public class PostController {
 
     private final PostService postService;
 
-    @Operation(summary = "게시글 생성")
+    @Operation(summary = "게시글 생성",
+            description = """
+               새로운 게시글을 등록합니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               - 요청 본문에 `title`과 `content`는 필수입니다.
+               - 성공 시, 생성된 게시글의 상세 정보와 함께 `201CREATED` 상태 코드가 반환됩니다.
+               """)
     @PostMapping
     public ResponseEntity<ApiResponse<PostDetailResponse>> createPost(
             @Valid @RequestBody CreatePostRequest request,
@@ -41,14 +47,24 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdPost));
     }
 
-    @Operation(summary = "게시글 상세 조회")
+    @Operation(summary = "게시글 상세 조회",
+            description = """
+               특정 ID를 가진 게시글의 상세 정보를 조회합니다.
+               - **Side Effect**: 이 API를 호출하면 해당 게시글의 조회수(`views`)가 1 증가합니다.
+               - 댓글 목록(`comments`)도 함께 포함되어 반환됩니다.
+               """)
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostById(@PathVariable Long postId) {
         PostDetailResponse postDetailResponse = postService.getPostById(postId);
         return ResponseEntity.ok(ApiResponse.ok(postDetailResponse));
     }
 
-    @Operation(summary = "게시글 수정")
+    @Operation(summary = "게시글 수정",
+            description = """
+               자신이 작성한 게시글의 제목과 내용을 수정합니다.
+               - **인증 및 권한 필요**: 게시글을 작성한 본인만 수정할 수 있습니다. 타인의 게시글 수정 시도 시 `403 Forbidden` 에러가 발생합니다.
+               - 성공 시, 수정된 게시글의 전체 상세 정보가 반환됩니다.
+               """)
     @PutMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> updatePost(
             @PathVariable Long postId,
@@ -58,7 +74,12 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(updatedPost));
     }
 
-    @Operation(summary = "게시글 삭제")
+    @Operation(summary = "게시글 삭제",
+            description = """
+               자신이 작성한 게시글을 영구적으로 삭제합니다.
+               - **인증 및 권한 필요**: 게시글을 작성한 본인 또는 `ADMIN` 역할만 삭제할 수 있습니다. 타인의 게시글 삭제 시도 시 `403 Forbidden` 에러가 발생합니다.
+               - 성공 시, 성공 메시지를 담은 응답이 반환됩니다.
+               """)
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<MessageResponse>> deletePost(
             @PathVariable Long postId,
@@ -67,7 +88,13 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글이 성공적으로 삭제되었습니다.")));
     }
 
-    @Operation(summary = "게시글 목록 페이징 조회")
+    @Operation(summary = "게시글 목록 페이징 조회",
+            description = """
+               게시글 목록을 페이징하여 조회합니다.
+               - `page`: 페이지 번호 (1부터 시작).
+               - `size`: 페이지당 게시글 수.
+               - `sort`: 정렬 기준. `LATEST`(최신순), `VIEWS`(조회수순), `LIKES`(좋아요순) 중 선택 가능합니다.
+               """)
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> getPosts(
             @Parameter(description = "페이지 번호 (1부터 시작)")

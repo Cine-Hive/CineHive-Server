@@ -13,6 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 게시글 '싫어요' 관련 API 컨트롤러입니다.
+ */
 @Tag(name = "Dislike Controller", description = "게시글 '싫어요' 관련 API")
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/dislikes")
@@ -21,7 +24,12 @@ public class DislikeController {
 
     private final DislikeService dislikeService;
 
-    @Operation(summary = "게시글 '싫어요' 추가")
+    @Operation(summary = "게시글 '싫어요' 추가",
+            description = """
+               특정 게시글에 '싫어요'를 누릅니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               - **Side Effect**: 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소됩니다.
+               """)
     @PostMapping
     public ResponseEntity<ApiResponse<MessageResponse>> addDislike(
             @PathVariable Long postId,
@@ -31,7 +39,11 @@ public class DislikeController {
         return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '싫어요'를 눌렀습니다.")));
     }
 
-    @Operation(summary = "게시글 '싫어요' 취소")
+    @Operation(summary = "게시글 '싫어요' 취소",
+            description = """
+               특정 게시글에 눌렀던 '싫어요'를 취소합니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               """)
     @DeleteMapping
     public ResponseEntity<ApiResponse<MessageResponse>> removeDislike(
             @PathVariable Long postId,
@@ -41,7 +53,8 @@ public class DislikeController {
         return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'싫어요'를 취소했습니다.")));
     }
 
-    @Operation(summary = "게시글 '싫어요' 개수 조회")
+    @Operation(summary = "게시글 '싫어요' 개수 조회",
+            description = "특정 게시글의 '싫어요' 개수를 조회합니다. 인증이 필요 없습니다.")
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<DislikeCountResponse>> getDislikeCount(@PathVariable Long postId) {
         int count = dislikeService.getDislikeCount(postId);
