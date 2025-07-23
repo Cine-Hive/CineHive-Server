@@ -83,7 +83,7 @@ public class PostServiceImpl implements PostService {
 
         return new PagedResponse<>(
                 postPage.getContent().stream().map(PostMapper::toSummaryResponse).toList(),
-                postPage.getNumber(),
+                postPage.getNumber() + 1, // 1-based
                 postPage.getSize(),
                 postPage.getTotalElements(),
                 postPage.getTotalPages(),

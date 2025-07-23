@@ -19,15 +19,8 @@ import java.util.stream.Stream;
 @Slf4j
 public final class MediaMapper {
 
-    private MediaMapper() {
-        // 유틸리티 클래스이므로 인스턴스화 방지
-    }
+    private MediaMapper() {}
 
-    // --- Public Mapper Methods ---
-
-    /**
-     * TMDB 영화 상세 응답을 MediaDetailResponse DTO로 변환합니다.
-     */
     public static MediaDetailResponse toDetailResponse(TmdbMovieDetailResponse tmdb) {
         if (tmdb == null) return null;
         return MediaDetailResponse.builder()
@@ -54,9 +47,6 @@ public final class MediaMapper {
                 .build();
     }
 
-    /**
-     * TMDB TV 시리즈 상세 응답을 MediaDetailResponse DTO로 변환합니다.
-     */
     public static MediaDetailResponse toDetailResponse(TmdbTvSeriesDetailResponse tmdb) {
         if (tmdb == null) return null;
         return MediaDetailResponse.builder()
@@ -83,53 +73,37 @@ public final class MediaMapper {
                 .build();
     }
 
-    /**
-     * TMDB의 페이징된 응답을 우리 시스템의 PagedResponse로 변환하는 제네릭 메서드입니다.
-     * @param tmdbResponse TMDB의 페이징 응답
-     * @param mapper 각 항목을 변환할 매핑 함수
-     * @param <T> TMDB 응답 항목 타입
-     * @param <R> 우리 시스템 DTO 타입
-     * @return 변환된 PagedResponse
-     */
     public static <T, R> PagedResponse<R> toPagedResponse(TmdbPagedResponse<T> tmdbResponse, Function<T, R> mapper) {
-        if (tmdbResponse == null || tmdbResponse.results() == null) {
-            return PagedResponse.empty(1, 20); // 기본 페이지, 사이즈
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PagedResponse.empty(1, 20);
         }
 
-        List<R> content = tmdbResponse.results().stream()
+        List<R> content = tmdbResponse.getResults().stream()
                 .map(mapper)
                 .toList();
 
         return new PagedResponse<>(
                 content,
-                tmdbResponse.page() - 1, // TMDB는 1부터 시작, 우리는 0부터 시작
+                tmdbResponse.getPage(),
                 content.size(),
-                (long) tmdbResponse.totalResults(),
-                tmdbResponse.totalPages(),
-                tmdbResponse.page() >= tmdbResponse.totalPages()
+                (long) tmdbResponse.getTotalResults(),
+                tmdbResponse.getTotalPages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotalPages()
         );
     }
 
-    /**
-     * TMDB의 페이징 응답을 순위 정보가 포함된 MediaChartResponse의 PagedResponse로 변환합니다.
-     * @param tmdbResponse TMDB의 페이징 응답
-     * @param mapper 각 항목을 MediaSummaryResponse로 변환할 함수
-     * @param <T> TMDB 응답 항목 타입 (TmdbMovieResponse 또는 TmdbTvSeriesResponse)
-     * @return 변환된 PagedResponse<MediaChartResponse>
-     */
     public static <T> PagedResponse<MediaChartResponse> toChartPagedResponse(
             TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
 
-        if (tmdbResponse == null || tmdbResponse.results() == null) {
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
             return PagedResponse.empty(1, 20);
         }
 
-        // 순위(rank)를 매기기 위해 AtomicInteger 사용
         java.util.concurrent.atomic.AtomicInteger ranker = new java.util.concurrent.atomic.AtomicInteger(
-                (tmdbResponse.page() - 1) * 20 // 페이지 번호에 맞춰 시작 순위 계산
+                (tmdbResponse.getPage() - 1) * 20
         );
 
-        List<MediaChartResponse> content = tmdbResponse.results().stream()
+        List<MediaChartResponse> content = tmdbResponse.getResults().stream()
                 .map(item -> {
                     MediaSummaryResponse summary = mapper.apply(item);
                     return MediaChartResponse.builder()
@@ -145,15 +119,13 @@ public final class MediaMapper {
 
         return new PagedResponse<>(
                 content,
-                tmdbResponse.page() - 1,
+                tmdbResponse.getPage(),
                 content.size(),
-                (long) tmdbResponse.totalResults(),
-                tmdbResponse.totalPages(),
-                tmdbResponse.page() >= tmdbResponse.totalPages()
+                (long) tmdbResponse.getTotalResults(),
+                tmdbResponse.getTotalPages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotalPages()
         );
     }
-
-    // --- Private Helper Methods ---
 
     public static MediaSummaryResponse toSummaryResponse(TmdbMovieResponse movie) {
         return MediaSummaryResponse.builder()
@@ -207,7 +179,7 @@ public final class MediaMapper {
                             .build());
         } else if ("Actor".equals(job) && credits.cast() != null) {
             stream = credits.cast().stream()
-                    .limit(10) // 배우는 10명으로 제한
+                    .limit(10)
                     .map(c -> CreditResponse.builder()
                             .personId(c.id())
                             .name(c.name())
@@ -242,8 +214,8 @@ public final class MediaMapper {
     }
 
     private static <T> List<MediaSummaryResponse> toSummaryResponses(TmdbPagedResponse<T> response, Function<T, MediaSummaryResponse> mapper) {
-        if (response == null || response.results() == null) return Collections.emptyList();
-        return response.results().stream()
+        if (response == null || response.getResults() == null) return Collections.emptyList();
+        return response.getResults().stream()
                 .limit(10)
                 .map(mapper)
                 .toList();
