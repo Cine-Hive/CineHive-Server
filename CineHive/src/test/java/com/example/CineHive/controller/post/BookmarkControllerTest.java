@@ -3,7 +3,7 @@ package com.example.CineHive.controller.post;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.post.Bookmark;
 import com.example.CineHive.entity.user.*;
-import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.PostRepository;
 import com.example.CineHive.repository.post.BookmarkRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package com.example.CineHive.repository.board;
+package com.example.CineHive.repository.post;
 
 import com.example.CineHive.config.JpaAuditingConfig;
 import com.example.CineHive.entity.post.Post;

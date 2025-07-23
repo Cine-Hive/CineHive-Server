@@ -5,7 +5,7 @@ import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.entity.user.*;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.board.PostRepository;
+import com.example.CineHive.repository.post.PostRepository;
 import com.example.CineHive.repository.post.ReportRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
