@@ -1,7 +1,11 @@
 package com.example.CineHive.controller.account;
 
-import com.example.CineHive.dto.account.*;
+import com.example.CineHive.dto.account.AccountInfoResponse;
+import com.example.CineHive.dto.account.UpdateGenresRequest;
+import com.example.CineHive.dto.account.UpdateNicknameRequest;
+import com.example.CineHive.dto.account.UpdatePasswordRequest;
 import com.example.CineHive.dto.global.ApiResponse;
+import com.example.CineHive.dto.global.MessageResponse;
 import com.example.CineHive.service.account.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,11 +17,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @Tag(name = "Account Controller", description = "인증된 사용자의 계정 정보 관리 API")
 @RestController
-@RequestMapping("/api/v1/account")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class AccountController {
 
@@ -32,37 +34,37 @@ public class AccountController {
     }
 
     @Operation(summary = "닉네임 변경", description = "현재 로그인된 사용자의 닉네임을 변경합니다.")
-    @PatchMapping("/nickname")
-    public ResponseEntity<ApiResponse<Map<String, String>>> changeNickname(
+    @PatchMapping("/me/nickname")
+    public ResponseEntity<ApiResponse<MessageResponse>> changeNickname(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateNicknameRequest requestDto) {
-        accountService.changeNickname(userDetails.getUsername(), requestDto.nickname());
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "닉네임이 성공적으로 변경되었습니다.")));
+            @Valid @RequestBody UpdateNicknameRequest request) {
+        accountService.changeNickname(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("닉네임이 성공적으로 변경되었습니다.")));
     }
 
     @Operation(summary = "비밀번호 변경", description = "현재 로그인된 사용자의 비밀번호를 변경합니다.")
-    @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<Map<String, String>>> changePassword(
+    @PatchMapping("/me/password")
+    public ResponseEntity<ApiResponse<MessageResponse>> changePassword(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdatePasswordRequest requestDto) {
-        accountService.changePassword(userDetails.getUsername(), requestDto.oldPassword(), requestDto.newPassword());
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다.")));
+            @Valid @RequestBody UpdatePasswordRequest request) {
+        accountService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("비밀번호가 성공적으로 변경되었습니다.")));
     }
 
     @Operation(summary = "선호 장르 수정", description = "현재 로그인된 사용자의 선호 장르 목록을 수정합니다.")
-    @PutMapping("/genres")
-    public ResponseEntity<ApiResponse<Map<String, String>>> updateGenres(
+    @PutMapping("/me/genres")
+    public ResponseEntity<ApiResponse<MessageResponse>> updateGenres(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UpdateGenresRequest requestDto) {
-        accountService.updateGenres(userDetails.getUsername(), requestDto.genres());
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "선호 장르가 성공적으로 수정되었습니다.")));
+            @RequestBody UpdateGenresRequest request) {
+        accountService.updateGenres(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("선호 장르가 성공적으로 수정되었습니다.")));
     }
 
-    @Operation(summary = "회원 탈퇴", description = "현재 로그인된 사용자의 계정을 삭제합니다. 모든 관련 데이터가 영구적으로 삭제됩니다.")
+    @Operation(summary = "회원 탈퇴", description = "현재 로그인된 사용자의 계정을 삭제합니다.")
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Map<String, String>>> deleteAccount(
+    public ResponseEntity<ApiResponse<MessageResponse>> deleteAccount(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         accountService.deleteAccount(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "회원 탈퇴가 성공적으로 처리되었습니다.")));
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("회원 탈퇴가 성공적으로 처리되었습니다.")));
     }
 }
