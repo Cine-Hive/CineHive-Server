@@ -1,4 +1,4 @@
-package com.example.CineHive.controller.member;
+package com.example.CineHive.controller.user;
 
 import com.example.CineHive.dto.auth.LoginRequest;
 import com.example.CineHive.dto.auth.RegisterRequest;
@@ -24,7 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
-public class MemberController {
+public class UserController {
 
     private final UserService userService;
 
