@@ -1,7 +1,8 @@
-package com.example.CineHive.controller.post;
+package com.example.CineHive.controller.report;
 
-import com.example.CineHive.dto.report.ReportRequest;
 import com.example.CineHive.dto.global.ApiResponse;
+import com.example.CineHive.dto.global.MessageResponse;
+import com.example.CineHive.dto.report.ReportRequest;
 import com.example.CineHive.service.report.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @Tag(name = "Report Controller", description = "콘텐츠(게시글, 댓글) 신고 API")
 @RestController
 @RequestMapping("/api/v1")
@@ -24,48 +23,29 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    /**
-     * 특정 게시글을 신고합니다.
-     * 한 사용자는 동일한 게시글을 한 번만 신고할 수 있습니다.
-     *
-     * @param boardId       신고할 게시글의 ID
-     * @param request       신고 사유를 담은 DTO
-     * @param userDetails   인증된 사용자 정보 (Spring Security가 자동으로 주입)
-     * @return 성공 메시지를 담은 ApiResponse
-     */
-    @Operation(summary = "게시글 신고", description = "특정 게시글을 신고합니다.")
-    @PostMapping("/boards/{boardId}/reports")
-    public ResponseEntity<ApiResponse<Map<String, String>>> reportBoard(
-            @PathVariable Long boardId,
+    @Operation(summary = "게시글 신고")
+    @PostMapping("/posts/{postId}/reports")
+    public ResponseEntity<ApiResponse<MessageResponse>> reportPost(
+            @PathVariable Long postId,
             @Valid @RequestBody ReportRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        reportService.reportBoard(boardId, request.reason(), userDetails.getUsername());
+        reportService.reportPost(postId, request, userDetails.getUsername());
 
-        // 새로운 '신고' 리소스가 생성되었으므로 201 CREATED 상태 코드를 반환합니다.
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(Map.of("message", "게시글 신고가 정상적으로 접수되었습니다.")));
+                .body(ApiResponse.ok(new MessageResponse("게시글 신고가 정상적으로 접수되었습니다.")));
     }
 
-    /**
-     * 특정 댓글을 신고합니다.
-     * 한 사용자는 동일한 댓글을 한 번만 신고할 수 있습니다.
-     *
-     * @param commentId     신고할 댓글의 ID
-     * @param request       신고 사유를 담은 DTO
-     * @param userDetails   인증된 사용자 정보 (Spring Security가 자동으로 주입)
-     * @return 성공 메시지를 담은 ApiResponse
-     */
-    @Operation(summary = "댓글 신고", description = "특정 댓글을 신고합니다.")
+    @Operation(summary = "댓글 신고")
     @PostMapping("/comments/{commentId}/reports")
-    public ResponseEntity<ApiResponse<Map<String, String>>> reportComment(
+    public ResponseEntity<ApiResponse<MessageResponse>> reportComment(
             @PathVariable Long commentId,
             @Valid @RequestBody ReportRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        reportService.reportComment(commentId, request.reason(), userDetails.getUsername());
+        reportService.reportComment(commentId, request, userDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(Map.of("message", "댓글 신고가 정상적으로 접수되었습니다.")));
+                .body(ApiResponse.ok(new MessageResponse("댓글 신고가 정상적으로 접수되었습니다.")));
     }
 }
