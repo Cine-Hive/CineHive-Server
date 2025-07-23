@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -33,7 +32,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     private final ChartStrategyFactory chartStrategyFactory;
     private final AdminHomeChartService adminHomeChartService;
     private final PlatformMetadataService platformMetadataService;
-    private final TransactionalOperator transactionalOperator;
     private static final int SUMMARY_SIZE = 10;
 
     @Override
@@ -46,7 +44,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
             case MOVIE -> tmdbApiClient.getMovieDetail(id).map(MediaMapper::toDetailResponse);
             case TV -> tmdbApiClient.getTvSeriesDetail(id).map(MediaMapper::toDetailResponse);
         };
-
         return detailMono.onErrorMap(e -> this.wrapClientException(e));
     }
 
@@ -62,31 +59,26 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     @Override
     public Mono<ChartSummaryResponse> getChartSummary() {
         log.info("홈 화면 차트 요약 정보 조회를 시작합니다.");
-
         Mono<ChartSummaryResponse> chartSummaryMono = Mono.fromCallable(() ->
                         adminHomeChartService.getHomeChartSettings().stream()
                                 .map(HomeChartSettingResponse::chartType)
                                 .toList()
                 )
                 .subscribeOn(Schedulers.boundedElastic())
-                .as(transactionalOperator::transactional) // 리액티브 스트림 내에서 트랜잭션 적용
                 .flatMap(summaryChartTypes -> {
                     if (summaryChartTypes.isEmpty()) {
                         log.warn("홈 화면에 설정된 차트가 없습니다.");
                         return Mono.just(new ChartSummaryResponse(List.of()));
                     }
-
                     List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
                             .map(this::createChartSection)
                             .toList();
-
                     return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
                                     .map(obj -> (ChartSection) obj)
                                     .collect(Collectors.toList()))
                             .map(ChartSummaryResponse::new);
                 });
-
-        return chartSummaryMono.cache(); // Mono의 결과를 캐싱
+        return chartSummaryMono.cache();
     }
 
     @Override
@@ -144,7 +136,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                 .onErrorMap(e -> this.wrapClientException(e));
     }
 
-
     private Mono<PagedResponse<MediaChartResponse>> discoverMedia(MediaType type, ChartProperties properties, int page) {
         log.debug("{} 미디어 탐색을 시작합니다. (속성: {}, 페이지: {})", type, properties, page);
         Mono<PagedResponse<MediaChartResponse>> discoveredMedia = switch (type) {
@@ -153,7 +144,6 @@ public class MediaQueryServiceImpl implements MediaQueryService {
             case TV -> tmdbApiClient.discoverTvSeries(page, properties)
                     .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
         };
-
         return discoveredMedia.onErrorMap(e -> this.wrapClientException(e));
     }
 
