@@ -1,4 +1,4 @@
-package com.example.CineHive.controller.board;
+package com.example.CineHive.controller.post;
 
 import com.example.CineHive.dto.post.PostDetailResponse;
 import com.example.CineHive.dto.post.PostSortType;

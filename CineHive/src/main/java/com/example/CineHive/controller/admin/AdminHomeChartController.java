@@ -1,6 +1,8 @@
 package com.example.CineHive.controller.admin;
 
 import com.example.CineHive.dto.admin.HomeChartSettingRequest;
+import com.example.CineHive.dto.admin.HomeChartSettingResponse;
+import com.example.CineHive.dto.global.MessageResponse;
 import com.example.CineHive.dto.media.ChartType;
 import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.global.ErrorResponse;
@@ -27,31 +29,14 @@ public class AdminHomeChartController {
 
     private final AdminHomeChartService adminHomeChartService;
 
-    @Operation(summary = "홈 화면 차트 설정 조회", description = "현재 홈 화면에 표시되도록 설정된 차트 목록과 순서를 조회합니다.")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음 (ADMIN 역할 필요)", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
+    @Operation(summary = "홈 화면 차트 설정 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HomeChartSettingRequest>>> getHomeChartSettings() {
-        List<HomeChartSettingRequest> settings = adminHomeChartService.getHomeChartSettings().stream()
-                .map(entity -> {
-                    var dto = new HomeChartSettingRequest();
-                    dto.setChartType(entity.getChartType());
-                    dto.setDisplayOrder(entity.getDisplayOrder());
-                    return dto;
-                }).toList();
+    public ResponseEntity<ApiResponse<List<HomeChartSettingResponse>>> getHomeChartSettings() {
+        List<HomeChartSettingResponse> settings = adminHomeChartService.getHomeChartSettings();
         return ResponseEntity.ok(ApiResponse.ok(settings));
     }
 
-    @Operation(summary = "선택 가능한 모든 차트 타입 조회", description = "관리자가 홈 화면 차트로 설정할 수 있는 모든 ChartType 목록을 제공합니다.")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
+    @Operation(summary = "선택 가능한 모든 차트 타입 조회")
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<ChartType>>> getAvailableChartTypes() {
         List<ChartType> chartTypes = adminHomeChartService.getAvailableChartTypes();
@@ -92,8 +77,9 @@ public class AdminHomeChartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping
-    public ResponseEntity<ApiResponse<Void>> updateHomeChartSettings(@Valid @RequestBody List<HomeChartSettingRequest> settings) { // @Valid 추가
+    public ResponseEntity<ApiResponse<MessageResponse>> updateHomeChartSettings(
+            @Valid @org.springframework.web.bind.annotation.RequestBody List<HomeChartSettingRequest> settings) {
         adminHomeChartService.updateHomeChartSettings(settings);
-        return ResponseEntity.ok(ApiResponse.ok(null));
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("홈 화면 차트 설정이 성공적으로 업데이트되었습니다.")));
     }
 }
