@@ -3,9 +3,9 @@ package com.example.CineHive.repository.post;
 import com.example.CineHive.config.JpaAuditingConfig;
 import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.UserRole;
-import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(JpaAuditingConfig.class)
-@DisplayName("BoardRepository 테스트")
+@DisplayName("PostRepository 테스트")
 class PostRepositoryTest {
 
     @Autowired
@@ -34,35 +34,32 @@ class PostRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // 테스트 전 데이터 정리
-        postRepository.deleteAll();
-        userRepository.deleteAll();
+        postRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
-        // 테스트용 사용자 생성
-        user1 = createAndSaveMember("user1@test.com", "테스터1");
-        user2 = createAndSaveMember("user2@test.com", "테스터2");
+        user1 = createAndSaveUser("user1@test.com", "테스터1");
+        user2 = createAndSaveUser("user2@test.com", "테스터2");
 
-        // 테스트용 게시글 데이터 생성 및 저장
         postRepository.save(Post.builder()
-                .brdTitle("JPA는 정말 신기해요")
-                .brdContent("Spring Boot와 JPA를 배우고 있습니다.")
-                .member(user1)
+                .title("JPA는 정말 신기해요")
+                .content("Spring Boot와 JPA를 배우고 있습니다.")
+                .user(user1)
                 .build());
 
         postRepository.save(Post.builder()
-                .brdTitle("오늘의 점심 메뉴는?")
-                .brdContent("김치찌개가 땡기네요. Spring 롤백 기능 최고!")
-                .member(user1)
+                .title("오늘의 점심 메뉴는?")
+                .content("김치찌개가 땡기네요. Spring 롤백 기능 최고!")
+                .user(user1)
                 .build());
 
         postRepository.save(Post.builder()
-                .brdTitle("리액트(React) 질문 있습니다.")
-                .brdContent("리액트에서 상태 관리는 어떻게 하나요?")
-                .member(user2)
+                .title("리액트(React) 질문 있습니다.")
+                .content("리액트에서 상태 관리는 어떻게 하나요?")
+                .user(user2)
                 .build());
     }
 
-    private User createAndSaveMember(String email, String nickname) {
+    private User createAndSaveUser(String email, String nickname) {
         return userRepository.save(User.builder()
                 .email(email)
                 .password("password")
@@ -85,7 +82,7 @@ class PostRepositoryTest {
 
         // then
         assertThat(results).hasSize(1);
-        assertThat(results.get(0).getBrdTitle()).contains(keyword);
+        assertThat(results.get(0).getTitle()).contains(keyword);
     }
 
     @Test
@@ -99,7 +96,7 @@ class PostRepositoryTest {
 
         // then
         assertThat(results).hasSize(1);
-        assertThat(results.get(0).getBrdContent()).contains(keyword);
+        assertThat(results.get(0).getContent()).contains(keyword);
     }
 
     @Test
@@ -113,7 +110,7 @@ class PostRepositoryTest {
 
         // then
         assertThat(results).hasSize(2);
-        assertThat(results).allMatch(board -> board.getUser().getNickname().equals(keyword));
+        assertThat(results).allMatch(post -> post.getUser().getNickname().equals(keyword));
     }
 
     @Test
@@ -140,7 +137,7 @@ class PostRepositoryTest {
 
         // then
         assertThat(results).hasSize(1);
-        assertThat(results.get(0).getBrdTitle()).contains("React");
+        assertThat(results.get(0).getTitle()).contains("React");
     }
 
     @Test
