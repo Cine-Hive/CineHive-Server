@@ -32,16 +32,16 @@ public class NaverClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getUserInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     private Mono<String> getAccessToken(String code) {
@@ -69,12 +69,8 @@ public class NaverClient implements OAuth2Client {
                 .bodyToMono(NaverUserResponse.class);
     }
 
-    private OAuth2UserInfo toMemberInfo(NaverUserResponse userResponse) {
-        log.debug("Naver User Info: {}", userResponse);
-        return new OAuth2UserInfo(
-                userResponse.response().email(),
-                userResponse.response().nickname(),
-                getProviderType()
-        );
+    private OAuth2UserInfo toUserInfo(NaverUserResponse userResponse) {
+        log.debug("네이버 사용자 정보: {}", userResponse);
+        return userResponse.toUserInfo(getProviderType());
     }
 }

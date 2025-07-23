@@ -35,16 +35,16 @@ public class GoogleClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getUserInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     private Mono<String> getAccessToken(String code) {
@@ -74,12 +74,8 @@ public class GoogleClient implements OAuth2Client {
                 .bodyToMono(GoogleUserResponse.class);
     }
 
-    private OAuth2UserInfo toMemberInfo(GoogleUserResponse userResponse) {
-        log.debug("Google User Info: {}", userResponse);
-        return new OAuth2UserInfo(
-                userResponse.email(),
-                userResponse.name(),
-                getProviderType()
-        );
+    private OAuth2UserInfo toUserInfo(GoogleUserResponse userResponse) {
+        log.debug("구글 사용자 정보: {}", userResponse);
+        return userResponse.toUserInfo(getProviderType());
     }
 }
