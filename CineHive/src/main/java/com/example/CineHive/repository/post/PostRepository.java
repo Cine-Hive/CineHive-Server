@@ -17,14 +17,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     /**
      * 키워드를 사용하여 게시글을 검색합니다.
-     * 검색 범위는 게시글의 제목, 내용, 그리고 작성자의 닉네임입니다.
+     * 제목과 작성자 닉네임은 대소문자를 무시하고, 내용은 대소문자를 구분하여 검색합니다.
      *
      * @param keyword 검색할 키워드 문자열
      * @return 검색 조건에 맞는 게시글 엔티티의 리스트
      */
     @Query("SELECT p FROM Post p JOIN p.user u WHERE " +
             "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR p.content LIKE CONCAT('%', :keyword, '%') " +
             "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Post> searchByKeyword(@Param("keyword") String keyword);
 

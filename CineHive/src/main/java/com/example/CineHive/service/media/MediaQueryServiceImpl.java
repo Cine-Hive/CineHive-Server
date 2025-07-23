@@ -4,6 +4,7 @@ import com.example.CineHive.client.TmdbApiClient;
 import com.example.CineHive.dto.admin.HomeChartSettingResponse;
 import com.example.CineHive.dto.global.PagedResponse;
 import com.example.CineHive.dto.media.*;
+import com.example.CineHive.entity.media.MediaType;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.media.MediaMapper;

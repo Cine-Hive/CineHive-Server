@@ -1,12 +1,14 @@
 package com.example.CineHive.entity.media;
 
 import com.example.CineHive.entity.BaseEntity;
-import com.example.CineHive.dto.media.MediaType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -31,12 +33,19 @@ public class Media extends BaseEntity {
 
     private String releaseDate;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "media_genres", joinColumns = @JoinColumn(name = "media_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "genre")
+    private Set<Genre> genres = new HashSet<>();
+
     @Builder
-    public Media(Long tmdbId, MediaType mediaType, String title, String posterPath, String releaseDate) {
+    public Media(Long tmdbId, MediaType mediaType, String title, String posterPath, String releaseDate, Set<Genre> genres) {
         this.tmdbId = tmdbId;
         this.mediaType = mediaType;
         this.title = title;
         this.posterPath = posterPath;
         this.releaseDate = releaseDate;
+        this.genres = genres != null ? genres : new HashSet<>();
     }
 }

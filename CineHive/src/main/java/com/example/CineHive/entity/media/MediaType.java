@@ -1,4 +1,4 @@
-package com.example.CineHive.dto.media;
+package com.example.CineHive.entity.media;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
