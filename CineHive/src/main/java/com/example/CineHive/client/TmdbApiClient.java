@@ -4,11 +4,13 @@ import com.example.CineHive.dto.media.ChartProperties;
 import com.example.CineHive.dto.tmdb.*;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,6 +29,7 @@ import reactor.core.publisher.Mono;
 public class TmdbApiClient {
 
     private final WebClient.Builder webClientBuilder;
+    private final ObjectMapper objectMapper;
 
     @Value("${tmdb.api.base-url}")
     private String tmdbBaseUrl;
@@ -67,106 +70,102 @@ public class TmdbApiClient {
         this.tmdbWebClient = webClientBuilder.baseUrl(tmdbBaseUrl).build();
     }
 
-    // --- 공용 GET 요청 메서드 ---
-    private <T> Mono<T> get(String path, ParameterizedTypeReference<T> responseType, MultiValueMap<String, String> queryParams) {
-        queryParams.add(API_KEY_PARAM, apiKey);
-        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
-
-        return tmdbWebClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
-                .bodyToMono(responseType);
-    }
-
-    private <T> Mono<T> get(String path, Class<T> responseType, MultiValueMap<String, String> queryParams) {
-        queryParams.add(API_KEY_PARAM, apiKey);
-        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
-
-        return tmdbWebClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
-                .bodyToMono(responseType);
-    }
-
     // --- 기본 영화 차트 API ---
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getPopularMovies(int page) {
-        return getPagedResponse("/movie/popular", page);
+        String path = "/movie/popular";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getTopRatedMovies(int page) {
-        return getPagedResponse("/movie/top_rated", page);
+        String path = "/movie/top_rated";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getUpcomingMovies(int page) {
-        return getPagedResponse("/movie/upcoming", page);
+        String path = "/movie/upcoming";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getNowPlayingMovies(int page) {
-        return getPagedResponse("/movie/now_playing", page);
+        String path = "/movie/now_playing";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     // --- 기본 TV 시리즈 차트 API ---
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getPopularTvSeries(int page) {
-        return getPagedResponse("/tv/popular", page);
+        String path = "/tv/popular";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getTopRatedTvSeries(int page) {
-        return getPagedResponse("/tv/top_rated", page);
+        String path = "/tv/top_rated";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getOnTheAirTvSeries(int page) {
-        return getPagedResponse("/tv/on_the_air", page);
+        String path = "/tv/on_the_air";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getAiringTodayTvSeries(int page) {
-        return getPagedResponse("/tv/airing_today", page);
+        String path = "/tv/airing_today";
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     // --- 트렌드 API ---
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> getTrendingMovies(String timeWindow, int page) {
-        return getPagedResponse("/trending/movie/" + timeWindow, page);
+        String path = "/trending/movie/" + timeWindow;
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> getTrendingTv(String timeWindow, int page) {
-        return getPagedResponse("/trending/tv/" + timeWindow, page);
+        String path = "/trending/tv/" + timeWindow;
+        MultiValueMap<String, String> params = createPageParams(page);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
-    // --- 상세 정보 API ---
+    // --- 상세 정보 API (제네릭이 아니므로 기존 방식 유지) ---
     public Mono<TmdbMovieDetailResponse> getMovieDetail(Long movieId) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
-        params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
+        MultiValueMap<String, String> params = createDetailParams();
         return get("/movie/" + movieId, TmdbMovieDetailResponse.class, params);
     }
 
     public Mono<TmdbTvSeriesDetailResponse> getTvSeriesDetail(Long tvId) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add(APPEND_TO_RESPONSE_PARAM, "credits,videos,images,recommendations,similar,keywords,watch/providers");
-        params.add(INCLUDE_IMAGE_LANGUAGE_PARAM, "ko,null");
+        MultiValueMap<String, String> params = createDetailParams();
         return get("/tv/" + tvId, TmdbTvSeriesDetailResponse.class, params);
     }
 
     // --- 검색 API ---
     public Mono<TmdbPagedResponse<TmdbMultiSearchResponse>> searchMulti(String query, int page) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        String path = "/search/multi";
+        MultiValueMap<String, String> params = createPageParams(page);
         params.add(QUERY_PARAM, query);
-        return get("/search/multi", new ParameterizedTypeReference<>() {}, params);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     // --- Discover API ---
     public Mono<TmdbPagedResponse<TmdbMovieResponse>> discoverMovies(int page, ChartProperties props) {
+        String path = "/discover/movie";
         MultiValueMap<String, String> params = buildDiscoverParams(page, props);
-        return get("/discover/movie", new ParameterizedTypeReference<>() {}, params);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
     public Mono<TmdbPagedResponse<TmdbTvSeriesResponse>> discoverTvSeries(int page, ChartProperties props) {
+        String path = "/discover/tv";
         MultiValueMap<String, String> params = buildDiscoverParams(page, props);
-        return get("/discover/tv", new ParameterizedTypeReference<>() {}, params);
+        return getRaw(path, params).map(json -> parseResponse(json, new TypeReference<>() {}));
     }
 
-    // --- 메타데이터 API ---
+    // --- 메타데이터 API (제네릭이 아니므로 기존 방식 유지) ---
     public Mono<TmdbGenresResponse> getMovieGenres() {
         return get("/genre/movie/list", TmdbGenresResponse.class, new LinkedMultiValueMap<>());
     }
@@ -181,16 +180,51 @@ public class TmdbApiClient {
 
     // --- Private Helper Methods ---
 
-    private <T> Mono<TmdbPagedResponse<T>> getPagedResponse(String path, int page) {
+    private <T> T parseResponse(String json, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(json, typeReference);
+        } catch (JsonProcessingException e) {
+            log.error("JSON 역직렬화에 실패했습니다.", e);
+            throw new BusinessException("API 응답 처리 중 오류가 발생했습니다.", ErrorCode.MAPPING_ERROR);
+        }
+    }
+
+    private <T> Mono<T> get(String path, Class<T> responseType, MultiValueMap<String, String> queryParams) {
+        queryParams.add(API_KEY_PARAM, apiKey);
+        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
+        return tmdbWebClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
+                .bodyToMono(responseType);
+    }
+
+    private Mono<String> getRaw(String path, MultiValueMap<String, String> queryParams) {
+        queryParams.add(API_KEY_PARAM, apiKey);
+        queryParams.add(LANGUAGE_PARAM, DEFAULT_LANGUAGE);
+        return tmdbWebClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParams(queryParams).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> handleApiError(response, path))
+                .bodyToMono(String.class);
+    }
+
+    private MultiValueMap<String, String> createPageParams(int page) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
-        return get(path, new ParameterizedTypeReference<>() {}, params);
+        return params;
+    }
+
+    private MultiValueMap<String, String> createDetailParams() {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("append_to_response", "credits,videos,images,recommendations,similar,keywords,watch/providers");
+        params.add("include_image_language", "ko,null");
+        return params;
     }
 
     private MultiValueMap<String, String> buildDiscoverParams(int page, ChartProperties props) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(PAGE_PARAM, String.valueOf(validatePage(page)));
-
         addQueryParamIfPresent(params, SORT_BY_PARAM, props.sortBy());
         addQueryParamIfPresent(params, WITH_GENRES_PARAM, props.genreId());
         addQueryParamIfPresent(params, WITH_COMPANIES_PARAM, props.companyId());
@@ -211,24 +245,23 @@ public class TmdbApiClient {
         return params;
     }
 
-    private Mono<Throwable> handleApiError(ClientResponse response, String path) {
-        return response.bodyToMono(String.class)
-                .defaultIfEmpty("응답 본문 없음")
-                .flatMap(errorBody -> {
-                    log.error("TMDB API 오류 발생. 경로: [{}], 상태 코드: {}, 응답 본문: {}",
-                            path, response.statusCode(), errorBody);
-                    String errorMessage = String.format("TMDB API 요청 실패: 상태 코드 %s", response.statusCode());
-                    return Mono.error(new BusinessException(errorMessage, ErrorCode.TMDB_API_ERROR));
-                });
+    private void addQueryParamIfPresent(MultiValueMap<String, String> params, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            params.add(key, value);
+        }
     }
 
     private int validatePage(int page) {
         return Math.max(1, Math.min(page, 500));
     }
 
-    private void addQueryParamIfPresent(MultiValueMap<String, String> params, String key, String value) {
-        if (value != null && !value.isBlank()) {
-            params.add(key, value);
-        }
+    private Mono<Throwable> handleApiError(ClientResponse response, String path) {
+        return response.bodyToMono(String.class)
+                .defaultIfEmpty("응답 본문 없음")
+                .flatMap(errorBody -> {
+                    log.error("TMDB API 오류 발생. 경로: [{}], 상태 코드: {}, 응답 본문: {}",
+                            path, response.statusCode(), errorBody);
+                    return Mono.error(new BusinessException("TMDB API 요청 실패", ErrorCode.TMDB_API_ERROR));
+                });
     }
 }
