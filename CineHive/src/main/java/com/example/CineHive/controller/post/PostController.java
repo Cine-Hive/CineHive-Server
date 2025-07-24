@@ -4,7 +4,12 @@ import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.global.MessageResponse;
 import com.example.CineHive.dto.global.PagedResponse;
 import com.example.CineHive.dto.post.*;
+import com.example.CineHive.dto.report.ReportRequest;
+import com.example.CineHive.service.post.BookmarkService;
+import com.example.CineHive.service.post.DislikeService;
+import com.example.CineHive.service.post.LikeService;
 import com.example.CineHive.service.post.PostService;
+import com.example.CineHive.service.report.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,10 +35,10 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
 
     private final PostService postService;
-    // TODO: private final LikeService likeService;
-    // TODO: private final DislikeService dislikeService;
-    // TODO: private final BookmarkService bookmarkService;
-    // TODO: private final ReportService reportService;
+    private final LikeService likeService;
+    private final DislikeService dislikeService;
+    private final BookmarkService bookmarkService;
+    private final ReportService reportService;
 
     // =========================================
     // == 게시글 조회 및 생성
@@ -139,53 +144,98 @@ public class PostController {
     // == 게시글 상호작용
     // =========================================
 
-    @Operation(summary = "게시글 좋아요")
+    @Operation(summary = "게시글 좋아요",
+            description = """
+               특정 게시글에 '좋아요'를 누릅니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               - **Side Effect**: 이미 '싫어요'를 누른 상태였다면, '싫어요'는 자동으로 취소됩니다.
+               """)
     @PostMapping("/{postId}/likes")
-    public void addLike(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. LikeService.addLike(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> addLike(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        likeService.addLike(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '좋아요'를 눌렀습니다.")));
     }
 
-    @Operation(summary = "게시글 좋아요 취소")
+    @Operation(summary = "게시글 '좋아요' 취소",
+            description = """
+               특정 게시글에 눌렀던 '좋아요'를 취소합니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               """)
     @DeleteMapping("/{postId}/likes")
-    public void removeLike(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. LikeService.removeLike(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> removeLike(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        likeService.removeLike(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'좋아요'를 취소했습니다.")));
     }
 
-    @Operation(summary = "게시글 싫어요")
+    @Operation(summary = "게시글 싫어요",
+            description = """
+               특정 게시글에 '싫어요'를 누릅니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               - **Side Effect**: 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소됩니다.
+               """)
     @PostMapping("/{postId}/dislikes")
-    public void addDislike(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. DislikeService.addDislike(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> addDislike(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        dislikeService.addDislike(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '싫어요'를 눌렀습니다.")));
     }
 
-    @Operation(summary = "게시글 싫어요 취소")
+    @Operation(summary = "게시글 '싫어요' 취소",
+            description = """
+               특정 게시글에 눌렀던 '싫어요'를 취소합니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               """)
     @DeleteMapping("/{postId}/dislikes")
-    public void removeDislike(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. DislikeService.removeDislike(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> removeDislike(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        dislikeService.removeDislike(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'싫어요'를 취소했습니다.")));
     }
 
-    @Operation(summary = "게시글 북마크")
+    @Operation(summary = "게시글 북마크",
+            description = "특정 게시글을 현재 로그인한 사용자의 북마크 목록에 추가합니다.")
     @PostMapping("/{postId}/bookmarks")
-    public void addBookmark(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. BookmarkService.addBookmark(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> addBookmark(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        bookmarkService.addBookmark(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글을 북마크했습니다.")));
     }
 
-    @Operation(summary = "게시글 북마크 취소")
+    @Operation(summary = "게시글 북마크 취소",
+            description = "현재 로그인한 사용자의 북마크 목록에서 특정 게시글을 삭제합니다.")
     @DeleteMapping("/{postId}/bookmarks")
-    public void removeBookmark(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. BookmarkService.removeBookmark(postId, userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> removeBookmark(
+            @PathVariable Long postId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        bookmarkService.removeBookmark(postId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("북마크를 취소했습니다.")));
     }
 
-    @Operation(summary = "게시글 신고")
+    @Operation(summary = "게시글 신고",
+            description = """
+               특정 게시글을 신고합니다.
+               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
+               - **규칙**: 자신의 게시글은 신고할 수 없으며, 동일한 게시글을 중복 신고할 수 없습니다.
+               - 성공 시, `201 CREATED` 상태 코드가 반환됩니다.
+               """)
     @PostMapping("/{postId}/reports")
-    public void reportPost(@PathVariable Long postId, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. ReportRequest DTO를 @RequestBody로 받음
-        // TODO: 2. ReportService.reportPost(postId, request, userEmail) 호출
-        // TODO: 3. 성공(201 CREATED) 시 MessageResponse 반환
+    public ResponseEntity<ApiResponse<MessageResponse>> reportPost(
+            @PathVariable Long postId,
+            @Valid @RequestBody ReportRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        reportService.reportPost(postId, request, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(new MessageResponse("게시글 신고가 정상적으로 접수되었습니다.")));
     }
 }
