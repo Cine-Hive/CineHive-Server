@@ -79,4 +79,11 @@ public class MetadataController {
         // TODO: 1. 자체적으로 선별한 주요 제작사/네트워크 목록을 Enum 또는 DB로 정의
         // TODO: 2. CompanyOption (신규 DTO) 리스트로 반환
     }
+
+    @Operation(summary = "게시글 카테고리 목록 조회")
+    @GetMapping("/post-categories")
+    public void getPostCategories() {
+        // TODO: 1. CategoryService에서 모든 게시글 카테고리 목록 조회
+        // TODO: 2. CategoryOption (신규 DTO) 리스트로 변환하여 반환
+    }
 }
