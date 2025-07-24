@@ -44,10 +44,23 @@ public enum Platform {
      * @return 변환된 Platform
      * @throws IllegalArgumentException 지원하지 않는 플랫폼일 경우
      */
-    public static Platform fromString(String text) {
+    public static Platform from(String text) { // fromString -> from
         return Arrays.stream(values())
                 .filter(p -> p.name().equalsIgnoreCase(text))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 플랫폼입니다: " + text));
+    }
+
+    /**
+     * TMDB 네트워크 ID로 해당하는 Platform Enum을 변환합니다.
+     * @param id 찾으려는 플랫폼의 TMDB ID
+     * @return ID에 해당하는 Platform Enum
+     * @throws IllegalArgumentException 지원하지 않는 ID일 경우
+     */
+    public static Platform fromId(Long id) {
+        return Arrays.stream(values())
+                .filter(p -> p.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 플랫폼 ID입니다: " + id));
     }
 }
