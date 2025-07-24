@@ -1,9 +1,15 @@
-HELP.md
+# Gradle
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+
+# IDE specific files
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
 
 ### STS ###
 .apt_generated
@@ -14,17 +20,6 @@ build/
 .springBeans
 .sts4-cache
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -36,5 +31,12 @@ out/
 ### VS Code ###
 .vscode/
 
-# Ignore application.properties
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Sensitive information
 application.properties
