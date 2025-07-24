@@ -1,9 +1,9 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.naver.NaverTokenResponse;
 import com.example.CineHive.dto.oauth.naver.NaverUserResponse;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,16 +32,16 @@ public class NaverClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getUserInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     private Mono<String> getAccessToken(String code) {
@@ -69,12 +69,8 @@ public class NaverClient implements OAuth2Client {
                 .bodyToMono(NaverUserResponse.class);
     }
 
-    private OAuth2MemberInfo toMemberInfo(NaverUserResponse userResponse) {
-        log.debug("Naver User Info: {}", userResponse);
-        return new OAuth2MemberInfo(
-                userResponse.response().email(),
-                userResponse.response().nickname(),
-                getProviderType()
-        );
+    private OAuth2UserInfo toUserInfo(NaverUserResponse userResponse) {
+        log.debug("네이버 사용자 정보: {}", userResponse);
+        return userResponse.toUserInfo(getProviderType());
     }
 }

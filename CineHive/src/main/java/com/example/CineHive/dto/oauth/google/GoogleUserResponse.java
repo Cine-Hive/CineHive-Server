@@ -1,10 +1,10 @@
 package com.example.CineHive.dto.oauth.google;
 
+import com.example.CineHive.dto.oauth.OAuth2Response;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.user.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * 구글 사용자 정보 요청에 대한 응답 DTO
- */
 public record GoogleUserResponse(
         String id,
         String email,
@@ -17,4 +17,14 @@ public record GoogleUserResponse(
         String familyName,
         String picture,
         String locale
-) {}
+) implements OAuth2Response {
+
+        @Override
+        public OAuth2UserInfo toUserInfo(ProviderType providerType) {
+                return new OAuth2UserInfo(
+                        this.email(),
+                        this.name(),
+                        providerType
+                );
+        }
+}

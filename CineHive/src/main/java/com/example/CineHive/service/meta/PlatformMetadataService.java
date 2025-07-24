@@ -1,6 +1,6 @@
 package com.example.CineHive.service.meta;
 
-import com.example.CineHive.dto.response.PlatformOptionDto;
+import com.example.CineHive.dto.media.PlatformOption;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -16,5 +16,5 @@ public interface PlatformMetadataService {
      *
      * @return 모든 플랫폼의 옵션 DTO 목록을 담은 Mono
      */
-    Mono<List<PlatformOptionDto>> getPlatformOptions();
+    Mono<List<PlatformOption>> getPlatformOptions();
 }

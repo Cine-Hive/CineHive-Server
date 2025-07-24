@@ -1,14 +1,14 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.OAuth2Client;
-import com.example.CineHive.dto.member.LoginResponseDto;
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
-import com.example.CineHive.entity.member.Gender;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.dto.auth.LoginResponse;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.ProviderType;
+import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -31,84 +31,84 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final List<OAuth2Client> clients;
     private Map<ProviderType, OAuth2Client> clientMap;
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
     @PostConstruct
     public void init() {
-        this.clientMap = clients.stream().collect(
+        clientMap = clients.stream().collect(
                 Collectors.toUnmodifiableMap(OAuth2Client::getProviderType, Function.identity())
         );
     }
 
     @Override
     @Transactional
-    public LoginResponseDto loginWithCode(ProviderType providerType, String code) {
+    public LoginResponse loginWithCode(ProviderType providerType, String code) {
         OAuth2Client client = getClient(providerType);
-        OAuth2MemberInfo memberInfo = client.getMemberInfo(code)
+        OAuth2UserInfo userInfo = client.getUserInfo(code)
                 .onErrorMap(error -> {
-                    log.error("OAuth 통신 오류 발생 (인가 코드 사용)", error);
+                    log.error("OAuth 통신 오류 (인가 코드 사용)", error);
                     return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
                 })
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
                 .block();
-        return processLogin(memberInfo);
+        return processLogin(userInfo);
     }
 
     @Override
     @Transactional
-    public LoginResponseDto loginWithAccessToken(ProviderType providerType, String accessToken) {
+    public LoginResponse loginWithAccessToken(ProviderType providerType, String accessToken) {
         OAuth2Client client = getClient(providerType);
-        OAuth2MemberInfo memberInfo = client.getMemberInfoByAccessToken(accessToken)
+        OAuth2UserInfo userInfo = client.getUserInfoByAccessToken(accessToken)
                 .onErrorMap(error -> {
-                    log.error("OAuth 통신 오류 발생 (액세스 토큰 사용)", error);
+                    log.error("OAuth 통신 오류 (액세스 토큰 사용)", error);
                     return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
                 })
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
                 .block();
-        return processLogin(memberInfo);
+        return processLogin(userInfo);
     }
 
-    private LoginResponseDto processLogin(OAuth2MemberInfo oAuth2MemberInfo) {
-        if (oAuth2MemberInfo == null || oAuth2MemberInfo.email() == null) {
-            throw new BusinessException("소셜 로그인 정보를 처리하는 중 오류가 발생했습니다. (이메일 정보 없음)", ErrorCode.OAUTH_COMMUNICATION_ERROR);
+    private LoginResponse processLogin(OAuth2UserInfo userInfo) {
+        if (userInfo == null || userInfo.email() == null) {
+            throw new BusinessException("소셜 로그인 정보 처리 중 오류가 발생했습니다 (이메일 정보 없음).", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
 
-        boolean isNewMember = !memberRepository.existsByEmail(oAuth2MemberInfo.email());
+        boolean isNewUser = !userRepository.existsByEmail(userInfo.email());
 
-        Member member = memberRepository.findByEmail(oAuth2MemberInfo.email())
-                .orElseGet(() -> registerNewMember(oAuth2MemberInfo));
+        User user = userRepository.findByEmail(userInfo.email())
+                .orElseGet(() -> registerNewUser(userInfo));
 
-        String token = jwtUtil.generateToken(member.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        return new LoginResponseDto(
+        return new LoginResponse(
                 token,
-                isNewMember,
-                LoginResponseDto.MemberInfo.from(member)
+                isNewUser,
+                LoginResponse.UserInfo.from(user)
         );
     }
 
-    private Member registerNewMember(OAuth2MemberInfo oAuth2MemberInfo) {
-        log.info("신규 소셜 회원 가입: {}", oAuth2MemberInfo.email());
-        String nickname = resolveUniqueNickname(oAuth2MemberInfo.nickname(), oAuth2MemberInfo.providerType());
+    private User registerNewUser(OAuth2UserInfo userInfo) {
+        log.info("신규 소셜 사용자 가입: {}", userInfo.email());
+        String nickname = resolveUniqueNickname(userInfo.nickname(), userInfo.providerType());
 
-        Member newMember = Member.builder()
-                .email(oAuth2MemberInfo.email())
-                .password("OAUTH_MEMBER_NO_PASSWORD") // 소셜 로그인 회원은 별도 비밀번호 없음
-                .name(oAuth2MemberInfo.nickname())
+        User newUser = User.builder()
+                .email(userInfo.email())
+                .password("OAUTH_USER_NO_PASSWORD") // 소셜 로그인 사용자는 별도 비밀번호 없음
+                .name(userInfo.nickname())
                 .nickname(nickname)
-                .gender(Gender.OTHER) // 소셜 로그인 시 성별 정보는 기본값으로 설정
+                .gender(Gender.OTHER)
                 .genres(Collections.emptySet())
-                .provider(oAuth2MemberInfo.providerType())
+                .provider(userInfo.providerType())
                 .build();
 
-        return memberRepository.save(newMember);
+        return userRepository.save(newUser);
     }
 
     private String resolveUniqueNickname(String nickname, ProviderType providerType) {
         String resolvedNickname = nickname;
         int suffix = 1;
-        while (memberRepository.existsByNickname(resolvedNickname)) {
+        while (userRepository.existsByNickname(resolvedNickname)) {
             resolvedNickname = String.format("%s (%s %d)", nickname, providerType.name(), suffix++);
         }
         return resolvedNickname;

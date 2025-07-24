@@ -1,7 +1,7 @@
 package com.example.CineHive.dto.report;
 
-import com.example.CineHive.entity.board.Report;
-import com.example.CineHive.entity.board.ReportStatus;
+import com.example.CineHive.entity.post.Report;
+import com.example.CineHive.entity.post.ReportStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -16,7 +16,7 @@ public record ReportResponse(
         @Schema(description = "신고된 콘텐츠의 ID (게시글 또는 댓글 ID)")
         Long reportedContentId,
 
-        @Schema(description = "신고된 콘텐츠의 타입", example = "BOARD")
+        @Schema(description = "신고된 콘텐츠의 타입", example = "POST")
         String contentType,
 
         @Schema(description = "신고 사유")
@@ -36,13 +36,13 @@ public record ReportResponse(
      * @param report 변환할 Report 엔티티
      * @return 변환된 ReportResponse DTO
      */
-    public static ReportResponse fromEntity(Report report) {
+    public static ReportResponse from(Report report) {
         Long contentId;
         String type;
 
-        if (report.getBoard() != null) {
-            contentId = report.getBoard().getId();
-            type = "BOARD";
+        if (report.getPost() != null) {
+            contentId = report.getPost().getId();
+            type = "POST"; // "BOARD" -> "POST" 로 변경
         } else if (report.getComment() != null) {
             contentId = report.getComment().getId();
             type = "COMMENT";

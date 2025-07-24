@@ -1,7 +1,7 @@
 package com.example.CineHive.service.admin;
 
 import com.example.CineHive.dto.report.ReportResponse;
-import com.example.CineHive.entity.board.ReportStatus;
+import com.example.CineHive.entity.post.ReportStatus;
 
 import java.util.List;
 

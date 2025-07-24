@@ -1,9 +1,9 @@
 package com.example.CineHive.service.meta;
 
 import com.example.CineHive.client.TmdbApiClient;
+import com.example.CineHive.dto.media.LogoInfo;
 import com.example.CineHive.dto.media.Platform;
-import com.example.CineHive.dto.response.LogoDto;
-import com.example.CineHive.dto.response.PlatformOptionDto;
+import com.example.CineHive.dto.media.PlatformOption;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +29,8 @@ public class PlatformMetadataServiceImpl implements PlatformMetadataService {
 
     @Override
     @Cacheable("platformMetadata")
-    public Mono<List<PlatformOptionDto>> getPlatformOptions() {
-        log.info("TMDB에서 모든 플랫폼 메타데이터를 가져와 캐시합니다.");
+    public Mono<List<PlatformOption>> getPlatformOptions() {
+        log.info("TMDB에서 모든 플랫폼 메타데이터를 조회하여 캐시에 저장합니다.");
 
         return Flux.fromArray(Platform.values())
                 .flatMap(this::fetchPlatformDetails)
@@ -39,18 +39,18 @@ public class PlatformMetadataServiceImpl implements PlatformMetadataService {
     }
 
     /**
-     * 단일 플랫폼에 대한 상세 정보를 TMDB에서 가져와 PlatformOptionDto로 변환합니다.
+     * 단일 플랫폼에 대한 상세 정보를 TMDB에서 가져와 PlatformOption으로 변환합니다.
      * @param platform 정보를 가져올 Platform Enum 상수
-     * @return 상세 정보가 포함된 PlatformOptionDto의 Mono
+     * @return 상세 정보가 포함된 PlatformOption의 Mono
      */
-    private Mono<PlatformOptionDto> fetchPlatformDetails(Platform platform) {
+    private Mono<PlatformOption> fetchPlatformDetails(Platform platform) {
         return tmdbApiClient.getNetworkImages(platform.getId())
                 .map(tmdbResponse -> {
-                    List<LogoDto> logos = tmdbResponse.getLogos().stream()
-                            .map(logo -> new LogoDto(logo.getFilePath(), logo.getFileType()))
+                    List<LogoInfo> logos = tmdbResponse.logos().stream()
+                            .map(logo -> new LogoInfo(logo.filePath(), logo.fileType()))
                             .collect(Collectors.toList());
 
-                    return new PlatformOptionDto(platform.name(), platform.getDisplayName(), logos);
+                    return new PlatformOption(platform.name(), platform.getDisplayName(), logos);
                 });
     }
 
@@ -63,7 +63,7 @@ public class PlatformMetadataServiceImpl implements PlatformMetadataService {
         if (e instanceof BusinessException) {
             return (BusinessException) e;
         }
-        log.error("TMDB API 클라이언트 오류 발생", e);
+        log.error("TMDB API 클라이언트에서 오류가 발생했습니다.", e);
         return new BusinessException("TMDB API Error: " + e.getMessage(), ErrorCode.TMDB_API_ERROR);
     }
 }

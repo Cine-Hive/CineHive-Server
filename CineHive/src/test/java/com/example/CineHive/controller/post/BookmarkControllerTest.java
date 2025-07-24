@@ -1,0 +1,200 @@
+package com.example.CineHive.controller.post;
+
+import com.example.CineHive.entity.post.Bookmark;
+import com.example.CineHive.entity.post.Post;
+import com.example.CineHive.entity.user.Gender;
+import com.example.CineHive.entity.user.ProviderType;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.UserRole;
+import com.example.CineHive.repository.post.BookmarkRepository;
+import com.example.CineHive.repository.post.PostRepository;
+import com.example.CineHive.repository.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+@DisplayName("BookmarkController 통합 테스트")
+class BookmarkControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PostRepository postRepository;
+    @Autowired
+    private BookmarkRepository bookmarkRepository;
+
+    private User postOwner;
+    private User bookmarkerUser;
+    private User anotherUser;
+    private Post testPost;
+
+    @BeforeEach
+    void setUp() {
+        bookmarkRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
+
+        postOwner = createUser("owner@example.com", "postOwner");
+        bookmarkerUser = createUser("bookmarker@example.com", "bookmarker");
+        anotherUser = createUser("another@example.com", "anotherUser");
+
+        testPost = postRepository.save(Post.builder()
+                .title("테스트 게시글")
+                .content("내용")
+                .user(postOwner)
+                .build());
+    }
+
+    private User createUser(String email, String nickname) {
+        return userRepository.save(User.builder()
+                .email(email)
+                .password("password")
+                .name(nickname)
+                .nickname(nickname)
+                .gender(Gender.MALE)
+                .provider(ProviderType.LOCAL)
+                .role(UserRole.ROLE_USER)
+                .build());
+    }
+
+    @Nested
+    @DisplayName("북마크 추가 테스트")
+    @WithMockUser(username = "bookmarker@example.com", roles = "USER")
+    class AddBookmark {
+
+        @Test
+        @DisplayName("✅ 성공: 사용자가 게시글을 성공적으로 북마크한다.")
+        void addBookmark_success() throws Exception {
+            mockMvc.perform(post("/api/v1/posts/{postId}/bookmarks", testPost.getId())
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.message").value("게시글을 북마크했습니다."));
+
+            Post postAfterBookmark = postRepository.findById(testPost.getId()).get();
+            assertThat(postAfterBookmark.getBookmarkCount()).isEqualTo(1);
+            assertThat(bookmarkRepository.existsByUserAndPost(bookmarkerUser, testPost)).isTrue();
+        }
+
+        @Test
+        @DisplayName("❌ 실패(409): 이미 북마크한 게시글을 다시 북마크하면 409 Conflict를 반환한다.")
+        void addBookmark_fail_alreadyExists() throws Exception {
+            bookmarkRepository.save(Bookmark.builder().user(bookmarkerUser).post(testPost).build());
+            testPost.increaseBookmarkCount();
+            postRepository.saveAndFlush(testPost);
+
+            mockMvc.perform(post("/api/v1/posts/{postId}/bookmarks", testPost.getId())
+                            .with(csrf()))
+                    .andExpect(status().isConflict());
+        }
+    }
+
+    @Nested
+    @DisplayName("북마크 취소 테스트 (북마크한 사용자로)")
+    @WithMockUser(username = "bookmarker@example.com", roles = "USER")
+    class RemoveBookmark_Success {
+
+        @BeforeEach
+        void setUp() {
+            bookmarkRepository.save(Bookmark.builder().user(bookmarkerUser).post(testPost).build());
+            testPost.increaseBookmarkCount();
+            postRepository.saveAndFlush(testPost);
+        }
+
+        @Test
+        @DisplayName("✅ 성공: 사용자가 북마크한 게시글을 성공적으로 취소한다.")
+        void removeBookmark_success() throws Exception {
+            mockMvc.perform(delete("/api/v1/posts/{postId}/bookmarks", testPost.getId())
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.message").value("북마크를 취소했습니다."));
+
+            Post postAfterRemove = postRepository.findById(testPost.getId()).get();
+            assertThat(postAfterRemove.getBookmarkCount()).isEqualTo(0);
+            assertThat(bookmarkRepository.existsByUserAndPost(bookmarkerUser, testPost)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("북마크 취소 테스트 (북마크하지 않은 사용자로)")
+    @WithMockUser(username = "another@example.com", roles = "USER")
+    class RemoveBookmark_Fail {
+
+        @BeforeEach
+        void setUp() {
+            bookmarkRepository.save(Bookmark.builder().user(bookmarkerUser).post(testPost).build());
+            testPost.increaseBookmarkCount();
+            postRepository.saveAndFlush(testPost);
+        }
+
+        @Test
+        @DisplayName("❌ 실패(404): 북마크하지 않은 게시글의 북마크를 취소하면 404 Not Found를 반환한다.")
+        void removeBookmark_fail_notFound() throws Exception {
+            mockMvc.perform(delete("/api/v1/posts/{postId}/bookmarks", testPost.getId())
+                            .with(csrf()))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("북마크 상태 및 개수 조회 테스트")
+    class GetBookmarkStatus {
+
+        @Test
+        @DisplayName("✅ 성공: 북마크 개수를 정확히 반환한다.")
+        void getBookmarkCount_success() throws Exception {
+            bookmarkRepository.save(Bookmark.builder().user(bookmarkerUser).post(testPost).build());
+            testPost.increaseBookmarkCount();
+            postRepository.saveAndFlush(testPost);
+
+            mockMvc.perform(get("/api/v1/posts/{postId}/bookmarks/count", testPost.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.count").value(1));
+        }
+
+        @Test
+        @WithMockUser(username = "bookmarker@example.com", roles = "USER")
+        @DisplayName("✅ 성공: 사용자가 북마크한 경우 isBookmarked가 true로 반환된다.")
+        void getBookmarkStatus_success_whenBookmarked() throws Exception {
+            bookmarkRepository.save(Bookmark.builder().user(bookmarkerUser).post(testPost).build());
+
+            mockMvc.perform(get("/api/v1/posts/{postId}/bookmarks/status", testPost.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isBookmarked").value(true));
+        }
+
+        @Test
+        @WithMockUser(username = "bookmarker@example.com", roles = "USER")
+        @DisplayName("✅ 성공: 사용자가 북마크하지 않은 경우 isBookmarked가 false로 반환된다.")
+        void getBookmarkStatus_success_whenNotBookmarked() throws Exception {
+            mockMvc.perform(get("/api/v1/posts/{postId}/bookmarks/status", testPost.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isBookmarked").value(false));
+        }
+
+        @Test
+        @DisplayName("✅ 성공: 인증되지 않은 사용자가 상태 조회를 시도하면 200 OK와 함께 false를 반환한다.")
+        void getBookmarkStatus_forAnonymousUser() throws Exception {
+            mockMvc.perform(get("/api/v1/posts/{postId}/bookmarks/status", testPost.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isBookmarked").value(false));
+        }
+    }
+}

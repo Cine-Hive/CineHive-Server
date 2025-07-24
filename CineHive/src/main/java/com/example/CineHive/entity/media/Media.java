@@ -1,53 +1,51 @@
 package com.example.CineHive.entity.media;
 
-import com.example.CineHive.entity.credit.Director;
+import com.example.CineHive.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.awt.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "media_type")
-public abstract class Media {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Media extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String originalTitle;
+    @Column(nullable = false, unique = true)
+    private Long tmdbId;
 
-    @Lob
-    @Column(columnDefinition = "TEXT")
-    private String overview;
-    private String releaseDate;
-    private Double voteAverage;
-    private Integer voteCount;
-    private Double popularity;
-    private String posterPath;
-    private String backdropPath;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MediaType mediaType;
 
     @Column(nullable = false)
-    private boolean isAnimation = false;
+    private String title;
 
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    private String posterPath;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    private String releaseDate;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "media_genres", joinColumns = @JoinColumn(name = "media_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "genre")
+    private Set<Genre> genres = new HashSet<>();
+
+    @Builder
+    public Media(Long tmdbId, MediaType mediaType, String title, String posterPath, String releaseDate, Set<Genre> genres) {
+        this.tmdbId = tmdbId;
+        this.mediaType = mediaType;
+        this.title = title;
+        this.posterPath = posterPath;
+        this.releaseDate = releaseDate;
+        this.genres = genres != null ? genres : new HashSet<>();
     }
-
-    @OneToMany(mappedBy = "media", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MediaGenre> mediaGenres;
-
-    @OneToMany(mappedBy = "media", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Director> director;
 }

@@ -1,8 +1,8 @@
 package com.example.CineHive.controller.banner;
 
-import com.example.CineHive.dto.banner.BannerResponseDto;
-import com.example.CineHive.dto.response.ApiResponse;
-import com.example.CineHive.dto.response.ErrorResponse;
+import com.example.CineHive.dto.banner.BannerResponse;
+import com.example.CineHive.dto.global.ApiResponse;
+import com.example.CineHive.dto.global.ErrorResponse;
 import com.example.CineHive.service.banner.BannerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -52,8 +52,8 @@ public class BannerController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류 발생", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BannerResponseDto>>> getActiveBanners() {
-        List<BannerResponseDto> banners = bannerService.findActiveBanners();
+    public ResponseEntity<ApiResponse<List<BannerResponse>>> getActiveBanners() {
+        List<BannerResponse> banners = bannerService.findActiveBanners();
         return ResponseEntity.ok(ApiResponse.ok(banners));
     }
 }
