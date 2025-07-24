@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.admin;
 
-import com.example.CineHive.dto.banner.BannerAdminRequestDto;
+import com.example.CineHive.dto.banner.BannerAdminRequest;
 import com.example.CineHive.entity.banner.Banner;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.banner.BannerRepository;
@@ -79,7 +79,7 @@ class AdminBannerControllerTest {
         @DisplayName("✅ 성공: 새로운 배너를 생성한다.")
         void createBanner_success() throws Exception {
             // given
-            BannerAdminRequestDto requestDto = new BannerAdminRequestDto("새 배너", "새 부제", "https://example.com/new.jpg", "https://example.com/new-link", 2, true);
+            BannerAdminRequest requestDto = new BannerAdminRequest("새 배너", "새 부제", "https://example.com/new.jpg", "https://example.com/new-link", 2, true);
 
             // when & then
             mockMvc.perform(post("/api/v1/admin/banners")
@@ -96,7 +96,7 @@ class AdminBannerControllerTest {
         @DisplayName("✅ 성공: 기존 배너를 수정한다.")
         void updateBanner_success() throws Exception {
             // given
-            BannerAdminRequestDto requestDto = new BannerAdminRequestDto("수정된 배너", "수정된 부제", "https://example.com/updated.jpg", "https://example.com/updated-link", 1, false);
+            BannerAdminRequest requestDto = new BannerAdminRequest("수정된 배너", "수정된 부제", "https://example.com/updated.jpg", "https://example.com/updated-link", 1, false);
 
             // when & then
             mockMvc.perform(put("/api/v1/admin/banners/{bannerId}", testBanner.getId())
@@ -126,7 +126,7 @@ class AdminBannerControllerTest {
         @DisplayName("❌ 실패: 존재하지 않는 배너를 수정하려 하면 404 Not Found를 반환한다.")
         void updateBanner_fail_notFound() throws Exception {
             // given
-            BannerAdminRequestDto requestDto = new BannerAdminRequestDto("수정", "수정", "https://example.com/u.jpg", "https://example.com/u", 1, true);
+            BannerAdminRequest requestDto = new BannerAdminRequest("수정", "수정", "https://example.com/u.jpg", "https://example.com/u", 1, true);
             long nonExistentId = 9999L;
 
             // when & then
@@ -147,7 +147,7 @@ class AdminBannerControllerTest {
         @DisplayName("❌ 실패(유효성): 필수 필드가 비어있을 때 400 Bad Request를 반환한다.")
         void createBanner_fail_withBlankField(String fieldName, String title, String subtitle, String imageUrl, String linkUrl) throws Exception {
             // given
-            BannerAdminRequestDto requestDto = new BannerAdminRequestDto(title, subtitle, imageUrl, linkUrl, 1, true);
+            BannerAdminRequest requestDto = new BannerAdminRequest(title, subtitle, imageUrl, linkUrl, 1, true);
 
             // when & then
             mockMvc.perform(post("/api/v1/admin/banners")
@@ -177,7 +177,7 @@ class AdminBannerControllerTest {
         @DisplayName("❌ 실패(권한): 배너 생성 시 403 Forbidden을 반환한다.")
         void createBanner_fail_forbidden() throws Exception {
             // given
-            BannerAdminRequestDto requestDto = new BannerAdminRequestDto("해킹시도", "", "https://example.com/hack.jpg", "https://example.com/hack", 1, true);
+            BannerAdminRequest requestDto = new BannerAdminRequest("해킹시도", "", "https://example.com/hack.jpg", "https://example.com/hack", 1, true);
 
             // when & then
             mockMvc.perform(post("/api/v1/admin/banners")

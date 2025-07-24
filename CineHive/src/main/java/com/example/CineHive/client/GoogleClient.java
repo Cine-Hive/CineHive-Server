@@ -1,9 +1,9 @@
 package com.example.CineHive.client;
 
-import com.example.CineHive.dto.oauth.OAuth2MemberInfo;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.google.GoogleTokenResponse;
 import com.example.CineHive.dto.oauth.google.GoogleUserResponse;
-import com.example.CineHive.entity.member.ProviderType;
+import com.example.CineHive.entity.user.ProviderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,16 +35,16 @@ public class GoogleClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code) {
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     @Override
-    public Mono<OAuth2MemberInfo> getMemberInfoByAccessToken(String accessToken) {
+    public Mono<OAuth2UserInfo> getUserInfoByAccessToken(String accessToken) {
         return fetchUserInfo(accessToken)
-                .map(this::toMemberInfo);
+                .map(this::toUserInfo);
     }
 
     private Mono<String> getAccessToken(String code) {
@@ -74,12 +74,8 @@ public class GoogleClient implements OAuth2Client {
                 .bodyToMono(GoogleUserResponse.class);
     }
 
-    private OAuth2MemberInfo toMemberInfo(GoogleUserResponse userResponse) {
-        log.debug("Google User Info: {}", userResponse);
-        return new OAuth2MemberInfo(
-                userResponse.email(),
-                userResponse.name(),
-                getProviderType()
-        );
+    private OAuth2UserInfo toUserInfo(GoogleUserResponse userResponse) {
+        log.debug("구글 사용자 정보: {}", userResponse);
+        return userResponse.toUserInfo(getProviderType());
     }
 }

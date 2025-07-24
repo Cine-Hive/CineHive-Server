@@ -38,10 +38,16 @@ public enum Platform {
     private final Long id;
     private final String displayName;
 
+    /**
+     * 문자열을 해당하는 Platform Enum으로 변환합니다.
+     * @param text 변환할 Enum 상수 이름 (대소문자 무시)
+     * @return 변환된 Platform
+     * @throws IllegalArgumentException 지원하지 않는 플랫폼일 경우
+     */
     public static Platform fromString(String text) {
         return Arrays.stream(values())
                 .filter(p -> p.name().equalsIgnoreCase(text))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown platform: " + text));
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 플랫폼입니다: " + text));
     }
 }

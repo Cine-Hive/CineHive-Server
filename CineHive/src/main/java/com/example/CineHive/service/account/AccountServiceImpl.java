@@ -1,23 +1,23 @@
 package com.example.CineHive.service.account;
 
-import com.example.CineHive.dto.account.AccountInfoResponseDto;
-import com.example.CineHive.entity.member.Member;
-import com.example.CineHive.exception.BusinessException; // BusinessException import
-import com.example.CineHive.exception.ErrorCode;       // ErrorCode import
-import com.example.CineHive.repository.board.BoardRepository;
-import com.example.CineHive.repository.board.BookmarkRepository;
-import com.example.CineHive.repository.board.CommentRepository;
-import com.example.CineHive.repository.board.DislikeRepository;
-import com.example.CineHive.repository.board.LikeRepository;
-import com.example.CineHive.repository.member.MemberRepository;
+import com.example.CineHive.dto.account.AccountInfoResponse;
+import com.example.CineHive.dto.account.UpdateGenresRequest;
+import com.example.CineHive.dto.account.UpdateNicknameRequest;
+import com.example.CineHive.dto.account.UpdatePasswordRequest;
+import com.example.CineHive.entity.media.Genre;
+import com.example.CineHive.entity.user.User;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
+import com.example.CineHive.repository.post.*;
+import com.example.CineHive.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -25,78 +25,72 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AccountServiceImpl implements AccountService {
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 회원 탈퇴 시 연관 데이터 삭제를 위한 리포지토리들
     private final BookmarkRepository bookmarkRepository;
-    private final DislikeRepository disLikeRepository;
+    private final DislikeRepository dislikeRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
-    private final BoardRepository boardRepository;
+    private final PostRepository postRepository;
 
     @Override
-    public AccountInfoResponseDto getAccountInfo(String email) {
-        Member member = findMemberByEmail(email);
-        return AccountInfoResponseDto.from(member);
+    public AccountInfoResponse getAccountInfo(String email) {
+        User user = findUserByEmail(email);
+        return AccountInfoResponse.from(user);
     }
 
     @Override
     @Transactional
-    public void changeNickname(String email, String newNickname) {
-        Member member = findMemberByEmail(email);
-        if (memberRepository.existsByNickname(newNickname) && !member.getNickname().equals(newNickname)) {
+    public void changeNickname(String email, UpdateNicknameRequest request) {
+        User user = findUserByEmail(email);
+        String newNickname = request.nickname();
+        if (userRepository.existsByNickname(newNickname) && !user.getNickname().equals(newNickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
-        member.changeNickname(newNickname);
-        log.info("Member {} changed nickname to {}", email, newNickname);
+        user.changeNickname(newNickname);
+        log.info("사용자({}), 닉네임을 '{}'(으)로 변경했습니다.", email, newNickname);
     }
 
     @Override
     @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) {
-        Member member = findMemberByEmail(email);
-        if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
+    public void changePassword(String email, UpdatePasswordRequest request) {
+        User user = findUserByEmail(email);
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
-        member.changePassword(passwordEncoder.encode(newPassword));
-        log.info("Member {} changed password.", email);
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        log.info("사용자({}), 비밀번호를 변경했습니다.", email);
     }
 
     @Override
     @Transactional
-    public void updateGenres(String email, List<String> genres) {
-        Member member = findMemberByEmail(email);
-        member.updateGenres(new HashSet<>(genres));
-        log.info("Member {} updated genres.", email);
+    public void updateGenres(String email, UpdateGenresRequest request) {
+        User user = findUserByEmail(email);
+        Set<Genre> newGenres = request.genres().stream()
+                .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
+                .collect(Collectors.toSet());
+        user.updateGenres(newGenres);
+        log.info("사용자({}), 선호 장르를 업데이트했습니다.", email);
     }
 
     @Override
     @Transactional
     public void deleteAccount(String email) {
-        log.warn("Deleting all data for member: {}", email);
+        log.warn("사용자({})의 모든 데이터를 삭제합니다. (회원 탈퇴)", email);
 
-        bookmarkRepository.deleteByMember_Email(email);
-        likeRepository.deleteByMember_Email(email);
-        disLikeRepository.deleteByMember_Email(email);
-        commentRepository.deleteByMember_Email(email);
-        boardRepository.deleteByMember_Email(email);
+        bookmarkRepository.deleteAllByUserEmail(email);
+        likeRepository.deleteAllByUserEmail(email);
+        dislikeRepository.deleteAllByUserEmail(email);
+        commentRepository.deleteAllByUser_Email(email);
+        postRepository.deleteAllByUserEmail(email);
+        userRepository.deleteByEmail(email);
 
-        // 마지막으로 회원 정보 삭제
-        memberRepository.deleteByEmail(email);
-        log.info("Successfully deleted account for member: {}", email);
+        log.info("사용자({}) 계정이 성공적으로 삭제되었습니다.", email);
     }
 
-    /**
-     * 이메일로 회원을 조회하는 내부 헬퍼 메서드.
-     * @param email 조회할 이메일
-     * @return Member 엔티티
-     * @throws BusinessException 해당 이메일의 회원이 없을 경우
-     */
-    private Member findMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    return new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-                });
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

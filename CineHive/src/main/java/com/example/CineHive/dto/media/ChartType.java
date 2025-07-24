@@ -83,12 +83,21 @@ public enum ChartType {
     ONE_SEASON_WONDERS("한 시즌만 방영한 명작"),
     KOREAN_ACTORS_IN_HOLLYWOOD("한국 배우 출연 해외 영화");
 
+    /**
+     * 차트의 제목 등으로 UI에 표시될 한글 설명입니다.
+     */
     private final String description;
 
+    /**
+     * 문자열을 해당하는 ChartType Enum으로 변환합니다.
+     * @param text 변환할 Enum 상수 이름 (대소문자 무시)
+     * @return 변환된 ChartType
+     * @throws IllegalArgumentException 지원하지 않는 차트 타입일 경우
+     */
     public static ChartType fromString(String text) {
         return Arrays.stream(values())
                 .filter(b -> b.name().equalsIgnoreCase(text))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown chart type: " + text));
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 차트 타입입니다: " + text));
     }
 }

@@ -1,10 +1,21 @@
 package com.example.CineHive.dto.oauth.naver;
 
-/**
- * 네이버 사용자 정보 요청에 대한 전체 응답 DTO
- */
+import com.example.CineHive.dto.oauth.OAuth2Response;
+import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.user.ProviderType;
+
 public record NaverUserResponse(
         String resultcode,
         String message,
         NaverUser response
-) {}
+) implements OAuth2Response {
+
+    @Override
+    public OAuth2UserInfo toUserInfo(ProviderType providerType) {
+        return new OAuth2UserInfo(
+                this.response().email(),
+                this.response().nickname(),
+                providerType
+        );
+    }
+}
