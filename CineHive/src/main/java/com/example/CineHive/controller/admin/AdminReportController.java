@@ -55,4 +55,12 @@ public class AdminReportController {
         adminReportService.rejectReport(reportId);
         return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("신고를 성공적으로 기각 처리했습니다.")));
     }
+
+    @Operation(summary = "신고 처리", description = "신고를 승인 또는 기각 처리하고, 필요 시 후속 조치를 연동합니다.")
+    @PatchMapping("/{reportId}/process")
+    public void processReport(@PathVariable Long reportId) {
+        // TODO: 1. ProcessReportRequest DTO (action: ACCEPTED/REJECTED, details: String)를 @RequestBody로 받음
+        // TODO: 2. AdminReportService.processReport(reportId, request) 호출
+        // TODO: 3. acceptReport, rejectReport를 대체하거나 내부적으로 호출하도록 구현
+    }
 }
