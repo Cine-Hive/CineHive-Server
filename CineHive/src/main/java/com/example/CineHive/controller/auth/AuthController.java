@@ -18,9 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 인증(회원가입, 로그인) 및 중복 확인 API 컨트롤러입니다.
+ * 인증(회원가입, 로그인) 및 토큰 관리 API 컨트롤러입니다.
  */
-@Tag(name = "Auth Controller", description = "인증(회원가입, 로그인) 및 중복 확인 API")
+@Tag(name = "Auth Controller", description = "인증(회원가입, 로그인) 및 토큰 관리 API")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -28,6 +28,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    // TODO: private final TokenService tokenService; // 토큰 재발급/로그아웃 로직을 위한 서비스 주입 필요
 
     @Operation(summary = "회원가입",
             description = "새로운 사용자를 시스템에 등록합니다. 성공 시 `201 CREATED` 상태 코드와 성공 메시지를 반환합니다.")
@@ -48,6 +49,25 @@ public class AuthController {
         String userAgent = httpServletRequest.getHeader("User-Agent");
         LoginResponse response = authService.login(request, userAgent);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "로그아웃",
+            description = "서버에서 사용자의 리프레시 토큰을 삭제하여 로그아웃 처리합니다.")
+    @PostMapping("/logout")
+    public void logout() {
+        // TODO: 1. Request Header의 쿠키 또는 Authorization 헤더에서 Refresh Token 추출
+        // TODO: 2. TokenService를 호출하여 저장된 Refresh Token 삭제
+        // TODO: 3. 성공 시 MessageResponse 반환 (예: "로그아웃되었습니다.")
+    }
+
+    @Operation(summary = "액세스 토큰 재발급",
+            description = "유효한 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
+    @PostMapping("/refresh")
+    public void refresh() {
+        // TODO: 1. Request Header의 쿠키 또는 Authorization 헤더에서 Refresh Token 추출
+        // TODO: 2. TokenService를 호출하여 Refresh Token 유효성 검증
+        // TODO: 3. 유효하다면 새로운 Access Token만 생성하여 응답 (신규 DTO: AccessTokenResponse 필요)
+        // TODO: 4. 유효하지 않다면 401 Unauthorized 에러 응답
     }
 
     @Operation(summary = "이메일 중복 확인",
