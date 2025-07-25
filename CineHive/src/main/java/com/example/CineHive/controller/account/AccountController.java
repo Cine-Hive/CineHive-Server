@@ -1,89 +1,129 @@
 package com.example.CineHive.controller.account;
 
-import com.example.CineHive.dto.account.AccountInfoResponse;
-import com.example.CineHive.dto.account.UpdateGenresRequest;
-import com.example.CineHive.dto.account.UpdateNicknameRequest;
-import com.example.CineHive.dto.account.UpdatePasswordRequest;
-import com.example.CineHive.dto.global.ApiResponse;
-import com.example.CineHive.dto.global.ErrorResponse;
-import com.example.CineHive.dto.global.MessageResponse;
-import com.example.CineHive.service.account.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 인증된 사용자의 계정 정보 관리 API 컨트롤러입니다.
+ * 인증된 사용자 본인(me)의 계정 정보 및 활동 내역 조회 API 컨트롤러입니다.
  */
-@Tag(name = "Account Controller", description = "인증된 사용자의 계정 정보 관리 API")
+@Tag(name = "Account Controller", description = "내 계정 정보 및 활동 관리 API")
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/users/me")
 @RequiredArgsConstructor
 public class AccountController {
 
-    private final AccountService accountService;
+    // TODO: private final AccountService accountService;
 
-    @Operation(summary = "내 정보 조회", description = "현재 로그인된 사용자의 상세 정보를 조회합니다.")
-    @ApiResponses(@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"))
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<AccountInfoResponse>> getMyInfo(
+    // =========================================
+    // == 계정 관리
+    // =========================================
+
+    @Operation(summary = "내 정보 상세 조회")
+    @GetMapping
+    public void getMyInfo(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. AccountService.getAccountInfo(userEmail) 호출
+        // TODO: 2. AccountInfoResponse DTO로 변환하여 반환
+    }
+
+    @Operation(summary = "내 정보 수정",
+            description = "닉네임, 프로필 이미지, 최근 검색어 저장 여부 등 내 계정 정보를 수정합니다.")
+    @PatchMapping
+    public void updateMyInfo(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. AccountUpdateRequest DTO를 @RequestBody로 받음
+        // TODO: 2. AccountService.updateAccountInfo(userEmail, request) 호출
+        // TODO: 3. 수정된 정보가 포함된 AccountInfoResponse DTO 반환
+    }
+
+    @Operation(summary = "회원 탈퇴")
+    @DeleteMapping
+    public void deleteMyAccount(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. AccountService.deleteAccount(userEmail) 호출
+        // TODO: 2. 성공 시 MessageResponse 반환
+    }
+
+    // =========================================
+    // == 내 활동 조회
+    // =========================================
+
+    @Operation(summary = "내 북마크 목록 조회")
+    @GetMapping("/bookmarks")
+    public void getMyBookmarks(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. BookmarkService에서 현재 사용자의 북마크 목록 조회 (페이징)
+        // TODO: 2. PagedResponse<PostSummaryResponse> 형태로 변환하여 반환
+    }
+
+    @Operation(summary = "내 플레이리스트 목록 조회")
+    @GetMapping("/playlists")
+    public void getMyPlaylists(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. PlaylistService에서 현재 사용자의 플레이리스트 목록 조회 (페이징)
+        // TODO: 2. PagedResponse<PlaylistSummaryResponse> 형태로 변환하여 반환
+    }
+
+    @Operation(summary = "내가 좋아요한 인물 목록")
+    @GetMapping("/liked-people")
+    public void getMyLikedPeople(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. '좋아요한 인물' 서비스에서 목록 조회 (페이징)
+        // TODO: 2. PagedResponse<PersonSummaryResponse> 형태로 변환하여 반환
+    }
+
+    @Operation(summary = "내 커뮤니티 활동 내역")
+    @GetMapping("/activities")
+    public void getMyActivities(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. 내가 작성한 게시글/댓글 등을 시간순으로 조회 (페이징)
+        // TODO: 2. PagedResponse<ActivityResponse> (신규 DTO) 형태로 변환하여 반환
+    }
+
+    @Operation(summary = "내 시청 상태별 미디어 목록")
+    @GetMapping("/media-list")
+    public void getMyMediaListByStatus(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. '시청 상태'를 @RequestParam으로 받아 필터링
+        // TODO: 2. PagedResponse<MyMediaStatusResponse> (신규 DTO) 형태로 변환하여 반환
+    }
+
+    @Operation(summary = "내 최근 검색어 목록 조회")
+    @GetMapping("/recent-searches")
+    public void getMyRecentSearches(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. SearchService/AccountService에서 최근 검색어 목록 조회
+        // TODO: 2. RecentSearchResponse (신규 DTO) 리스트로 변환하여 반환
+    }
+
+    @Operation(summary = "내 최근 검색어 전체 삭제")
+    @DeleteMapping("/recent-searches")
+    public void deleteAllMyRecentSearches(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. SearchService/AccountService에서 최근 검색어 전체 삭제 로직 호출
+        // TODO: 2. 성공 시 MessageResponse 반환
+    }
+
+    @Operation(summary = "특정 검색어 기록 삭제")
+    @DeleteMapping("/recent-searches/{searchId}")
+    public void deleteMyRecentSearch(
+            @PathVariable Long searchId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        AccountInfoResponse accountInfo = accountService.getAccountInfo(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(accountInfo));
+        // TODO: 1. SearchService/AccountService에서 특정 검색어 삭제 로직 호출
+        // TODO: 2. 성공 시 MessageResponse 반환
     }
 
-    @Operation(summary = "닉네임 변경", description = "현재 로그인된 사용자의 닉네임을 변경합니다.")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "변경 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "유효성 검사 실패 (닉네임 규칙 위반)", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PatchMapping("/me/nickname")
-    public ResponseEntity<ApiResponse<MessageResponse>> changeNickname(
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateNicknameRequest request) {
-        accountService.changeNickname(userDetails.getUsername(), request);
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("닉네임이 성공적으로 변경되었습니다.")));
+    // =========================================
+    // == 내 설정 관리
+    // =========================================
+
+    @Operation(summary = "내 알림 설정 조회")
+    @GetMapping("/notification-settings")
+    public void getMyNotificationSettings(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. NotificationService에서 현재 사용자의 알림 설정 조회
+        // TODO: 2. NotificationSettingsResponse (신규 DTO)로 변환하여 반환
     }
 
-    @Operation(summary = "비밀번호 변경", description = "현재 로그인된 사용자의 비밀번호를 변경합니다.")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "변경 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "유효성 검사 실패 (비밀번호 규칙 위반) 또는 기존 비밀번호 불일치", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PatchMapping("/me/password")
-    public ResponseEntity<ApiResponse<MessageResponse>> changePassword(
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdatePasswordRequest request) {
-        accountService.changePassword(userDetails.getUsername(), request);
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("비밀번호가 성공적으로 변경되었습니다.")));
-    }
-
-    @Operation(summary = "선호 장르 수정", description = "현재 로그인된 사용자의 선호 장르 목록을 수정합니다.")
-    @ApiResponses(@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"))
-    @PutMapping("/me/genres")
-    public ResponseEntity<ApiResponse<MessageResponse>> updateGenres(
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UpdateGenresRequest request) {
-        accountService.updateGenres(userDetails.getUsername(), request);
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("선호 장르가 성공적으로 수정되었습니다.")));
-    }
-
-    @Operation(summary = "회원 탈퇴", description = "현재 로그인된 사용자의 계정을 삭제합니다. 모든 관련 데이터가 영구적으로 삭제되므로 주의가 필요합니다.")
-    @ApiResponses(@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "탈퇴 성공"))
-    @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<MessageResponse>> deleteAccount(
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        accountService.deleteAccount(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("회원 탈퇴가 성공적으로 처리되었습니다.")));
+    @Operation(summary = "내 알림 설정 변경")
+    @PutMapping("/notification-settings")
+    public void updateMyNotificationSettings(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: 1. UpdateNotificationSettingsRequest (신규 DTO)를 @RequestBody로 받음
+        // TODO: 2. NotificationService 호출하여 알림 설정 업데이트
+        // TODO: 3. 성공 시 MessageResponse 반환
     }
 }
