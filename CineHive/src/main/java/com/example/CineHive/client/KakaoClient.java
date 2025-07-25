@@ -1,12 +1,11 @@
 package com.example.CineHive.client;
 
+import com.example.CineHive.config.OAuthProperties;
 import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.kakao.KakaoTokenResponse;
 import com.example.CineHive.dto.oauth.kakao.KakaoUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -17,15 +16,15 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class KakaoClient implements OAuth2Client {
 
     private final WebClient webClient;
+    private final OAuthProperties.Kakao kakaoProperties;
 
-    @Value("${kakao.client.id}")
-    private String clientId;
-    @Value("${kakao.redirect.uri}")
-    private String redirectUri;
+    public KakaoClient(WebClient webClient, OAuthProperties oAuthProperties) {
+        this.webClient = webClient;
+        this.kakaoProperties = oAuthProperties.getKakao();
+    }
 
     @Override
     public ProviderType getProviderType() {
@@ -33,7 +32,8 @@ public class KakaoClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getUserInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
+        // 카카오는 토큰 요청 시 state를 사용하지 않으므로 무시
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
@@ -49,8 +49,8 @@ public class KakaoClient implements OAuth2Client {
         String tokenUri = "https://kauth.kakao.com/oauth/token";
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
-        formData.add("client_id", clientId);
-        formData.add("redirect_uri", redirectUri);
+        formData.add("client_id", kakaoProperties.getClientId());
+        formData.add("redirect_uri", kakaoProperties.getRedirectUri());
         formData.add("code", code);
 
         return webClient.post()
