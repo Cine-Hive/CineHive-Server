@@ -4,23 +4,25 @@ import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.oauth.AccessTokenRequest;
 import com.example.CineHive.entity.user.ProviderType;
+import com.example.CineHive.exception.BusinessException;
+import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.service.oauth.OAuth2Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @Tag(name = "OAuth2 Controller", description = "통합 소셜 로그인 API")
 @Validated
@@ -28,14 +30,9 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/api/v1/oauth2")
 @RequiredArgsConstructor
 public class OAuth2Controller {
-    private final OAuth2Service oauth2Service;
 
-    @Value("${naver.client.id}") private String naverClientId;
-    @Value("${naver.redirect.uri}") private String naverRedirectUri;
-    @Value("${kakao.client.id}") private String kakaoClientId;
-    @Value("${kakao.redirect.uri}") private String kakaoRedirectUri;
-    @Value("${google.client.id}") private String googleClientId;
-    @Value("${google.redirect.uri}") private String googleRedirectUri;
+    private final OAuth2Service oauth2Service;
+    private static final String STATE_SESSION_ATTRIBUTE_NAME = "oauthState";
 
     @Operation(summary = "소셜 로그인 페이지로 리다이렉트 (웹 전용)",
             description = """
@@ -47,14 +44,15 @@ public class OAuth2Controller {
     public void redirectToProvider(
             @Parameter(description = "소셜 로그인 플랫폼", schema = @Schema(type = "string", allowableValues = {"naver", "kakao", "google"}))
             @PathVariable ProviderType platform,
+            HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        String redirectUrl = switch (platform) {
-            case NAVER -> "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=" + naverClientId + "&redirect_uri=" + URLEncoder.encode(naverRedirectUri, StandardCharsets.UTF_8) + "&state=STATE_STRING";
-            case KAKAO -> "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=" + kakaoClientId + "&redirect_uri=" + URLEncoder.encode(kakaoRedirectUri, StandardCharsets.UTF_8);
-            case GOOGLE -> "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=" + googleClientId + "&redirect_uri=" + URLEncoder.encode(googleRedirectUri, StandardCharsets.UTF_8) + "&scope=" + URLEncoder.encode("email profile", StandardCharsets.UTF_8);
-            case LOCAL -> throw new IllegalArgumentException("지원하지 않는 플랫폼입니다: " + platform);
-        };
+        // CSRF 방어를 위한 state 생성 및 세션 저장
+        String state = UUID.randomUUID().toString();
+        request.getSession().setAttribute(STATE_SESSION_ATTRIBUTE_NAME, state);
+
+        // Service 계층에 Redirect URL 생성을 위임
+        String redirectUrl = oauth2Service.getRedirectUrl(platform, state);
         response.sendRedirect(redirectUrl);
     }
 
@@ -67,8 +65,21 @@ public class OAuth2Controller {
     @GetMapping("/web/{platform}/callback")
     public ResponseEntity<ApiResponse<LoginResponse>> handleCallback(
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
-            @Parameter(description = "플랫폼으로부터 발급받은 인가 코드") @RequestParam @NotBlank String code) {
-        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code);
+            @Parameter(description = "플랫폼으로부터 발급받은 인가 코드") @RequestParam @NotBlank String code,
+            @Parameter(description = "CSRF 방어용 상태 토큰") @RequestParam(required = false) String state,
+            HttpSession session) {
+
+        // CSRF 공격 방지를 위해 state 값 검증 (Kakao는 state를 사용하지 않으므로 예외 처리)
+        if (platform != ProviderType.KAKAO) {
+            String sessionState = (String) session.getAttribute(STATE_SESSION_ATTRIBUTE_NAME);
+            if (sessionState == null || !sessionState.equals(state)) {
+                // ErrorCode에 INVALID_STATE_VALUE 추가 필요
+                throw new BusinessException("유효하지 않은 state 값입니다.", ErrorCode.INVALID_INPUT_VALUE);
+            }
+            session.removeAttribute(STATE_SESSION_ATTRIBUTE_NAME); // 사용한 state는 즉시 제거
+        }
+
+        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code, state);
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
 
@@ -81,6 +92,7 @@ public class OAuth2Controller {
     public ResponseEntity<ApiResponse<LoginResponse>> loginFromApp(
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
             @Valid @RequestBody AccessTokenRequest request) {
+
         LoginResponse loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken());
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }

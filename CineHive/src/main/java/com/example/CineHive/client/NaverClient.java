@@ -1,12 +1,11 @@
 package com.example.CineHive.client;
 
+import com.example.CineHive.config.OAuthProperties;
 import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.naver.NaverTokenResponse;
 import com.example.CineHive.dto.oauth.naver.NaverUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,17 +13,16 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class NaverClient implements OAuth2Client {
 
     private final WebClient webClient;
+    private final OAuthProperties.Naver naverProperties;
 
-    @Value("${naver.client.id}")
-    private String clientId;
-    @Value("${naver.client.secret}")
-    private String clientSecret;
-    @Value("${naver.redirect.uri}")
-    private String redirectUri;
+    // 생성자를 통해 WebClient와 Naver 설정 정보 주입
+    public NaverClient(WebClient webClient, OAuthProperties oAuthProperties) {
+        this.webClient = webClient;
+        this.naverProperties = oAuthProperties.getNaver();
+    }
 
     @Override
     public ProviderType getProviderType() {
@@ -32,8 +30,8 @@ public class NaverClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getUserInfo(String code) {
-        return getAccessToken(code)
+    public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
+        return getAccessToken(code, state) // state 전달
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
     }
@@ -44,15 +42,15 @@ public class NaverClient implements OAuth2Client {
                 .map(this::toUserInfo);
     }
 
-    private Mono<String> getAccessToken(String code) {
+    private Mono<String> getAccessToken(String code, String state) {
         String tokenUri = "https://nid.naver.com/oauth2.0/token";
         return webClient.post()
                 .uri(tokenUri, uriBuilder -> uriBuilder
                         .queryParam("grant_type", "authorization_code")
-                        .queryParam("client_id", clientId)
-                        .queryParam("client_secret", clientSecret)
+                        .queryParam("client_id", naverProperties.getClientId())
+                        .queryParam("client_secret", naverProperties.getClientSecret())
                         .queryParam("code", code)
-                        .queryParam("state", "STATE_STRING") // CSRF 방지를 위한 상태 토큰
+                        .queryParam("state", state) // Controller에서 전달받은 state 사용
                         .build())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .retrieve()

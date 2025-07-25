@@ -1,12 +1,11 @@
 package com.example.CineHive.client;
 
+import com.example.CineHive.config.OAuthProperties;
 import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.dto.oauth.google.GoogleTokenResponse;
 import com.example.CineHive.dto.oauth.google.GoogleUserResponse;
 import com.example.CineHive.entity.user.ProviderType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -17,17 +16,15 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GoogleClient implements OAuth2Client {
 
     private final WebClient webClient;
+    private final OAuthProperties.Google googleProperties;
 
-    @Value("${google.client.id}")
-    private String clientId;
-    @Value("${google.client.secret}")
-    private String clientSecret;
-    @Value("${google.redirect.uri}")
-    private String redirectUri;
+    public GoogleClient(WebClient webClient, OAuthProperties oAuthProperties) {
+        this.webClient = webClient;
+        this.googleProperties = oAuthProperties.getGoogle();
+    }
 
     @Override
     public ProviderType getProviderType() {
@@ -35,7 +32,8 @@ public class GoogleClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getUserInfo(String code) {
+    public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
+        // 구글은 토큰 요청 시 state를 사용하지 않으므로 무시
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
@@ -51,9 +49,9 @@ public class GoogleClient implements OAuth2Client {
         String tokenUri = "https://oauth2.googleapis.com/token";
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", code);
-        formData.add("client_id", clientId);
-        formData.add("client_secret", clientSecret);
-        formData.add("redirect_uri", redirectUri);
+        formData.add("client_id", googleProperties.getClientId());
+        formData.add("client_secret", googleProperties.getClientSecret());
+        formData.add("redirect_uri", googleProperties.getRedirectUri());
         formData.add("grant_type", "authorization_code");
 
         return webClient.post()
