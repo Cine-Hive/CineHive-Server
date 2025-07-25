@@ -40,3 +40,4 @@ Thumbs.db
 
 # Sensitive information
 application.properties
+application.yml
