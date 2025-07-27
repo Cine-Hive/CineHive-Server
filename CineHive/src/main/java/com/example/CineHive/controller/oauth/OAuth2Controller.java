@@ -4,8 +4,6 @@ import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.global.ApiResponse;
 import com.example.CineHive.dto.oauth.AccessTokenRequest;
 import com.example.CineHive.entity.user.ProviderType;
-import com.example.CineHive.exception.BusinessException;
-import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.service.oauth.OAuth2Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,6 +36,7 @@ public class OAuth2Controller {
             description = """
             사용자를 각 소셜 로그인 플랫폼의 인증 페이지로 이동시킵니다.
             - **[사용법]** 클라이언트는 이 API를 직접 Ajax로 호출하는 것이 아니라, 로그인 버튼에 `<a>` 태그를 사용하여 이 API의 URL로 링크를 걸어야 합니다.
+            - **[보안]** CSRF(Cross-Site Request Forgery) 공격을 방어하기 위해 'state' 파라미터를 생성하여 사용자의 세션과 리다이렉션 URL에 포함시킵니다.
             - 예시: `<a href="/api/v1/oauth2/web/kakao">카카오로 로그인</a>`
             """)
     @GetMapping("/web/{platform}")
@@ -60,26 +59,22 @@ public class OAuth2Controller {
             description = """
             각 플랫폼으로부터 인가 코드를 받아 로그인을 처리하고 서버의 JWT를 발급합니다.
             - **[사용법]** 이 API는 사용자가 직접 호출하는 것이 아니라, 소셜 플랫폼이 로그인 성공 후 사용자를 리다이렉션시키는 주소(Redirect URI)입니다.
-            - 프론트엔드에서는 이 주소로 리다이렉션된 후, 응답받은 JWT를 저장하여 사용하면 됩니다.
+            - **[보안]** 리다이렉션 시 전달되는 'state' 값과 이전에 세션에 저장했던 'state' 값을 비교하여 CSRF 공격을 방어합니다.
             """)
     @GetMapping("/web/{platform}/callback")
     public ResponseEntity<ApiResponse<LoginResponse>> handleCallback(
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
             @Parameter(description = "플랫폼으로부터 발급받은 인가 코드") @RequestParam @NotBlank String code,
-            @Parameter(description = "CSRF 방어용 상태 토큰") @RequestParam(required = false) String state,
+            @Parameter(description = "CSRF 방어용 상태 토큰") @RequestParam(name = "state", required = false) String receivedState,
             HttpSession session) {
 
-        // CSRF 공격 방지를 위해 state 값 검증 (Kakao는 state를 사용하지 않으므로 예외 처리)
-        if (platform != ProviderType.KAKAO) {
-            String sessionState = (String) session.getAttribute(STATE_SESSION_ATTRIBUTE_NAME);
-            if (sessionState == null || !sessionState.equals(state)) {
-                // ErrorCode에 INVALID_STATE_VALUE 추가 필요
-                throw new BusinessException("유효하지 않은 state 값입니다.", ErrorCode.INVALID_INPUT_VALUE);
-            }
-            session.removeAttribute(STATE_SESSION_ATTRIBUTE_NAME); // 사용한 state는 즉시 제거
-        }
+        // 1. 세션에서 state 값을 가져온 후 즉시 제거
+        String sessionState = (String) session.getAttribute(STATE_SESSION_ATTRIBUTE_NAME);
+        session.removeAttribute(STATE_SESSION_ATTRIBUTE_NAME);
 
-        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code, state);
+        // 2. Service 계층으로 모든 로직 위임 (State 검증 포함)
+        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code, receivedState, sessionState);
+
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
 
