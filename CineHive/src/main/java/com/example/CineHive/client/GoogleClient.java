@@ -33,7 +33,6 @@ public class GoogleClient implements OAuth2Client {
 
     @Override
     public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
-        // 구글은 토큰 요청 시 state를 사용하지 않으므로 무시
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
@@ -46,7 +45,6 @@ public class GoogleClient implements OAuth2Client {
     }
 
     private Mono<String> getAccessToken(String code) {
-        String tokenUri = "https://oauth2.googleapis.com/token";
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", code);
         formData.add("client_id", googleProperties.getClientId());
@@ -55,7 +53,7 @@ public class GoogleClient implements OAuth2Client {
         formData.add("grant_type", "authorization_code");
 
         return webClient.post()
-                .uri(tokenUri)
+                .uri(googleProperties.getTokenUri())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
@@ -64,9 +62,8 @@ public class GoogleClient implements OAuth2Client {
     }
 
     private Mono<GoogleUserResponse> fetchUserInfo(String accessToken) {
-        String userInfoUri = "https://www.googleapis.com/oauth2/v2/userinfo";
         return webClient.get()
-                .uri(userInfoUri)
+                .uri(googleProperties.getUserInfoUri())
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .bodyToMono(GoogleUserResponse.class);
