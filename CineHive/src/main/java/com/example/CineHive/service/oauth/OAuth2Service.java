@@ -19,13 +19,15 @@ public interface OAuth2Service {
 
     /**
      * [웹 로그인용] 인가 코드를 사용하여 로그인/회원가입을 처리하고 JWT를 발급합니다.
+     * CSRF 방어를 위한 state 값 검증을 포함합니다.
      *
-     * @param providerType 소셜 로그인 제공업체
-     * @param code         제공업체로부터 받은 인가 코드
-     * @param state        CSRF 공격 방어를 위해 검증에 사용될 상태 값
+     * @param providerType   소셜 로그인 제공업체
+     * @param code           제공업체로부터 받은 인가 코드
+     * @param receivedState  플랫폼 리다이렉션 시 전달받은 state 값
+     * @param sessionState   CSRF 방어를 위해 세션에 저장했던 state 값
      * @return 로그인 성공 시 JWT 토큰과 회원 정보를 담은 DTO
      */
-    LoginResponse loginWithCode(ProviderType providerType, String code, String state);
+    LoginResponse loginWithCode(ProviderType providerType, String code, String receivedState, String sessionState);
 
     /**
      * [앱 로그인용] 액세스 토큰을 사용하여 로그인/회원가입을 처리하고 JWT를 발급합니다.
