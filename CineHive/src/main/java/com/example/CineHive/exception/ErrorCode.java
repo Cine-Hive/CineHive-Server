@@ -30,6 +30,7 @@ public enum ErrorCode {
     // OAuth (O0xx)
     INVALID_OAUTH_TOKEN(HttpStatus.BAD_REQUEST, "O001", "유효하지 않은 OAuth 토큰입니다."),
     OAUTH_COMMUNICATION_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "O002", "OAuth 서비스와 통신 중 오류가 발생했습니다."),
+    INVALID_OAUTH_STATE(HttpStatus.UNAUTHORIZED, "O003", "유효하지 않은 OAuth 인증 상태입니다. CSRF 공격일 수 있습니다."),
 
     // Banner (B0xx)
     BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "해당 배너를 찾을 수 없습니다."),
@@ -57,6 +58,7 @@ public enum ErrorCode {
     CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "M002", "해당 차트 타입을 처리할 수 없습니다."),
     GENRE_NOT_FOUND(HttpStatus.NOT_FOUND, "M003", "해당 장르를 찾을 수 없습니다."),
     TMDB_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "M004", "외부 영화 API 호출 중 오류가 발생했습니다.");
+
 
     private final HttpStatus status;
     private final String code;
