@@ -250,6 +250,27 @@ class OAuth2LoginIntegrationTest {
             User found = userRepository.findByEmail(userEmail).orElseThrow();
             assertThat(found.getNickname()).isEqualTo(userNickname + " (KAKAO 1)");
         }
+
+        @Test
+        @DisplayName("닉네임 중복이 2번 이상 발생하면, 숫자가 증가된 형태로 저장한다")
+        void whenNicknameDuplicatedTwice_thenIncrementCounter() throws Exception {
+            String base = "테스트카카오유저";
+            // 이미 "테스트카카오유저", "테스트카카오유저 (KAKAO 1)" 두 사용자 존재
+            userRepository.save(User.builder().email("u1@kakao.com").name(base).nickname(base).password("p").provider(ProviderType.LOCAL).gender(Gender.OTHER).build());
+            userRepository.save(User.builder().email("u2@kakao.com").name(base).nickname(base + " (KAKAO 1)").password("p").provider(ProviderType.LOCAL).gender(Gender.OTHER).build());
+
+            mockWebServer.enqueue(new MockResponse().addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(createTokenResponseBody("token")));
+            mockWebServer.enqueue(new MockResponse().addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(createKakaoUserInfoResponseBody(999L, "new@kakao.com", base)));
+
+            mockMvc.perform(get("/api/v1/oauth2/web/{platform}/callback", ProviderType.KAKAO)
+                            .param("code", "test_code")
+                            .session(mockSession))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.userInfo.nickname").value(base + " (KAKAO 2)"));
+        }
     }
 
     @Nested
@@ -297,7 +318,8 @@ class OAuth2LoginIntegrationTest {
                             .session(mockSession))
                     .andDo(print())
                     .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.code").value("INVALID_OAUTH_STATE"));
+                    .andExpect(jsonPath("$.error.code").value("O003"))
+                    .andExpect(jsonPath("$.error.error").value("INVALID_OAUTH_STATE"));
         }
     }
 
@@ -345,7 +367,9 @@ class OAuth2LoginIntegrationTest {
                             .session(mockSession))
                     .andDo(print())
                     .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.code").value("INVALID_OAUTH_STATE"));
+                    .andExpect(jsonPath("$.error.code").value("O003"))
+                    .andExpect(jsonPath("$.error.error").value("INVALID_OAUTH_STATE"));
+
         }
     }
 
@@ -372,7 +396,7 @@ class OAuth2LoginIntegrationTest {
 
         @Test
         @DisplayName("사용자 정보에 이메일이 없으면, 503 Service Unavailable Error를 반환한다")
-        void whenEmailIsMissing_shouldReturnInternalServerError() throws Exception {
+        void whenEmailIsMissing_shouldReturnServiceUnavailable() throws Exception {
             mockWebServer.enqueue(new MockResponse()
                     .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(createTokenResponseBody("any-token")));
@@ -389,6 +413,31 @@ class OAuth2LoginIntegrationTest {
                     .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"))
                     .andExpect(jsonPath("$.error.message")
                             .value("소셜 로그인 정보 처리 중 오류가 발생했습니다 (이메일 정보 없음)."));
+        }
+
+        @Test
+        @DisplayName("토큰 요청 단계에서 401 응답 시, 503 Service Unavailable을 반환한다")
+        void whenTokenRequestFails401_thenServiceUnavailable() throws Exception {
+            mockWebServer.enqueue(new MockResponse().setResponseCode(401));
+
+            mockMvc.perform(get("/api/v1/oauth2/web/{platform}/callback", ProviderType.KAKAO)
+                            .param("code", "test_code")
+                            .session(mockSession))
+                    .andDo(print())
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error.code").value("O002"))
+                    .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"));
+        }
+
+        @Test
+        @DisplayName("code 파라미터 누락 시, 400 Bad Request를 반환한다")
+        void whenCodeMissing_thenBadRequest() throws Exception {
+            mockMvc.perform(get("/api/v1/oauth2/web/{platform}/callback", ProviderType.KAKAO)
+                            .session(mockSession))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("C005"))
+                    .andExpect(jsonPath("$.error.error").value("MISSING_REQUEST_PARAMETER"));
         }
     }
 
@@ -462,6 +511,44 @@ class OAuth2LoginIntegrationTest {
                     .andExpect(jsonPath("$.error.code").value("O002"))
                     .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"));
         }
+
+        @Test
+        @DisplayName("지원하지 않는 플랫폼으로 앱 로그인 요청 시 400 Bad Request를 반환한다")
+        void whenUnsupportedPlatformForAppLogin_thenBadRequest() throws Exception {
+            mockMvc.perform(post("/api/v1/oauth2/app/{platform}/login", ProviderType.LOCAL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"accessToken\":\"foo\"}"))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("C001"))
+                    .andExpect(jsonPath("$.error.error").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("액세스 토큰 누락 시 400 Bad Request를 반환한다")
+        void whenAccessTokenMissing_thenBadRequest() throws Exception {
+            mockMvc.perform(post("/api/v1/oauth2/app/{platform}/login", ProviderType.KAKAO)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("C007"))
+                    .andExpect(jsonPath("$.error.error").value("VALIDATION_FAILED"));
+        }
+
+        @Test
+        @DisplayName("잘못된 JSON 키로 요청 시 400 Bad Request를 반환한다")
+        void whenInvalidJsonField_thenBadRequest() throws Exception {
+            mockMvc.perform(post("/api/v1/oauth2/app/{platform}/login", ProviderType.KAKAO)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"access_token\":\"foo\"}"))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("C007"))
+                    .andExpect(jsonPath("$.error.error").value("VALIDATION_FAILED"));
+        }
+
+
     }
 
     // --- Helper Methods ---
