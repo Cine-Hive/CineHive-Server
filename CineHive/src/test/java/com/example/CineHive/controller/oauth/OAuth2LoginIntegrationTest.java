@@ -354,8 +354,8 @@ class OAuth2LoginIntegrationTest {
     class Describe_CallbackCommonExceptions {
 
         @Test
-        @DisplayName("OAuth 서버 통신 실패 시, 500 Internal Server Error를 반환한다")
-        void whenOAuthServerFails_shouldReturnInternalServerError() throws Exception {
+        @DisplayName("OAuth 서버 통신 실패 시, 503 Service Unavailable Error를 반환한다")
+        void whenOAuthServerFails_shouldReturnServiceUnavailable() throws Exception {
             mockWebServer.enqueue(new MockResponse()
                     .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(createTokenResponseBody("any-token")));
@@ -365,8 +365,9 @@ class OAuth2LoginIntegrationTest {
                             .param("code", "test_code")
                             .session(mockSession))
                     .andDo(print())
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("OAUTH_COMMUNICATION_ERROR"));
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error.code").value("O002"))
+                    .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"));
         }
 
         @Test
