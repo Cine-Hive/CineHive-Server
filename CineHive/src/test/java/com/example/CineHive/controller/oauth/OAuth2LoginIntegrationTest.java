@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -369,7 +370,7 @@ class OAuth2LoginIntegrationTest {
         }
 
         @Test
-        @DisplayName("사용자 정보에 이메일이 없으면, 500 Internal Server Error를 반환한다")
+        @DisplayName("사용자 정보에 이메일이 없으면, 503 Service Unavailable Error를 반환한다")
         void whenEmailIsMissing_shouldReturnInternalServerError() throws Exception {
             mockWebServer.enqueue(new MockResponse()
                     .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -383,7 +384,8 @@ class OAuth2LoginIntegrationTest {
                             .session(mockSession))
                     .andDo(print())
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("OAUTH_COMMUNICATION_ERROR"))
+                    .andExpect(jsonPath("$.error.code").value("O002"))
+                    .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"))
                     .andExpect(jsonPath("$.error.message")
                             .value("소셜 로그인 정보 처리 중 오류가 발생했습니다 (이메일 정보 없음)."));
         }
@@ -456,7 +458,8 @@ class OAuth2LoginIntegrationTest {
                             .content(requestBody))
                     .andDo(print())
                     .andExpect(status().isServiceUnavailable())
-                    .andExpect(jsonPath("$.error.code").value("OAUTH_COMMUNICATION_ERROR"));
+                    .andExpect(jsonPath("$.error.code").value("O002"))
+                    .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"));
         }
     }
 
@@ -474,7 +477,10 @@ class OAuth2LoginIntegrationTest {
 
     private String createKakaoUserInfoResponseBody(Long id, String email, String nickname) throws JsonProcessingException {
         Map<String, Object> properties = Map.of("nickname", nickname);
-        Map<String, Object> kakaoAccount = Map.of("profile", properties, "email", email);
+        Map<String, Object> kakaoAccount = new HashMap<>();
+        kakaoAccount.put("profile", properties);
+        kakaoAccount.put("email", email);
+
         Map<String, Object> body = Map.of("id", id, "kakao_account", kakaoAccount);
         return objectMapper.writeValueAsString(body);
     }
