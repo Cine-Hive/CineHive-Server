@@ -50,6 +50,7 @@ public class KakaoClient implements OAuth2Client {
         formData.add("client_id", kakaoProperties.getClientId());
         formData.add("redirect_uri", kakaoProperties.getRedirectUri());
         formData.add("code", code);
+        formData.add("client_secret", kakaoProperties.getClientSecret());
 
         return webClient.post()
                 .uri(kakaoProperties.getTokenUri())
