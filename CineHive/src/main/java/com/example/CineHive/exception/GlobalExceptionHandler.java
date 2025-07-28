@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
                 errorCode.getStatus().value(),
                 errorCode.getCode(),
                 errorCode.name(),
-                errorCode.getMessage(),
+                e.getMessage(),
                 request.getRequestURI()
         );
         return ResponseEntity.status(errorCode.getStatus()).body(ApiResponse.error(errorResponse));
