@@ -30,6 +30,7 @@ public class OAuthProperties {
     @Setter
     public static class Kakao {
         private String clientId;
+        private String clientSecret;
         private String redirectUri;
         private String tokenUri;
         private String userInfoUri;
