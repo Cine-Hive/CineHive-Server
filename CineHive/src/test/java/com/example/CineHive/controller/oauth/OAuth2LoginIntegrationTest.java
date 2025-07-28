@@ -383,7 +383,7 @@ class OAuth2LoginIntegrationTest {
                             .param("code", "test_code")
                             .session(mockSession))
                     .andDo(print())
-                    .andExpect(status().isInternalServerError())
+                    .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error.code").value("O002"))
                     .andExpect(jsonPath("$.error.error").value("OAUTH_COMMUNICATION_ERROR"))
                     .andExpect(jsonPath("$.error.message")
