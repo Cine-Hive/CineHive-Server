@@ -17,6 +17,11 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 내부 오류가 발생했습니다."),
     MAPPING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "데이터 매핑 중 오류가 발생했습니다."),
     DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "C004", "데이터 무결성 제약 조건에 위배되었습니다."),
+    MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "C005", "필수 파라미터가 누락되었습니다."),
+    INVALID_JSON_FORMAT        (HttpStatus.BAD_REQUEST, "C006", "유효하지 않은 JSON 형식입니다."),
+    VALIDATION_FAILED          (HttpStatus.BAD_REQUEST, "C007", "유효성 검증에 실패했습니다."),
+    CONSTRAINT_VIOLATION       (HttpStatus.BAD_REQUEST, "C008", "파라미터 유효성 검증 실패"),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C009", "지원하지 않는 HTTP 메서드입니다."),
 
     // User & Auth (U0xx)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
