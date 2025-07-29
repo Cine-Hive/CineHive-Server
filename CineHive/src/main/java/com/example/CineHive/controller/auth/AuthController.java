@@ -38,7 +38,19 @@ public class AuthController {
     }
 
     @Operation(summary = "로그인",
-            description = "이메일과 비밀번호로 로그인하고 Access/Refresh Token을 발급받습니다. `User-Agent` 헤더를 통해 로그인한 브라우저 정보를 기록합니다.")
+            description = """
+            ### **일반 로그인 후, 서비스 이용에 필요한 토큰들을 발급받습니다.**
+            
+            **[서버 처리]**
+            1.  로그인 성공 시, 서버는 두 종류의 토큰을 발급합니다.
+                - **Access Token**: API 호출 시 사용 (수명: 30분)
+                - **Refresh Token**: Access Token 재발급 시 사용 (수명: 7일)
+            2.  발급된 Refresh Token은 서버의 안전한 저장소(Redis)에도 저장됩니다.
+            
+            **[클라이언트 처리]**
+            1.  응답으로 받은 `accessToken`과 `refreshToken`을 **모두** 클라이언트의 안전한 공간에 저장해야 합니다.
+            2.  이후 모든 API 요청에는 `Authorization` 헤더에 `accessToken`을 `Bearer` 형식으로 담아 보내야 합니다.
+            """)
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
@@ -51,10 +63,21 @@ public class AuthController {
 
     @Operation(summary = "토큰 재발급 (Token Rotation)",
             description = """
-            ### Access Token이 만료되었을 때, 유효한 Refresh Token을 사용하여 새로운 토큰들을 발급받습니다.
-            - **요청**: `application/json` 형식으로 Request Body에 Refresh Token을 담아 전송해야 합니다.
-            - **성공**: 새로운 Access Token과 Refresh Token이 함께 반환됩니다. 클라이언트는 이 새로운 토큰들로 교체하여 저장해야 합니다.
-            - **실패**: Refresh Token이 유효하지 않거나 탈취가 의심될 경우 `401 Unauthorized` 에러가 발생하며, 이 경우 사용자는 다시 로그인해야 합니다.
+            ### **Access Token이 만료되었을 때, 이 API를 통해 새로운 토큰들을 발급받습니다.**
+            
+            **[호출 시점]**
+            - 일반 API를 호출했는데 `401 Unauthorized` 에러를 응답받았을 때, 자동으로 이 API를 호출해야 합니다.
+            
+            **[요청 방법]**
+            - `POST` 메서드로, Request Body에 이전에 받아 저장해 둔 `refreshToken`을 담아 요청합니다.
+            
+            **[서버 처리 및 응답]**
+            - **성공 시 (토큰 로테이션)**: 서버는 보안을 위해 **완전히 새로운 Access Token과 Refresh Token을 모두** 재발급하여 응답합니다.
+            - **실패 시**: Refresh Token이 만료되었거나, 이미 사용된 토큰(탈취 의심)일 경우 `401 Unauthorized` 에러를 반환합니다.
+            
+            **[클라이언트 처리]**
+            1.  **재발급 성공 시**: 응답으로 받은 **새로운 `accessToken`과 `refreshToken`으로 기존 토큰들을 덮어쓰기 저장**해야 합니다. 그 후, 만료되어 실패했던 원래 API 요청을 새로운 `accessToken`으로 다시 시도합니다.
+            2.  **재발급 실패 시**: 저장된 모든 토큰을 삭제하고, 사용자를 로그인 페이지로 보내 **강제 로그아웃** 시켜야 합니다.
             """)
     @PostMapping("/reissue")
     public ResponseEntity<ApiResponse<ReissueTokenResponse>> reissueToken(@Valid @RequestBody ReissueTokenRequest request) {
@@ -64,10 +87,16 @@ public class AuthController {
 
     @Operation(summary = "로그아웃",
             description = """
-            ### 현재 로그인된 사용자를 로그아웃 처리합니다.
-            - **요청**: `Authorization` 헤더에 유효한 Access Token을 포함하여 요청해야 합니다.
-            - **처리**: 서버는 해당 사용자의 Refresh Token을 저장소(Redis)에서 삭제하여, 더 이상 토큰 재발급이 불가능하도록 만듭니다.
-            - **클라이언트**: 이 API 호출 성공 후, 클라이언트 측에 저장된 모든 토큰(Access, Refresh)을 삭제해야 합니다.
+            ### **현재 로그인된 사용자를 로그아웃 처리합니다.**
+            
+            **[서버 처리]**
+            - 이 API가 호출되면, 서버는 해당 사용자의 Refresh Token을 저장소(Redis)에서 완전히 삭제합니다.
+            - 이로써 해당 Refresh Token으로는 더 이상 토큰 재발급이 불가능해집니다.
+            
+            **[클라이언트 처리]**
+            1.  `Authorization` 헤더에 유효한 **Access Token**을 포함하여 이 API를 호출합니다.
+            2.  API 호출 성공 여부와 관계없이, 클라이언트는 **자신이 저장하고 있던 `accessToken`과 `refreshToken`을 모두 즉시 삭제**해야 합니다.
+            3.  사용자를 로그인 페이지로 이동시킵니다.
             """)
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<MessageResponse>> logout(@AuthenticationPrincipal UserDetails userDetails) {
