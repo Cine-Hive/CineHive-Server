@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@NamedEntityGraph(
+        name = "PostDislike.withUser",
+        attributeNodes = @NamedAttributeNode("user")
+)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
