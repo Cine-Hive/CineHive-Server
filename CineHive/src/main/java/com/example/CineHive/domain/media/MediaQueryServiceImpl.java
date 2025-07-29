@@ -39,10 +39,10 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         log.info("{} 상세 정보 조회를 시작합니다. (ID: {})", type, id);
 
         Mono<MediaDetailResponse> detailMono = switch (type) {
-            case MOVIE -> tmdbApiClient.getMovieDetail(id).map(MediaMapper::toDetailResponse);
-            case TV -> tmdbApiClient.getTvSeriesDetail(id).map(MediaMapper::toDetailResponse);
+            case MOVIE -> tmdbApiClient.getMovieDetail(id).map(MediaDetailResponse::from);
+            case TV -> tmdbApiClient.getTvSeriesDetail(id).map(MediaDetailResponse::from);
         };
-        return detailMono.onErrorMap(e -> this.wrapClientException(e));
+        return detailMono.onErrorMap(this::wrapClientException);
     }
 
     @Override
@@ -50,8 +50,8 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     public Mono<PagedResponse<MediaSummaryResponse>> searchMedia(String query, int page) {
         log.info("미디어 검색을 시작합니다. (쿼리: '{}', 페이지: {})", query, page);
         return tmdbApiClient.searchMulti(query, page)
-                .map(tmdbResponse -> MediaMapper.toPagedResponse(tmdbResponse, MediaMapper::toSummaryResponse))
-                .onErrorMap(e -> this.wrapClientException(e));
+                .map(tmdbResponse -> PagedResponse.from(tmdbResponse, MediaSummaryResponse::from))
+                .onErrorMap(this::wrapClientException);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         log.info("큐레이션 차트 조회를 시작합니다. (타입: {}, 페이지: {})", chartType.name(), page);
         ChartStrategy strategy = getChartStrategy(chartType);
         return strategy.fetchChart(tmdbApiClient, page)
-                .onErrorMap(e -> this.wrapClientException(e));
+                .onErrorMap(this::wrapClientException);
     }
 
     @Override
@@ -131,18 +131,18 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                         .platforms(tuple.getT3())
                         .sortOptions(tuple.getT4())
                         .build())
-                .onErrorMap(e -> this.wrapClientException(e));
+                .onErrorMap(this::wrapClientException);
     }
 
     private Mono<PagedResponse<MediaChartResponse>> discoverMedia(MediaType type, ChartProperties properties, int page) {
         log.debug("{} 미디어 탐색을 시작합니다. (속성: {}, 페이지: {})", type, properties, page);
         Mono<PagedResponse<MediaChartResponse>> discoveredMedia = switch (type) {
             case MOVIE -> tmdbApiClient.discoverMovies(page, properties)
-                    .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+                    .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
             case TV -> tmdbApiClient.discoverTvSeries(page, properties)
-                    .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+                    .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
         };
-        return discoveredMedia.onErrorMap(e -> this.wrapClientException(e));
+        return discoveredMedia.onErrorMap(this::wrapClientException);
     }
 
     private Mono<ChartSection> createChartSection(ChartType chartType) {
