@@ -1,9 +1,9 @@
 package com.example.CineHive.controller.admin;
 
-import com.example.CineHive.dto.banner.BannerAdminRequest;
-import com.example.CineHive.entity.banner.Banner;
-import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.banner.BannerRepository;
+import com.example.CineHive.domain.banner.dto.BannerAdminRequest;
+import com.example.CineHive.domain.banner.Banner;
+import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.domain.banner.BannerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

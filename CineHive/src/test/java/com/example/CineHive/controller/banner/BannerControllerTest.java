@@ -1,9 +1,9 @@
 package com.example.CineHive.controller.banner;
 
-import com.example.CineHive.dto.banner.BannerResponse;
-import com.example.CineHive.exception.BusinessException;
-import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.service.banner.BannerService;
+import com.example.CineHive.domain.banner.dto.BannerResponse;
+import com.example.CineHive.global.exception.BusinessException;
+import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.domain.banner.BannerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
