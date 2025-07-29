@@ -1,4 +1,4 @@
-package com.example.CineHive.filter;
+package com.example.CineHive.filters;
 
 import com.example.CineHive.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
@@ -28,7 +28,7 @@ import java.io.IOException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtRequestFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
