@@ -3,16 +3,19 @@ package com.example.CineHive.service.auth;
 import com.example.CineHive.dto.auth.LoginRequest;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.auth.RegisterRequest;
+import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.user.UserMapper;
+import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.LoginHistoryRepository;
 import com.example.CineHive.repository.user.UserRepository;
 import com.example.CineHive.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +27,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final LoginHistoryRepository loginHistoryRepository;
+    private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    @Value("${jwt.expiration.refresh-token}")
+    private long refreshTokenExpiration;
 
     @Override
     @Transactional
@@ -56,10 +63,17 @@ public class AuthServiceImpl implements AuthService {
 
         recordLoginHistory(user, userAgent);
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
+        String accessToken = jwtUtil.createAccessToken(user.getEmail());
+        String refreshToken = jwtUtil.createRefreshToken(user.getEmail());
+
+        // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
+        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));
+        log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
+
         log.info("로그인 성공: {}", request.email());
 
-        return new LoginResponse(token, false, LoginResponse.UserInfo.from(user));
+        return new LoginResponse(accessToken, refreshToken, false, LoginResponse.UserInfo.from(user));
     }
 
     private void recordLoginHistory(User user, String userAgent) {
