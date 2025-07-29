@@ -1,9 +1,6 @@
 package com.example.CineHive.service.auth;
 
-import com.example.CineHive.dto.auth.LoginRequest;
-import com.example.CineHive.dto.auth.LoginResponse;
-import com.example.CineHive.dto.auth.RegisterRequest;
-import com.example.CineHive.dto.auth.TokenInfo;
+import com.example.CineHive.dto.auth.*;
 import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
@@ -77,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenInfo.ReissueResponse reissueToken(TokenInfo.ReissueRequest request) {
+    public ReissueTokenResponse reissueToken(ReissueTokenRequest request) {
         String refreshToken = request.refreshToken();
 
         if (jwtUtil.isTokenExpired(refreshToken)) {
@@ -85,6 +82,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String email = jwtUtil.extractUsername(refreshToken);
+
         RefreshToken storedToken = refreshTokenRepository.findById(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS));
 
@@ -96,10 +94,11 @@ public class AuthServiceImpl implements AuthService {
 
         String newAccessToken = jwtUtil.createAccessToken(email);
         String newRefreshToken = jwtUtil.createRefreshToken(email);
+
         refreshTokenRepository.save(new RefreshToken(email, newRefreshToken, refreshTokenExpiration / 1000));
         log.info("토큰 재발급 및 로테이션 완료. User: {}", email);
 
-        return new TokenInfo.ReissueResponse(newAccessToken, newRefreshToken);
+        return new ReissueTokenResponse(newAccessToken, newRefreshToken);
     }
 
     @Override

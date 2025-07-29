@@ -3,7 +3,8 @@ package com.example.CineHive.service.auth;
 import com.example.CineHive.dto.auth.LoginRequest;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.auth.RegisterRequest;
-import com.example.CineHive.dto.auth.TokenInfo;
+import com.example.CineHive.dto.auth.ReissueTokenRequest;
+import com.example.CineHive.dto.auth.ReissueTokenResponse;
 
 /**
  * 인증(회원가입, 로그인, 토큰 관리) 관련 비즈니스 로직을 정의하는 인터페이스입니다.
@@ -29,7 +30,7 @@ public interface AuthService {
      * @param request 재발급 요청 DTO (Refresh Token 포함)
      * @return 재발급된 토큰 정보 DTO
      */
-    TokenInfo.ReissueResponse reissueToken(TokenInfo.ReissueRequest request);
+    ReissueTokenResponse reissueToken(ReissueTokenRequest request);
 
     /**
      * 로그아웃을 처리합니다. Redis에 저장된 Refresh Token을 삭제합니다.
