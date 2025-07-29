@@ -1,18 +1,19 @@
 package com.example.CineHive.service.auth;
 
-import com.example.CineHive.dto.auth.LoginRequest;
-import com.example.CineHive.dto.auth.LoginResponse;
-import com.example.CineHive.dto.auth.RegisterRequest;
+import com.example.CineHive.dto.auth.*;
+import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.mapper.user.UserMapper;
+import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.LoginHistoryRepository;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +25,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final LoginHistoryRepository loginHistoryRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${jwt.expiration.refresh-token}")
+    private long refreshTokenExpiration;
 
     @Override
     @Transactional
@@ -56,10 +61,51 @@ public class AuthServiceImpl implements AuthService {
 
         recordLoginHistory(user, userAgent);
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String refreshTokenValue = jwtTokenProvider.createRefreshToken(user.getEmail());
+
+        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshTokenValue, refreshTokenExpiration / 1000));
+        log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
+
         log.info("로그인 성공: {}", request.email());
 
-        return new LoginResponse(token, false, LoginResponse.UserInfo.from(user));
+        return new LoginResponse(accessToken, refreshTokenValue, false, LoginResponse.UserInfo.from(user));
+    }
+
+    @Override
+    @Transactional
+    public ReissueTokenResponse reissueToken(ReissueTokenRequest request) {
+        String refreshToken = request.refreshToken();
+
+        if (jwtTokenProvider.isTokenExpired(refreshToken)) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        String email = jwtTokenProvider.extractUsername(refreshToken);
+
+        RefreshToken storedToken = refreshTokenRepository.findById(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS));
+
+        if (!storedToken.getToken().equals(refreshToken)) {
+            refreshTokenRepository.deleteById(email);
+            log.warn("Refresh Token 불일치 감지 (탈취 의심). 강제 로그아웃 처리: {}", email);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+
+        refreshTokenRepository.save(new RefreshToken(email, newRefreshToken, refreshTokenExpiration / 1000));
+        log.info("토큰 재발급 및 로테이션 완료. User: {}", email);
+
+        return new ReissueTokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String userEmail) {
+        refreshTokenRepository.deleteById(userEmail);
+        log.info("로그아웃 처리 완료. Redis의 Refresh Token 삭제. User: {}", userEmail);
     }
 
     private void recordLoginHistory(User user, String userAgent) {

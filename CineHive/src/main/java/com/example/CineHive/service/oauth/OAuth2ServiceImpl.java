@@ -4,17 +4,20 @@ import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.config.OAuthProperties;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.UserRole;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
+import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -33,8 +36,12 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     private final List<OAuth2Client> clients;
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
+    private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
+
+    @Value("${jwt.expiration.refresh-token}")
+    private long refreshTokenExpiration;
 
     private Map<ProviderType, OAuth2Client> clientMap;
 
@@ -98,8 +105,16 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         boolean isNewUser = !userRepository.existsByEmail(userInfo.email());
         User user = userRepository.findByEmail(userInfo.email())
                 .orElseGet(() -> registerNewUser(userInfo));
-        String token = jwtUtil.generateToken(user.getEmail());
-        return new LoginResponse(token, isNewUser, LoginResponse.UserInfo.from(user));
+
+        // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+
+        // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
+        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));
+        log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
+
+        return new LoginResponse(accessToken, refreshToken, isNewUser, LoginResponse.UserInfo.from(user));
     }
 
     private User registerNewUser(OAuth2UserInfo userInfo) {
@@ -151,7 +166,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .queryParam("response_type", "code")
                 .queryParam("client_id", kakao.getClientId())
                 .queryParam("redirect_uri", kakao.getRedirectUri())
-                .queryParam("scope", "profile_nickname,account_email")
+                .queryParam("scope", kakao.getScope())
                 .build().toUriString();
     }
 

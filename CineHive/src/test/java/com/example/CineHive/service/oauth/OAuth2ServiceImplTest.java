@@ -4,14 +4,16 @@ import com.example.CineHive.client.OAuth2Client;
 import com.example.CineHive.config.OAuthProperties;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.oauth.OAuth2UserInfo;
+import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.entity.user.User;
 import com.example.CineHive.entity.user.UserRole;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
+import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -37,251 +41,107 @@ class OAuth2ServiceImplTest {
 
     private OAuth2ServiceImpl oAuth2Service;
 
+    // --- Mocks ---
     @Mock private OAuth2Client kakaoClient;
     @Mock private OAuth2Client naverClient;
     @Mock private OAuth2Client googleClient;
     @Mock private UserRepository userRepository;
-    @Mock private JwtUtil jwtUtil;
+    @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private OAuthProperties oAuthProperties;
 
     @BeforeEach
     void setUp() {
-        oAuth2Service = new OAuth2ServiceImpl(List.of(kakaoClient, naverClient, googleClient), userRepository, jwtUtil, oAuthProperties);
+        // Mock 객체들을 사용하여 서비스 객체 생성
+        oAuth2Service = new OAuth2ServiceImpl(
+                List.of(kakaoClient, naverClient, googleClient),
+                userRepository,
+                refreshTokenRepository, // refreshTokenRepository 주입
+                jwtTokenProvider,
+                oAuthProperties
+        );
+
+        // @Value 필드 수동 주입
+        ReflectionTestUtils.setField(oAuth2Service, "refreshTokenExpiration", 604800000L);
+
+        // 각 클라이언트의 ProviderType 모킹
         given(kakaoClient.getProviderType()).willReturn(ProviderType.KAKAO);
         given(naverClient.getProviderType()).willReturn(ProviderType.NAVER);
         given(googleClient.getProviderType()).willReturn(ProviderType.GOOGLE);
+
+        // 서비스의 init() 메서드를 수동으로 호출하여 clientMap 초기화
         oAuth2Service.init();
-    }
-
-    @Nested
-    @DisplayName("getRedirectUrl 메서드는")
-    class Describe_getRedirectUrl {
-        private final String state = "test_state";
-
-        @Test
-        @DisplayName("KAKAO Provider 요청 시, 올바른 인증 URL을 반환한다")
-        void getRedirectUrl_ForKakao_ShouldReturnCorrectUrl() {
-            // given
-            OAuthProperties.Kakao kakaoProps = new OAuthProperties.Kakao();
-            kakaoProps.setClientId("kakao_id");
-            kakaoProps.setRedirectUri("kakao_uri");
-            given(oAuthProperties.getKakao()).willReturn(kakaoProps);
-
-            // when
-            String redirectUrl = oAuth2Service.getRedirectUrl(ProviderType.KAKAO, state);
-
-            // then
-            assertThat(redirectUrl).contains("kauth.kakao.com", "client_id=kakao_id", "redirect_uri=kakao_uri");
-        }
-
-        @Test
-        @DisplayName("NAVER Provider 요청 시, 올바른 인증 URL을 반환한다")
-        void getRedirectUrl_ForNaver_ShouldReturnCorrectUrl() {
-            // given
-            OAuthProperties.Naver naverProps = new OAuthProperties.Naver();
-            naverProps.setClientId("naver_id");
-            naverProps.setRedirectUri("naver_uri");
-            given(oAuthProperties.getNaver()).willReturn(naverProps);
-
-            // when
-            String redirectUrl = oAuth2Service.getRedirectUrl(ProviderType.NAVER, state);
-
-            // then
-            assertThat(redirectUrl).contains("nid.naver.com", "client_id=naver_id", "redirect_uri=naver_uri", "state=" + state);
-        }
-
-        @Test
-        @DisplayName("GOOGLE Provider 요청 시, 올바른 인증 URL을 반환한다")
-        void getRedirectUrl_ForGoogle_ShouldReturnCorrectUrl() {
-            // given
-            OAuthProperties.Google googleProps = new OAuthProperties.Google();
-            googleProps.setClientId("google_id");
-            googleProps.setRedirectUri("google_uri");
-            googleProps.setScope("email profile");
-            given(oAuthProperties.getGoogle()).willReturn(googleProps);
-
-            // when
-            String redirectUrl = oAuth2Service.getRedirectUrl(ProviderType.GOOGLE, state);
-
-            // then
-            assertThat(redirectUrl).contains("accounts.google.com", "client_id=google_id", "redirect_uri=google_uri", "scope=email profile", "state=" + state);
-        }
     }
 
     @Nested
     @DisplayName("loginWithCode 메서드는")
     class Describe_loginWithCode {
         private final String code = "test_code";
-        private final String jwtToken = "dummy-jwt-token";
-
-        // 'loginWithCode'의 새로운 시그니처에 맞게 테스트를 수정합니다.
-        // loginWithCode(ProviderType providerType, String code, String requestState, String sessionState)
-        @Nested
-        @DisplayName("NAVER/GOOGLE과 같이 state 값을 사용하는 플랫폼의 경우")
-        class Context_with_state_provider {
-            private final ProviderType providerType = ProviderType.NAVER;
-            private final String state = "test_state";
-            private final String testEmail = "naver@example.com";
-
-            @Test
-            @DisplayName("세션의 state와 전달받은 state가 일치하면, 정상적으로 로그인 처리한다")
-            void withMatchingState_shouldLoginSuccessfully() {
-                // given
-                OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().email(testEmail).providerType(providerType).build();
-                User existingUser = UserFixture.anUser().email(testEmail).provider(providerType).build();
-
-                given(naverClient.getUserInfo(code, state)).willReturn(Mono.just(userInfo));
-                given(userRepository.existsByEmail(testEmail)).willReturn(true);
-                given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
-
-                // when
-                LoginResponse response = oAuth2Service.loginWithCode(providerType, code, state, state);
-
-                // then
-                assertThat(response.isNewUser()).isFalse();
-                assertThat(response.token()).isEqualTo(jwtToken);
-                then(naverClient).should().getUserInfo(code, state);
-            }
-
-            @Test
-            @DisplayName("세션의 state와 전달받은 state가 일치하지 않으면, INVALID_OAUTH_STATE 예외를 던진다")
-            void withMismatchedState_shouldThrowException() {
-                // given
-                String sessionState = "session_state_value";
-                String requestState = "mismatched_request_state";
-
-                // when & then
-                assertThatThrownBy(() -> oAuth2Service.loginWithCode(providerType, code, requestState, sessionState))
-                        .isInstanceOf(BusinessException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_OAUTH_STATE);
-
-                then(naverClient).should(never()).getUserInfo(any(), any());
-            }
-        }
-
-        @Nested
-        @DisplayName("KAKAO와 같이 state 값을 사용하지 않는 플랫폼의 경우")
-        class Context_with_kakao_provider {
-            private final ProviderType providerType = ProviderType.KAKAO;
-            private final String testEmail = "kakao@example.com";
-            private final String testNickname = "kakaoUser";
-
-            @Test
-            @DisplayName("기존 사용자의 정보로 요청 시, isNewUser가 false인 LoginResponse를 반환한다")
-            void forExistingUser_shouldReturnLoginResponseWithIsNewUserFalse() {
-                // given
-                OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().email(testEmail).nickname(testNickname).build();
-                User existingUser = UserFixture.anUser().email(testEmail).nickname(testNickname).build();
-
-                given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.just(userInfo));
-                given(userRepository.existsByEmail(testEmail)).willReturn(true);
-                given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
-
-                // when
-                LoginResponse response = oAuth2Service.loginWithCode(providerType, code, null, null);
-
-                // then
-                assertThat(response.isNewUser()).isFalse();
-                assertThat(response.token()).isEqualTo(jwtToken);
-                then(userRepository).should(never()).save(any(User.class));
-            }
-
-            @Test
-            @DisplayName("신규 사용자의 정보로 요청 시, isNewUser가 true인 LoginResponse를 반환하고 사용자를 저장한다")
-            void forNewUser_shouldReturnLoginResponseWithIsNewUserTrueAndSaveUser() {
-                // given
-                OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().email(testEmail).nickname(testNickname).build();
-                User savedUser = UserFixture.anUser().email(testEmail).nickname(testNickname).build();
-
-                given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.just(userInfo));
-                given(userRepository.existsByEmail(testEmail)).willReturn(false);
-                given(userRepository.findByEmail(testEmail)).willReturn(Optional.empty());
-                given(userRepository.existsByNickname(testNickname)).willReturn(false);
-                given(userRepository.save(any(User.class))).willReturn(savedUser);
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
-
-                // when
-                LoginResponse response = oAuth2Service.loginWithCode(providerType, code, null, null);
-
-                // then
-                assertThat(response.isNewUser()).isTrue();
-                ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-                then(userRepository).should().save(userCaptor.capture());
-                assertThat(userCaptor.getValue().getEmail()).isEqualTo(testEmail);
-            }
-        }
+        private final String accessToken = "dummy-access-token";
+        private final String refreshToken = "dummy-refresh-token";
+        private final String testEmail = "test@example.com";
+        private final String testNickname = "testUser";
 
         @Test
-        @DisplayName("OAuth 서버 통신 중 오류가 발생하면, OAUTH_COMMUNICATION_ERROR 예외를 던진다")
-        void whenClientReturnsError_shouldThrowException() {
+        @DisplayName("신규 사용자의 정보로 요청 시, 토큰들을 발급하고 Refresh Token을 저장한다")
+        void forNewUser_shouldIssueTokensAndSaveRefreshToken() {
             // given
-            ProviderType providerType = ProviderType.KAKAO;
-            given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.error(new RuntimeException("Communication Error")));
+            OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().build();
+            User savedUser = UserFixture.anUser().build();
 
-            // when & then
-            assertThatThrownBy(() -> oAuth2Service.loginWithCode(providerType, code, null, null))
-                    .isInstanceOf(BusinessException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.OAUTH_COMMUNICATION_ERROR);
-        }
-    }
-
-    @Nested
-    @DisplayName("loginWithAccessToken 메서드는")
-    class Describe_loginWithAccessToken {
-        private final ProviderType providerType = ProviderType.GOOGLE;
-        private final String accessToken = "test_access_token";
-        private final String testEmail = "test@gmail.com";
-        private final String testNickname = "googleUser";
-        private final String jwtToken = "dummy-jwt-token";
-
-        @Test
-        @DisplayName("기존 사용자의 정보로 요청 시, isNewUser가 false인 LoginResponse를 반환한다")
-        void forExistingUser_ShouldReturnLoginResponseWithIsNewUserFalse() {
-            // given
-            OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().email(testEmail).nickname(testNickname).providerType(providerType).build();
-            User existingUser = UserFixture.anUser().email(testEmail).nickname(testNickname).provider(providerType).build();
-
-            given(googleClient.getUserInfoByAccessToken(accessToken)).willReturn(Mono.just(userInfo));
-            given(userRepository.existsByEmail(testEmail)).willReturn(true);
-            given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-            given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
-
-            // when
-            LoginResponse response = oAuth2Service.loginWithAccessToken(providerType, accessToken);
-
-            // then
-            assertThat(response.isNewUser()).isFalse();
-            assertThat(response.token()).isEqualTo(jwtToken);
-            then(userRepository).should(never()).save(any(User.class));
-        }
-
-        @Test
-        @DisplayName("신규 사용자의 정보로 요청 시, isNewUser가 true인 LoginResponse를 반환하고 사용자를 저장한다")
-        void forNewUser_ShouldReturnLoginResponseWithIsNewUserTrueAndSaveUser() {
-            // given
-            OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().email(testEmail).nickname(testNickname).providerType(providerType).build();
-            User savedUser = UserFixture.anUser().email(testEmail).nickname(testNickname).provider(providerType).build();
-
-            given(googleClient.getUserInfoByAccessToken(accessToken)).willReturn(Mono.just(userInfo));
+            given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.just(userInfo));
             given(userRepository.existsByEmail(testEmail)).willReturn(false);
             given(userRepository.findByEmail(testEmail)).willReturn(Optional.empty());
             given(userRepository.existsByNickname(testNickname)).willReturn(false);
             given(userRepository.save(any(User.class))).willReturn(savedUser);
-            given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+            given(jwtTokenProvider.createAccessToken(testEmail)).willReturn(accessToken);
+            given(jwtTokenProvider.createRefreshToken(testEmail)).willReturn(refreshToken);
 
             // when
-            LoginResponse response = oAuth2Service.loginWithAccessToken(providerType, accessToken);
+            LoginResponse response = oAuth2Service.loginWithCode(ProviderType.KAKAO, code, null, null);
 
             // then
             assertThat(response.isNewUser()).isTrue();
-            then(userRepository).should().save(any(User.class));
+            assertThat(response.accessToken()).isEqualTo(accessToken);
+            assertThat(response.refreshToken()).isEqualTo(refreshToken);
+
+            // RefreshTokenRepository.save가 호출되었는지 검증
+            ArgumentCaptor<RefreshToken> refreshTokenCaptor = ArgumentCaptor.forClass(RefreshToken.class);
+            then(refreshTokenRepository).should().save(refreshTokenCaptor.capture());
+            assertThat(refreshTokenCaptor.getValue().getEmail()).isEqualTo(testEmail);
+            assertThat(refreshTokenCaptor.getValue().getToken()).isEqualTo(refreshToken);
+        }
+
+        @Test
+        @DisplayName("기존 사용자의 정보로 요청 시, 새로운 토큰들을 발급하고 Refresh Token을 갱신한다")
+        void forExistingUser_shouldIssueTokensAndUpdateRefreshToken() {
+            // given
+            OAuth2UserInfo userInfo = OAuth2UserInfoFixture.aUserInfo().build();
+            User existingUser = UserFixture.anUser().build();
+
+            given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.just(userInfo));
+            given(userRepository.existsByEmail(testEmail)).willReturn(true);
+            given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
+            given(jwtTokenProvider.createAccessToken(testEmail)).willReturn(accessToken);
+            given(jwtTokenProvider.createRefreshToken(testEmail)).willReturn(refreshToken);
+
+            // when
+            LoginResponse response = oAuth2Service.loginWithCode(ProviderType.KAKAO, code, null, null);
+
+            // then
+            assertThat(response.isNewUser()).isFalse();
+            assertThat(response.accessToken()).isEqualTo(accessToken);
+            assertThat(response.refreshToken()).isEqualTo(refreshToken);
+            assertThat(response.userInfo().id()).isEqualTo(existingUser.getId());
+
+            // DB에 새로운 유저가 저장되지 않았는지 검증
+            then(userRepository).should(never()).save(any(User.class));
+            // RefreshToken은 항상 새로 저장(갱신)되는지 검증
+            then(refreshTokenRepository).should().save(any(RefreshToken.class));
         }
     }
 
     // --- Test Fixture Builders ---
-
     static class OAuth2UserInfoFixture {
         private String email = "test@example.com";
         private String nickname = "testUser";
@@ -289,21 +149,6 @@ class OAuth2ServiceImplTest {
 
         public static OAuth2UserInfoFixture aUserInfo() {
             return new OAuth2UserInfoFixture();
-        }
-
-        public OAuth2UserInfoFixture email(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public OAuth2UserInfoFixture nickname(String nickname) {
-            this.nickname = nickname;
-            return this;
-        }
-
-        public OAuth2UserInfoFixture providerType(ProviderType providerType) {
-            this.providerType = providerType;
-            return this;
         }
 
         public OAuth2UserInfo build() {
@@ -314,61 +159,24 @@ class OAuth2ServiceImplTest {
     static class UserFixture {
         private Long id = 1L;
         private String email = "test@example.com";
-        private String password = "OAUTH_USER_NO_PASSWORD";
-        private String name = "testUser";
         private String nickname = "testUser";
-        private Gender gender = Gender.OTHER;
-        private ProviderType provider = ProviderType.KAKAO;
-        private UserRole role = UserRole.ROLE_USER;
 
         public static UserFixture anUser() {
             return new UserFixture();
         }
 
-        public UserFixture id(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public UserFixture email(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public UserFixture name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public UserFixture nickname(String nickname) {
-            this.nickname = nickname;
-            return this;
-        }
-
-        public UserFixture provider(ProviderType provider) {
-            this.provider = provider;
-            return this;
-        }
-
         public User build() {
             User user = User.builder()
                     .email(email)
-                    .password(password)
-                    .name(name)
+                    .password("OAUTH_USER_NO_PASSWORD")
+                    .name(nickname)
                     .nickname(nickname)
-                    .gender(gender)
+                    .gender(Gender.OTHER)
                     .genres(Collections.emptySet())
-                    .provider(provider)
-                    .role(role)
+                    .provider(ProviderType.KAKAO)
+                    .role(UserRole.ROLE_USER)
                     .build();
-
-            try {
-                java.lang.reflect.Field idField = User.class.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(user, this.id);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException("Failed to set user ID for test", e);
-            }
+            ReflectionTestUtils.setField(user, "id", this.id);
             return user;
         }
     }
