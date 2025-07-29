@@ -1,6 +1,7 @@
 package com.example.CineHive.repository.post;
 
 import com.example.CineHive.entity.post.Comment;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +19,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * @param postId 댓글을 조회할 게시글의 ID
      * @return 해당 게시글의 모든 댓글 엔티티 리스트
      */
+    @EntityGraph(value = "Comment.withUser")
     List<Comment> findByPost_Id(Long postId);
 
     /**

@@ -5,6 +5,7 @@ import com.example.CineHive.entity.post.Post;
 import com.example.CineHive.entity.post.Report;
 import com.example.CineHive.entity.post.ReportStatus;
 import com.example.CineHive.entity.user.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -35,11 +36,11 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     boolean existsByReporterAndComment(User reporter, Comment comment);
 
     /**
-
      * 특정 상태의 모든 신고 내역을 조회합니다.
      *
      * @param status 조회할 신고 처리 상태
      * @return 해당 상태의 모든 신고 엔티티 리스트
      */
+    @EntityGraph(value = "Report.withAll")
     List<Report> findByStatus(ReportStatus status);
 }
