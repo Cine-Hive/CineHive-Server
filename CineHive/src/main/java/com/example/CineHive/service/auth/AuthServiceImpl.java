@@ -3,6 +3,7 @@ package com.example.CineHive.service.auth;
 import com.example.CineHive.dto.auth.LoginRequest;
 import com.example.CineHive.dto.auth.LoginResponse;
 import com.example.CineHive.dto.auth.RegisterRequest;
+import com.example.CineHive.dto.auth.TokenInfo;
 import com.example.CineHive.entity.auth.RefreshToken;
 import com.example.CineHive.entity.user.LoginHistory;
 import com.example.CineHive.entity.user.User;
@@ -27,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final LoginHistoryRepository loginHistoryRepository;
-    private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -63,17 +64,49 @@ public class AuthServiceImpl implements AuthService {
 
         recordLoginHistory(user, userAgent);
 
-        // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
         String accessToken = jwtUtil.createAccessToken(user.getEmail());
-        String refreshToken = jwtUtil.createRefreshToken(user.getEmail());
+        String refreshTokenValue = jwtUtil.createRefreshToken(user.getEmail());
 
-        // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
-        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));
+        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshTokenValue, refreshTokenExpiration / 1000));
         log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
 
         log.info("로그인 성공: {}", request.email());
 
-        return new LoginResponse(accessToken, refreshToken, false, LoginResponse.UserInfo.from(user));
+        return new LoginResponse(accessToken, refreshTokenValue, false, LoginResponse.UserInfo.from(user));
+    }
+
+    @Override
+    @Transactional
+    public TokenInfo.ReissueResponse reissueToken(TokenInfo.ReissueRequest request) {
+        String refreshToken = request.refreshToken();
+
+        if (jwtUtil.isTokenExpired(refreshToken)) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        String email = jwtUtil.extractUsername(refreshToken);
+        RefreshToken storedToken = refreshTokenRepository.findById(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS));
+
+        if (!storedToken.getToken().equals(refreshToken)) {
+            refreshTokenRepository.deleteById(email);
+            log.warn("Refresh Token 불일치 감지 (탈취 의심). 강제 로그아웃 처리: {}", email);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        String newAccessToken = jwtUtil.createAccessToken(email);
+        String newRefreshToken = jwtUtil.createRefreshToken(email);
+        refreshTokenRepository.save(new RefreshToken(email, newRefreshToken, refreshTokenExpiration / 1000));
+        log.info("토큰 재발급 및 로테이션 완료. User: {}", email);
+
+        return new TokenInfo.ReissueResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String userEmail) {
+        refreshTokenRepository.deleteById(userEmail);
+        log.info("로그아웃 처리 완료. Redis의 Refresh Token 삭제. User: {}", userEmail);
     }
 
     private void recordLoginHistory(User user, String userAgent) {
