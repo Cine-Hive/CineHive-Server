@@ -13,7 +13,7 @@ import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final List<OAuth2Client> clients;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
 
     @Value("${jwt.expiration.refresh-token}")
@@ -107,8 +107,8 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .orElseGet(() -> registerNewUser(userInfo));
 
         // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
-        String accessToken = jwtUtil.createAccessToken(user.getEmail());
-        String refreshToken = jwtUtil.createRefreshToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
         refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));

@@ -10,7 +10,7 @@ import com.example.CineHive.mapper.user.UserMapper;
 import com.example.CineHive.repository.auth.RefreshTokenRepository;
 import com.example.CineHive.repository.user.LoginHistoryRepository;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginHistoryRepository loginHistoryRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${jwt.expiration.refresh-token}")
     private long refreshTokenExpiration;
@@ -61,8 +61,8 @@ public class AuthServiceImpl implements AuthService {
 
         recordLoginHistory(user, userAgent);
 
-        String accessToken = jwtUtil.createAccessToken(user.getEmail());
-        String refreshTokenValue = jwtUtil.createRefreshToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String refreshTokenValue = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshTokenValue, refreshTokenExpiration / 1000));
         log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
@@ -77,11 +77,11 @@ public class AuthServiceImpl implements AuthService {
     public ReissueTokenResponse reissueToken(ReissueTokenRequest request) {
         String refreshToken = request.refreshToken();
 
-        if (jwtUtil.isTokenExpired(refreshToken)) {
+        if (jwtTokenProvider.isTokenExpired(refreshToken)) {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         }
 
-        String email = jwtUtil.extractUsername(refreshToken);
+        String email = jwtTokenProvider.extractUsername(refreshToken);
 
         RefreshToken storedToken = refreshTokenRepository.findById(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS));
@@ -92,8 +92,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        String newAccessToken = jwtUtil.createAccessToken(email);
-        String newRefreshToken = jwtUtil.createRefreshToken(email);
+        String newAccessToken = jwtTokenProvider.createAccessToken(email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
 
         refreshTokenRepository.save(new RefreshToken(email, newRefreshToken, refreshTokenExpiration / 1000));
         log.info("토큰 재발급 및 로테이션 완료. User: {}", email);

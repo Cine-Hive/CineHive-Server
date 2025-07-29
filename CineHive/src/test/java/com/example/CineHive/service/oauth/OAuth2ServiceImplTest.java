@@ -11,7 +11,7 @@ import com.example.CineHive.entity.user.UserRole;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.user.UserRepository;
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,12 +41,12 @@ class OAuth2ServiceImplTest {
     @Mock private OAuth2Client naverClient;
     @Mock private OAuth2Client googleClient;
     @Mock private UserRepository userRepository;
-    @Mock private JwtUtil jwtUtil;
+    @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private OAuthProperties oAuthProperties;
 
     @BeforeEach
     void setUp() {
-        oAuth2Service = new OAuth2ServiceImpl(List.of(kakaoClient, naverClient, googleClient), userRepository, jwtUtil, oAuthProperties);
+        oAuth2Service = new OAuth2ServiceImpl(List.of(kakaoClient, naverClient, googleClient), userRepository, jwtTokenProvider, oAuthProperties);
         given(kakaoClient.getProviderType()).willReturn(ProviderType.KAKAO);
         given(naverClient.getProviderType()).willReturn(ProviderType.NAVER);
         given(googleClient.getProviderType()).willReturn(ProviderType.GOOGLE);
@@ -133,7 +133,7 @@ class OAuth2ServiceImplTest {
                 given(naverClient.getUserInfo(code, state)).willReturn(Mono.just(userInfo));
                 given(userRepository.existsByEmail(testEmail)).willReturn(true);
                 given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+                given(jwtTokenProvider.generateToken(testEmail)).willReturn(jwtToken);
 
                 // when
                 LoginResponse response = oAuth2Service.loginWithCode(providerType, code, state, state);
@@ -177,7 +177,7 @@ class OAuth2ServiceImplTest {
                 given(kakaoClient.getUserInfo(code, null)).willReturn(Mono.just(userInfo));
                 given(userRepository.existsByEmail(testEmail)).willReturn(true);
                 given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+                given(jwtTokenProvider.generateToken(testEmail)).willReturn(jwtToken);
 
                 // when
                 LoginResponse response = oAuth2Service.loginWithCode(providerType, code, null, null);
@@ -200,7 +200,7 @@ class OAuth2ServiceImplTest {
                 given(userRepository.findByEmail(testEmail)).willReturn(Optional.empty());
                 given(userRepository.existsByNickname(testNickname)).willReturn(false);
                 given(userRepository.save(any(User.class))).willReturn(savedUser);
-                given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+                given(jwtTokenProvider.generateToken(testEmail)).willReturn(jwtToken);
 
                 // when
                 LoginResponse response = oAuth2Service.loginWithCode(providerType, code, null, null);
@@ -246,7 +246,7 @@ class OAuth2ServiceImplTest {
             given(googleClient.getUserInfoByAccessToken(accessToken)).willReturn(Mono.just(userInfo));
             given(userRepository.existsByEmail(testEmail)).willReturn(true);
             given(userRepository.findByEmail(testEmail)).willReturn(Optional.of(existingUser));
-            given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+            given(jwtTokenProvider.generateToken(testEmail)).willReturn(jwtToken);
 
             // when
             LoginResponse response = oAuth2Service.loginWithAccessToken(providerType, accessToken);
@@ -269,7 +269,7 @@ class OAuth2ServiceImplTest {
             given(userRepository.findByEmail(testEmail)).willReturn(Optional.empty());
             given(userRepository.existsByNickname(testNickname)).willReturn(false);
             given(userRepository.save(any(User.class))).willReturn(savedUser);
-            given(jwtUtil.generateToken(testEmail)).willReturn(jwtToken);
+            given(jwtTokenProvider.generateToken(testEmail)).willReturn(jwtToken);
 
             // when
             LoginResponse response = oAuth2Service.loginWithAccessToken(providerType, accessToken);
