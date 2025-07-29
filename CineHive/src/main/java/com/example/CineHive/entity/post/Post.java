@@ -11,6 +11,15 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 게시글 엔티티
+ */
+@NamedEntityGraph(
+        name = "Post.withUser",
+        attributeNodes = {
+                @NamedAttributeNode("user")
+        }
+)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -33,7 +42,7 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true) // mappedBy 변경
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @Column(nullable = false)
@@ -80,8 +89,6 @@ public class Post extends BaseEntity {
     public void increaseLikeCount() {
         this.likeCount++;
     }
-
-
 
     public void decreaseLikeCount() {
         if (this.likeCount > 0) {
