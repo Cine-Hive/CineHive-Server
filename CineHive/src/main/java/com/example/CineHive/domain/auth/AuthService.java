@@ -1,0 +1,40 @@
+package com.example.CineHive.domain.auth;
+
+import com.example.CineHive.domain.auth.dto.LoginRequest;
+import com.example.CineHive.domain.auth.dto.LoginResponse;
+import com.example.CineHive.domain.auth.dto.RegisterRequest;
+import com.example.CineHive.domain.auth.dto.ReissueTokenRequest;
+import com.example.CineHive.domain.auth.dto.ReissueTokenResponse;
+
+/**
+ * 인증(회원가입, 로그인, 토큰 관리) 관련 비즈니스 로직을 정의하는 인터페이스입니다.
+ */
+public interface AuthService {
+
+    /**
+     * 새로운 사용자를 등록합니다.
+     * @param request 회원가입 정보 DTO
+     */
+    void register(RegisterRequest request);
+
+    /**
+     * 일반 로그인을 처리하고 JWT 토큰(Access/Refresh)을 발급합니다.
+     * @param request 로그인 정보 DTO
+     * @param userAgent  클라이언트의 User-Agent 정보
+     * @return 로그인 응답 DTO (토큰 및 사용자 정보 포함)
+     */
+    LoginResponse login(LoginRequest request, String userAgent);
+
+    /**
+     * Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 재발급합니다. (토큰 로테이션)
+     * @param request 재발급 요청 DTO (Refresh Token 포함)
+     * @return 재발급된 토큰 정보 DTO
+     */
+    ReissueTokenResponse reissueToken(ReissueTokenRequest request);
+
+    /**
+     * 로그아웃을 처리합니다. Redis에 저장된 Refresh Token을 삭제합니다.
+     * @param userEmail 로그아웃할 사용자의 이메일
+     */
+    void logout(String userEmail);
+}

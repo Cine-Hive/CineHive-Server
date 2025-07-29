@@ -1,9 +1,9 @@
 package com.example.CineHive.controller.oauth;
 
-import com.example.CineHive.entity.user.Gender;
-import com.example.CineHive.entity.user.ProviderType;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.repository.user.UserRepository;
+import com.example.CineHive.domain.user.Gender;
+import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;

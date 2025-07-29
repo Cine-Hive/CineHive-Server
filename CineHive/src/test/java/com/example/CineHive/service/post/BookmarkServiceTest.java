@@ -1,13 +1,14 @@
 package com.example.CineHive.service.post;
 
-import com.example.CineHive.entity.post.Bookmark;
-import com.example.CineHive.entity.post.Post;
-import com.example.CineHive.entity.user.User;
-import com.example.CineHive.exception.BusinessException;
-import com.example.CineHive.exception.ErrorCode;
-import com.example.CineHive.repository.post.BookmarkRepository;
-import com.example.CineHive.repository.post.PostRepository;
-import com.example.CineHive.repository.user.UserRepository;
+import com.example.CineHive.domain.bookmark.BookmarkServiceImpl;
+import com.example.CineHive.domain.bookmark.Bookmark;
+import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.user.User;
+import com.example.CineHive.global.exception.BusinessException;
+import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.domain.bookmark.BookmarkRepository;
+import com.example.CineHive.domain.post.PostRepository;
+import com.example.CineHive.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
