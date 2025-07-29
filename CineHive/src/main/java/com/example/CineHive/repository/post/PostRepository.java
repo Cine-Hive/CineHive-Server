@@ -13,6 +13,7 @@ import java.util.Optional;
 
 /**
  * 게시글(Post) 엔티티에 대한 데이터 접근을 처리하는 JpaRepository입니다.
+ * N+1 문제 해결을 위해 @EntityGraph를 적극적으로 사용합니다.
  */
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
