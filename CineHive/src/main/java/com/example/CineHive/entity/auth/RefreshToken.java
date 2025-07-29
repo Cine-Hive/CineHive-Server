@@ -16,27 +16,28 @@ import org.springframework.data.redis.core.index.Indexed;
  * 지정된 시간이 지나면 데이터는 자동으로 삭제됩니다.
  */
 @Getter
-@AllArgsConstructor
 @RedisHash(value = "refreshToken")
 public class RefreshToken {
 
-    /**
-     * Refresh Token의 Key가 될 사용자의 이메일입니다.
-     */
     @Id
-    private String email;
+    private final String email;
 
-    /**
-     * 실제 Refresh Token 문자열입니다.
-     * @Indexed 어노테이션을 통해 이 필드로 데이터를 검색할 수 있습니다. (FindByToken)
-     */
     @Indexed
-    private String token;
+    private final String token;
+
+    @TimeToLive
+    private final Long expiration;
 
     /**
-     * 토큰의 만료 시간(초 단위)입니다.
-     * 이 필드에 설정된 시간이 지나면 Redis에서 자동으로 삭제됩니다.
+     * RefreshToken 객체를 생성합니다.
+     * @param email 사용자의 이메일 (Redis Key)
+     * @param token 발급된 Refresh Token
+     * @param expiration 토큰 만료 시간 (초 단위)
      */
-    @TimeToLive
-    private Long expiration;
+    public RefreshToken(String email, String token, Long expiration) {
+        this.email = email;
+        this.token = token;
+        this.expiration = expiration;
+    }
 }
+
