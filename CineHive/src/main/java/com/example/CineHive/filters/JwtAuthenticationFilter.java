@@ -1,6 +1,6 @@
 package com.example.CineHive.filters;
 
-import com.example.CineHive.util.JwtUtil;
+import com.example.CineHive.util.JwtTokenProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,7 +30,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
 
     /**
@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String email = null;
 
         try {
-            email = jwtUtil.extractUsername(jwt);
+            email = jwtTokenProvider.extractUsername(jwt);
         } catch (JwtException e) {
             // 토큰 파싱/만료 등 예외 발생 시 경고 로그만 남기고 통과시킵니다.
             // 인증 정보가 설정되지 않았으므로, 이후 Security Filter에서 접근이 거부됩니다.
@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
-                if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+                if (jwtTokenProvider.validateToken(jwt, userDetails.getUsername())) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
