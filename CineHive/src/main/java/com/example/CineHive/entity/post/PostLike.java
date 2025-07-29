@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@NamedEntityGraph(
+        name = "PostLike.withUser",
+        attributeNodes = @NamedAttributeNode("user")
+)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,12 +31,12 @@ public class PostLike extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false) // 컬럼명 변경
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
-    private Post post; // 참조 엔티티 변경
+    private Post post;
 
     @Builder
     public PostLike(User user, Post post) {
