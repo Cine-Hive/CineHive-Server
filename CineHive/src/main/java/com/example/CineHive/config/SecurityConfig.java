@@ -30,7 +30,6 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    // Swagger UI 및 API 문서 접근을 위한 경로
     private static final String[] SWAGGER_PATHS = {
             "/v3/api-docs/**",
             "/swagger-ui.html",
@@ -52,9 +51,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
                         // --- 인증 없이 접근 허용 (Permit All) ---
-                        .requestMatchers(SWAGGER_PATHS).permitAll() // Swagger 경로 허용
+                        .requestMatchers(SWAGGER_PATHS).permitAll()
                         .requestMatchers("/api/v1/auth/register").permitAll()
                         .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/reissue").permitAll() // <-- 토큰 재발급 경로는 인증 없이 접근 허용
                         .requestMatchers("/api/v1/auth/check-email", "/api/v1/auth/check-nickname").permitAll()
                         .requestMatchers("/api/v1/oauth2/**").permitAll()
 
@@ -76,19 +76,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * 비밀번호 암호화를 위한 PasswordEncoder Bean을 등록합니다.
-     * BCrypt 알고리즘을 사용합니다.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * CORS(Cross-Origin Resource Sharing) 설정을 위한 Bean을 등록합니다.
-     * 다른 도메인에서의 요청을 허용하는 정책을 정의합니다.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
