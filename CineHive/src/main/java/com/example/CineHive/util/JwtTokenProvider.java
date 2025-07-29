@@ -15,27 +15,28 @@ import java.util.Date;
 import java.util.function.Function;
 
 /**
- * JWT(JSON Web Token) 생성, 검증, 정보 추출 등 토큰 관련 모든 기능을 담당하는 유틸리티 클래스입니다.
+ * JWT(JSON Web Token) 생성, 검증, 정보 추출 등 토큰 관련 모든 기능을 담당하는 클래스입니다.
+ * Spring Security 인증 과정 전반에서 사용됩니다.
  */
 @Component
 @Slf4j
-public class JwtUtil {
+public class JwtTokenProvider {
 
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
     /**
-     * JwtUtil 생성자입니다.
+     * JwtTokenProvider 생성자입니다.
      * application.yml에 정의된 JWT 시크릿 키와 토큰 만료 시간을 주입받아 초기화합니다.
      *
      * @param secret                 Base64로 인코딩된 JWT 시크릿 키 문자열
      * @param accessTokenExpiration  Access Token의 만료 시간 (밀리초 단위)
      * @param refreshTokenExpiration Refresh Token의 만료 시간 (밀리초 단위)
      */
-    public JwtUtil(@Value("${jwt.secret.key}") String secret,
-                   @Value("${jwt.expiration.access-token}") long accessTokenExpiration,
-                   @Value("${jwt.expiration.refresh-token}") long refreshTokenExpiration) {
+    public JwtTokenProvider(@Value("${jwt.secret.key}") String secret,
+                            @Value("${jwt.expiration.access-token}") long accessTokenExpiration,
+                            @Value("${jwt.expiration.refresh-token}") long refreshTokenExpiration) {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpiration = accessTokenExpiration;
@@ -98,7 +99,6 @@ public class JwtUtil {
         try {
             return extractClaim(token, Claims::getExpiration).before(new Date());
         } catch (Exception e) {
-            // 파싱 과정에서 예외 발생 시 (예: 서명 오류, 형식 오류) 만료된 것으로 간주
             log.warn("토큰 검증 중 오류 발생: {}", e.getMessage());
             return true;
         }
