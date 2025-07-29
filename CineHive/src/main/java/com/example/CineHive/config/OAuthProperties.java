@@ -34,6 +34,7 @@ public class OAuthProperties {
         private String redirectUri;
         private String tokenUri;
         private String userInfoUri;
+        private String scope;
     }
 
     @Getter
