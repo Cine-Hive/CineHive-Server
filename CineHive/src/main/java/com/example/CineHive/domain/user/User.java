@@ -1,6 +1,7 @@
 package com.example.CineHive.domain.user;
 
 import com.example.CineHive.domain.auth.ProviderType;
+import com.example.CineHive.domain.auth.dto.RegisterRequest;
 import com.example.CineHive.global.common.BaseEntity;
 import com.example.CineHive.domain.media.Genre;
 import jakarta.persistence.*;
@@ -8,9 +9,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 서비스의 사용자(회원)를 나타내는 핵심 엔티티입니다.
@@ -74,25 +77,36 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 사용자의 비밀번호를 변경합니다.
-     * @param newPassword 새 비밀번호 (암호화된 상태여야 함)
+     * RegisterRequest DTO로부터 User 엔티티를 생성하는 정적 팩토리 메서드입니다.
+     * 비밀번호 암호화 및 기본값 설정을 포함합니다.
+     *
+     * @param dto             회원가입 요청 데이터
+     * @param passwordEncoder 비밀번호 암호화기
+     * @return 생성된 User 엔티티
      */
+    public static User from(RegisterRequest dto, PasswordEncoder passwordEncoder) {
+        return User.builder()
+                .email(dto.email())
+                .password(passwordEncoder.encode(dto.password()))
+                .name(dto.name())
+                .nickname(dto.nickname())
+                .gender(Gender.valueOf(dto.gender().toUpperCase()))
+                .genres(dto.genres().stream()
+                        .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
+                        .collect(Collectors.toSet()))
+                .provider(ProviderType.LOCAL)
+                .role(UserRole.ROLE_USER)
+                .build();
+    }
+
     public void changePassword(String newPassword) {
         this.password = newPassword;
     }
 
-    /**
-     * 사용자의 닉네임을 변경합니다.
-     * @param newNickname 새 닉네임
-     */
     public void changeNickname(String newNickname) {
         this.nickname = newNickname;
     }
 
-    /**
-     * 사용자의 선호 장르를 업데이트합니다.
-     * @param newGenres 새로운 선호 장르 Set
-     */
     public void updateGenres(Set<Genre> newGenres) {
         this.genres.clear();
         if (newGenres != null) {
