@@ -33,7 +33,6 @@ public class KakaoClient implements OAuth2Client {
 
     @Override
     public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
-        // 카카오는 토큰 요청 시 state를 사용하지 않으므로 무시
         return getAccessToken(code)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
@@ -46,15 +45,15 @@ public class KakaoClient implements OAuth2Client {
     }
 
     private Mono<String> getAccessToken(String code) {
-        String tokenUri = "https://kauth.kakao.com/oauth/token";
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", kakaoProperties.getClientId());
         formData.add("redirect_uri", kakaoProperties.getRedirectUri());
         formData.add("code", code);
+        formData.add("client_secret", kakaoProperties.getClientSecret());
 
         return webClient.post()
-                .uri(tokenUri)
+                .uri(kakaoProperties.getTokenUri())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
@@ -63,9 +62,8 @@ public class KakaoClient implements OAuth2Client {
     }
 
     private Mono<KakaoUserResponse> fetchUserInfo(String accessToken) {
-        String userInfoUri = "https://kapi.kakao.com/v2/user/me";
         return webClient.get()
-                .uri(userInfoUri)
+                .uri(kakaoProperties.getUserInfoUri())
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .bodyToMono(KakaoUserResponse.class);

@@ -27,6 +27,7 @@ dependencies {
 	// --- 데이터 및 JPA ---
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
 	// --- 웹 (리액티브 스택) ---
 	implementation 'org.springframework.boot:spring-boot-starter-web' // 서블릿 기반 웹 스택
@@ -59,6 +60,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'com.h2database:h2'
+	testImplementation 'com.squareup.okhttp3:mockwebserver'
 
 	// M1/M2 Mac용 (오류 로그 방지)
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.101.Final:osx-aarch_64'
@@ -66,4 +68,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+	options.compilerArgs += ['-parameters']
 }

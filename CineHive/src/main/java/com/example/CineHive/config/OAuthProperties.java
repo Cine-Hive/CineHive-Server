@@ -21,14 +21,19 @@ public class OAuthProperties {
         private String clientId;
         private String clientSecret;
         private String redirectUri;
-        private String state; // 네이버는 state 값을 필수로 요구
+        private String state;
+        private String tokenUri;
+        private String userInfoUri;
     }
 
     @Getter
     @Setter
     public static class Kakao {
         private String clientId;
+        private String clientSecret;
         private String redirectUri;
+        private String tokenUri;
+        private String userInfoUri;
     }
 
     @Getter
@@ -38,5 +43,7 @@ public class OAuthProperties {
         private String clientSecret;
         private String redirectUri;
         private String scope;
+        private String tokenUri;
+        private String userInfoUri;
     }
 }

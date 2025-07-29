@@ -7,6 +7,7 @@ import com.example.CineHive.dto.oauth.OAuth2UserInfo;
 import com.example.CineHive.entity.user.Gender;
 import com.example.CineHive.entity.user.ProviderType;
 import com.example.CineHive.entity.user.User;
+import com.example.CineHive.entity.user.UserRole;
 import com.example.CineHive.exception.BusinessException;
 import com.example.CineHive.exception.ErrorCode;
 import com.example.CineHive.repository.user.UserRepository;
@@ -54,21 +55,25 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         };
     }
 
-    /**
-     * 여기를 수정해야 합니다.
-     * 인터페이스에 맞게 3개의 파라미터(providerType, code, state)를 받도록 수정합니다.
-     */
     @Override
     @Transactional
-    public LoginResponse loginWithCode(ProviderType providerType, String code, String state) {
+    public LoginResponse loginWithCode(ProviderType providerType, String code, String receivedState, String sessionState) {
+        if (providerType.isStateRequired()) {
+            if (sessionState == null || !sessionState.equals(receivedState)) {
+                log.warn("OAuth State 값이 일치하지 않습니다. CSRF 공격일 수 있습니다. Session State: {}, Received State: {}", sessionState, receivedState);
+                throw new BusinessException(ErrorCode.INVALID_OAUTH_STATE);
+            }
+        }
+
         OAuth2Client client = getClient(providerType);
-        OAuth2UserInfo userInfo = client.getUserInfo(code, state)
+        OAuth2UserInfo userInfo = client.getUserInfo(code, receivedState)
                 .onErrorMap(error -> {
                     log.error("OAuth 통신 오류 (인가 코드 사용): {}", error.getMessage());
                     return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
                 })
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
                 .block();
+
         return processLogin(userInfo);
     }
 
@@ -108,6 +113,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .gender(Gender.OTHER)
                 .genres(Collections.emptySet())
                 .provider(userInfo.providerType())
+                .role(UserRole.ROLE_USER)
                 .build();
         return userRepository.save(newUser);
     }
@@ -145,6 +151,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 .queryParam("response_type", "code")
                 .queryParam("client_id", kakao.getClientId())
                 .queryParam("redirect_uri", kakao.getRedirectUri())
+                .queryParam("scope", "profile_nickname,account_email")
                 .build().toUriString();
     }
 

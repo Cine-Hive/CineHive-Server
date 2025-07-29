@@ -18,7 +18,6 @@ public class NaverClient implements OAuth2Client {
     private final WebClient webClient;
     private final OAuthProperties.Naver naverProperties;
 
-    // 생성자를 통해 WebClient와 Naver 설정 정보 주입
     public NaverClient(WebClient webClient, OAuthProperties oAuthProperties) {
         this.webClient = webClient;
         this.naverProperties = oAuthProperties.getNaver();
@@ -31,7 +30,7 @@ public class NaverClient implements OAuth2Client {
 
     @Override
     public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
-        return getAccessToken(code, state) // state 전달
+        return getAccessToken(code, state)
                 .flatMap(this::fetchUserInfo)
                 .map(this::toUserInfo);
     }
@@ -43,14 +42,13 @@ public class NaverClient implements OAuth2Client {
     }
 
     private Mono<String> getAccessToken(String code, String state) {
-        String tokenUri = "https://nid.naver.com/oauth2.0/token";
         return webClient.post()
-                .uri(tokenUri, uriBuilder -> uriBuilder
+                .uri(naverProperties.getTokenUri(), uriBuilder -> uriBuilder
                         .queryParam("grant_type", "authorization_code")
                         .queryParam("client_id", naverProperties.getClientId())
                         .queryParam("client_secret", naverProperties.getClientSecret())
                         .queryParam("code", code)
-                        .queryParam("state", state) // Controller에서 전달받은 state 사용
+                        .queryParam("state", state)
                         .build())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .retrieve()
@@ -59,9 +57,8 @@ public class NaverClient implements OAuth2Client {
     }
 
     private Mono<NaverUserResponse> fetchUserInfo(String accessToken) {
-        String userInfoUri = "https://openapi.naver.com/v1/nid/me";
         return webClient.get()
-                .uri(userInfoUri)
+                .uri(naverProperties.getUserInfoUri())
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .bodyToMono(NaverUserResponse.class);
