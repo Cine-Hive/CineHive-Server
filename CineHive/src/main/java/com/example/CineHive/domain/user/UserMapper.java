@@ -2,7 +2,7 @@ package com.example.CineHive.domain.user;
 
 import com.example.CineHive.domain.auth.dto.RegisterRequest;
 import com.example.CineHive.domain.media.Genre;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.stream.Collectors;

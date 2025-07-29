@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.dto;
 
-import com.example.CineHive.domain.comment.dto.CommentResponse;
+import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;

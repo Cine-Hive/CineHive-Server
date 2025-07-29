@@ -2,7 +2,7 @@ package com.example.CineHive.domain.post;
 
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import com.example.CineHive.domain.post.dto.PostSummaryResponse;
-import com.example.CineHive.domain.comment.CommentMapper; // comment 패키지로 이동 가정
+import com.example.CineHive.domain.post.comment.CommentMapper; // comment 패키지로 이동 가정
 import java.util.stream.Collectors;
 
 /**

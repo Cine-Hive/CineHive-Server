@@ -2,7 +2,7 @@ package com.example.CineHive.controller.post;
 
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;

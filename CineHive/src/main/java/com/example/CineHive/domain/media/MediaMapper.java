@@ -3,7 +3,6 @@ package com.example.CineHive.domain.media;
 import com.example.CineHive.client.tmdb.dto.*;
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.global.common.dto.PagedResponse;
-import com.example.CineHive.dto.tmdb.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;

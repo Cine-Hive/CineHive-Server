@@ -4,7 +4,7 @@ import com.example.CineHive.domain.post.PostRepository;
 import com.example.CineHive.global.config.database.JpaAuditingConfig;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRole;
 import com.example.CineHive.domain.user.UserRepository;

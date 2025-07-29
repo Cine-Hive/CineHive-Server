@@ -1,6 +1,6 @@
 package com.example.CineHive.global.config.web.converter;
 
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

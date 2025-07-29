@@ -1,13 +1,13 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
-import com.example.CineHive.domain.oauth.OAuth2ServiceImpl;
+import com.example.CineHive.domain.auth.OAuth2ServiceImpl;
 import com.example.CineHive.global.config.security.OAuthProperties;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
-import com.example.CineHive.domain.oauth.dto.OAuth2UserInfo;
+import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
 import com.example.CineHive.domain.auth.RefreshToken;
 import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRole;
 import com.example.CineHive.domain.auth.RefreshTokenRepository;

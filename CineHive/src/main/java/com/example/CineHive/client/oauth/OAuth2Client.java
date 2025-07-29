@@ -1,7 +1,7 @@
 package com.example.CineHive.client.oauth;
 
-import com.example.CineHive.domain.oauth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
+import com.example.CineHive.domain.auth.ProviderType;
 import reactor.core.publisher.Mono;
 
 public interface OAuth2Client {

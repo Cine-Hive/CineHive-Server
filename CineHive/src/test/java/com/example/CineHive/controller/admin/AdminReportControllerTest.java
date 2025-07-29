@@ -4,7 +4,7 @@ import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.report.Report;
 import com.example.CineHive.domain.report.ReportStatus;
 import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRole;
 import com.example.CineHive.global.exception.ErrorCode;

@@ -1,7 +1,7 @@
 package com.example.CineHive.controller.oauth;
 
 import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;

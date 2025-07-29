@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.user;
 
-import com.example.CineHive.domain.oauth.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.global.common.BaseEntity;
 import com.example.CineHive.domain.media.Genre;
 import jakarta.persistence.*;

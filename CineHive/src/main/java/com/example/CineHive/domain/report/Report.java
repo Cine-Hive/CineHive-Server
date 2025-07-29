@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.report;
 
-import com.example.CineHive.domain.comment.Comment;
+import com.example.CineHive.domain.post.comment.Comment;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.global.common.BaseEntity;
 import com.example.CineHive.domain.user.User;

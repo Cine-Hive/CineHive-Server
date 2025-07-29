@@ -2,7 +2,6 @@ package com.example.CineHive.client.tmdb;
 
 import com.example.CineHive.client.tmdb.dto.*;
 import com.example.CineHive.domain.media.dto.ChartProperties;
-import com.example.CineHive.dto.tmdb.*;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
