@@ -38,7 +38,7 @@ public class PostServiceImpl implements PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
-        return PostMapper.toDetailResponse(savedPost);
+        return PostDetailResponse.from(savedPost);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class PostServiceImpl implements PostService {
     public PostDetailResponse getPostById(Long postId) {
         Post post = findPostById(postId);
         post.increaseViews();
-        return PostMapper.toDetailResponse(post);
+        return PostDetailResponse.from(post);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class PostServiceImpl implements PostService {
         verifyPostOwnership(post, user);
 
         post.update(request.title(), request.content());
-        return PostMapper.toDetailResponse(post);
+        return PostDetailResponse.from(post);
     }
 
     @Override
@@ -74,13 +74,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort) {
-        // 클라이언트가 1페이지를 요청하면, Spring Data JPA는 0페이지를 조회해야 합니다.
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
         Page<Post> postPage = postRepository.findAll(pageable);
 
         return new PagedResponse<>(
-                postPage.getContent().stream().map(PostMapper::toSummaryResponse).toList(),
-                postPage.getNumber() + 1, // 1-based
+                postPage.getContent().stream().map(PostSummaryResponse::from).toList(),
+                postPage.getNumber() + 1,
                 postPage.getSize(),
                 postPage.getTotalElements(),
                 postPage.getTotalPages(),
