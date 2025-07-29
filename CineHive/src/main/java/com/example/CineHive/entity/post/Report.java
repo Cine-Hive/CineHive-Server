@@ -8,6 +8,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@NamedEntityGraph(
+        name = "Report.withAll",
+        attributeNodes = {
+                @NamedAttributeNode("reporter"),
+                @NamedAttributeNode("post"),
+                @NamedAttributeNode("comment")
+        }
+)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
