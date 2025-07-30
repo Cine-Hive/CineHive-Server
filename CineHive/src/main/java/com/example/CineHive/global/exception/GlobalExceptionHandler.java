@@ -15,6 +15,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
@@ -71,6 +73,33 @@ public class GlobalExceptionHandler {
                 dynamicErrorMessage,
                 request.getRequestURI(),
                 details
+        );
+        return ResponseEntity.status(errorCode.getStatus()).body(ApiResponse.error(errorResponse));
+    }
+
+    /**
+     * RestTemplate을 사용한 외부 API 통신 중 발생하는 예외를 처리합니다.
+     * 주로 OAuth2 클라이언트에서 사용됩니다.
+     */
+    @ExceptionHandler(RestClientException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRestClientException(RestClientException e, HttpServletRequest request) {
+        ErrorCode errorCode = ErrorCode.OAUTH_COMMUNICATION_ERROR;
+
+        // 4xx, 5xx 에러코드를 포함하는 경우, 더 상세한 로그를 남깁니다.
+        if (e instanceof HttpClientErrorException) {
+            HttpClientErrorException hce = (HttpClientErrorException) e;
+            log.error("External API Client Error: Status={}, Body={}, URI: {}",
+                    hce.getStatusCode(), hce.getResponseBodyAsString(), request.getRequestURI(), hce);
+        } else {
+            log.error("External API I/O Error: {}, URI: {}", e.getMessage(), request.getRequestURI(), e);
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                errorCode.getStatus().value(),
+                errorCode.getCode(),
+                errorCode.name(),
+                errorCode.getMessage(),
+                request.getRequestURI()
         );
         return ResponseEntity.status(errorCode.getStatus()).body(ApiResponse.error(errorResponse));
     }
