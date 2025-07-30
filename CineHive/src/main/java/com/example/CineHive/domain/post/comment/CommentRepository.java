@@ -1,30 +1,30 @@
 package com.example.CineHive.domain.post.comment;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
-/**
- * 댓글(Comment) 엔티티에 대한 데이터 접근을 처리하는 JpaRepository입니다.
- */
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    /**
-     * 특정 게시글에 달린 모든 댓글을 조회합니다.
-     *
-     * @param postId 댓글을 조회할 게시글의 ID
-     * @return 해당 게시글의 모든 댓글 엔티티 리스트
-     */
-    @EntityGraph(value = "Comment.withUser")
-    List<Comment> findByPost_Id(Long postId);
+    @Override
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Comment> findById(Long id);
 
-    /**
-     * 특정 사용자가 작성한 모든 댓글을 삭제합니다.
-     *
-     * @param email 삭제할 댓글의 작성자 이메일
-     */
-    void deleteAllByUser_Email(String email);
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Comment> findByIdAndUserId(Long id, Long userId);
+
+    @EntityGraph(attributePaths = {"user"})
+    Page<Comment> findByPost_Id(Long postId, Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Comment c WHERE c.user.email = :email")
+    int deleteAllByUserEmail(@Param("email") String email);
 }
