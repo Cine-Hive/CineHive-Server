@@ -5,20 +5,19 @@ import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.User;
+import com.example.CineHive.global.common.dto.PagedResponse;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;
 import com.example.CineHive.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-/**
- * CommentService 인터페이스의 구현체입니다.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -41,30 +40,33 @@ public class CommentServiceImpl implements CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
-
         return CommentResponse.from(savedComment);
     }
 
     @Override
-    public List<CommentResponse> getCommentsByPost(Long postId) {
-        if (!postRepository.existsById(postId)) {
-            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
-        }
-        List<Comment> comments = commentRepository.findByPost_Id(postId);
-        return comments.stream()
-                .map(CommentResponse::from)
-                .collect(Collectors.toList());
+    public PagedResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size) {
+        Post post = findPostById(postId);
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Comment> commentPage = commentRepository.findByPost_Id(postId, pageable);
+
+        return new PagedResponse<>(
+                commentPage.getContent().stream().map(CommentResponse::from).toList(),
+                commentPage.getNumber() + 1,
+                commentPage.getSize(),
+                commentPage.getTotalElements(),
+                commentPage.getTotalPages(),
+                commentPage.isLast()
+        );
     }
 
     @Override
     @Transactional
     public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, String userEmail) {
         User user = findUserByEmail(userEmail);
-        Comment comment = findCommentById(commentId);
+        Comment comment = findCommentAndVerifyOwner(commentId, user.getId());
 
-        verifyCommentOwnership(comment, user);
         comment.update(request.content());
-
         return CommentResponse.from(comment);
     }
 
@@ -72,9 +74,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteComment(Long commentId, String userEmail) {
         User user = findUserByEmail(userEmail);
-        Comment comment = findCommentById(commentId);
+        Comment comment = findCommentAndVerifyOwner(commentId, user.getId());
 
-        verifyCommentOwnership(comment, user);
         commentRepository.delete(comment);
     }
 
@@ -88,14 +89,14 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private Comment findCommentById(Long commentId) {
-        return commentRepository.findById(commentId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-    }
-
-    private void verifyCommentOwnership(Comment comment, User user) {
-        if (!comment.getUser().equals(user)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
+    private Comment findCommentAndVerifyOwner(Long commentId, Long userId) {
+        return commentRepository.findByIdAndUserId(commentId, userId)
+                .orElseThrow(() -> {
+                    if (commentRepository.existsById(commentId)) {
+                        throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                    } else {
+                        throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+                    }
+                });
     }
 }
