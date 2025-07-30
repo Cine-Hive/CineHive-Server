@@ -55,10 +55,10 @@ public class OAuth2Controller {
     public void redirectToProvider(
             @Parameter(description = "소셜 로그인 플랫폼", schema = @Schema(type = "string", allowableValues = {"naver", "kakao", "google"}))
             @PathVariable ProviderType platform,
-                HttpServletRequest request,
-                HttpServletResponse response) throws IOException {
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
 
-            String state = UUID.randomUUID().toString();
+        String state = UUID.randomUUID().toString();
         request.getSession().setAttribute(STATE_SESSION_ATTRIBUTE_NAME, state);
 
         String redirectUrl = oauth2Service.getRedirectUrl(platform, state);
@@ -74,7 +74,8 @@ public class OAuth2Controller {
             **[서버의 역할]**
             1.  소셜 플랫폼이 URL에 임시 `code`를 붙여서 보내줍니다.
             2.  우리 서버는 이 `code`를 사용하여 해당 플랫폼에 사용자 정보를 요청하고, CineHive 서비스의 회원가입 또는 로그인 처리를 완료합니다.
-            3.  모든 처리가 성공하면, 서버는 CineHive 서비스에서 사용할 수 있는 자체 **JWT(JSON Web Token)**를 생성하여 응답 본문에 담아 반환합니다.
+            3.  **성공 시, 사용자의 로그인 이력(브라우저 정보 등)이 기록됩니다.**
+            4.  모든 처리가 성공하면, 서버는 CineHive 서비스에서 사용할 수 있는 자체 **JWT(JSON Web Token)**를 생성하여 응답 본문에 담아 반환합니다.
             
             **[클라이언트의 역할]**
             1.  이 API가 호출된 후, 프론트엔드 코드는 이 API의 **응답 본문(Response Body)**에서 `token`, `isNewUser`, `userInfo`가 포함된 JSON 데이터를 받게 됩니다.
@@ -89,12 +90,13 @@ public class OAuth2Controller {
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
             @Parameter(description = "플랫폼으로부터 발급받은 인가 코드") @RequestParam @NotBlank String code,
             @Parameter(description = "CSRF 방어용 상태 토큰") @RequestParam(name = "state", required = false) String receivedState,
+            @Parameter(hidden = true) @RequestHeader("User-Agent") String userAgent,
             HttpSession session) {
 
         String sessionState = (String) session.getAttribute(STATE_SESSION_ATTRIBUTE_NAME);
         session.removeAttribute(STATE_SESSION_ATTRIBUTE_NAME);
 
-        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code, receivedState, sessionState);
+        LoginResponse loginResponse = oauth2Service.loginWithCode(platform, code, receivedState, sessionState, userAgent);
 
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
@@ -110,7 +112,7 @@ public class OAuth2Controller {
             2.  **[앱]** 카카오 SDK가 실행되어 로그인 과정을 처리합니다.
             3.  **[앱]** 로그인 성공 시, 카카오 SDK는 앱에게 **카카오의 액세스 토큰**을 반환합니다.
             4.  **[앱]** 앱은 방금 받은 카카오 액세스 토큰을 담아, **이 API(`POST /api/v1/oauth2/app/kakao/login`)를 호출**합니다.
-            5.  **[서버]** 서버는 전달받은 카카오 액세스 토큰의 유효성을 검증하고, 사용자 정보를 받아 CineHive 서비스의 로그인/회원가입을 처리합니다.
+            5.  **[서버]** 서버는 전달받은 카카오 액세스 토큰의 유효성을 검증하고, 사용자 정보를 받아 CineHive 서비스의 로그인/회원가입을 처리 및 **로그인 이력을 기록**합니다.
             6.  **[서버]** 모든 처리가 성공하면, 서버는 CineHive 서비스 전용 **JWT**를 생성하여 앱에게 응답으로 보내줍니다.
             7.  **[앱]** 앱은 서버로부터 받은 **CineHive JWT**를 안전하게 저장한 후, 앞으로 모든 서버 API 요청에 이 토큰을 사용합니다.
             
@@ -127,9 +129,10 @@ public class OAuth2Controller {
     @PostMapping("/app/{platform}/login")
     public ResponseEntity<ApiResponse<LoginResponse>> loginFromApp(
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
-            @Valid @RequestBody AccessTokenRequest request) {
+            @Valid @RequestBody AccessTokenRequest request,
+            @Parameter(hidden = true) @RequestHeader("User-Agent") String userAgent) {
 
-        LoginResponse loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken());
+        LoginResponse loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken(), userAgent);
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
     }
 }
