@@ -31,23 +31,30 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostDetailResponse createPost(CreatePostRequest request, String userEmail) {
+        log.info("새 게시글 작성을 시작합니다. 작성자: {}", userEmail);
         User user = domainFinder.findUserByEmail(userEmail);
+
         Post post = Post.builder()
                 .title(request.title())
                 .content(request.content())
                 .user(user)
                 .build();
         Post savedPost = postRepository.save(post);
+
+        log.info("게시글이 성공적으로 생성되었습니다. 게시글 ID: {}, 작성자: {}", savedPost.getId(), userEmail);
         return PostDetailResponse.from(savedPost);
     }
 
     @Override
     @Transactional
     public PostDetailResponse getPostById(Long postId) {
+        log.debug("게시글 상세 조회를 시작합니다. 게시글 ID: {}", postId);
+
         int updatedRows = postRepository.incrementViews(postId);
         if (updatedRows == 0) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
+        log.debug("게시글 조회수 증가 완료. 게시글 ID: {}", postId);
 
         Post post = domainFinder.findPostById(postId);
         return PostDetailResponse.from(post);
@@ -56,6 +63,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void incrementViews(Long postId) {
+        log.debug("게시글 조회수 1 증가를 시도합니다. 게시글 ID: {}", postId);
         int updatedRows = postRepository.incrementViews(postId);
         if (updatedRows == 0) {
             log.warn("조회수 증가 실패: 존재하지 않는 게시글 ID={}", postId);
@@ -66,16 +74,19 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostDetailResponse updatePost(Long postId, UpdatePostRequest request, String userEmail) {
+        log.info("게시글 수정을 시작합니다. 게시글 ID: {}, 요청자: {}", postId, userEmail);
         User user = domainFinder.findUserByEmail(userEmail);
         Post post = findPostAndVerifyOwner(postId, user.getId());
 
         post.update(request.title(), request.content());
+        log.info("게시글이 성공적으로 수정되었습니다. 게시글 ID: {}", postId);
         return PostDetailResponse.from(post);
     }
 
     @Override
     @Transactional
     public void deletePost(Long postId, String userEmail) {
+        log.info("게시글 삭제를 시작합니다. 게시글 ID: {}, 요청자: {}", postId, userEmail);
         User user = domainFinder.findUserByEmail(userEmail);
 
         int deletedRows = postRepository.deleteByIdAndUserId(postId, user.getId());
@@ -83,6 +94,7 @@ public class PostServiceImpl implements PostService {
             if (!postRepository.existsById(postId)) {
                 throw new BusinessException(ErrorCode.POST_NOT_FOUND);
             } else {
+                log.warn("게시글 삭제 권한 없음. 게시글 ID: {}, 요청자: {}", postId, userEmail);
                 throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
             }
         }
@@ -91,9 +103,11 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort) {
+        log.debug("게시글 목록 조회를 시작합니다. 페이지: {}, 사이즈: {}, 정렬: {}", page, size, sort);
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
         Page<Post> postPage = postRepository.findAll(pageable);
 
+        log.debug("{} 페이지에서 {}개의 게시글을 조회했습니다.", postPage.getNumber() + 1, postPage.getNumberOfElements());
         return new PagedResponse<>(
                 postPage.getContent().stream().map(PostSummaryResponse::from).toList(),
                 postPage.getNumber() + 1,
@@ -106,9 +120,11 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PagedResponse<PostSummaryResponse> searchPosts(String keyword, int page, int size) {
+        log.debug("게시글 키워드 검색을 시작합니다. 키워드: '{}', 페이지: {}, 사이즈: {}", keyword, page, size);
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Post> postPage = postRepository.searchByKeyword(keyword, pageable);
 
+        log.debug("'{}' 키워드로 {} 페이지에서 {}개의 게시글을 조회했습니다.", keyword, postPage.getNumber() + 1, postPage.getNumberOfElements());
         return new PagedResponse<>(
                 postPage.getContent().stream().map(PostSummaryResponse::from).toList(),
                 postPage.getNumber() + 1,
@@ -119,18 +135,13 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    /**
-     * 게시글을 조회하고 소유권을 검증합니다.
-     * DomainFinder를 통해 게시글을 먼저 조회하고, 그 후에 소유권을 비교하여 불필요한 DB 호출을 제거합니다.
-     * @param postId 조회할 게시글 ID
-     * @param userId 검증할 사용자 ID
-     * @return 검증된 Post 엔티티
-     */
     private Post findPostAndVerifyOwner(Long postId, Long userId) {
+        log.debug("게시글 소유권 검증을 시작합니다. 게시글 ID: {}, 사용자 ID: {}", postId, userId);
         Post post = domainFinder.findPostById(postId);
         if (!post.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
+        log.debug("게시글 소유권 검증 완료. 게시글 ID: {}", postId);
         return post;
     }
 }
