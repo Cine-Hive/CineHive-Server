@@ -26,10 +26,6 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    /**
-     * 게시글을 생성합니다. (쓰기 작업)
-     * 클래스 레벨의 readOnly 설정을 덮어쓰기 위해 @Transactional을 명시합니다.
-     */
     @Override
     @Transactional
     public PostDetailResponse createPost(CreatePostRequest request, String userEmail) {
@@ -45,10 +41,6 @@ public class PostServiceImpl implements PostService {
         return PostDetailResponse.from(savedPost);
     }
 
-    /**
-     * 게시글을 조회하고 조회수를 증가시킵니다. (읽기 + 쓰기 작업)
-     * 조회수(views)를 변경하는 쓰기 작업이 포함되어 있으므로, @Transactional을 명시하여 쓰기 트랜잭션을 활성화합니다.
-     */
     @Override
     @Transactional
     public PostDetailResponse getPostById(Long postId) {
@@ -57,9 +49,6 @@ public class PostServiceImpl implements PostService {
         return PostDetailResponse.from(post);
     }
 
-    /**
-     * 게시글을 수정합니다. (쓰기 작업)
-     */
     @Override
     @Transactional
     public PostDetailResponse updatePost(Long postId, UpdatePostRequest request, String userEmail) {
@@ -72,9 +61,6 @@ public class PostServiceImpl implements PostService {
         return PostDetailResponse.from(post);
     }
 
-    /**
-     * 게시글을 삭제합니다. (쓰기 작업)
-     */
     @Override
     @Transactional
     public void deletePost(Long postId, String userEmail) {
@@ -86,10 +72,6 @@ public class PostServiceImpl implements PostService {
         postRepository.delete(post);
     }
 
-    /**
-     * 게시글 목록을 조회합니다. (읽기 전용)
-     * 별도의 @Transactional 어노테이션이 없으므로, 클래스 레벨의 readOnly=true 설정이 적용됩니다.
-     */
     @Override
     public PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
