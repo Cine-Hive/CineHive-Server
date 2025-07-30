@@ -23,9 +23,13 @@ import lombok.NoArgsConstructor;
                         name = "uk_user_post_like",
                         columnNames = {"user_id", "post_id"}
                 )
+        },
+        indexes = {
+                @Index(name = "idx_postlike_post_id", columnList = "post_id"),
+                @Index(name = "idx_postlike_user_id", columnList = "user_id")
         }
 )
-public class PostLike extends BaseEntity {
+public class Like extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_like_id")
@@ -40,7 +44,7 @@ public class PostLike extends BaseEntity {
     private Post post;
 
     @Builder
-    public PostLike(User user, Post post) {
+    public Like(User user, Post post) {
         this.user = user;
         this.post = post;
     }
