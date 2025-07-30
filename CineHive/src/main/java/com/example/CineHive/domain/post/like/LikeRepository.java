@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -30,11 +29,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
      * 특정 사용자와 게시글에 해당하는 '좋아요'를 삭제합니다.
      * @return 삭제된 행(row)의 수
      */
-    @Transactional
     @Modifying(clearAutomatically = true)
     int deleteByUserAndPost(User user, Post post);
 
-    @Transactional
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Like l WHERE l.user.email = :email")
     int deleteAllByUserEmail(@Param("email") String email);

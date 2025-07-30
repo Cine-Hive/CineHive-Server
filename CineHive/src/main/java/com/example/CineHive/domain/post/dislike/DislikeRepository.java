@@ -30,11 +30,9 @@ public interface DislikeRepository extends JpaRepository<Dislike, Long> {
      * 특정 사용자와 게시글에 해당하는 '싫어요'를 삭제합니다.
      * @return 삭제된 행(row)의 수
      */
-    @Transactional
     @Modifying(clearAutomatically = true)
     int deleteByUserAndPost(User user, Post post);
 
-    @Transactional
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Dislike d WHERE d.user.email = :email")
     int deleteAllByUserEmail(@Param("email") String email);
