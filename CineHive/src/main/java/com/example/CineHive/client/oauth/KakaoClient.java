@@ -6,23 +6,22 @@ import com.example.CineHive.domain.auth.dto.kakao.KakaoTokenResponse;
 import com.example.CineHive.domain.auth.dto.kakao.KakaoUserResponse;
 import com.example.CineHive.domain.auth.ProviderType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Component
 public class KakaoClient implements OAuth2Client {
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
     private final OAuthProperties.Kakao kakaoProperties;
 
-    public KakaoClient(WebClient webClient, OAuthProperties oAuthProperties) {
-        this.webClient = webClient;
+    public KakaoClient(RestTemplateBuilder restTemplateBuilder, OAuthProperties oAuthProperties) {
+        this.restTemplate = restTemplateBuilder.build();
         this.kakaoProperties = oAuthProperties.getKakao();
     }
 
@@ -32,19 +31,22 @@ public class KakaoClient implements OAuth2Client {
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getUserInfo(String code, String state) {
-        return getAccessToken(code)
-                .flatMap(this::fetchUserInfo)
-                .map(this::toUserInfo);
+    public OAuth2UserInfo getUserInfo(String code, String state) {
+        String accessToken = getAccessToken(code);
+        KakaoUserResponse userResponse = fetchUserInfo(accessToken);
+        return toUserInfo(userResponse);
     }
 
     @Override
-    public Mono<OAuth2UserInfo> getUserInfoByAccessToken(String accessToken) {
-        return fetchUserInfo(accessToken)
-                .map(this::toUserInfo);
+    public OAuth2UserInfo getUserInfoByAccessToken(String accessToken) {
+        KakaoUserResponse userResponse = fetchUserInfo(accessToken);
+        return toUserInfo(userResponse);
     }
 
-    private Mono<String> getAccessToken(String code) {
+    private String getAccessToken(String code) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", kakaoProperties.getClientId());
@@ -52,21 +54,33 @@ public class KakaoClient implements OAuth2Client {
         formData.add("code", code);
         formData.add("client_secret", kakaoProperties.getClientSecret());
 
-        return webClient.post()
-                .uri(kakaoProperties.getTokenUri())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(formData))
-                .retrieve()
-                .bodyToMono(KakaoTokenResponse.class)
-                .map(KakaoTokenResponse::accessToken);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+        KakaoTokenResponse tokenResponse = restTemplate.postForObject(
+                kakaoProperties.getTokenUri(),
+                requestEntity,
+                KakaoTokenResponse.class
+        );
+
+        if (tokenResponse == null) {
+            throw new IllegalStateException("카카오 토큰 응답을 받지 못했습니다.");
+        }
+        return tokenResponse.accessToken();
     }
 
-    private Mono<KakaoUserResponse> fetchUserInfo(String accessToken) {
-        return webClient.get()
-                .uri(kakaoProperties.getUserInfoUri())
-                .header("Authorization", "Bearer " + accessToken)
-                .retrieve()
-                .bodyToMono(KakaoUserResponse.class);
+    private KakaoUserResponse fetchUserInfo(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<KakaoUserResponse> responseEntity = restTemplate.exchange(
+                kakaoProperties.getUserInfoUri(),
+                HttpMethod.GET,
+                requestEntity,
+                KakaoUserResponse.class
+        );
+
+        return responseEntity.getBody();
     }
 
     private OAuth2UserInfo toUserInfo(KakaoUserResponse userResponse) {
