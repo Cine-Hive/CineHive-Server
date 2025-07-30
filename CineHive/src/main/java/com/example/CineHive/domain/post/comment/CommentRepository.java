@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -23,6 +24,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     Page<Comment> findByPost_Id(Long postId, Pageable pageable);
+
+    /**
+     * ID와 사용자 ID로 댓글을 삭제합니다. (소유권 검증 + 삭제 동시 처리)
+     * @return 삭제된 행(row)의 수
+     */
+    @Modifying(clearAutomatically = true)
+    int deleteByIdAndUserId(Long id, Long userId);
 
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Comment c WHERE c.user.email = :email")
