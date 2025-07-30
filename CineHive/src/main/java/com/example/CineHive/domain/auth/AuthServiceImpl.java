@@ -57,7 +57,6 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        // User 엔티티를 통해 로그인 기록 업데이트 (1:1 양방향 매핑 활용)
         String browser = parseBrowserFromUserAgent(userAgent);
         user.updateLoginHistory(browser);
         log.debug("로그인 기록 업데이트. 사용자 ID: {}", user.getId());
@@ -65,7 +64,6 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
         String refreshTokenValue = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        // RefreshToken 만료 단위를 ISO-8601 Duration 형식으로 처리
         long refreshTokenValidityInSeconds = Duration.parse(refreshTokenExpirationIso).toSeconds();
         refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshTokenValue, refreshTokenValidityInSeconds));
         log.info("Refresh Token이 Redis에 저장되었습니다. User: {}, 만료 시간(초): {}", user.getEmail(), refreshTokenValidityInSeconds);
@@ -122,4 +120,15 @@ public class AuthServiceImpl implements AuthService {
         if (userAgent.contains("MSIE") || userAgent.contains("Trident")) return "Internet Explorer";
         return "Other";
     }
+
+    @Override
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
+
 }
