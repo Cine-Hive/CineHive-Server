@@ -23,6 +23,10 @@ import lombok.NoArgsConstructor;
                         name = "uk_user_post_bookmark",
                         columnNames = {"user_id", "post_id"}
                 )
+        },
+        indexes = {
+                @Index(name = "idx_bookmark_post_id", columnList = "post_id"),
+                @Index(name = "idx_bookmark_user_id", columnList = "user_id")
         }
 )
 public class Bookmark extends BaseEntity {
