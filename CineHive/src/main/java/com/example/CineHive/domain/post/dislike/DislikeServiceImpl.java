@@ -38,7 +38,7 @@ public class DislikeServiceImpl implements DislikeService {
             log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소하고 '싫어요'를 추가했습니다.", user.getId(), post.getId());
         });
 
-        PostDislike dislike = PostDislike.builder()
+        Dislike dislike = Dislike.builder()
                 .user(user)
                 .post(post)
                 .build();
@@ -54,7 +54,7 @@ public class DislikeServiceImpl implements DislikeService {
         User user = findUserByEmail(userEmail);
         Post post = findPostById(postId);
 
-        PostDislike dislike = dislikeRepository.findByUserAndPost(user, post)
+        Dislike dislike = dislikeRepository.findByUserAndPost(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
 
         dislikeRepository.delete(dislike);
