@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
