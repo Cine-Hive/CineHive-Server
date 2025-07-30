@@ -40,7 +40,7 @@ public class LikeServiceImpl implements LikeService {
         });
 
         // PostLike 엔티티를 생성하고 저장 (버그 수정)
-        PostLike like = PostLike.builder()
+        Like like = Like.builder()
                 .user(user)
                 .post(post)
                 .build();
@@ -57,7 +57,7 @@ public class LikeServiceImpl implements LikeService {
         Post post = findPostById(postId);
 
         // PostLike 엔티티를 조회 (버그 수정)
-        PostLike like = likeRepository.findByUserAndPost(user, post)
+        Like like = likeRepository.findByUserAndPost(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND));
 
         likeRepository.delete(like);
