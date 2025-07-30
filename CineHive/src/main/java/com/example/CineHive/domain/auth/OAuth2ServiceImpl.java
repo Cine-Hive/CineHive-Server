@@ -33,7 +33,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     private final List<OAuth2Client> clients;
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
 
@@ -103,11 +103,9 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         User user = userRepository.findByEmail(userInfo.email())
                 .orElseGet(() -> registerNewUser(userInfo));
 
-        // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
         refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));
         log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
 
