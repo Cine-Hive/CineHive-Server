@@ -7,7 +7,7 @@ import com.example.CineHive.domain.auth.dto.ReissueTokenRequest;
 import com.example.CineHive.domain.auth.dto.ReissueTokenResponse;
 
 /**
- * 인증(회원가입, 로그인, 토큰 관리) 관련 비즈니스 로직을 정의하는 인터페이스입니다.
+ * 인증(회원가입, 로그인, 토큰 관리, 중복 확인) 관련 비즈니스 로직을 정의하는 인터페이스입니다.
  */
 public interface AuthService {
 
@@ -37,4 +37,18 @@ public interface AuthService {
      * @param userEmail 로그아웃할 사용자의 이메일
      */
     void logout(String userEmail);
+
+    /**
+     * [추가] 이메일 사용 가능 여부를 확인합니다.
+     * @param email 확인할 이메일
+     * @return 사용 가능 시 true
+     */
+    boolean isEmailAvailable(String email);
+
+    /**
+     * [추가] 닉네임 사용 가능 여부를 확인합니다.
+     * @param nickname 확인할 닉네임
+     * @return 사용 가능 시 true
+     */
+    boolean isNicknameAvailable(String nickname);
 }
