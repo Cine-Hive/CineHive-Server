@@ -84,7 +84,7 @@ public class AccountServiceImpl implements AccountService {
         bookmarkRepository.deleteAllByUserEmail(email);
         likeRepository.deleteAllByUserEmail(email);
         dislikeRepository.deleteAllByUserEmail(email);
-        commentRepository.deleteAllByUser_Email(email);
+        commentRepository.deleteAllByUserEmail(email);
         postRepository.deleteAllByUserEmail(email);
         userRepository.deleteByEmail(email);
 
