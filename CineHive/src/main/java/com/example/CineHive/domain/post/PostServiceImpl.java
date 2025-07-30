@@ -1,5 +1,6 @@
 package com.example.CineHive.domain.post;
 
+import com.example.CineHive.domain.common.DomainFinder;
 import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
@@ -9,7 +10,6 @@ import com.example.CineHive.domain.post.dto.UpdatePostRequest;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,12 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
+    private final DomainFinder domainFinder; // UserRepository 대신 DomainFinder 주입
 
     @Override
     @Transactional
     public PostDetailResponse createPost(CreatePostRequest request, String userEmail) {
-        User user = findUserByEmail(userEmail);
+        User user = domainFinder.findUserByEmail(userEmail);
         Post post = Post.builder()
                 .title(request.title())
                 .content(request.content())
@@ -41,7 +41,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDetailResponse getPostById(Long postId) {
-        Post post = findPostById(postId);
+        Post post = domainFinder.findPostById(postId);
         return PostDetailResponse.from(post);
     }
 
@@ -57,7 +57,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostDetailResponse updatePost(Long postId, UpdatePostRequest request, String userEmail) {
-        User user = findUserByEmail(userEmail);
+        User user = domainFinder.findUserByEmail(userEmail);
         Post post = findPostAndVerifyOwner(postId, user.getId());
 
         post.update(request.title(), request.content());
@@ -67,7 +67,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void deletePost(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
+        User user = domainFinder.findUserByEmail(userEmail);
         Post post = findPostAndVerifyOwner(postId, user.getId());
 
         postRepository.delete(post);
@@ -88,23 +88,6 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    private User findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    private Post findPostById(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
-    }
-
-    /**
-     * 게시글을 조회하고 소유권을 검증합니다.
-     * 한 번의 쿼리로 조회와 검증을 시도하고, 실패 시 원인을 명확히 구분하여 예외를 발생시킵니다.
-     * @param postId 조회할 게시글 ID
-     * @param userId 검증할 사용자 ID
-     * @return 검증된 Post 엔티티
-     */
     private Post findPostAndVerifyOwner(Long postId, Long userId) {
         return postRepository.findByIdAndUserId(postId, userId)
                 .orElseThrow(() -> {

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -25,6 +26,15 @@ public interface DislikeRepository extends JpaRepository<Dislike, Long> {
     @EntityGraph(attributePaths = {"user"})
     Page<Dislike> findAllByPost(Post post, Pageable pageable);
 
+    /**
+     * 특정 사용자와 게시글에 해당하는 '싫어요'를 삭제합니다.
+     * @return 삭제된 행(row)의 수
+     */
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    int deleteByUserAndPost(User user, Post post);
+
+    @Transactional
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Dislike d WHERE d.user.email = :email")
     int deleteAllByUserEmail(@Param("email") String email);

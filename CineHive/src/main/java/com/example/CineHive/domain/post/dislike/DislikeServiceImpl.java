@@ -1,12 +1,12 @@
 package com.example.CineHive.domain.post.dislike;
 
+import com.example.CineHive.domain.common.DomainFinder;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.post.like.LikeRepository;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,48 +20,49 @@ public class DislikeServiceImpl implements DislikeService {
 
     private final DislikeRepository dislikeRepository;
     private final LikeRepository likeRepository;
-    private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final DomainFinder domainFinder;
 
     @Override
     @Transactional
     public void addDislike(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
+        User user = domainFinder.findUserByEmail(userEmail);
+        Post post = domainFinder.findPostById(postId);
 
-        dislikeRepository.findByUserAndPost(user, post).ifPresent(d -> {
+        if (dislikeRepository.existsByUserAndPost(user, post)) {
+            log.debug("사용자 ID: {}가 이미 게시글 ID: {}에 '싫어요'를 눌렀습니다.", user.getId(), post.getId());
             throw new BusinessException(ErrorCode.DISLIKE_ALREADY_EXISTS);
-        });
+        }
 
-        likeRepository.findByUserAndPost(user, post).ifPresent(like -> {
-            likeRepository.delete(like);
+        // '좋아요'가 있으면 한 번의 쿼리로 삭제하고, 카운트 감소
+        int likesDeleted = likeRepository.deleteByUserAndPost(user, post);
+        if (likesDeleted > 0) {
             if (postRepository.decreaseLikeCount(postId) == 0) {
                 throw new BusinessException(ErrorCode.POST_NOT_FOUND);
             }
-            log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소하고 '싫어요'를 추가했습니다.", user.getId(), post.getId());
-        });
+            log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소하고 '싫어요'를 추가합니다.", user.getId(), post.getId());
+        }
 
-        Dislike dislike = Dislike.builder()
-                .user(user)
-                .post(post)
-                .build();
-        dislikeRepository.save(dislike);
+        // '싫어요' 추가
+        dislikeRepository.save(Dislike.builder().user(user).post(post).build());
         if (postRepository.increaseDislikeCount(postId) == 0) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
-        log.info("사용자 ID: {}가 게시글 ID: {}에 '싫어요'를 눌렀습니다.", user.getId(), post.getId());
+        log.info("사용자 ID: {}가 게시글 ID: {}에 '싫어요'를 추가했습니다.", user.getId(), post.getId());
     }
 
     @Override
     @Transactional
     public void removeDislike(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
+        User user = domainFinder.findUserByEmail(userEmail);
+        Post post = domainFinder.findPostById(postId);
 
-        Dislike dislike = dislikeRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
+        // 한 번의 쿼리로 '싫어요'를 삭제하고, 삭제된 행이 없으면 예외 발생
+        int dislikesDeleted = dislikeRepository.deleteByUserAndPost(user, post);
+        if (dislikesDeleted == 0) {
+            throw new BusinessException(ErrorCode.DISLIKE_NOT_FOUND);
+        }
 
-        dislikeRepository.delete(dislike);
         if (postRepository.decreaseDislikeCount(postId) == 0) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
@@ -70,17 +71,7 @@ public class DislikeServiceImpl implements DislikeService {
 
     @Override
     public int getDislikeCount(Long postId) {
-        findPostById(postId);
+        domainFinder.findPostById(postId);
         return dislikeRepository.countByPost_Id(postId);
-    }
-
-    private User findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    private Post findPostById(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 }
