@@ -117,12 +117,10 @@ public class OAuth2ServiceImpl implements OAuth2Service {
             throw new BusinessException("소셜 로그인 정보 처리 중 오류가 발생했습니다 (이메일 정보 없음).", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
 
-        // 소셜 계정으로 사용자를 찾거나, 없으면 새로 등록 (Find or Create)
         boolean isNewUser = !userRepository.existsByEmail(userInfo.email());
         User user = userRepository.findByEmail(userInfo.email())
                 .orElseGet(() -> registerNewUser(userInfo));
 
-        // 소셜 로그인 시에도 로그인 기록을 남김
         String browser = parseBrowserFromUserAgent(userAgent);
         user.updateLoginHistory(browser);
         log.debug("소셜 로그인 기록 업데이트. 사용자 ID: {}", user.getId());
