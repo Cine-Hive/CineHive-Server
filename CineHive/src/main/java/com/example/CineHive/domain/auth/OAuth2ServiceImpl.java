@@ -72,16 +72,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         }
 
         OAuth2Client client = getClient(providerType);
-        OAuth2UserInfo userInfo;
-        try {
-            userInfo = client.getUserInfo(code, receivedState);
-        } catch (HttpClientErrorException e) {
-            log.error("OAuth 통신 오류 (인가 코드 사용) - HTTP Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-        } catch (RestClientException | IllegalStateException e) {
-            log.error("OAuth 통신 오류 (인가 코드 사용): {}", e.getMessage());
-            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-        }
+        OAuth2UserInfo userInfo = client.getUserInfo(code, receivedState);
 
         if (userInfo == null) {
             throw new BusinessException("소셜 로그인 정보를 가져오지 못했습니다.", ErrorCode.INVALID_OAUTH_TOKEN);
@@ -94,16 +85,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     @Transactional
     public LoginResponse loginWithAccessToken(ProviderType providerType, String accessToken, String userAgent) {
         OAuth2Client client = getClient(providerType);
-        OAuth2UserInfo userInfo;
-        try {
-            userInfo = client.getUserInfoByAccessToken(accessToken);
-        } catch (HttpClientErrorException e) {
-            log.error("OAuth 통신 오류 (액세스 토큰 사용) - HTTP Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-        } catch (RestClientException | IllegalStateException e) {
-            log.error("OAuth 통신 오류 (액세스 토큰 사용): {}", e.getMessage());
-            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-        }
+        OAuth2UserInfo userInfo = client.getUserInfoByAccessToken(accessToken);
 
         if (userInfo == null) {
             throw new BusinessException("소셜 로그인 정보를 가져오지 못했습니다.", ErrorCode.INVALID_OAUTH_TOKEN);
