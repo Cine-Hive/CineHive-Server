@@ -18,4 +18,21 @@ public record MediaChartResponse(
         boolean isAnimation,
         @Schema(description = "차트 순위")
         int rank
-) {}
+) {
+        /**
+         * MediaSummaryResponse와 순위를 조합하여 MediaChartResponse를 생성합니다.
+         * @param summary 요약된 미디어 정보
+         * @param rank 차트 순위
+         * @return 생성된 MediaChartResponse
+         */
+        public static MediaChartResponse from(MediaSummaryResponse summary, int rank) {
+                return MediaChartResponse.builder()
+                        .mediaId(summary.id())
+                        .title(summary.title())
+                        .posterPath(summary.posterPath())
+                        .voteAverage(summary.voteAverage())
+                        .isAnimation(summary.isAnimation())
+                        .rank(rank)
+                        .build();
+        }
+}

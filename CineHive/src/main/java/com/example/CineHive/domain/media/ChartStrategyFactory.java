@@ -2,6 +2,8 @@ package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.dto.MediaSummaryResponse;
+import com.example.CineHive.global.common.dto.PagedResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,20 +17,20 @@ public class ChartStrategyFactory {
     public ChartStrategy getStrategy(ChartType chartType) {
         return switch (chartType) {
             // 기본 영화 차트
-            case POPULAR_MOVIES -> (client, page) -> client.getPopularMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case TOP_RATED_MOVIES -> (client, page) -> client.getTopRatedMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case UPCOMING_MOVIES -> (client, page) -> client.getUpcomingMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case NOW_PLAYING_MOVIES -> (client, page) -> client.getNowPlayingMovies(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case POPULAR_MOVIES -> (client, page) -> client.getPopularMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case TOP_RATED_MOVIES -> (client, page) -> client.getTopRatedMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case UPCOMING_MOVIES -> (client, page) -> client.getUpcomingMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case NOW_PLAYING_MOVIES -> (client, page) -> client.getNowPlayingMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
 
             // 기본 TV 시리즈 차트
-            case POPULAR_TV -> (client, page) -> client.getPopularTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case TOP_RATED_TV -> (client, page) -> client.getTopRatedTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case ON_THE_AIR_TV -> (client, page) -> client.getOnTheAirTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case AIRING_TODAY_TV -> (client, page) -> client.getAiringTodayTvSeries(page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case POPULAR_TV -> (client, page) -> client.getPopularTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case TOP_RATED_TV -> (client, page) -> client.getTopRatedTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case ON_THE_AIR_TV -> (client, page) -> client.getOnTheAirTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case AIRING_TODAY_TV -> (client, page) -> client.getAiringTodayTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
 
             // 트렌드 차트
-            case TRENDING_MOVIES_WEEK -> (client, page) -> client.getTrendingMovies("week", page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
-            case TRENDING_TV_WEEK -> (client, page) -> client.getTrendingTv("week", page).map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+            case TRENDING_MOVIES_WEEK -> (client, page) -> client.getTrendingMovies("week", page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case TRENDING_TV_WEEK -> (client, page) -> client.getTrendingTv("week", page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
 
             // Discover API 기반 차트
             case ACTION_BLOCKBUSTERS -> createDiscoverMovieStrategy(ChartProperties.builder().genreId("28").sortBy("vote_average.desc").build());
@@ -96,7 +98,6 @@ public class ChartStrategyFactory {
                     .numberOfSeasons("1")
                     .sortBy("vote_average.desc").build());
             case KOREAN_ACTORS_IN_HOLLYWOOD -> {
-                // 배두나(73383), 이병헌(18948), 마동석(97435), 스티븐연(111391), 박서준(240413) 등
                 String koreanActorsCastIds = "73383,18948,97435,111391,240413";
                 yield createDiscoverMovieStrategy(ChartProperties.builder()
                         .withCast(koreanActorsCastIds)
@@ -107,11 +108,11 @@ public class ChartStrategyFactory {
 
     private ChartStrategy createDiscoverMovieStrategy(ChartProperties props) {
         return (client, page) -> client.discoverMovies(page, props)
-                .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+                .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
     }
 
     private ChartStrategy createDiscoverTvStrategy(ChartProperties props) {
         return (client, page) -> client.discoverTvSeries(page, props)
-                .map(res -> MediaMapper.toChartPagedResponse(res, MediaMapper::toSummaryResponse));
+                .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
     }
 }

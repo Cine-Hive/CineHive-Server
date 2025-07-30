@@ -41,7 +41,8 @@ public class CommentServiceImpl implements CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
-        return CommentMapper.toResponse(savedComment);
+
+        return CommentResponse.from(savedComment);
     }
 
     @Override
@@ -51,7 +52,7 @@ public class CommentServiceImpl implements CommentService {
         }
         List<Comment> comments = commentRepository.findByPost_Id(postId);
         return comments.stream()
-                .map(CommentMapper::toResponse)
+                .map(CommentResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -64,10 +65,8 @@ public class CommentServiceImpl implements CommentService {
         verifyCommentOwnership(comment, user);
         comment.update(request.content());
 
-        return CommentMapper.toResponse(comment);
+        return CommentResponse.from(comment);
     }
-
-
 
     @Override
     @Transactional

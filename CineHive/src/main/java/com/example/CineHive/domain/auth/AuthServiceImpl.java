@@ -4,7 +4,6 @@ import com.example.CineHive.domain.auth.dto.*;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.user.UserMapper;
 import com.example.CineHive.domain.user.UserRepository;
 import com.example.CineHive.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
-        User user = UserMapper.toEntity(request, passwordEncoder);
+        User user = User.from(request, passwordEncoder);
         userRepository.save(user);
         log.info("사용자 가입이 완료되었습니다. 이메일: {}", request.email());
     }
