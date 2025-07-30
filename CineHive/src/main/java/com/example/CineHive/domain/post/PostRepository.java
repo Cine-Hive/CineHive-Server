@@ -19,12 +19,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"user"})
     Optional<Post> findById(Long id);
 
-    /**
-     * ID와 작성자 ID로 특정 게시글을 조회합니다. 소유권 검증에 사용됩니다.
-     * @param id 조회할 게시글의 ID
-     * @param userId 작성자의 ID
-     * @return User 정보가 포함된 Optional<Post> 객체
-     */
     @EntityGraph(attributePaths = {"user"})
     Optional<Post> findByIdAndUserId(Long id, Long userId);
 
@@ -42,6 +36,35 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.views = p.views + 1 WHERE p.id = :postId")
     int incrementViews(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :postId")
+    int increaseLikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount > 0")
+    int decreaseLikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + 1 WHERE p.id = :postId")
+    int increaseDislikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount - 1 WHERE p.id = :postId AND p.dislikeCount > 0")
+    int decreaseDislikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount + 1 WHERE p.id = :postId")
+    int increaseBookmarkCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount - 1 WHERE p.id = :postId AND p.bookmarkCount > 0")
+    int decreaseBookmarkCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.commentCount = :count WHERE p.id = :postId")
+    int updateCommentCount(@Param("postId") Long postId, @Param("count") int count);
+
 
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.user.email = :email")
