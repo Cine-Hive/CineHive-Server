@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookmarkServiceImpl implements BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
@@ -26,9 +27,9 @@ public class BookmarkServiceImpl implements BookmarkService {
         User user = findUserByEmail(userEmail);
         Post post = findPostById(postId);
 
-        if (bookmarkRepository.existsByUserAndPost(user, post)) {
+        bookmarkRepository.findByUserAndPost(user, post).ifPresent(b -> {
             throw new BusinessException(ErrorCode.BOOKMARK_ALREADY_EXISTS);
-        }
+        });
 
         Bookmark bookmark = Bookmark.builder()
                 .user(user)
@@ -36,7 +37,6 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .build();
         bookmarkRepository.save(bookmark);
 
-        post.increaseBookmarkCount();
         log.info("User {} bookmarked post {}", user.getId(), post.getId());
     }
 
@@ -51,19 +51,18 @@ public class BookmarkServiceImpl implements BookmarkService {
 
         bookmarkRepository.delete(bookmark);
 
-        post.decreaseBookmarkCount();
         log.info("User {} removed bookmark from post {}", user.getId(), post.getId());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int getBookmarkCount(Long postId) {
-        Post post = findPostById(postId);
-        return post.getBookmarkCount();
+        if (!postRepository.existsById(postId)) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        return bookmarkRepository.countByPost_Id(postId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean isBookmarkedByUser(Long postId, String userEmail) {
         User user = findUserByEmail(userEmail);
         Post post = findPostById(postId);
