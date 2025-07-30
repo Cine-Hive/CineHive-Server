@@ -5,6 +5,7 @@ import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -86,21 +87,21 @@ public class AuthController {
 
     @Operation(summary = "로그아웃",
             description = """
-            ### **현재 로그인된 사용자를 로그아웃 처리합니다.**
+            ### **현재 로그인된 사용자의 세션을 종료합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
             
             **[서버 처리]**
-            - 이 API가 호출되면, 서버는 해당 사용자의 Refresh Token을 저장소(Redis)에서 완전히 삭제합니다.
-            - 이로써 해당 Refresh Token으로는 더 이상 토큰 재발급이 불가능해집니다.
+            - 서버에 저장된 사용자의 Refresh Token을 삭제하여, 현재 세션을 무효화시킵니다.
             
             **[클라이언트 처리]**
-            1.  `Authorization` 헤더에 유효한 **Access Token**을 포함하여 이 API를 호출합니다.
-            2.  API 호출 성공 여부와 관계없이, 클라이언트는 **자신이 저장하고 있던 `accessToken`과 `refreshToken`을 모두 즉시 삭제**해야 합니다.
-            3.  사용자를 로그인 페이지로 이동시킵니다.
+            - 이 API 호출 성공 시(`204 No Content` 응답), 클라이언트는 저장된 모든 토큰(Access, Refresh)을 삭제하고 사용자를 로그인 페이지로 리다이렉트해야 합니다.
             """)
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<MessageResponse>> logout(@AuthenticationPrincipal UserDetails userDetails) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         authService.logout(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("성공적으로 로그아웃되었습니다.")));
     }
 
     @Operation(summary = "이메일 중복 확인",
