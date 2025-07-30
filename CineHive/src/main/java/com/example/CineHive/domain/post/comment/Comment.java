@@ -1,13 +1,15 @@
 package com.example.CineHive.domain.post.comment;
 
 import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.global.common.BaseEntity;
+import com.example.CineHive.domain.common.BaseEntity;
 import com.example.CineHive.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @NamedEntityGraph(
         name = "Comment.withUser",
@@ -18,7 +20,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "comments")
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_comment_post_id", columnList = "post_id"),
+        @Index(name = "idx_comment_user_id", columnList = "user_id")
+})
 public class Comment extends BaseEntity {
 
     @Id
@@ -36,6 +41,7 @@ public class Comment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Builder

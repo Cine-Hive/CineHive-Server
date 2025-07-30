@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import com.example.CineHive.domain.post.dto.PostSortType;
@@ -51,4 +51,19 @@ public interface PostService {
      * @return 페이징된 게시글 요약 정보 목록
      */
     PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort);
+
+    /**
+     * 게시글의 조회수를 1 증가시킵니다.
+     * @param postId 조회수를 증가시킬 게시글의 ID
+     */
+    void incrementViews(Long postId);
+
+    /**
+     * 키워드로 게시글을 검색하고 결과를 페이징하여 반환합니다.
+     * @param keyword 검색어
+     * @param page    페이지 번호
+     * @param size    페이지 크기
+     * @return 페이징된 검색 결과
+     */
+    PagedResponse<PostSummaryResponse> searchPosts(String keyword, int page, int size);
 }

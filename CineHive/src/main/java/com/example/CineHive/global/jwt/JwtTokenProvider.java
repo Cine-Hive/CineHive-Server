@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.time.Duration; // --- [추가] Duration 클래스 import ---
 import java.util.Date;
 import java.util.function.Function;
 
@@ -30,17 +31,17 @@ public class JwtTokenProvider {
      * JwtTokenProvider 생성자입니다.
      * application.yml에 정의된 JWT 시크릿 키와 토큰 만료 시간을 주입받아 초기화합니다.
      *
-     * @param secret                 Base64로 인코딩된 JWT 시크릿 키 문자열
-     * @param accessTokenExpiration  Access Token의 만료 시간 (밀리초 단위)
-     * @param refreshTokenExpiration Refresh Token의 만료 시간 (밀리초 단위)
+     * @param secret                      Base64로 인코딩된 JWT 시크릿 키 문자열
+     * @param accessTokenExpirationIso    Access Token의 만료 시간 (ISO-8601 Duration 형식, 예: "PT30M")
+     * @param refreshTokenExpirationIso   Refresh Token의 만료 시간 (ISO-8601 Duration 형식, 예: "P30D")
      */
     public JwtTokenProvider(@Value("${jwt.secret.key}") String secret,
-                            @Value("${jwt.expiration.access-token}") long accessTokenExpiration,
-                            @Value("${jwt.expiration.refresh-token}") long refreshTokenExpiration) {
+                            @Value("${jwt.expiration.access-token}") String accessTokenExpirationIso,
+                            @Value("${jwt.expiration.refresh-token}") String refreshTokenExpirationIso) {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
-        this.accessTokenExpiration = accessTokenExpiration;
-        this.refreshTokenExpiration = refreshTokenExpiration;
+        this.accessTokenExpiration = Duration.parse(accessTokenExpirationIso).toMillis();
+        this.refreshTokenExpiration = Duration.parse(refreshTokenExpirationIso).toMillis();
     }
 
     /**

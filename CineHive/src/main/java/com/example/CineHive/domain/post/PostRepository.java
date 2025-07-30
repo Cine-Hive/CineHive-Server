@@ -1,5 +1,7 @@
 package com.example.CineHive.domain.post;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -7,53 +9,75 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
-/**
- * 게시글(Post) 엔티티에 대한 데이터 접근을 처리하는 JpaRepository입니다.
- * N+1 문제 해결을 위해 @EntityGraph를 적극적으로 사용합니다.
- */
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    /**
-     * 모든 게시글을 조회할 때, N+1 문제를 방지하기 위해 작성자(User) 정보도 함께 조회합니다.
-     * @return User 정보가 포함된 Post 엔티티 리스트
-     */
     @Override
-    @EntityGraph(value = "Post.withUser")
-    List<Post> findAll();
-
-    /**
-     * ID로 특정 게시글을 조회할 때, N+1 문제를 방지하기 위해 작성자(User) 정보도 함께 조회합니다.
-     * @param id 조회할 게시글의 ID
-     * @return User 정보가 포함된 Optional<Post> 객체
-     */
-    @Override
-    @EntityGraph(value = "Post.withUser")
+    @EntityGraph(attributePaths = {"user"})
     Optional<Post> findById(Long id);
 
-    /**
-     * 키워드를 사용하여 게시글을 검색할 때, N+1 문제를 방지하기 위해 작성자(User) 정보도 함께 조회합니다.
-     *
-     * @param keyword 검색할 키워드 문자열
-     * @return User 정보가 포함된 검색 조건에 맞는 게시글 엔티티의 리스트
-     */
-    @Query("SELECT p FROM Post p JOIN p.user u WHERE " +
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Post> findByIdAndUserId(Long id, Long userId);
+
+    @Override
+    @EntityGraph(attributePaths = {"user"})
+    Page<Post> findAll(Pageable pageable);
+
+    @Query(value = "SELECT p FROM Post p JOIN p.user u WHERE " +
             "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR p.content LIKE CONCAT('%', :keyword, '%') " +
-            "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    @EntityGraph(value = "Post.withUser")
-    List<Post> searchByKeyword(@Param("keyword") String keyword);
+            "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))",
+            countQuery = "SELECT COUNT(p) FROM Post p JOIN p.user u WHERE " +
+                    "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                    "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @EntityGraph(attributePaths = {"user"})
+    Page<Post> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.views = p.views + 1 WHERE p.id = :postId")
+    int incrementViews(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :postId")
+    int increaseLikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount > 0")
+    int decreaseLikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + 1 WHERE p.id = :postId")
+    int increaseDislikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount - 1 WHERE p.id = :postId AND p.dislikeCount > 0")
+    int decreaseDislikeCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount + 1 WHERE p.id = :postId")
+    int increaseBookmarkCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount - 1 WHERE p.id = :postId AND p.bookmarkCount > 0")
+    int decreaseBookmarkCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount + 1 WHERE p.id = :postId")
+    int increaseCommentCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
+    int decreaseCommentCount(@Param("postId") Long postId);
 
     /**
-     * 특정 사용자가 작성한 모든 게시글을 삭제합니다.
-     * 주로 회원 탈퇴 시 사용됩니다.
-     *
-     * @param email 삭제할 게시글의 작성자 이메일
+     * ID와 사용자 ID로 게시글을 삭제합니다. (소유권 검증 + 삭제 동시 처리)
+     * @return 삭제된 행(row)의 수
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
+    int deleteByIdAndUserId(Long id, Long userId);
+
+    @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.user.email = :email")
-    void deleteAllByUserEmail(@Param("email") String email);
+    int deleteAllByUserEmail(@Param("email") String email);
 }

@@ -1,9 +1,9 @@
 package com.example.CineHive.domain.post;
 
 import com.example.CineHive.domain.post.dto.*;
-import com.example.CineHive.global.common.dto.ApiResponse;
-import com.example.CineHive.global.common.dto.MessageResponse;
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.ApiResponse;
+import com.example.CineHive.domain.common.dto.MessageResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import com.example.CineHive.domain.post.bookmark.BookmarkService;
 import com.example.CineHive.domain.post.dislike.DislikeService;
@@ -66,11 +66,19 @@ public class PostController {
 
     @Operation(summary = "게시글 목록 페이징 조회",
             description = """
-               게시글 목록을 페이징하여 조회합니다.
-               - `page`: 페이지 번호 (1부터 시작).
-               - `size`: 페이지당 게시글 수.
-               - `sort`: 정렬 기준. `LATEST`(최신순), `VIEWS`(조회수순), `LIKES`(좋아요순) 중 선택 가능합니다.
-               """)
+            ### **게시글 목록을 조건에 맞게 페이징하여 조회합니다.**
+            
+            **[요청 파라미터]**
+            - **`page`**: 조회할 페이지 번호입니다. (기본값: 1, 1부터 시작)
+            - **`size`**: 한 페이지에 표시할 게시글 수입니다. (기본값: 10)
+            - **`sort`**: 정렬 기준을 지정합니다. (기본값: `LATEST`)
+                - `LATEST`: 최신순
+                - `VIEWS`: 조회수순
+                - `LIKES`: 좋아요순
+            
+            **[응답 데이터]**
+            - `PagedResponse` 객체 형태로 반환되며, 게시글 목록(`content`)과 함께 전체 페이지 수(`totalPages`), 현재 페이지 번호(`pageNumber`) 등 페이징 관련 정보가 포함됩니다.
+            """)
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> getPosts(
             @Parameter(description = "페이지 번호 (1부터 시작)")
@@ -83,13 +91,44 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 
+    @Operation(summary = "게시글 키워드 검색 페이징 조회",
+            description = """
+            ### **키워드를 사용하여 게시글을 검색하고, 결과를 페이징하여 조회합니다.**
+            
+            **[검색 대상]**
+            - 게시글 제목 (`title`)
+            - 작성자 닉네임 (`nickname`)
+            
+            **[요청 파라미터]**
+            - **`keyword`**: 검색할 키워드 (필수)
+            - **`page`**: 페이지 번호 (기본값: 1)
+            - **`size`**: 페이지당 게시글 수 (기본값: 10)
+            
+            **※ 참고:** 검색은 대소문자를 구분하지 않습니다.
+            """)
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PagedResponse<PostSummaryResponse> response = postService.searchPosts(keyword, page, size);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @Operation(summary = "새 게시글 작성",
             description = """
-               새로운 게시글을 등록합니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               - 요청 본문에 `title`과 `content`는 필수입니다.
-               - 성공 시, 생성된 게시글의 상세 정보와 함께 `201 CREATED` 상태 코드가 반환됩니다.
-               """)
+            ### **새로운 게시글을 등록합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다. (`USER` 역할 이상)
+            
+            **[요청 본문]**
+            - `title` (문자열): 게시글 제목 (필수)
+            - `content` (문자열): 게시글 내용 (필수)
+            
+            **[서버 처리 및 응답]**
+            - 성공 시, 생성된 게시글의 상세 정보(`PostDetailResponse`)와 함께 `201 CREATED` 상태 코드가 반환됩니다.
+            """)
     @PostMapping
     public ResponseEntity<ApiResponse<PostDetailResponse>> createPost(
             @Valid @RequestBody CreatePostRequest request,
@@ -100,10 +139,12 @@ public class PostController {
 
     @Operation(summary = "게시글 상세 조회",
             description = """
-               특정 ID를 가진 게시글의 상세 정보를 조회합니다.
-               - **Side Effect**: 이 API를 호출하면 해당 게시글의 조회수(`views`)가 1 증가합니다.
-               - 댓글 목록(`comments`)도 함께 포함되어 반환됩니다.
-               """)
+            ### **특정 ID를 가진 게시글의 상세 정보를 조회합니다.**
+            
+            **[주요 동작]**
+            - **조회수 증가**: 이 API를 호출하면 해당 게시글의 조회수(`views`)가 1 증가합니다.
+            - **상세 정보 반환**: 게시글의 모든 정보와 함께 댓글 목록(`comments`)도 포함되어 반환됩니다.
+            """)
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> getPostById(@PathVariable Long postId) {
         PostDetailResponse postDetailResponse = postService.getPostById(postId);
@@ -112,10 +153,19 @@ public class PostController {
 
     @Operation(summary = "게시글 수정",
             description = """
-               자신이 작성한 게시글의 제목과 내용을 수정합니다.
-               - **인증 및 권한 필요**: 게시글을 작성한 본인만 수정할 수 있습니다. 타인의 게시글 수정 시도 시 `403 Forbidden` 에러가 발생합니다.
-               - 성공 시, 수정된 게시글의 전체 상세 정보가 반환됩니다.
-               """)
+            ### **자신이 작성한 게시글의 제목과 내용을 수정합니다.**
+            
+            **[인증 및 권한]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            - **소유권 검증**: 게시글을 작성한 본인만 수정할 수 있습니다. 타인의 게시글 수정 시도 시 에러가 발생합니다.
+            
+            **[요청 본문]**
+            - `title` (문자열): 새로운 게시글 제목 (필수)
+            - `content` (문자열): 새로운 게시글 내용 (필수)
+            
+            **[응답]**
+            - 성공 시, 수정된 게시글의 전체 상세 정보(`PostDetailResponse`)가 반환됩니다.
+            """)
     @PutMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailResponse>> updatePost(
             @PathVariable Long postId,
@@ -127,10 +177,15 @@ public class PostController {
 
     @Operation(summary = "게시글 삭제",
             description = """
-               자신이 작성한 게시글을 영구적으로 삭제합니다.
-               - **인증 및 권한 필요**: 게시글을 작성한 본인 또는 `ADMIN` 역할만 삭제할 수 있습니다. 타인의 게시글 삭제 시도 시 `403 Forbidden` 에러가 발생합니다.
-               - 성공 시, 성공 메시지를 담은 응답이 반환됩니다.
-               """)
+            ### **자신이 작성한 게시글을 영구적으로 삭제합니다.**
+            
+            **[인증 및 권한]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            - **소유권 검증**: 게시글을 작성한 본인 또는 `ADMIN` 역할만 삭제할 수 있습니다.
+            
+            **[응답]**
+            - 성공 시, "게시글이 성공적으로 삭제되었습니다." 메시지를 담은 `MessageResponse`가 반환됩니다.
+            """)
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<MessageResponse>> deletePost(
             @PathVariable Long postId,
@@ -145,10 +200,15 @@ public class PostController {
 
     @Operation(summary = "게시글 좋아요",
             description = """
-               특정 게시글에 '좋아요'를 누릅니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               - **Side Effect**: 이미 '싫어요'를 누른 상태였다면, '싫어요'는 자동으로 취소됩니다.
-               """)
+            ### **특정 게시글에 '좋아요'를 누릅니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - 이미 '좋아요'를 누른 상태에서 다시 호출해도 아무 변화가 없습니다.
+            - 이미 '싫어요'를 누른 상태였다면, '싫어요'는 자동으로 취소되고 '좋아요'가 등록됩니다.
+            """)
     @PostMapping("/{postId}/likes")
     public ResponseEntity<ApiResponse<MessageResponse>> addLike(
             @PathVariable Long postId,
@@ -160,9 +220,14 @@ public class PostController {
 
     @Operation(summary = "게시글 '좋아요' 취소",
             description = """
-               특정 게시글에 눌렀던 '좋아요'를 취소합니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               """)
+            ### **특정 게시글에 눌렀던 '좋아요'를 취소합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - '좋아요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
+            """)
     @DeleteMapping("/{postId}/likes")
     public ResponseEntity<ApiResponse<MessageResponse>> removeLike(
             @PathVariable Long postId,
@@ -174,10 +239,15 @@ public class PostController {
 
     @Operation(summary = "게시글 싫어요",
             description = """
-               특정 게시글에 '싫어요'를 누릅니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               - **Side Effect**: 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소됩니다.
-               """)
+            ### **특정 게시글에 '싫어요'를 누릅니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - 이미 '싫어요'를 누른 상태에서 다시 호출해도 아무 변화가 없습니다.
+            - 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소되고 '싫어요'가 등록됩니다.
+            """)
     @PostMapping("/{postId}/dislikes")
     public ResponseEntity<ApiResponse<MessageResponse>> addDislike(
             @PathVariable Long postId,
@@ -189,9 +259,14 @@ public class PostController {
 
     @Operation(summary = "게시글 '싫어요' 취소",
             description = """
-               특정 게시글에 눌렀던 '싫어요'를 취소합니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               """)
+            ### **특정 게시글에 눌렀던 '싫어요'를 취소합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - '싫어요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
+            """)
     @DeleteMapping("/{postId}/dislikes")
     public ResponseEntity<ApiResponse<MessageResponse>> removeDislike(
             @PathVariable Long postId,
@@ -202,7 +277,15 @@ public class PostController {
     }
 
     @Operation(summary = "게시글 북마크",
-            description = "특정 게시글을 현재 로그인한 사용자의 북마크 목록에 추가합니다.")
+            description = """
+            ### **특정 게시글을 북마크 목록에 추가합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - 이미 북마크한 게시글을 다시 요청하면 중복으로 추가되지 않고, 에러(예: 409 Conflict)가 발생할 수 있습니다.
+            """)
     @PostMapping("/{postId}/bookmarks")
     public ResponseEntity<ApiResponse<MessageResponse>> addBookmark(
             @PathVariable Long postId,
@@ -212,7 +295,15 @@ public class PostController {
     }
 
     @Operation(summary = "게시글 북마크 취소",
-            description = "현재 로그인한 사용자의 북마크 목록에서 특정 게시글을 삭제합니다.")
+            description = """
+            ### **북마크 목록에서 특정 게시글을 삭제합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[주요 동작]**
+            - 북마크한 기록이 있는 게시글에 대해서만 정상적으로 취소됩니다.
+            """)
     @DeleteMapping("/{postId}/bookmarks")
     public ResponseEntity<ApiResponse<MessageResponse>> removeBookmark(
             @PathVariable Long postId,
@@ -223,11 +314,21 @@ public class PostController {
 
     @Operation(summary = "게시글 신고",
             description = """
-               특정 게시글을 신고합니다.
-               - **인증 필요**: `USER` 역할 이상의 권한이 필요합니다.
-               - **규칙**: 자신의 게시글은 신고할 수 없으며, 동일한 게시글을 중복 신고할 수 없습니다.
-               - 성공 시, `201 CREATED` 상태 코드가 반환됩니다.
-               """)
+            ### **부적절한 게시글을 신고합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[요청 본문]**
+            - `reason` (문자열): 신고 사유 (필수)
+            
+            **[주요 규칙]**
+            - 자신의 게시글은 신고할 수 없습니다.
+            - 동일한 게시글을 중복해서 신고할 수 없습니다.
+            
+            **[응답]**
+            - 성공 시, 신고 접수 완료 메시지와 함께 `201 CREATED` 상태 코드가 반환됩니다.
+            """)
     @PostMapping("/{postId}/reports")
     public ResponseEntity<ApiResponse<MessageResponse>> reportPost(
             @PathVariable Long postId,

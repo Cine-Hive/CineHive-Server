@@ -1,12 +1,12 @@
 package com.example.CineHive.domain.auth;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
-import com.example.CineHive.global.config.security.OAuthProperties;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
 import com.example.CineHive.domain.user.Gender;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRole;
+import com.example.CineHive.global.config.security.OAuthProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.user.UserRepository;
@@ -17,9 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +35,12 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     private final List<OAuth2Client> clients;
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository; // <-- Repository 주입
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
 
     @Value("${jwt.expiration.refresh-token}")
-    private long refreshTokenExpiration;
+    private String refreshTokenExpirationIso;
 
     private Map<ProviderType, OAuth2Client> clientMap;
 
@@ -61,7 +63,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     @Override
     @Transactional
-    public LoginResponse loginWithCode(ProviderType providerType, String code, String receivedState, String sessionState) {
+    public LoginResponse loginWithCode(ProviderType providerType, String code, String receivedState, String sessionState, String userAgent) {
         if (providerType.isStateRequired()) {
             if (sessionState == null || !sessionState.equals(receivedState)) {
                 log.warn("OAuth State 값이 일치하지 않습니다. CSRF 공격일 수 있습니다. Session State: {}, Received State: {}", sessionState, receivedState);
@@ -70,45 +72,66 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         }
 
         OAuth2Client client = getClient(providerType);
-        OAuth2UserInfo userInfo = client.getUserInfo(code, receivedState)
-                .onErrorMap(error -> {
-                    log.error("OAuth 통신 오류 (인가 코드 사용): {}", error.getMessage());
-                    return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-                })
-                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
-                .block();
+        OAuth2UserInfo userInfo;
+        try {
+            userInfo = client.getUserInfo(code, receivedState);
+        } catch (HttpClientErrorException e) {
+            log.error("OAuth 통신 오류 (인가 코드 사용) - HTTP Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+        } catch (RestClientException | IllegalStateException e) {
+            log.error("OAuth 통신 오류 (인가 코드 사용): {}", e.getMessage());
+            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+        }
 
-        return processLogin(userInfo);
+        if (userInfo == null) {
+            throw new BusinessException("소셜 로그인 정보를 가져오지 못했습니다.", ErrorCode.INVALID_OAUTH_TOKEN);
+        }
+
+        return processLogin(userInfo, userAgent);
     }
 
     @Override
     @Transactional
-    public LoginResponse loginWithAccessToken(ProviderType providerType, String accessToken) {
+    public LoginResponse loginWithAccessToken(ProviderType providerType, String accessToken, String userAgent) {
         OAuth2Client client = getClient(providerType);
-        OAuth2UserInfo userInfo = client.getUserInfoByAccessToken(accessToken)
-                .onErrorMap(error -> {
-                    log.error("OAuth 통신 오류 (액세스 토큰 사용): {}", error.getMessage());
-                    return new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
-                })
-                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN)))
-                .block();
-        return processLogin(userInfo);
+        OAuth2UserInfo userInfo;
+        try {
+            userInfo = client.getUserInfoByAccessToken(accessToken);
+        } catch (HttpClientErrorException e) {
+            log.error("OAuth 통신 오류 (액세스 토큰 사용) - HTTP Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+        } catch (RestClientException | IllegalStateException e) {
+            log.error("OAuth 통신 오류 (액세스 토큰 사용): {}", e.getMessage());
+            throw new BusinessException(ErrorCode.OAUTH_COMMUNICATION_ERROR);
+        }
+
+        if (userInfo == null) {
+            throw new BusinessException("소셜 로그인 정보를 가져오지 못했습니다.", ErrorCode.INVALID_OAUTH_TOKEN);
+        }
+
+        return processLogin(userInfo, userAgent);
     }
 
-    private LoginResponse processLogin(OAuth2UserInfo userInfo) {
+    private LoginResponse processLogin(OAuth2UserInfo userInfo, String userAgent) {
         if (userInfo == null || userInfo.email() == null) {
             throw new BusinessException("소셜 로그인 정보 처리 중 오류가 발생했습니다 (이메일 정보 없음).", ErrorCode.OAUTH_COMMUNICATION_ERROR);
         }
+
+        // 소셜 계정으로 사용자를 찾거나, 없으면 새로 등록 (Find or Create)
         boolean isNewUser = !userRepository.existsByEmail(userInfo.email());
         User user = userRepository.findByEmail(userInfo.email())
                 .orElseGet(() -> registerNewUser(userInfo));
 
-        // --- 수정된 부분: Access Token과 Refresh Token을 모두 생성 ---
+        // 소셜 로그인 시에도 로그인 기록을 남김
+        String browser = parseBrowserFromUserAgent(userAgent);
+        user.updateLoginHistory(browser);
+        log.debug("소셜 로그인 기록 업데이트. 사용자 ID: {}", user.getId());
+
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        // --- 추가된 부분: Refresh Token을 Redis에 저장 ---
-        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenExpiration / 1000));
+        long refreshTokenValidityInSeconds = Duration.parse(refreshTokenExpirationIso).toSeconds();
+        refreshTokenRepository.save(new RefreshToken(user.getEmail(), refreshToken, refreshTokenValidityInSeconds));
         log.info("Refresh Token이 Redis에 저장되었습니다. User: {}", user.getEmail());
 
         return new LoginResponse(accessToken, refreshToken, isNewUser, LoginResponse.UserInfo.from(user));
@@ -145,6 +168,16 @@ public class OAuth2ServiceImpl implements OAuth2Service {
             throw new BusinessException("지원하지 않는 소셜 로그인입니다: " + providerType, ErrorCode.INVALID_INPUT_VALUE);
         }
         return client;
+    }
+
+    private String parseBrowserFromUserAgent(String userAgent) {
+        if (userAgent == null || userAgent.isEmpty()) return "Unknown";
+        if (userAgent.contains("Chrome") && !userAgent.contains("Edg")) return "Chrome";
+        if (userAgent.contains("Edg")) return "Edge";
+        if (userAgent.contains("Safari") && !userAgent.contains("Chrome")) return "Safari";
+        if (userAgent.contains("Firefox")) return "Firefox";
+        if (userAgent.contains("MSIE") || userAgent.contains("Trident")) return "Internet Explorer";
+        return "Other";
     }
 
     private String buildNaverRedirectUrl(String state) {

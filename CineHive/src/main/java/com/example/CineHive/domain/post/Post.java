@@ -1,19 +1,22 @@
 package com.example.CineHive.domain.post;
 
 import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.global.common.BaseEntity;
+import com.example.CineHive.domain.common.BaseEntity;
 import com.example.CineHive.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 게시글 엔티티
+ * 게시글 엔티티입니다.
+ * 모든 카운트(조회수, 좋아요 등)는 데이터 정합성을 위해 Repository 레벨의 원자적 업데이트 쿼리를 통해 관리됩니다.
  */
 @NamedEntityGraph(
         name = "Post.withUser",
@@ -41,6 +44,7 @@ public class Post extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -71,43 +75,5 @@ public class Post extends BaseEntity {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
-    }
-
-    public void increaseViews() {
-        this.views++;
-    }
-
-    public void increaseBookmarkCount() {
-        this.bookmarkCount++;
-    }
-
-    public void decreaseBookmarkCount() {
-        if (this.bookmarkCount > 0) {
-            this.bookmarkCount--;
-        }
-    }
-
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
-    }
-
-    public void increaseDislikeCount() {
-        this.dislikeCount++;
-    }
-
-    public void decreaseDislikeCount() {
-        if (this.dislikeCount > 0) {
-            this.dislikeCount--;
-        }
-    }
-
-    public void updateCommentCount(int count) {
-        this.commentCount = count;
     }
 }

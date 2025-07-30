@@ -2,34 +2,38 @@ package com.example.CineHive.domain.post.dislike;
 
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DislikeRepository extends JpaRepository<PostDislike, Long> {
+public interface DislikeRepository extends JpaRepository<Dislike, Long> {
+
+    Optional<Dislike> findByUserAndPost(User user, Post post);
 
     boolean existsByUserAndPost(User user, Post post);
 
-    Optional<PostDislike> findByUserAndPost(User user, Post post);
-
     int countByPost_Id(Long postId);
 
-    /**
-     * 특정 게시글에 '싫어요'를 누른 모든 사용자 정보를 함께 조회합니다.
-     * @param post 조회할 게시글 엔티티
-     * @return User 정보가 포함된 PostDislike 엔티티 리스트
-     */
-    @EntityGraph(value = "PostDislike.withUser")
-    List<PostDislike> findAllByPost(Post post);
+    @EntityGraph(attributePaths = {"user"})
+    Page<Dislike> findAllByPost(Post post, Pageable pageable);
 
-    @Modifying
-    @Query("DELETE FROM PostDislike d WHERE d.user.email = :email")
-    void deleteAllByUserEmail(@Param("email") String email);
+    /**
+     * 특정 사용자와 게시글에 해당하는 '싫어요'를 삭제합니다.
+     * @return 삭제된 행(row)의 수
+     */
+    @Modifying(clearAutomatically = true)
+    int deleteByUserAndPost(User user, Post post);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Dislike d WHERE d.user.email = :email")
+    int deleteAllByUserEmail(@Param("email") String email);
 }

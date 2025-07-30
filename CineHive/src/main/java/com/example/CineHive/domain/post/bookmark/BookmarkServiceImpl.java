@@ -1,11 +1,11 @@
 package com.example.CineHive.domain.post.bookmark;
 
+import com.example.CineHive.domain.common.DomainFinder;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,69 +14,57 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookmarkServiceImpl implements BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
-    private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final DomainFinder domainFinder;
 
     @Override
     @Transactional
     public void addBookmark(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
+        User user = domainFinder.findUserByEmail(userEmail);
+        Post post = domainFinder.findPostById(postId);
 
-        if (bookmarkRepository.existsByUserAndPost(user, post)) {
+        if (bookmarkRepository.existsByUserIdAndPostId(user.getId(), post.getId())) {
+            log.debug("사용자 ID: {}가 이미 게시글 ID: {}를 북마크했습니다.", user.getId(), post.getId());
             throw new BusinessException(ErrorCode.BOOKMARK_ALREADY_EXISTS);
         }
 
-        Bookmark bookmark = Bookmark.builder()
-                .user(user)
-                .post(post)
-                .build();
-        bookmarkRepository.save(bookmark);
-
-        post.increaseBookmarkCount();
-        log.info("User {} bookmarked post {}", user.getId(), post.getId());
+        bookmarkRepository.save(Bookmark.builder().user(user).post(post).build());
+        if (postRepository.increaseBookmarkCount(postId) == 0) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        log.info("사용자 ID: {}가 게시글 ID: {}를 북마크했습니다.", user.getId(), post.getId());
     }
 
     @Override
     @Transactional
     public void removeBookmark(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
+        User user = domainFinder.findUserByEmail(userEmail);
+        Post post = domainFinder.findPostById(postId);
 
-        Bookmark bookmark = bookmarkRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOOKMARK_NOT_FOUND));
+        int deleted = bookmarkRepository.deleteByUserAndPost(user, post);
+        if (deleted == 0) {
+            throw new BusinessException(ErrorCode.BOOKMARK_NOT_FOUND);
+        }
 
-        bookmarkRepository.delete(bookmark);
-
-        post.decreaseBookmarkCount();
-        log.info("User {} removed bookmark from post {}", user.getId(), post.getId());
+        if (postRepository.decreaseBookmarkCount(postId) == 0) {
+            log.warn("북마크 수 감소 실패: 존재하지 않는 게시글(ID: {})에 대한 동시성 문제 가능성", postId);
+        }
+        log.info("사용자 ID: {}가 게시글 ID: {}의 북마크를 취소했습니다.", user.getId(), post.getId());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int getBookmarkCount(Long postId) {
-        Post post = findPostById(postId);
-        return post.getBookmarkCount();
+        domainFinder.findPostById(postId);
+        return bookmarkRepository.countByPost_Id(postId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean isBookmarkedByUser(Long postId, String userEmail) {
-        User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
-        return bookmarkRepository.existsByUserAndPost(user, post);
-    }
-
-    private User findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    private Post findPostById(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+        User user = domainFinder.findUserByEmail(userEmail);
+        return bookmarkRepository.existsByUserIdAndPostId(user.getId(), postId);
     }
 }

@@ -3,7 +3,7 @@ package com.example.CineHive.domain.media;
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.admin.AdminHomeChartService;

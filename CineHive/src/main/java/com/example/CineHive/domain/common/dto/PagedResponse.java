@@ -1,4 +1,4 @@
-package com.example.CineHive.global.common.dto;
+package com.example.CineHive.domain.common.dto;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.domain.media.dto.MediaChartResponse;

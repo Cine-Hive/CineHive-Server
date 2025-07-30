@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.admin;
 
-import com.example.CineHive.global.common.dto.ApiResponse;
-import com.example.CineHive.global.common.dto.MessageResponse;
+import com.example.CineHive.domain.common.dto.ApiResponse;
+import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.report.dto.ReportResponse;
 import com.example.CineHive.domain.report.ReportStatus;
 import io.swagger.v3.oas.annotations.Operation;

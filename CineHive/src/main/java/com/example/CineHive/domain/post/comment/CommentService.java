@@ -3,8 +3,7 @@ package com.example.CineHive.domain.post.comment;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
-
-import java.util.List;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 
 /**
  * 댓글 관련 비즈니스 로직을 처리하는 서비스의 인터페이스입니다.
@@ -22,12 +21,13 @@ public interface CommentService {
     CommentResponse addComment(Long postId, CreateCommentRequest request, String userEmail);
 
     /**
-     * 특정 게시글에 달린 모든 댓글을 조회합니다.
-     *
-     * @param postId 댓글 목록을 조회할 게시글의 ID
-     * @return 해당 게시글의 댓글 DTO 리스트
+     * 특정 게시글의 댓글 목록을 페이징하여 조회합니다.
+     * @param postId 게시글 ID
+     * @param page   페이지 번호 (1부터 시작)
+     * @param size   페이지 당 항목 수
+     * @return 페이징된 댓글 목록 응답 DTO
      */
-    List<CommentResponse> getCommentsByPost(Long postId);
+    PagedResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size);
 
     /**
      * 기존 댓글의 내용을 수정합니다.
