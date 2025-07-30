@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
 
     @Operation(summary = "회원가입",
             description = "새로운 사용자를 시스템에 등록합니다. 성공 시 `201 CREATED` 상태 코드와 성공 메시지를 반환합니다.")
@@ -108,7 +107,7 @@ public class AuthController {
             description = "회원가입 시 이메일 사용 가능 여부를 확인합니다. 사용 가능할 경우 `isAvailable` 필드가 `true`로 반환됩니다.")
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<AvailabilityResponse>> checkEmail(@RequestParam String email) {
-        boolean isAvailable = userService.isEmailAvailable(email);
+        boolean isAvailable = authService.isEmailAvailable(email);
         return ResponseEntity.ok(ApiResponse.ok(new AvailabilityResponse(isAvailable)));
     }
 
@@ -116,7 +115,7 @@ public class AuthController {
             description = "회원가입 시 닉네임 사용 가능 여부를 확인합니다. 사용 가능할 경우 `isAvailable` 필드가 `true`로 반환됩니다.")
     @GetMapping("/check-nickname")
     public ResponseEntity<ApiResponse<AvailabilityResponse>> checkNickname(@RequestParam String nickname) {
-        boolean isAvailable = userService.isNicknameAvailable(nickname);
+        boolean isAvailable = authService.isNicknameAvailable(nickname);
         return ResponseEntity.ok(ApiResponse.ok(new AvailabilityResponse(isAvailable)));
     }
 }
