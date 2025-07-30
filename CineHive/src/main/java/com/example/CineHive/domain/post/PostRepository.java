@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,12 +25,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"user"})
     Page<Post> findAll(Pageable pageable);
 
-    @Query("SELECT p FROM Post p JOIN p.user u WHERE " +
+    @Query(value = "SELECT p FROM Post p JOIN p.user u WHERE " +
             "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+            "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))",
+            countQuery = "SELECT COUNT(p) FROM Post p JOIN p.user u WHERE " +
+                    "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                    "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     @EntityGraph(attributePaths = {"user"})
-    List<Post> searchByKeyword(@Param("keyword") String keyword);
+    Page<Post> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.views = p.views + 1 WHERE p.id = :postId")
@@ -62,9 +63,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     int decreaseBookmarkCount(@Param("postId") Long postId);
 
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Post p SET p.commentCount = :count WHERE p.id = :postId")
-    int updateCommentCount(@Param("postId") Long postId, @Param("count") int count);
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount + 1 WHERE p.id = :postId")
+    int increaseCommentCount(@Param("postId") Long postId);
 
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
+    int decreaseCommentCount(@Param("postId") Long postId);
+
+    /**
+     * ID와 사용자 ID로 게시글을 삭제합니다. (소유권 검증 + 삭제 동시 처리)
+     * @return 삭제된 행(row)의 수
+     */
+    @Modifying(clearAutomatically = true)
+    int deleteByIdAndUserId(Long id, Long userId);
 
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.user.email = :email")
