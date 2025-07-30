@@ -82,16 +82,14 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteComment(Long commentId, String userEmail) {
         User user = domainFinder.findUserByEmail(userEmail);
-        Comment comment = domainFinder.findCommentById(commentId); // 게시글 ID를 얻기 위해 먼저 조회
+        Comment comment = domainFinder.findCommentById(commentId);
         Long postId = comment.getPost().getId();
 
-        // 한 번의 쿼리로 소유권 검증과 삭제를 동시에 처리
         int deletedRows = commentRepository.deleteByIdAndUserId(commentId, user.getId());
         if (deletedRows == 0) {
-            // 삭제된 행이 없다면, 소유권이 없거나 이미 삭제된 경우
-            if (commentRepository.existsById(commentId)) { // 존재하는데 삭제가 안됐으면 권한 문제
+            if (commentRepository.existsById(commentId)) {
                 throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-            } else { // 존재하지도 않으면 NOT_FOUND
+            } else {
                 throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
             }
         }
