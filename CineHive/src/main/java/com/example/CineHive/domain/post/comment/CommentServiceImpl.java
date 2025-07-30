@@ -5,7 +5,7 @@ import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.user.User;
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;

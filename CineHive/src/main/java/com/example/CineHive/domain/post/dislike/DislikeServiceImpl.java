@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class DislikeServiceImpl implements DislikeService {
 
     private final DislikeRepository dislikeRepository;
@@ -28,13 +29,15 @@ public class DislikeServiceImpl implements DislikeService {
         User user = findUserByEmail(userEmail);
         Post post = findPostById(postId);
 
-        if (dislikeRepository.existsByUserAndPost(user, post)) {
+        dislikeRepository.findByUserAndPost(user, post).ifPresent(d -> {
             throw new BusinessException(ErrorCode.DISLIKE_ALREADY_EXISTS);
-        }
+        });
 
         likeRepository.findByUserAndPost(user, post).ifPresent(like -> {
             likeRepository.delete(like);
-            post.decreaseLikeCount();
+            if (postRepository.decreaseLikeCount(postId) == 0) {
+                throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+            }
             log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소하고 '싫어요'를 추가했습니다.", user.getId(), post.getId());
         });
 
@@ -43,8 +46,9 @@ public class DislikeServiceImpl implements DislikeService {
                 .post(post)
                 .build();
         dislikeRepository.save(dislike);
-
-        post.increaseDislikeCount();
+        if (postRepository.increaseDislikeCount(postId) == 0) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
         log.info("사용자 ID: {}가 게시글 ID: {}에 '싫어요'를 눌렀습니다.", user.getId(), post.getId());
     }
 
@@ -58,16 +62,16 @@ public class DislikeServiceImpl implements DislikeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DISLIKE_NOT_FOUND));
 
         dislikeRepository.delete(dislike);
-
-        post.decreaseDislikeCount();
+        if (postRepository.decreaseDislikeCount(postId) == 0) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
         log.info("사용자 ID: {}가 게시글 ID: {}의 '싫어요'를 취소했습니다.", user.getId(), post.getId());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int getDislikeCount(Long postId) {
-        Post post = findPostById(postId);
-        return post.getDislikeCount();
+        findPostById(postId);
+        return dislikeRepository.countByPost_Id(postId);
     }
 
     private User findUserByEmail(String email) {

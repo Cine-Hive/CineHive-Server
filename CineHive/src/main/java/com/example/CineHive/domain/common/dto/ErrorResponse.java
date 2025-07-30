@@ -1,4 +1,4 @@
-package com.example.CineHive.global.common.dto;
+package com.example.CineHive.domain.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;

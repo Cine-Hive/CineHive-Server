@@ -1,4 +1,4 @@
-package com.example.CineHive.global.common;
+package com.example.CineHive.domain.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import reactor.core.publisher.Mono;
 
 /**

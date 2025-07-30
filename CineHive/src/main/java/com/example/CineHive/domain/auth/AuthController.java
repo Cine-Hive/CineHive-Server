@@ -1,8 +1,8 @@
 package com.example.CineHive.domain.auth;
 
 import com.example.CineHive.domain.auth.dto.*;
-import com.example.CineHive.global.common.dto.ApiResponse;
-import com.example.CineHive.global.common.dto.MessageResponse;
+import com.example.CineHive.domain.common.dto.ApiResponse;
+import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

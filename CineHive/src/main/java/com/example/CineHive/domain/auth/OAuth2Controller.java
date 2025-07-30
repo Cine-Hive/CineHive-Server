@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.auth;
 
 import com.example.CineHive.domain.auth.dto.LoginResponse;
-import com.example.CineHive.global.common.dto.ApiResponse;
+import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.auth.dto.AccessTokenRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

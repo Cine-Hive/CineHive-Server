@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LikeServiceImpl implements LikeService {
 
     private final LikeRepository likeRepository;
@@ -32,21 +33,18 @@ public class LikeServiceImpl implements LikeService {
             throw new BusinessException(ErrorCode.LIKE_ALREADY_EXISTS);
         }
 
-        // '싫어요'를 누른 상태였다면 '싫어요'를 취소
         dislikeRepository.findByUserAndPost(user, post).ifPresent(dislike -> {
             dislikeRepository.delete(dislike);
-            post.decreaseDislikeCount();
-            log.info("사용자 ID: {}가 게시글 ID: {}의 '싫어요'를 취소하고 '좋아요'를 추가했습니다.", user.getId(), post.getId());
+            postRepository.decreaseDislikeCount(postId);
+            log.info("사용자 ID: {}가 게시글 ID: {}의 '싫어요'를 취소하고 '좋아요'를 추가합니다.", user.getId(), post.getId());
         });
 
-        // PostLike 엔티티를 생성하고 저장 (버그 수정)
         Like like = Like.builder()
                 .user(user)
                 .post(post)
                 .build();
         likeRepository.save(like);
-
-        post.increaseLikeCount();
+        postRepository.increaseLikeCount(postId);
         log.info("사용자 ID: {}가 게시글 ID: {}에 '좋아요'를 눌렀습니다.", user.getId(), post.getId());
     }
 
@@ -56,21 +54,20 @@ public class LikeServiceImpl implements LikeService {
         User user = findUserByEmail(userEmail);
         Post post = findPostById(postId);
 
-        // PostLike 엔티티를 조회 (버그 수정)
         Like like = likeRepository.findByUserAndPost(user, post)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND));
 
         likeRepository.delete(like);
-
-        post.decreaseLikeCount();
+        postRepository.decreaseLikeCount(postId);
         log.info("사용자 ID: {}가 게시글 ID: {}의 '좋아요'를 취소했습니다.", user.getId(), post.getId());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int getLikeCount(Long postId) {
-        Post post = findPostById(postId);
-        return post.getLikeCount();
+        if (!postRepository.existsById(postId)) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        return likeRepository.countByPost_Id(postId);
     }
 
     private User findUserByEmail(String email) {

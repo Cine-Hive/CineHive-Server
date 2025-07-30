@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.global.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PagedResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import com.example.CineHive.domain.post.dto.PostSortType;
