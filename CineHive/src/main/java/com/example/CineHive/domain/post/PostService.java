@@ -51,4 +51,10 @@ public interface PostService {
      * @return 페이징된 게시글 요약 정보 목록
      */
     PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort);
+
+    /**
+     * 게시글의 조회수를 1 증가시킵니다.
+     * @param postId 조회수를 증가시킬 게시글의 ID
+     */
+    void incrementViews(Long postId);
 }
