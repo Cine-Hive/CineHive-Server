@@ -30,32 +30,35 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostDetailResponse createPost(CreatePostRequest request, String userEmail) {
         User user = findUserByEmail(userEmail);
-
         Post post = Post.builder()
                 .title(request.title())
                 .content(request.content())
                 .user(user)
                 .build();
-
         Post savedPost = postRepository.save(post);
         return PostDetailResponse.from(savedPost);
     }
 
     @Override
-    @Transactional
     public PostDetailResponse getPostById(Long postId) {
         Post post = findPostById(postId);
-        post.increaseViews(); // Dirty Checking에 의해 update 쿼리 발생
         return PostDetailResponse.from(post);
+    }
+
+    @Override
+    @Transactional
+    public void incrementViews(Long postId) {
+        int updatedRows = postRepository.incrementViews(postId);
+        if (updatedRows == 0) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
     }
 
     @Override
     @Transactional
     public PostDetailResponse updatePost(Long postId, UpdatePostRequest request, String userEmail) {
         User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
-
-        verifyPostOwnership(post, user);
+        Post post = findPostAndVerifyOwner(postId, user.getId());
 
         post.update(request.title(), request.content());
         return PostDetailResponse.from(post);
@@ -65,9 +68,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void deletePost(Long postId, String userEmail) {
         User user = findUserByEmail(userEmail);
-        Post post = findPostById(postId);
-
-        verifyPostOwnership(post, user);
+        Post post = findPostAndVerifyOwner(postId, user.getId());
 
         postRepository.delete(post);
     }
@@ -97,9 +98,21 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private void verifyPostOwnership(Post post, User user) {
-        if (!post.getUser().equals(user)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
+    /**
+     * 게시글을 조회하고 소유권을 검증합니다.
+     * 한 번의 쿼리로 조회와 검증을 시도하고, 실패 시 원인을 명확히 구분하여 예외를 발생시킵니다.
+     * @param postId 조회할 게시글 ID
+     * @param userId 검증할 사용자 ID
+     * @return 검증된 Post 엔티티
+     */
+    private Post findPostAndVerifyOwner(Long postId, Long userId) {
+        return postRepository.findByIdAndUserId(postId, userId)
+                .orElseThrow(() -> {
+                    if (postRepository.existsById(postId)) {
+                        throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+                    } else {
+                        throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+                    }
+                });
     }
 }
