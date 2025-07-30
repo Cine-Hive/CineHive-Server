@@ -1,10 +1,11 @@
 package com.example.CineHive.domain.auth;
 
 import com.example.CineHive.domain.auth.dto.LoginResponse;
-import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.auth.dto.AccessTokenRequest;
+import com.example.CineHive.domain.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -90,7 +91,8 @@ public class OAuth2Controller {
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
             @Parameter(description = "플랫폼으로부터 발급받은 인가 코드") @RequestParam @NotBlank String code,
             @Parameter(description = "CSRF 방어용 상태 토큰") @RequestParam(name = "state", required = false) String receivedState,
-            @Parameter(hidden = true) @RequestHeader("User-Agent") String userAgent,
+            @Parameter(name = "User-Agent", description = "로그인 이력 기록을 위한 클라이언트의 브라우저 정보", in = ParameterIn.HEADER, required = true)
+            @RequestHeader("User-Agent") String userAgent,
             HttpSession session) {
 
         String sessionState = (String) session.getAttribute(STATE_SESSION_ATTRIBUTE_NAME);
@@ -130,7 +132,8 @@ public class OAuth2Controller {
     public ResponseEntity<ApiResponse<LoginResponse>> loginFromApp(
             @Parameter(description = "소셜 로그인 플랫폼") @PathVariable ProviderType platform,
             @Valid @RequestBody AccessTokenRequest request,
-            @Parameter(hidden = true) @RequestHeader("User-Agent") String userAgent) {
+            @Parameter(name = "User-Agent", description = "로그인 이력 기록을 위한 클라이언트의 앱 정보", in = ParameterIn.HEADER, required = true)
+            @RequestHeader("User-Agent") String userAgent) {
 
         LoginResponse loginResponse = oauth2Service.loginWithAccessToken(platform, request.accessToken(), userAgent);
         return ResponseEntity.ok(ApiResponse.ok(loginResponse));
