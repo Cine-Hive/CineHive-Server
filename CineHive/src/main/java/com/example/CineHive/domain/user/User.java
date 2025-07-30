@@ -1,5 +1,6 @@
 package com.example.CineHive.domain.user;
 
+import com.example.CineHive.domain.auth.LoginHistory;
 import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.auth.dto.RegisterRequest;
 import com.example.CineHive.domain.common.BaseEntity;
@@ -63,6 +64,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private UserRole role;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private LoginHistory loginHistory;
+
     @Builder
     public User(String email, String password, String name, String nickname, Gender gender, Set<Genre> genres, ProviderType provider, UserRole role) {
         this.email = email;
@@ -111,6 +115,22 @@ public class User extends BaseEntity {
         this.genres.clear();
         if (newGenres != null) {
             this.genres.addAll(newGenres);
+        }
+    }
+
+    /**
+     * 사용자의 로그인 기록을 업데이트합니다.
+     * LoginHistory가 없으면 새로 생성하고, 있으면 기존 정보를 업데이트합니다.
+     * @param browser 로그인한 브라우저 정보
+     */
+    public void updateLoginHistory(String browser) {
+        if (this.loginHistory == null) {
+            this.loginHistory = LoginHistory.builder()
+                    .user(this)
+                    .browser(browser)
+                    .build();
+        } else {
+            this.loginHistory.updateLoginInfo(browser);
         }
     }
 }
