@@ -57,4 +57,13 @@ public interface PostService {
      * @param postId 조회수를 증가시킬 게시글의 ID
      */
     void incrementViews(Long postId);
+
+    /**
+     * 키워드로 게시글을 검색하고 결과를 페이징하여 반환합니다.
+     * @param keyword 검색어
+     * @param page    페이지 번호
+     * @param size    페이지 크기
+     * @return 페이징된 검색 결과
+     */
+    PagedResponse<PostSummaryResponse> searchPosts(String keyword, int page, int size);
 }
