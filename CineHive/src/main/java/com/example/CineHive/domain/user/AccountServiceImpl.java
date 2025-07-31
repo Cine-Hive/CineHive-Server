@@ -48,16 +48,13 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void changePassword(String email, UpdatePasswordRequest request) {
-        User user = findUserByEmail(email);
+        User user = domainFinder.findUserByEmail(email);
 
         if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        String newPassword = request.newPassword();
-        validatePasswordPolicy(newPassword);
-
-        user.changePassword(passwordEncoder.encode(newPassword));
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
         log.info("사용자({}), 비밀번호를 변경했습니다.", email);
     }
 
