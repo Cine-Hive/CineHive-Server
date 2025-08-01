@@ -1,9 +1,14 @@
 package com.example.CineHive.domain.user;
 
+import com.example.CineHive.domain.common.dto.ApiResponse;
+import com.example.CineHive.domain.common.dto.MessageResponse;
+import com.example.CineHive.domain.user.dto.UpdatePasswordRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AccountController {
 
-    // TODO: private final AccountService accountService;
+    private final AccountService accountService;
 
     // =========================================
     // == 계정 관리
@@ -28,6 +33,33 @@ public class AccountController {
     public void getMyInfo(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         // TODO: 1. AccountService.getAccountInfo(userEmail) 호출
         // TODO: 2. AccountInfoResponse DTO로 변환하여 반환
+    }
+
+    @Operation(summary = "비밀번호 변경",
+            description = """
+            ### **현재 로그인된 사용자의 비밀번호를 변경합니다.**
+            
+            **[인증]**
+            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
+            
+            **[요청 본문]**
+            - `oldPassword` (문자열): 현재 사용 중인 비밀번호 (필수)
+            - `newPassword` (문자열): 새로 설정할 비밀번호 (필수)
+            
+            **[주요 검증 규칙]**
+            - 기존 비밀번호가 일치해야 합니다.
+            - 새로운 비밀번호는 보안 정책(길이, 영문/숫자/특수문자 조합)을 준수해야 합니다.
+            - **최근에 사용했던 비밀번호는 재사용할 수 없습니다.**
+            
+            **[응답]**
+            - 성공 시, "비밀번호가 성공적으로 변경되었습니다." 메시지를 반환합니다.
+            """)
+    @PatchMapping("/password")
+    public ResponseEntity<ApiResponse<MessageResponse>> changeMyPassword(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdatePasswordRequest request) {
+        accountService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("비밀번호가 성공적으로 변경되었습니다.")));
     }
 
     @Operation(summary = "내 정보 수정",

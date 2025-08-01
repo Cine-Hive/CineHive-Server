@@ -14,16 +14,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public boolean isEmailAvailable(String email) {
-        return !userRepository.existsByEmail(email);
-    }
-
-    @Override
-    public boolean isNicknameAvailable(String nickname) {
-        return !userRepository.existsByNickname(nickname);
-    }
-
-    @Override
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
