@@ -4,6 +4,8 @@ import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.post.PostRepository;
 import com.example.CineHive.domain.post.comment.Comment;
 import com.example.CineHive.domain.post.comment.CommentRepository;
+import com.example.CineHive.domain.review.Review;
+import com.example.CineHive.domain.review.ReviewRepository;
 import com.example.CineHive.domain.user.User;
 import com.example.CineHive.domain.user.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;
@@ -23,6 +25,7 @@ public class DomainFinder {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final ReviewRepository reviewRepository;
 
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -65,5 +68,10 @@ public class DomainFinder {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
         return comment;
+    }
+
+    public Review findReviewById(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
     }
 }
