@@ -86,7 +86,6 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<PagedResponse<ReviewResponse>>> getReviewsForMedia(
             @Parameter(description = "미디어 타입 (MOVIE 또는 TV)") @PathVariable MediaType mediaType,
             @Parameter(description = "미디어의 TMDB ID") @PathVariable Integer tmdbId,
-            @Parameter(hidden = true)
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
         PagedResponse<ReviewResponse> response = reviewService.getReviewsForMedia(tmdbId, mediaType, pageable);
