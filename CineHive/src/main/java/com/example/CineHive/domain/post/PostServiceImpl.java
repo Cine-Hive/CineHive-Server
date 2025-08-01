@@ -102,37 +102,21 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort) {
-        log.debug("게시글 목록 조회를 시작합니다. 페이지: {}, 사이즈: {}, 정렬: {}", page, size, sort);
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, sort.getDbField()));
+    public PagedResponse<PostSummaryResponse> getPosts(Pageable pageable) {
+        log.debug("게시글 목록 조회를 시작합니다. Pageable: {}", pageable);
         Page<Post> postPage = postRepository.findAll(pageable);
 
         log.debug("{} 페이지에서 {}개의 게시글을 조회했습니다.", postPage.getNumber() + 1, postPage.getNumberOfElements());
-        return new PagedResponse<>(
-                postPage.getContent().stream().map(PostSummaryResponse::from).toList(),
-                postPage.getNumber() + 1,
-                postPage.getSize(),
-                postPage.getTotalElements(),
-                postPage.getTotalPages(),
-                postPage.isLast()
-        );
+        return PagedResponse.from(postPage, PostSummaryResponse::from);
     }
 
     @Override
-    public PagedResponse<PostSummaryResponse> searchPosts(String keyword, int page, int size) {
-        log.debug("게시글 키워드 검색을 시작합니다. 키워드: '{}', 페이지: {}, 사이즈: {}", keyword, page, size);
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+    public PagedResponse<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
+        log.debug("게시글 키워드 검색을 시작합니다. 키워드: '{}', Pageable: {}", keyword, pageable);
         Page<Post> postPage = postRepository.searchByKeyword(keyword, pageable);
 
         log.debug("'{}' 키워드로 {} 페이지에서 {}개의 게시글을 조회했습니다.", keyword, postPage.getNumber() + 1, postPage.getNumberOfElements());
-        return new PagedResponse<>(
-                postPage.getContent().stream().map(PostSummaryResponse::from).toList(),
-                postPage.getNumber() + 1,
-                postPage.getSize(),
-                postPage.getTotalElements(),
-                postPage.getTotalPages(),
-                postPage.isLast()
-        );
+        return PagedResponse.from(postPage, PostSummaryResponse::from);
     }
 
     private Post findPostAndVerifyOwner(Long postId, Long userId) {
