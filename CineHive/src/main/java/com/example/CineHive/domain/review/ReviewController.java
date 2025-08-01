@@ -9,61 +9,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 개별 리뷰 수정, 삭제 및 상호작용을 담당하는 API 컨트롤러입니다.
+ * 특정 미디어에 대한 리뷰 생성을 담당하는 API 컨트롤러입니다.
  */
 @Tag(name = "Review Controller", description = "미디어 리뷰 CRUD 및 상호작용 API")
 @RestController
-@RequestMapping("/api/v1/reviews")
+@RequestMapping("/api/v1/media/{mediaType}/{mediaId}/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
     // TODO: private final ReviewService reviewService;
-    // TODO: private final ReportService reportService; // 신고 기능
 
-    @Operation(summary = "리뷰 수정")
-    @PutMapping("/{reviewId}")
-    public void updateReview(
-            @PathVariable Long reviewId,
+    @Operation(summary = "특정 미디어에 리뷰 작성")
+    @PostMapping
+    public void createReview(
+            @PathVariable String mediaType,
+            @PathVariable Long mediaId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. UpdateReviewRequest DTO를 @RequestBody로 받음
-        // TODO: 2. ReviewService.updateReview(userEmail, reviewId, request) 호출
-        // TODO: 3. 성공 시 수정된 ReviewResponse 반환
-    }
-
-    @Operation(summary = "리뷰 삭제")
-    @DeleteMapping("/{reviewId}")
-    public void deleteReview(
-            @PathVariable Long reviewId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. ReviewService.deleteReview(userEmail, reviewId) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
-    }
-
-    @Operation(summary = "리뷰 좋아요")
-    @PostMapping("/{reviewId}/like")
-    public void likeReview(
-            @PathVariable Long reviewId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. ReviewService/LikeService에서 likeReview(userEmail, reviewId) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
-    }
-
-    @Operation(summary = "리뷰 좋아요 취소")
-    @DeleteMapping("/{reviewId}/like")
-    public void unlikeReview(
-            @PathVariable Long reviewId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. ReviewService/LikeService에서 unlikeReview(userEmail, reviewId) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
-    }
-
-    @Operation(summary = "리뷰 신고")
-    @PostMapping("/{reviewId}/reports")
-    public void reportReview(
-            @PathVariable Long reviewId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. ReportRequest DTO를 @RequestBody로 받음
-        // TODO: 2. ReportService.reportReview(userEmail, reviewId, request) 호출
-        // TODO: 3. 성공(201 CREATED) 시 MessageResponse 반환
+        // TODO: 1. CreateReviewRequest DTO를 @RequestBody로 받음
+        // TODO: 2. ReviewService.createReview(userEmail, mediaId, mediaType, request) 호출
+        // TODO: 3. 성공(201 CREATED) 시 생성된 ReviewResponse 반환
     }
 }
