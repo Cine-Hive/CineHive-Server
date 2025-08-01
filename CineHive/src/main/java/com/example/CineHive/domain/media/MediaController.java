@@ -47,7 +47,7 @@ public class MediaController {
     @GetMapping("/{mediaType}/{mediaId}")
     public ResponseEntity<ApiResponse<MediaDetailResponse>> getMediaDetail(
             @PathVariable String mediaType, @PathVariable Long mediaId) {
-        MediaDetailResponse result = mediaQueryService.getMediaDetail(mediaId, mediaType).block();
+        MediaDetailResponse result = mediaQueryService.getMediaDetail(mediaId, mediaType);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -81,7 +81,7 @@ public class MediaController {
             description = "메인 화면에 표시될 여러 차트의 요약 목록을 한번에 조회합니다. 반환되는 차트의 종류와 순서는 관리자 API를 통해 동적으로 변경될 수 있습니다.")
     @GetMapping("/charts/summary")
     public ResponseEntity<ApiResponse<ChartSummaryResponse>> getChartSummary() {
-        ChartSummaryResponse result = mediaQueryService.getChartSummary().block();
+        ChartSummaryResponse result = mediaQueryService.getChartSummary();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -92,7 +92,7 @@ public class MediaController {
             @PathVariable Long genreId,
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getGenreChart(mediaType, genreId, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getGenreChart(mediaType, genreId, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -103,7 +103,7 @@ public class MediaController {
             @PathVariable Long platformId,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         Platform platform = Platform.fromId(platformId);
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getPlatformChart(platform, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getPlatformChart(platform, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -118,7 +118,7 @@ public class MediaController {
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.POPULAR_TV : ChartType.POPULAR_MOVIES;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -129,7 +129,7 @@ public class MediaController {
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.TOP_RATED_TV : ChartType.TOP_RATED_MOVIES;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -137,7 +137,7 @@ public class MediaController {
     @GetMapping("/trends/now-playing")
     public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getNowPlayingMovies(
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.NOW_PLAYING_MOVIES, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.NOW_PLAYING_MOVIES, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -145,7 +145,7 @@ public class MediaController {
     @GetMapping("/trends/upcoming")
     public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getUpcomingMovies(
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.UPCOMING_MOVIES, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.UPCOMING_MOVIES, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -156,7 +156,7 @@ public class MediaController {
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.TRENDING_TV_WEEK : ChartType.TRENDING_MOVIES_WEEK;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
