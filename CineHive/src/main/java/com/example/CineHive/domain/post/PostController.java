@@ -11,11 +11,12 @@ import com.example.CineHive.domain.post.like.LikeService;
 import com.example.CineHive.domain.report.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -66,52 +67,28 @@ public class PostController {
 
     @Operation(summary = "게시글 목록 페이징 조회",
             description = """
-            ### **게시글 목록을 조건에 맞게 페이징하여 조회합니다.**
-            
-            **[요청 파라미터]**
-            - **`page`**: 조회할 페이지 번호입니다. (기본값: 1, 1부터 시작)
-            - **`size`**: 한 페이지에 표시할 게시글 수입니다. (기본값: 10)
-            - **`sort`**: 정렬 기준을 지정합니다. (기본값: `LATEST`)
-                - `LATEST`: 최신순
-                - `VIEWS`: 조회수순
-                - `LIKES`: 좋아요순
-            
-            **[응답 데이터]**
-            - `PagedResponse` 객체 형태로 반환되며, 게시글 목록(`content`)과 함께 전체 페이지 수(`totalPages`), 현재 페이지 번호(`pageNumber`) 등 페이징 관련 정보가 포함됩니다.
-            """)
+               게시글 목록을 페이징하여 조회합니다.
+               - `page`: 페이지 번호 (0부터 시작).
+               - `size`: 페이지당 게시글 수.
+               - `sort`: 정렬 기준. `createdAt,desc` (최신순), `views,desc` (조회수순), `likeCount,desc` (좋아요순) 등 `프로퍼티명,정렬방향` 형식으로 요청 가능합니다.
+               """)
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> getPosts(
-            @Parameter(description = "페이지 번호 (1부터 시작)")
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "페이지당 게시글 수")
-            @RequestParam(defaultValue = "10") @Min(1) int size,
-            @Parameter(description = "정렬 기준", schema = @Schema(implementation = PostSortType.class))
-            @RequestParam(defaultValue = "LATEST") PostSortType sort) {
-        PagedResponse<PostSummaryResponse> pagedResponse = postService.getPosts(page, size, sort);
+            @Parameter(hidden = true)
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        PagedResponse<PostSummaryResponse> pagedResponse = postService.getPosts(pageable);
         return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
     }
 
-    @Operation(summary = "게시글 키워드 검색 페이징 조회",
-            description = """
-            ### **키워드를 사용하여 게시글을 검색하고, 결과를 페이징하여 조회합니다.**
-            
-            **[검색 대상]**
-            - 게시글 제목 (`title`)
-            - 작성자 닉네임 (`nickname`)
-            
-            **[요청 파라미터]**
-            - **`keyword`**: 검색할 키워드 (필수)
-            - **`page`**: 페이지 번호 (기본값: 1)
-            - **`size`**: 페이지당 게시글 수 (기본값: 10)
-            
-            **※ 참고:** 검색은 대소문자를 구분하지 않습니다.
-            """)
+    @Operation(summary = "게시글 키워드 검색 페이징 조회")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> searchPosts(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        PagedResponse<PostSummaryResponse> response = postService.searchPosts(keyword, page, size);
+            @Parameter(hidden = true)
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        PagedResponse<PostSummaryResponse> response = postService.searchPosts(keyword, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
