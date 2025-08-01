@@ -63,6 +63,10 @@ public enum ErrorCode {
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "R003", "자신이 작성한 콘텐츠는 신고할 수 없습니다."),
     REPORT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "R004", "이미 처리된 신고입니다."),
 
+    // Review (RVxx)
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "RV001", "해당 리뷰를 찾을 수 없습니다."),
+    REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "RV002", "이미 해당 미디어에 대한 리뷰를 작성했습니다."),
+
     // Media & External API (M0xx)
     INVALID_MEDIA_TYPE(HttpStatus.BAD_REQUEST, "M001", "유효하지 않은 미디어 타입입니다."),
     CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "M002", "해당 차트 타입을 처리할 수 없습니다."),
