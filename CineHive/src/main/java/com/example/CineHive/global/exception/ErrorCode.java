@@ -31,6 +31,11 @@ public enum ErrorCode {
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "U005", "인증되지 않은 접근입니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "U006", "접근 권한이 없습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "U007", "토큰이 만료되었습니다."),
+    INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "U009", "유효하지 않은 비밀번호 재설정 토큰입니다."),
+    RESET_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "U010", "비밀번호 재설정 토큰이 만료되었습니다."),
+    ACCOUNT_LOCKED(HttpStatus.LOCKED, "U011", "계정이 잠겼습니다. 잠시 후 다시 시도해주세요."),
+    PASSWORD_REUSE_PROHIBITED(HttpStatus.BAD_REQUEST, "U012", "최근에 사용한 비밀번호는 다시 사용할 수 없습니다."),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "U013", "요청 횟수를 초과했습니다. 잠시 후 다시 시도해주세요."),
 
     // OAuth (O0xx)
     INVALID_OAUTH_TOKEN(HttpStatus.BAD_REQUEST, "O001", "유효하지 않은 OAuth 토큰입니다."),
