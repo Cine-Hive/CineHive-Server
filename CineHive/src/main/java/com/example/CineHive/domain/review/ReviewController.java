@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -60,8 +61,6 @@ public class ReviewController {
 
         ReviewResponse response = reviewService.createReview(request, userDetails.getUsername());
 
-        // 생성된 리소스의 위치를 Location 헤더에 담아 반환 (RESTful 원칙)
-        // 리뷰 자체는 미디어에 종속되지 않는 독립적인 리소스이므로, 별도의 경로를 가질 수 있음
         URI location = URI.create(String.format("/api/v1/reviews/%d", response.id()));
         return ResponseEntity.created(location).body(ApiResponse.ok(response));
     }
@@ -75,18 +74,17 @@ public class ReviewController {
             
             **[페이징 파라미터]**
             - `page`: 조회할 페이지 번호 (0부터 시작, 기본값: 0)
-            - `size`: 한 페이지에 표시할 리뷰 수 (기본값: 10)
+            - `size`: 한 페이지에 표시할 리뷰 수 (기본값: 10, 최대: 50)
             - `sort`: 정렬 기준. `createdAt,desc` (최신순), `createdAt,asc` (오래된순) 등 사용 가능.
             
             **[응답]**
             - `PagedResponse` 객체 형태로 반환되며, 리뷰 목록(`content`)과 함께 페이징 관련 정보가 포함됩니다.
-            - 해당 미디어에 리뷰가 하나도 없으면 빈 목록(`content: []`)을 반환합니다.
             """)
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponse<ReviewResponse>>> getReviewsForMedia(
             @Parameter(description = "미디어 타입 (MOVIE 또는 TV)") @PathVariable MediaType mediaType,
             @Parameter(description = "미디어의 TMDB ID") @PathVariable Integer tmdbId,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
         PagedResponse<ReviewResponse> response = reviewService.getReviewsForMedia(tmdbId, mediaType, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
