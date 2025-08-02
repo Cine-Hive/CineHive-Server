@@ -1,8 +1,10 @@
 package com.example.CineHive.domain.review;
 
 import com.example.CineHive.domain.media.Media;
+import com.example.CineHive.domain.review.dto.RatingStats;
 import com.example.CineHive.domain.user.User;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -32,7 +34,18 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     long countByMedia(Media media);
 
     /**
-     * 특정 미디어에 대한 리뷰 목록을 페이징하여 조회합니다.
+     * 특정 미디어에 대한 평균 별점과 전체 리뷰 수를 한 번의 쿼리로 계산합니다.
+     * COALESCE를 사용하여 리뷰가 없는 경우에도 0.0과 0을 반환하도록 보장합니다.
+     * @param media 통계를 계산할 미디어 엔티티
+     * @return RatingStats DTO
      */
+    @Query("SELECT new com.example.CineHive.domain.review.dto.RatingStats(COALESCE(AVG(r.rating), 0.0), COUNT(r)) " +
+            "FROM Review r WHERE r.media = :media")
+    RatingStats getRatingStatsByMedia(@Param("media") Media media);
+
+    /**
+     * 특정 미디어에 대한 리뷰 목록을 페이징하여 조회할 때, N+1 문제를 방지하기 위해 작성자(User) 정보도 함께 조회합니다.
+     */
+    @EntityGraph(attributePaths = {"user"})
     Page<Review> findByMedia(Media media, Pageable pageable);
 }
