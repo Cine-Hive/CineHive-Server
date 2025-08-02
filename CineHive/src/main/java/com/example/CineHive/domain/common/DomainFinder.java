@@ -1,9 +1,9 @@
 package com.example.CineHive.domain.common;
 
+import com.example.CineHive.domain.media.Media;
+import com.example.CineHive.domain.media.MediaRepository;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.comment.CommentRepository;
 import com.example.CineHive.domain.review.Review;
 import com.example.CineHive.domain.review.ReviewRepository;
 import com.example.CineHive.domain.user.User;
@@ -14,9 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 여러 도메인에서 공통적으로 사용되는 엔티티 조회 및 검증 로직을 중앙에서 관리하는 헬퍼 클래스입니다.
- */
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,7 +21,7 @@ public class DomainFinder {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
+    private final MediaRepository mediaRepository;
     private final ReviewRepository reviewRepository;
 
     public User findUserByEmail(String email) {
@@ -37,41 +34,27 @@ public class DomainFinder {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
-    public Comment findCommentById(Long commentId) {
-        return commentRepository.findById(commentId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-    }
-
-    /**
-     * 게시글을 조회하고 소유권을 검증합니다.
-     * @param postId  조회 및 검증할 게시글 ID
-     * @param userId  검증할 사용자 ID
-     * @return 검증된 Post 엔티티
-     */
-    public Post findPostAndVerifyOwner(Long postId, Long userId) {
-        Post post = findPostById(postId);
-        if (!post.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
-        return post;
-    }
-
-    /**
-     * 댓글을 조회하고 소유권을 검증합니다.
-     * @param commentId 조회 및 검증할 댓글 ID
-     * @param userId    검증할 사용자 ID
-     * @return 검증된 Comment 엔티티
-     */
-    public Comment findCommentAndVerifyOwner(Long commentId, Long userId) {
-        Comment comment = findCommentById(commentId);
-        if (!comment.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
-        return comment;
+    public Media findMediaByTmdbIdAndType(Integer tmdbId, com.example.CineHive.domain.media.MediaType mediaType) {
+        return mediaRepository.findByTmdbIdAndMediaType(tmdbId, mediaType)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEDIA_NOT_FOUND));
     }
 
     public Review findReviewById(Long reviewId) {
         return reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+    }
+
+    /**
+     * 리뷰를 조회하고 소유권을 검증합니다.
+     * @param reviewId 조회 및 검증할 리뷰 ID
+     * @param userId   검증할 사용자 ID
+     * @return 검증된 Review 엔티티
+     */
+    public Review findReviewAndVerifyOwner(Long reviewId, Long userId) {
+        Review review = findReviewById(reviewId);
+        if (!review.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+        return review;
     }
 }
