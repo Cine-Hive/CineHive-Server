@@ -5,7 +5,7 @@ import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.domain.media.dto.ChartType;
 import com.example.CineHive.domain.media.dto.MediaChartResponse;
 import com.example.CineHive.domain.media.dto.MediaSummaryResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -129,10 +129,10 @@ public class ChartStrategyFactory {
         };
     }
 
-    private <T> PagedResponse<MediaChartResponse> toChartResponsePage(
+    private <T> PageResponse<MediaChartResponse> toChartResponsePage(
             TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.empty();
+            return PageResponse.empty();
         }
         AtomicInteger ranker = new AtomicInteger((tmdbResponse.getPage() - 1) * tmdbDefaultPageSize);
         List<MediaChartResponse> content = tmdbResponse.getResults().stream()
@@ -141,7 +141,7 @@ public class ChartStrategyFactory {
                     return MediaChartResponse.from(summary, ranker.incrementAndGet());
                 })
                 .toList();
-        return new PagedResponse<>(
+        return new PageResponse<>(
                 content,
                 tmdbResponse.getPage(),
                 content.size(),
