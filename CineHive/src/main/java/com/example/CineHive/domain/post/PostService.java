@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +48,7 @@ public interface PostService {
      * @param pageable 페이징 및 정렬 정보
      * @return 페이징된 게시글 요약 목록
      */
-    PagedResponse<PostSummaryResponse> getPosts(Pageable pageable);
+    PageResponse<PostSummaryResponse> getPosts(Pageable pageable);
 
     /**
      * 게시글의 조회수를 1 증가시킵니다.
@@ -62,5 +62,5 @@ public interface PostService {
      * @param pageable 페이징 정보 (정렬은 최신순으로 고정)
      * @return 페이징된 검색 결과 목록
      */
-    PagedResponse<PostSummaryResponse> searchPosts(String keyword, Pageable pageable);
+    PageResponse<PostSummaryResponse> searchPosts(String keyword, Pageable pageable);
 }
