@@ -33,10 +33,10 @@ public class TmdbApiClient {
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
 
-    @Value("${tmdb.api.base-url}")
+    @Value("${app.tmdb.base-url}")
     private String tmdbBaseUrl;
 
-    @Value("${tmdb.api.key}")
+    @Value("${app.tmdb.api-key}")
     private String apiKey;
 
     private WebClient tmdbWebClient;
