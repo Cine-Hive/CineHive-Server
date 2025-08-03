@@ -3,7 +3,7 @@ package com.example.CineHive.domain.post;
 import com.example.CineHive.domain.post.dto.*;
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import com.example.CineHive.domain.post.bookmark.BookmarkService;
 import com.example.CineHive.domain.post.dislike.DislikeService;
@@ -73,22 +73,22 @@ public class PostController {
                - `sort`: 정렬 기준. `createdAt,desc` (최신순), `views,desc` (조회수순), `likeCount,desc` (좋아요순) 등 `프로퍼티명,정렬방향` 형식으로 요청 가능합니다.
                """)
     @GetMapping
-    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> getPosts(
+    public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> getPosts(
             @Parameter(hidden = true)
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        PagedResponse<PostSummaryResponse> pagedResponse = postService.getPosts(pageable);
-        return ResponseEntity.ok(ApiResponse.ok(pagedResponse));
+        PageResponse<PostSummaryResponse> pageResponse = postService.getPosts(pageable);
+        return ResponseEntity.ok(ApiResponse.ok(pageResponse));
     }
 
     @Operation(summary = "게시글 키워드 검색 페이징 조회")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PagedResponse<PostSummaryResponse>>> searchPosts(
+    public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> searchPosts(
             @RequestParam String keyword,
             @Parameter(hidden = true)
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        PagedResponse<PostSummaryResponse> response = postService.searchPosts(keyword, pageable);
+        PageResponse<PostSummaryResponse> response = postService.searchPosts(keyword, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
