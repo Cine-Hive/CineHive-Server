@@ -1,141 +1,130 @@
 package com.example.CineHive.domain.review;
 
-import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.common.DomainFinder;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.SliceResponse;
 import com.example.CineHive.domain.media.Media;
 import com.example.CineHive.domain.media.MediaRepository;
+import com.example.CineHive.domain.media.MediaService;
 import com.example.CineHive.domain.media.MediaType;
 import com.example.CineHive.domain.review.dto.CreateReviewRequest;
 import com.example.CineHive.domain.review.dto.ReviewResponse;
 import com.example.CineHive.domain.review.dto.UpdateReviewRequest;
 import com.example.CineHive.domain.user.User;
+import com.example.CineHive.global.config.security.ReviewProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@CacheConfig(cacheNames = "reviews")
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MediaRepository mediaRepository;
     private final DomainFinder domainFinder;
-    private final TmdbApiClient tmdbApiClient;
+    private final MediaService mediaService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ReviewProperties reviewProperties;
 
     @Override
     @Transactional
-    public ReviewResponse createReview(CreateReviewRequest request, String userEmail) {
+    public ReviewResponse createReview(Integer tmdbId, MediaType mediaType, CreateReviewRequest request, String userEmail) {
         User user = domainFinder.findUserByEmail(userEmail);
-        Media media = findOrCreateMedia(request.tmdbId(), request.mediaType());
+        Media media = mediaService.findOrCreateMedia(tmdbId, mediaType);
 
         if (reviewRepository.existsByUserAndMedia(user, media)) {
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
-        double ratingValue = Double.parseDouble(request.rating());
         Review review = Review.builder()
                 .user(user)
                 .media(media)
                 .content(request.content())
-                .rating(ratingValue)
+                .rating(request.rating())
                 .build();
 
         Review savedReview = reviewRepository.save(review);
-        updateMediaRating(media);
+        eventPublisher.publishEvent(new ReviewChangedEvent(media.getId()));
 
-        log.info("새로운 리뷰가 생성되었습니다. 리뷰 ID: {}, 미디어 ID: {}", savedReview.getId(), media.getId());
-        return ReviewResponse.of(savedReview);
+        log.info("새로운 리뷰가 생성되었습니다. 리뷰 ID: {}", savedReview.getId());
+        return ReviewResponse.from(savedReview);
     }
 
     @Override
-    public PagedResponse<ReviewResponse> getReviewsForMedia(Integer tmdbId, MediaType mediaType, Pageable pageable) {
+    @Cacheable(key = "'tmdb:' + #tmdbId + ':' + #mediaType.name() + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':sort:' + #pageable.sort")
+    public SliceResponse<ReviewResponse> getReviewsForMedia(Integer tmdbId, MediaType mediaType, Pageable pageable) {
+        log.debug("Cache miss. DB에서 리뷰 목록을 조회합니다. tmdbId: {}, mediaType: {}, pageable: {}", tmdbId, mediaType, pageable);
+        Pageable adjustedPageable = adjustPageable(pageable);
+
         return mediaRepository.findByTmdbIdAndMediaType(tmdbId, mediaType)
                 .map(media -> {
-                    Page<Review> reviewPage = reviewRepository.findByMedia(media, pageable);
-                    return PagedResponse.from(reviewPage, ReviewResponse::of);
+                    Slice<Review> reviewSlice = reviewRepository.findByMedia(media, adjustedPageable);
+                    return SliceResponse.from(reviewSlice, ReviewResponse::from);
                 })
-                .orElseGet(PagedResponse::empty);
+                .orElseGet(() -> {
+                    Slice<Review> emptySlice = new SliceImpl<>(Collections.emptyList(), adjustedPageable, false);
+                    return SliceResponse.from(emptySlice, ReviewResponse::from);
+                });
     }
 
     @Override
     @Transactional
-    public ReviewResponse updateReview(Long reviewId, UpdateReviewRequest request, String userEmail) {
+    public void updateReview(Long reviewId, UpdateReviewRequest request, String userEmail) {
         User user = domainFinder.findUserByEmail(userEmail);
-        Review review = findReviewAndVerifyOwner(reviewId, user.getId());
+        Review review = domainFinder.findReviewAndVerifyOwner(reviewId, user.getId());
 
-        double newRating = Double.parseDouble(request.rating());
-        review.update(request.content(), newRating);
-        updateMediaRating(review.getMedia());
+        review.update(request.content(), request.rating());
+        eventPublisher.publishEvent(new ReviewChangedEvent(review.getMedia().getId()));
 
         log.info("리뷰가 수정되었습니다. 리뷰 ID: {}", reviewId);
-        return ReviewResponse.of(review);
     }
 
     @Override
     @Transactional
     public void deleteReview(Long reviewId, String userEmail) {
         User user = domainFinder.findUserByEmail(userEmail);
-        Review review = findReviewAndVerifyOwner(reviewId, user.getId());
-        Media media = review.getMedia();
+        Review review = domainFinder.findReviewAndVerifyOwner(reviewId, user.getId());
+        Long mediaId = review.getMedia().getId();
 
         reviewRepository.delete(review);
-        updateMediaRating(media);
+        eventPublisher.publishEvent(new ReviewChangedEvent(mediaId));
 
         log.info("리뷰가 삭제되었습니다. 리뷰 ID: {}", reviewId);
     }
 
-    private Media findOrCreateMedia(Integer tmdbId, MediaType mediaType) {
-        return mediaRepository.findByTmdbIdAndMediaType(tmdbId, mediaType)
-                .orElseGet(() -> {
-                    log.info("DB에 미디어 정보가 없어 TMDB API를 통해 새로 생성합니다. TMDB ID: {}, 타입: {}", tmdbId, mediaType);
-                    Media newMedia = createMediaFromTmdb(tmdbId, mediaType);
-                    return mediaRepository.save(newMedia);
-                });
+    @Override
+    public boolean isAuthor(Long reviewId, String username) {
+        return reviewRepository.findById(reviewId)
+                .map(review -> review.getUser().getEmail().equals(username))
+                .orElse(false);
     }
 
-    private Media createMediaFromTmdb(Integer tmdbId, MediaType mediaType) {
-        if (mediaType.isMovie()) {
-            var tmdb = tmdbApiClient.getMovieDetail(tmdbId.longValue());
-            return Media.builder()
-                    .tmdbId(tmdb.id().intValue())
-                    .mediaType(MediaType.MOVIE)
-                    .title(tmdb.title())
-                    .posterPath(tmdb.posterPath())
-                    .releaseDate(tmdb.releaseDate())
-                    .build();
-        } else {
-            var tmdb = tmdbApiClient.getTvSeriesDetail(tmdbId.longValue());
-            return Media.builder()
-                    .tmdbId(tmdb.id().intValue())
-                    .mediaType(MediaType.TV)
-                    .title(tmdb.name())
-                    .posterPath(tmdb.posterPath())
-                    .releaseDate(tmdb.firstAirDate())
-                    .build();
+    private Pageable adjustPageable(Pageable pageable) {
+        int page = pageable.getPageNumber();
+        int size = pageable.getPageSize();
+
+        if (page < 0) {
+            page = 0;
         }
-    }
-
-    private void updateMediaRating(Media media) {
-        double totalRating = reviewRepository.sumRatingByMedia(media).orElse(0.0);
-        int reviewCount = (int) reviewRepository.countByMedia(media);
-        media.updateRating(totalRating, reviewCount);
-    }
-
-    private Review findReviewAndVerifyOwner(Long reviewId, Long userId) {
-        Review review = domainFinder.findReviewById(reviewId);
-        if (!review.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        if (size <= 0 || size > reviewProperties.getMaxPageSize()) {
+            size = reviewProperties.getDefaultPageSize();
         }
-        return review;
+
+        return PageRequest.of(page, size, pageable.getSort());
     }
 }
