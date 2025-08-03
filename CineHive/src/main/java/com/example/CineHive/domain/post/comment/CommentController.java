@@ -5,7 +5,7 @@ import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.report.ReportService;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -81,12 +81,12 @@ public class CommentController {
             - 응답의 페이징 정보를 바탕으로 '더 보기' 버튼이나 페이지네이션 UI를 구현할 수 있습니다.
             """)
     @GetMapping("/posts/{postId}/comments")
-    public ResponseEntity<ApiResponse<PagedResponse<CommentResponse>>> getCommentsByPost(
+    public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> getCommentsByPost(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        PagedResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, size);
+        PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, size);
         return ResponseEntity.ok(ApiResponse.ok(comments));
     }
 

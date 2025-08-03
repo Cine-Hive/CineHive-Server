@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.post.comment;
 
 import com.example.CineHive.domain.common.DomainFinder;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
@@ -52,13 +52,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public PagedResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size) {
+    public PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size) {
         domainFinder.findPostById(postId);
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Comment> commentPage = commentRepository.findByPost_Id(postId, pageable);
 
-        return new PagedResponse<>(
+        return new PageResponse<>(
                 commentPage.getContent().stream().map(CommentResponse::from).toList(),
                 commentPage.getNumber() + 1,
                 commentPage.getSize(),
