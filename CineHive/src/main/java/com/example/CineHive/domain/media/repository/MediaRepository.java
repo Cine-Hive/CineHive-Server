@@ -1,4 +1,7 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.repository;
+
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.entity.MediaType;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

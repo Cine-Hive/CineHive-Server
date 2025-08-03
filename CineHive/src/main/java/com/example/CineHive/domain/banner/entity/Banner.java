@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.banner.controller.entity;
+package com.example.CineHive.domain.banner.entity;
 
-import com.example.CineHive.domain.common.controller.BaseEntity;
+import com.example.CineHive.domain.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

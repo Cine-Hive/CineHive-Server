@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

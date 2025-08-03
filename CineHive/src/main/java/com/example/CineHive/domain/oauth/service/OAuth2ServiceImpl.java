@@ -1,18 +1,18 @@
-package com.example.CineHive.domain.oauth.controller.entity;
+package com.example.CineHive.domain.oauth.service;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
-import com.example.CineHive.domain.auth.controller.ProviderType;
-import com.example.CineHive.domain.auth.controller.RefreshToken;
-import com.example.CineHive.domain.auth.controller.RefreshTokenRepository;
+import com.example.CineHive.domain.auth.entity.ProviderType;
+import com.example.CineHive.domain.auth.entity.RefreshToken;
+import com.example.CineHive.domain.auth.repository.RefreshTokenRepository;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.user.controller.Gender;
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.domain.user.controller.UserRole;
+import com.example.CineHive.domain.user.entity.Gender;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.entity.UserRole;
 import com.example.CineHive.global.config.security.OAuthProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.user.controller.UserRepository;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.jwt.JwtTokenProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

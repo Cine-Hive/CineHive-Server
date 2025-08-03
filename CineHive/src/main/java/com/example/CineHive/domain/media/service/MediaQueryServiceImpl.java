@@ -1,14 +1,14 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.TmdbMovieResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
-import com.example.CineHive.domain.admin.controller.AdminHomeChartService;
+import com.example.CineHive.domain.admin.service.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
 import com.example.CineHive.domain.common.dto.PageResponse;
-import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.domain.meta.controller.PlatformMetadataService;
+import com.example.CineHive.domain.media.entity.MediaType;
+import com.example.CineHive.domain.meta.service.PlatformMetadataService;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;

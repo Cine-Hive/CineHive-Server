@@ -1,9 +1,10 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.controller;
 
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.report.dto.ReportResponse;
-import com.example.CineHive.domain.report.controller.ReportStatus;
+import com.example.CineHive.domain.admin.service.AdminReportService;
+import com.example.CineHive.domain.report.entity.ReportStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

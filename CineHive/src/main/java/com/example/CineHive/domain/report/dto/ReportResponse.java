@@ -1,7 +1,7 @@
-package com.example.CineHive.domain.report.controller.dto;
+package com.example.CineHive.domain.report.dto;
 
-import com.example.CineHive.domain.report.controller.Report;
-import com.example.CineHive.domain.report.controller.ReportStatus;
+import com.example.CineHive.domain.report.entity.Report;
+import com.example.CineHive.domain.report.entity.ReportStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

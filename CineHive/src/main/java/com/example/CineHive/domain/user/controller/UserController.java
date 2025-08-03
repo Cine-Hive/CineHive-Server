@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.user.controller.entity;
+package com.example.CineHive.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

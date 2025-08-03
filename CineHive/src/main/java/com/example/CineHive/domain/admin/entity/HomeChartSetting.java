@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.entity;
 
 import com.example.CineHive.domain.media.dto.ChartType;
 import jakarta.persistence.*;

@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.oauth.controller.entity;
+package com.example.CineHive.domain.oauth.service;
 
-import com.example.CineHive.domain.auth.controller.ProviderType;
+import com.example.CineHive.domain.auth.entity.ProviderType;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 
 /**

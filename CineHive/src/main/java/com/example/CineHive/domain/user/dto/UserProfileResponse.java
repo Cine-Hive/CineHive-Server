@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.user.controller.dto;
+package com.example.CineHive.domain.user.dto;
 
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.user.entity.User;
 
 /**
  * 사용자 프로필 조회 응답 DTO입니다.

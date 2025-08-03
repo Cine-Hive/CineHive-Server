@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.account.controller.controller;
+package com.example.CineHive.domain.account.controller;
 
 import com.example.CineHive.domain.account.service.AccountService;
 import com.example.CineHive.domain.common.dto.ApiResponse;

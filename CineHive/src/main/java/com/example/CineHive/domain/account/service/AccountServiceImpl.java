@@ -1,11 +1,11 @@
-package com.example.CineHive.domain.account.controller.entity;
+package com.example.CineHive.domain.account.service;
 
-import com.example.CineHive.domain.auth.controller.PasswordHistory;
-import com.example.CineHive.domain.auth.controller.PasswordHistoryRepository;
-import com.example.CineHive.domain.common.controller.DomainFinder;
-import com.example.CineHive.domain.media.controller.Genre;
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.domain.user.controller.UserRepository;
+import com.example.CineHive.domain.auth.entity.PasswordHistory;
+import com.example.CineHive.domain.auth.repository.PasswordHistoryRepository;
+import com.example.CineHive.domain.common.service.DomainFinder;
+import com.example.CineHive.domain.media.entity.Genre;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.domain.user.dto.AccountInfoResponse;
 import com.example.CineHive.domain.user.dto.UpdateGenresRequest;
 import com.example.CineHive.domain.user.dto.UpdateNicknameRequest;

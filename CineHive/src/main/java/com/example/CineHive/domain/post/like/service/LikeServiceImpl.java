@@ -1,12 +1,14 @@
-package com.example.CineHive.domain.post.controller.like;
+package com.example.CineHive.domain.post.like.service;
 
-import com.example.CineHive.domain.common.controller.DomainFinder;
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.post.dislike.DislikeRepository;
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.common.service.DomainFinder;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.dislike.repository.DislikeRepository;
+import com.example.CineHive.domain.post.like.entity.Like;
+import com.example.CineHive.domain.post.like.repository.LikeRepository;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.controller.PostRepository;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

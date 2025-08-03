@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.service;
 
 import com.example.CineHive.domain.report.dto.ReportResponse;
 import com.example.CineHive.domain.report.controller.Report;

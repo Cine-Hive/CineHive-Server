@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.review.dto.RatingStats;
@@ -11,6 +11,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.repository.MediaRepository;
+import com.example.CineHive.domain.media.entity.MediaType;
 
 /**
  * MediaService의 구현 클래스입니다.

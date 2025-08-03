@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review.controller.entity;
+package com.example.CineHive.domain.review.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +8,8 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Objects;
+
+import com.example.CineHive.domain.review.entity.ReviewChangedEvent;
 
 /**
  * 리뷰 변경 이벤트 발생 시, 관련 캐시를 무효화하는 리스너입니다.

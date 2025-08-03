@@ -1,10 +1,10 @@
-package com.example.CineHive.domain.user.controller.entity;
+package com.example.CineHive.domain.user.entity;
 
-import com.example.CineHive.domain.auth.controller.LoginHistory;
-import com.example.CineHive.domain.auth.controller.ProviderType;
+import com.example.CineHive.domain.auth.entity.LoginHistory;
+import com.example.CineHive.domain.auth.entity.ProviderType;
 import com.example.CineHive.domain.auth.dto.RegisterRequest;
-import com.example.CineHive.domain.common.controller.BaseEntity;
-import com.example.CineHive.domain.media.controller.Genre;
+import com.example.CineHive.domain.common.entity.BaseEntity;
+import com.example.CineHive.domain.media.entity.Genre;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

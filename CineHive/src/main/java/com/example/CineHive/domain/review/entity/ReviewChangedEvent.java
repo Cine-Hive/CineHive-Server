@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review.controller.entity;
+package com.example.CineHive.domain.review.entity;
 
 import lombok.Getter;
 

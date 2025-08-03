@@ -1,4 +1,6 @@
-package com.example.CineHive.domain.post.controller.entity;
+package com.example.CineHive.domain.post.repository;
+
+import com.example.CineHive.domain.post.entity.Post;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

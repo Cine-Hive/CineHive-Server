@@ -1,4 +1,6 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.repository;
+
+import com.example.CineHive.domain.admin.entity.HomeChartSetting;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

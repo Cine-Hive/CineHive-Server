@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.meta.controller.entity;
+package com.example.CineHive.domain.meta.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.media.dto.LogoInfo;

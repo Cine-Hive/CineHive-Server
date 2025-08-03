@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.dto;
+package com.example.CineHive.domain.media.dto;
 
 import com.example.CineHive.client.tmdb.dto.TmdbMovieResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbMultiSearchResponse;

@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.user.controller.entity;
+package com.example.CineHive.domain.user.service;
 
 /**
  * 사용자 정보 조회 및 검증 관련 비즈니스 로직을 정의하는 인터페이스입니다.

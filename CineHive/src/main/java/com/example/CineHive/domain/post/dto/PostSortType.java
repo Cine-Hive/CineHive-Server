@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.controller.dto;
+package com.example.CineHive.domain.post.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

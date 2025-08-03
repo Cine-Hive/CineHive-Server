@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.mail.controller.entity;
+package com.example.CineHive.domain.mail.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

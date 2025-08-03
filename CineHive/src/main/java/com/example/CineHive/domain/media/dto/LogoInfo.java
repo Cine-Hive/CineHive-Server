@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.dto;
+package com.example.CineHive.domain.media.dto;
 
 /**
  * 개별 로고 이미지 정보를 담는 DTO

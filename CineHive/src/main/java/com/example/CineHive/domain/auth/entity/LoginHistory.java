@@ -1,7 +1,7 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.entity;
 
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.domain.common.controller.BaseEntity;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

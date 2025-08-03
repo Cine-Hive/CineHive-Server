@@ -1,10 +1,16 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.service;
 
 import com.example.CineHive.domain.auth.dto.*;
-import com.example.CineHive.domain.common.controller.DomainFinder;
-import com.example.CineHive.domain.mail.controller.EmailService;
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.domain.user.controller.UserRepository;
+import com.example.CineHive.domain.auth.entity.PasswordHistory;
+import com.example.CineHive.domain.auth.entity.PasswordResetToken;
+import com.example.CineHive.domain.auth.entity.RefreshToken;
+import com.example.CineHive.domain.auth.repository.PasswordHistoryRepository;
+import com.example.CineHive.domain.auth.repository.PasswordResetTokenRepository;
+import com.example.CineHive.domain.auth.repository.RefreshTokenRepository;
+import com.example.CineHive.domain.common.service.DomainFinder;
+import com.example.CineHive.domain.mail.service.EmailService;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.global.jwt.JwtTokenProvider;

@@ -1,4 +1,8 @@
-package com.example.CineHive.domain.post.controller.dislike;
+package com.example.CineHive.domain.post.dislike.repository;
+
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.post.dislike.entity.Dislike;
 
 import com.example.CineHive.domain.post.controller.Post;
 import com.example.CineHive.domain.user.controller.User;

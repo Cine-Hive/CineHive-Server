@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.controller;
 
 import com.example.CineHive.domain.admin.dto.HomeChartSettingRequest;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
@@ -7,7 +7,8 @@ import com.example.CineHive.domain.banner.dto.BannerAdminResponse;
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.media.dto.ChartType;
-import com.example.CineHive.domain.banner.controller.BannerService;
+import com.example.CineHive.domain.admin.service.AdminHomeChartService;
+import com.example.CineHive.domain.banner.service.BannerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;

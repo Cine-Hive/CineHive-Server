@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.controller.entity;
+package com.example.CineHive.domain.post.controller;
 
 import com.example.CineHive.domain.post.dto.*;
 import com.example.CineHive.domain.common.dto.ApiResponse;
@@ -8,7 +8,11 @@ import com.example.CineHive.domain.report.dto.ReportRequest;
 import com.example.CineHive.domain.post.bookmark.BookmarkService;
 import com.example.CineHive.domain.post.dislike.DislikeService;
 import com.example.CineHive.domain.post.like.LikeService;
-import com.example.CineHive.domain.report.controller.ReportService;
+import com.example.CineHive.domain.post.service.PostService;
+import com.example.CineHive.domain.post.bookmark.service.BookmarkService;
+import com.example.CineHive.domain.post.dislike.service.DislikeService;
+import com.example.CineHive.domain.post.like.service.LikeService;
+import com.example.CineHive.domain.report.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

@@ -1,4 +1,6 @@
-package com.example.CineHive.domain.user.controller.entity;
+package com.example.CineHive.domain.user.repository;
+
+import com.example.CineHive.domain.user.entity.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

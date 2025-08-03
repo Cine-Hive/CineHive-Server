@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.service;
 
 /**
  * MediaSyncService 미디어 동기화 관련 서비스입니다.

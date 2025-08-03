@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.post.controller.dto;
+package com.example.CineHive.domain.post.dto;
 
-import com.example.CineHive.domain.post.controller.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;

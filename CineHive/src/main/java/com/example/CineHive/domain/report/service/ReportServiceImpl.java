@@ -1,14 +1,14 @@
-package com.example.CineHive.domain.report.controller.entity;
+package com.example.CineHive.domain.report.service;
 
 import com.example.CineHive.domain.report.dto.ReportRequest;
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.global.exception.BusinessException;
-import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.comment.CommentRepository;
-import com.example.CineHive.domain.post.controller.PostRepository;
-import com.example.CineHive.domain.user.controller.UserRepository;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.repository.UserRepository;
+import com.example.CineHive.domain.report.entity.Report;
+import com.example.CineHive.domain.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

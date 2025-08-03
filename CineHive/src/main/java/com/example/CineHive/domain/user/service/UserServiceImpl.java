@@ -1,4 +1,6 @@
-package com.example.CineHive.domain.user.controller.entity;
+package com.example.CineHive.domain.user.service;
+
+import com.example.CineHive.domain.user.repository.UserRepository;
 
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;

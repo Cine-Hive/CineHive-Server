@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.controller.entity;
+package com.example.CineHive.domain.post.service;
 
 import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;

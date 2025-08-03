@@ -1,4 +1,6 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.repository;
+
+import com.example.CineHive.domain.auth.entity.RefreshToken;
 
 import org.springframework.data.repository.CrudRepository;
 

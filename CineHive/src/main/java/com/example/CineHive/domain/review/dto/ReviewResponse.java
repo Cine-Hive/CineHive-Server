@@ -1,7 +1,7 @@
-package com.example.CineHive.domain.review.controller.dto;
+package com.example.CineHive.domain.review.dto;
 
-import com.example.CineHive.domain.review.controller.Review;
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.review.entity.Review;
+import com.example.CineHive.domain.user.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 

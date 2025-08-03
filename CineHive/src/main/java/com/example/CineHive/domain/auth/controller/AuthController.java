@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.controller;
 
 import com.example.CineHive.domain.auth.dto.*;
 import com.example.CineHive.domain.common.dto.ApiResponse;
@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.CineHive.domain.auth.service.AuthService;
+
 /**
  * 인증(회원가입, 로그인, 비밀번호 찾기) 및 토큰 관리 API 컨트롤러입니다.
  */
@@ -24,8 +26,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
-    private final AuthService authService;
 
     @Operation(summary = "회원가입",
             description = """

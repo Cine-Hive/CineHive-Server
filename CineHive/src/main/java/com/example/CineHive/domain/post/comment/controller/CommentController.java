@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.controller.comment;
+package com.example.CineHive.domain.post.comment.controller;
 
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
@@ -6,7 +6,8 @@ import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
 import com.example.CineHive.domain.common.dto.PageResponse;
-import com.example.CineHive.domain.report.controller.ReportService;
+import com.example.CineHive.domain.post.comment.service.CommentService;
+import com.example.CineHive.domain.report.service.ReportService;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

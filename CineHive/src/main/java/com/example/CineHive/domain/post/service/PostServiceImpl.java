@@ -1,12 +1,12 @@
-package com.example.CineHive.domain.post.controller.entity;
+package com.example.CineHive.domain.post.service;
 
-import com.example.CineHive.domain.common.controller.DomainFinder;
+import com.example.CineHive.domain.common.service.DomainFinder;
 import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import com.example.CineHive.domain.post.dto.PostSummaryResponse;
 import com.example.CineHive.domain.post.dto.UpdatePostRequest;
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.CineHive.domain.user.entity.User;
 
 @Slf4j
 @Service

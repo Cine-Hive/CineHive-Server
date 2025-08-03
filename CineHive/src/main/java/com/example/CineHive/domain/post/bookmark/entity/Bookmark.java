@@ -1,8 +1,8 @@
-package com.example.CineHive.domain.post.controller.bookmark;
+package com.example.CineHive.domain.post.bookmark.entity;
 
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.common.controller.BaseEntity;
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.common.entity.BaseEntity;
+import com.example.CineHive.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

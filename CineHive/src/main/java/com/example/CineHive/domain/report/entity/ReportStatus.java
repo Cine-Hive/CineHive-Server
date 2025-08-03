@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.report.controller.entity;
+package com.example.CineHive.domain.report.entity;
 
 /**
  * 신고 처리 상태를 나타내는 Enum 클래스입니다.

@@ -1,4 +1,7 @@
-package com.example.CineHive.domain.admin.controller.entity;
+package com.example.CineHive.domain.admin.service;
+
+import com.example.CineHive.domain.admin.entity.HomeChartSetting;
+import com.example.CineHive.domain.admin.repository.AdminAppearanceRepository;
 
 import com.example.CineHive.domain.admin.dto.HomeChartSettingRequest;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;

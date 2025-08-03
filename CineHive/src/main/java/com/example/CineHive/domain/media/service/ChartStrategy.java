@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.common.dto.PageResponse;

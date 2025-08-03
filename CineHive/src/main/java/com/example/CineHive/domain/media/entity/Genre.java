@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.entity;
 
 import lombok.Getter;
 import java.util.Arrays;

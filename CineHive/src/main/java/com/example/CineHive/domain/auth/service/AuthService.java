@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.controller.entity;
+package com.example.CineHive.domain.auth.service;
 
 import com.example.CineHive.domain.auth.dto.*;
 

@@ -1,9 +1,10 @@
-package com.example.CineHive.domain.review.controller.entity;
+package com.example.CineHive.domain.review.listener;
 
-import com.example.CineHive.domain.common.controller.DomainFinder;
-import com.example.CineHive.domain.media.controller.Media;
-import com.example.CineHive.domain.media.controller.MediaService;
-import com.example.CineHive.domain.review.dto.RatingStats;
+import com.example.CineHive.domain.common.service.DomainFinder;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.service.MediaService;
+import com.example.CineHive.domain.review.entity.ReviewChangedEvent;
+import com.example.CineHive.domain.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

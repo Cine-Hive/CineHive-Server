@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.controller.dto;
+package com.example.CineHive.domain.media.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

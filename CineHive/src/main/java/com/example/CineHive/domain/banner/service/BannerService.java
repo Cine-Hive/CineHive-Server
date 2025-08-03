@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.banner.controller.entity;
+package com.example.CineHive.domain.banner.service;
 
 import com.example.CineHive.domain.banner.dto.BannerAdminRequest;
 import com.example.CineHive.domain.banner.dto.BannerAdminResponse;
