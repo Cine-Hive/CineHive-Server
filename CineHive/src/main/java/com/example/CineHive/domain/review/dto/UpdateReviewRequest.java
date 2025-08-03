@@ -10,8 +10,9 @@ public record UpdateReviewRequest(
         @Size(min = 10, max = 5000, message = "리뷰 내용은 10자 이상 5000자 이하로 작성해야 합니다.")
         String content,
 
-        @Schema(description = "새로운 별점 (0.5 단위, 0.5~5.0 사이)", example = "5.0")
+        @Schema(description = "새로운 별점 (0.5 ~ 5.0 사이)", example = "5.0")
         @NotNull(message = "별점은 필수입니다.")
-        @Pattern(regexp = "^(0\\.5|[1-4](\\.0|\\.5)?|5\\.0)$", message = "별점은 0.5 단위로 0.5에서 5.0 사이의 값이어야 합니다.")
-        String rating
+        @DecimalMin(value = "0.5", message = "별점은 0.5 이상이어야 합니다.")
+        @DecimalMax(value = "5.0", message = "별점은 5.0 이하이어야 합니다.")
+        double rating
 ) {}

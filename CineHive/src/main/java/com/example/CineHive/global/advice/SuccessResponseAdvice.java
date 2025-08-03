@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.common.dto;
+package com.example.CineHive.global.advice;
 
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.global.exception.GlobalExceptionHandler;
