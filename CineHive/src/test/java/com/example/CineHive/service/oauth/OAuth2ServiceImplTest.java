@@ -1,7 +1,7 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
-import com.example.CineHive.domain.auth.OAuth2ServiceImpl;
+import com.example.CineHive.domain.oauth.OAuth2ServiceImpl;
 import com.example.CineHive.global.config.security.OAuthProperties;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;

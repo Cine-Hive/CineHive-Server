@@ -1,5 +1,6 @@
-package com.example.CineHive.domain.auth;
+package com.example.CineHive.domain.oauth;
 
+import com.example.CineHive.domain.auth.ProviderType;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 import com.example.CineHive.domain.auth.dto.AccessTokenRequest;
 import com.example.CineHive.domain.common.dto.ApiResponse;

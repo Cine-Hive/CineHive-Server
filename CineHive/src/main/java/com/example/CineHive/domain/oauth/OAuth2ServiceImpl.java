@@ -1,6 +1,9 @@
-package com.example.CineHive.domain.auth;
+package com.example.CineHive.domain.oauth;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
+import com.example.CineHive.domain.auth.ProviderType;
+import com.example.CineHive.domain.auth.RefreshToken;
+import com.example.CineHive.domain.auth.RefreshTokenRepository;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
 import com.example.CineHive.domain.user.Gender;
@@ -17,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;

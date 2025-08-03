@@ -1,9 +1,11 @@
-package com.example.CineHive.domain.user;
+package com.example.CineHive.domain.account;
 
 import com.example.CineHive.domain.auth.PasswordHistory;
 import com.example.CineHive.domain.auth.PasswordHistoryRepository;
 import com.example.CineHive.domain.common.DomainFinder;
 import com.example.CineHive.domain.media.Genre;
+import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.UserRepository;
 import com.example.CineHive.domain.user.dto.AccountInfoResponse;
 import com.example.CineHive.domain.user.dto.UpdateGenresRequest;
 import com.example.CineHive.domain.user.dto.UpdateNicknameRequest;

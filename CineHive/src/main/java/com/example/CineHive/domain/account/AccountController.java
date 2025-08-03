@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.user;
+package com.example.CineHive.domain.account;
 
 import com.example.CineHive.domain.common.dto.ApiResponse;
 import com.example.CineHive.domain.common.dto.MessageResponse;
