@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Schema(description = "페이징 처리된 목록 응답")
-public record PagedResponse<T>(
+public record PageResponse<T>(
         @Schema(description = "현재 페이지의 콘텐츠 목록")
         List<T> content,
         @Schema(description = "현재 페이지 번호 (1부터 시작)")
@@ -26,9 +26,9 @@ public record PagedResponse<T>(
     /**
      * Spring Data JPA의 Page 객체를 PagedResponse DTO로 변환합니다.
      */
-    public static <E, D> PagedResponse<D> from(Page<E> page, Function<E, D> mapper) {
+    public static <E, D> PageResponse<D> from(Page<E> page, Function<E, D> mapper) {
         List<D> content = page.getContent().stream().map(mapper).toList();
-        return new PagedResponse<>(
+        return new PageResponse<>(
                 content,
                 page.getNumber() + 1, // Page는 0-based, API는 1-based
                 page.getSize(),
@@ -41,12 +41,12 @@ public record PagedResponse<T>(
     /**
      * TMDB API 응답을 PagedResponse DTO로 변환합니다.
      */
-    public static <E, D> PagedResponse<D> from(TmdbPagedResponse<E> tmdbResponse, Function<E, D> mapper) {
+    public static <E, D> PageResponse<D> from(TmdbPagedResponse<E> tmdbResponse, Function<E, D> mapper) {
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
             return empty();
         }
         List<D> content = tmdbResponse.getResults().stream().map(mapper).toList();
-        return new PagedResponse<>(
+        return new PageResponse<>(
                 content,
                 tmdbResponse.getPage(),
                 content.size(),
@@ -59,7 +59,7 @@ public record PagedResponse<T>(
     /**
      * 비어있는 PagedResponse 객체를 생성합니다.
      */
-    public static <T> PagedResponse<T> empty() {
-        return new PagedResponse<>(Collections.emptyList(), 1, 0, 0L, 0, true);
+    public static <T> PageResponse<T> empty() {
+        return new PageResponse<>(Collections.emptyList(), 1, 0, 0L, 0, true);
     }
 }
