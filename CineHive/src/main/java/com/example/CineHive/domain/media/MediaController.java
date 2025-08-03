@@ -2,7 +2,7 @@ package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,7 +47,7 @@ public class MediaController {
     @GetMapping("/{mediaType}/{mediaId}")
     public ResponseEntity<ApiResponse<MediaDetailResponse>> getMediaDetail(
             @PathVariable String mediaType, @PathVariable Long mediaId) {
-        MediaDetailResponse result = mediaQueryService.getMediaDetail(mediaId, mediaType).block();
+        MediaDetailResponse result = mediaQueryService.getMediaDetail(mediaId, mediaType);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -81,29 +81,29 @@ public class MediaController {
             description = "메인 화면에 표시될 여러 차트의 요약 목록을 한번에 조회합니다. 반환되는 차트의 종류와 순서는 관리자 API를 통해 동적으로 변경될 수 있습니다.")
     @GetMapping("/charts/summary")
     public ResponseEntity<ApiResponse<ChartSummaryResponse>> getChartSummary() {
-        ChartSummaryResponse result = mediaQueryService.getChartSummary().block();
+        ChartSummaryResponse result = mediaQueryService.getChartSummary();
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "장르별 차트 조회",
             description = "특정 장르의 영화/TV 시리즈 목록을 인기순으로 조회합니다. 사용 가능한 장르 ID 목록은 `GET /api/v1/media/meta/filters` 엔드포인트를 통해 얻을 수 있습니다.")
     @GetMapping("/charts/genres/{genreId}")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getGenreChart(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getGenreChart(
             @PathVariable Long genreId,
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getGenreChart(mediaType, genreId, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getGenreChart(mediaType, genreId, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "플랫폼별 차트 조회",
             description = "특정 플랫폼의 TV 시리즈 목록을 인기순으로 조회합니다. 사용 가능한 플랫폼 ID 목록은 `GET /api/v1/meta/filters`를 통해 얻을 수 있습니다.")
     @GetMapping("/charts/platforms/{platformId}")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getPlatformChart(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getPlatformChart(
             @PathVariable Long platformId,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         Platform platform = Platform.fromId(platformId);
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getPlatformChart(platform, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getPlatformChart(platform, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
@@ -114,49 +114,49 @@ public class MediaController {
     @Operation(summary = "인기 미디어 목록 조회",
             description = "현재 인기있는 영화 또는 TV 시리즈 목록을 조회합니다.")
     @GetMapping("/trends/popular")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getPopularMedia(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getPopularMedia(
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.POPULAR_TV : ChartType.POPULAR_MOVIES;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "평점 높은 미디어 목록 조회",
             description = "평점이 높은 영화 또는 TV 시리즈 목록을 조회합니다.")
     @GetMapping("/trends/top-rated")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getTopRatedMedia(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getTopRatedMedia(
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.TOP_RATED_TV : ChartType.TOP_RATED_MOVIES;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "현재 상영중인 영화 목록 조회")
     @GetMapping("/trends/now-playing")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getNowPlayingMovies(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getNowPlayingMovies(
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.NOW_PLAYING_MOVIES, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.NOW_PLAYING_MOVIES, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "개봉 예정인 영화 목록 조회")
     @GetMapping("/trends/upcoming")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getUpcomingMovies(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getUpcomingMovies(
             @RequestParam(defaultValue = "1") @Min(1) int page) {
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.UPCOMING_MOVIES, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(ChartType.UPCOMING_MOVIES, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @Operation(summary = "주간 트렌드 미디어 목록 조회",
             description = "지난 주를 기준으로 가장 인기 있었던 영화 또는 TV 시리즈 목록을 조회합니다.")
     @GetMapping("/trends/weekly")
-    public ResponseEntity<ApiResponse<PagedResponse<MediaChartResponse>>> getWeeklyTrendingMedia(
+    public ResponseEntity<ApiResponse<PageResponse<MediaChartResponse>>> getWeeklyTrendingMedia(
             @RequestParam(defaultValue = "movie") String mediaType,
             @RequestParam(defaultValue = "1") @Min(1) int page) {
         ChartType chartType = "tv".equalsIgnoreCase(mediaType) ? ChartType.TRENDING_TV_WEEK : ChartType.TRENDING_MOVIES_WEEK;
-        PagedResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page).block();
+        PageResponse<MediaChartResponse> result = mediaQueryService.getCuratedChart(chartType, page);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 

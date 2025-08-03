@@ -3,7 +3,7 @@ package com.example.CineHive.domain.post.comment;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 
 /**
  * 댓글 관련 비즈니스 로직을 처리하는 서비스의 인터페이스입니다.
@@ -27,7 +27,7 @@ public interface CommentService {
      * @param size   페이지 당 항목 수
      * @return 페이징된 댓글 목록 응답 DTO
      */
-    PagedResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size);
+    PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size);
 
     /**
      * 기존 댓글의 내용을 수정합니다.

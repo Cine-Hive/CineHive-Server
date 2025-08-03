@@ -1,23 +1,26 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
+import com.example.CineHive.client.tmdb.dto.TmdbMovieResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
+import com.example.CineHive.domain.admin.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.meta.PlatformMetadataService;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.admin.AdminHomeChartService;
-import com.example.CineHive.domain.meta.PlatformMetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,129 +33,152 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     private final ChartStrategyFactory chartStrategyFactory;
     private final AdminHomeChartService adminHomeChartService;
     private final PlatformMetadataService platformMetadataService;
+
+    @Value("${tmdb.default-page-size:20}")
+    private int tmdbDefaultPageSize;
     private static final int SUMMARY_SIZE = 10;
 
     @Override
     @Cacheable(value = "mediaDetails", key = "#mediaType + '_' + #id")
-    public Mono<MediaDetailResponse> getMediaDetail(Long id, String mediaType) {
+    public MediaDetailResponse getMediaDetail(Long id, String mediaType) {
         MediaType type = parseMediaType(mediaType);
         log.info("{} 상세 정보 조회를 시작합니다. (ID: {})", type, id);
-
-        Mono<MediaDetailResponse> detailMono = switch (type) {
-            case MOVIE -> tmdbApiClient.getMovieDetail(id).map(MediaDetailResponse::from);
-            case TV -> tmdbApiClient.getTvSeriesDetail(id).map(MediaDetailResponse::from);
-        };
-        return detailMono.onErrorMap(this::wrapClientException);
+        try {
+            return switch (type) {
+                case MOVIE -> MediaDetailResponse.from(tmdbApiClient.getMovieDetail(id));
+                case TV -> MediaDetailResponse.from(tmdbApiClient.getTvSeriesDetail(id));
+            };
+        } catch (Exception e) {
+            throw wrapClientException(e);
+        }
     }
 
     @Override
     @Cacheable(value = "mediaSearch", key = "#query + '_' + #page")
-    public Mono<PagedResponse<MediaSummaryResponse>> searchMedia(String query, int page) {
+    public PageResponse<MediaSummaryResponse> searchMedia(String query, int page) {
         log.info("미디어 검색을 시작합니다. (쿼리: '{}', 페이지: {})", query, page);
-        return tmdbApiClient.searchMulti(query, page)
-                .map(tmdbResponse -> PagedResponse.from(tmdbResponse, MediaSummaryResponse::from))
-                .onErrorMap(this::wrapClientException);
+        try {
+            var tmdbResponse = tmdbApiClient.searchMulti(query, page);
+            return PageResponse.from(tmdbResponse, MediaSummaryResponse::from);
+        } catch (Exception e) {
+            throw wrapClientException(e);
+        }
     }
 
     @Override
-    public Mono<ChartSummaryResponse> getChartSummary() {
+    public ChartSummaryResponse getChartSummary() {
         log.info("홈 화면 차트 요약 정보 조회를 시작합니다.");
-        Mono<ChartSummaryResponse> chartSummaryMono = Mono.fromCallable(() ->
-                        adminHomeChartService.getHomeChartSettings().stream()
-                                .map(HomeChartSettingResponse::chartType)
-                                .toList()
-                )
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(summaryChartTypes -> {
-                    if (summaryChartTypes.isEmpty()) {
-                        log.warn("홈 화면에 설정된 차트가 없습니다.");
-                        return Mono.just(new ChartSummaryResponse(List.of()));
-                    }
-                    List<Mono<ChartSection>> chartSectionMonos = summaryChartTypes.stream()
-                            .map(this::createChartSection)
-                            .toList();
-                    return Mono.zip(chartSectionMonos, objects -> Arrays.stream(objects)
-                                    .map(obj -> (ChartSection) obj)
-                                    .collect(Collectors.toList()))
-                            .map(ChartSummaryResponse::new);
-                });
-        return chartSummaryMono.cache();
+        List<ChartType> summaryChartTypes = adminHomeChartService.getHomeChartSettings().stream()
+                .map(HomeChartSettingResponse::chartType)
+                .toList();
+        if (summaryChartTypes.isEmpty()) {
+            log.warn("홈 화면에 설정된 차트가 없습니다.");
+            return new ChartSummaryResponse(List.of());
+        }
+        List<ChartSection> chartSections = summaryChartTypes.parallelStream()
+                .map(this::createChartSection)
+                .collect(Collectors.toList());
+        return new ChartSummaryResponse(chartSections);
     }
 
     @Override
     @Cacheable(value = "curatedCharts", key = "#chartType.name() + '_' + #page")
-    public Mono<PagedResponse<MediaChartResponse>> getCuratedChart(ChartType chartType, int page) {
+    public PageResponse<MediaChartResponse> getCuratedChart(ChartType chartType, int page) {
         log.info("큐레이션 차트 조회를 시작합니다. (타입: {}, 페이지: {})", chartType.name(), page);
         ChartStrategy strategy = getChartStrategy(chartType);
-        return strategy.fetchChart(tmdbApiClient, page)
-                .onErrorMap(this::wrapClientException);
+        try {
+            return strategy.fetchChart(tmdbApiClient, page);
+        } catch (Exception e) {
+            throw wrapClientException(e);
+        }
     }
 
     @Override
     @Cacheable(value = "genreCharts", key = "#mediaType + '_' + #genreId + '_' + #page")
-    public Mono<PagedResponse<MediaChartResponse>> getGenreChart(String mediaType, Long genreId, int page) {
+    public PageResponse<MediaChartResponse> getGenreChart(String mediaType, Long genreId, int page) {
         log.info("장르별 차트 조회를 시작합니다. (미디어 타입: '{}', 장르 ID: '{}', 페이지: {})", mediaType, genreId, page);
-        ChartProperties props = ChartProperties.builder()
-                .genreId(String.valueOf(genreId))
-                .build();
+        ChartProperties props = ChartProperties.builder().genreId(String.valueOf(genreId)).build();
         return discoverMedia(parseMediaType(mediaType), props, page);
     }
 
     @Override
     @Cacheable(value = "platformCharts", key = "#platform.name() + '_' + #page")
-    public Mono<PagedResponse<MediaChartResponse>> getPlatformChart(Platform platform, int page) {
+    public PageResponse<MediaChartResponse> getPlatformChart(Platform platform, int page) {
         log.info("플랫폼별 차트 조회를 시작합니다. (플랫폼: '{}', 페이지: {})", platform.name(), page);
-        ChartProperties props = ChartProperties.builder()
-                .networkId(String.valueOf(platform.getId()))
-                .build();
+        ChartProperties props = ChartProperties.builder().networkId(String.valueOf(platform.getId())).build();
         return discoverMedia(MediaType.TV, props, page);
     }
 
     @Override
     @Cacheable("filterMetadata")
-    public Mono<FilterMetadataResponse> getFilterMetadata() {
+    public FilterMetadataResponse getFilterMetadata() {
         log.info("필터 메타데이터 조회를 시작합니다.");
-        Mono<List<GenreOption>> movieGenres = tmdbApiClient.getMovieGenres()
-                .map(res -> res.genres().stream().map(g -> new GenreOption(g.id().longValue(), g.name())).toList());
-        Mono<List<GenreOption>> tvGenres = tmdbApiClient.getTvGenres()
-                .map(res -> res.genres().stream().map(g -> new GenreOption(g.id().longValue(), g.name())).toList());
-        Mono<List<PlatformOption>> platforms = platformMetadataService.getPlatformOptions();
-        Mono<List<SortOption>> sortOptions = Mono.just(List.of(
-                new SortOption("popularity.desc", "인기순"),
-                new SortOption("vote_average.desc", "평점순"),
-                new SortOption("primary_release_date.desc", "최신순 (영화)"),
-                new SortOption("first_air_date.desc", "최신순 (TV)")
-        ));
-
-        return Mono.zip(movieGenres, tvGenres, platforms, sortOptions)
-                .map(tuple -> FilterMetadataResponse.builder()
-                        .movieGenres(tuple.getT1())
-                        .tvGenres(tuple.getT2())
-                        .platforms(tuple.getT3())
-                        .sortOptions(tuple.getT4())
-                        .build())
-                .onErrorMap(this::wrapClientException);
+        try {
+            List<GenreOption> movieGenres = tmdbApiClient.getMovieGenres().genres().stream().map(g -> new GenreOption(g.id().longValue(), g.name())).toList();
+            List<GenreOption> tvGenres = tmdbApiClient.getTvGenres().genres().stream().map(g -> new GenreOption(g.id().longValue(), g.name())).toList();
+            List<PlatformOption> platforms = platformMetadataService.getPlatformOptions();
+            List<SortOption> sortOptions = List.of(
+                    new SortOption("popularity.desc", "인기순"),
+                    new SortOption("vote_average.desc", "평점순"),
+                    new SortOption("primary_release_date.desc", "최신순 (영화)"),
+                    new SortOption("first_air_date.desc", "최신순 (TV)")
+            );
+            return FilterMetadataResponse.builder()
+                    .movieGenres(movieGenres)
+                    .tvGenres(tvGenres)
+                    .platforms(platforms)
+                    .sortOptions(sortOptions)
+                    .build();
+        } catch (Exception e) {
+            throw wrapClientException(e);
+        }
     }
 
-    private Mono<PagedResponse<MediaChartResponse>> discoverMedia(MediaType type, ChartProperties properties, int page) {
+    private PageResponse<MediaChartResponse> discoverMedia(MediaType type, ChartProperties properties, int page) {
         log.debug("{} 미디어 탐색을 시작합니다. (속성: {}, 페이지: {})", type, properties, page);
-        Mono<PagedResponse<MediaChartResponse>> discoveredMedia = switch (type) {
-            case MOVIE -> tmdbApiClient.discoverMovies(page, properties)
-                    .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case TV -> tmdbApiClient.discoverTvSeries(page, properties)
-                    .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-        };
-        return discoveredMedia.onErrorMap(this::wrapClientException);
+        try {
+            if (type.isMovie()) {
+                TmdbPagedResponse<TmdbMovieResponse> tmdbResponse = tmdbApiClient.discoverMovies(page, properties);
+                return toChartResponsePage(tmdbResponse, MediaSummaryResponse::from);
+            } else {
+                TmdbPagedResponse<TmdbTvSeriesResponse> tmdbResponse = tmdbApiClient.discoverTvSeries(page, properties);
+                return toChartResponsePage(tmdbResponse, MediaSummaryResponse::from);
+            }
+        } catch (Exception e) {
+            throw wrapClientException(e);
+        }
     }
 
-    private Mono<ChartSection> createChartSection(ChartType chartType) {
-        return getCuratedChart(chartType, 1)
-                .map(pagedResponse -> pagedResponse.content().stream().limit(SUMMARY_SIZE).toList())
-                .map(content -> ChartSection.builder()
-                        .chartType(chartType.name())
-                        .title(chartType.getDescription())
-                        .content(content)
-                        .build());
+    private ChartSection createChartSection(ChartType chartType) {
+        PageResponse<MediaChartResponse> pageResponse = getCuratedChart(chartType, 1);
+        List<MediaChartResponse> content = pageResponse.content().stream().limit(SUMMARY_SIZE).toList();
+        return ChartSection.builder()
+                .chartType(chartType.name())
+                .title(chartType.getDescription())
+                .content(content)
+                .build();
+    }
+
+    private <T> PageResponse<MediaChartResponse> toChartResponsePage(
+            TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PageResponse.empty();
+        }
+        AtomicInteger ranker = new AtomicInteger((tmdbResponse.getPage() - 1) * tmdbDefaultPageSize);
+        List<MediaChartResponse> content = tmdbResponse.getResults().stream()
+                .map(item -> {
+                    MediaSummaryResponse summary = mapper.apply(item);
+                    return MediaChartResponse.from(summary, ranker.incrementAndGet());
+                })
+                .toList();
+        return new PageResponse<>(
+                content,
+                tmdbResponse.getPage(),
+                content.size(),
+                (long) tmdbResponse.getTotalResults(),
+                tmdbResponse.getTotalPages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotalPages()
+        );
     }
 
     private MediaType parseMediaType(String mediaType) {

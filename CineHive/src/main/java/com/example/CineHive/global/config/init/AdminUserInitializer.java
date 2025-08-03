@@ -21,10 +21,10 @@ public class AdminUserInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${admin.account.email}")
+    @Value("${app.admin.email}")
     private String adminEmail;
 
-    @Value("${admin.account.password}")
+    @Value("${app.admin.password}")
     private String adminPassword;
 
     @Override

@@ -1,36 +1,45 @@
 package com.example.CineHive.domain.media;
 
+import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.dto.MediaChartResponse;
 import com.example.CineHive.domain.media.dto.MediaSummaryResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
 public class ChartStrategyFactory {
 
+    @Value("${tmdb.default-page-size:20}")
+    private int tmdbDefaultPageSize;
+
     public ChartStrategy getStrategy(ChartType chartType) {
         return switch (chartType) {
             // 기본 영화 차트
-            case POPULAR_MOVIES -> (client, page) -> client.getPopularMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case TOP_RATED_MOVIES -> (client, page) -> client.getTopRatedMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case UPCOMING_MOVIES -> (client, page) -> client.getUpcomingMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case NOW_PLAYING_MOVIES -> (client, page) -> client.getNowPlayingMovies(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case POPULAR_MOVIES -> (client, page) -> toChartResponsePage(client.getPopularMovies(page), MediaSummaryResponse::from);
+            case TOP_RATED_MOVIES -> (client, page) -> toChartResponsePage(client.getTopRatedMovies(page), MediaSummaryResponse::from);
+            case UPCOMING_MOVIES -> (client, page) -> toChartResponsePage(client.getUpcomingMovies(page), MediaSummaryResponse::from);
+            case NOW_PLAYING_MOVIES -> (client, page) -> toChartResponsePage(client.getNowPlayingMovies(page), MediaSummaryResponse::from);
 
             // 기본 TV 시리즈 차트
-            case POPULAR_TV -> (client, page) -> client.getPopularTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case TOP_RATED_TV -> (client, page) -> client.getTopRatedTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case ON_THE_AIR_TV -> (client, page) -> client.getOnTheAirTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case AIRING_TODAY_TV -> (client, page) -> client.getAiringTodayTvSeries(page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case POPULAR_TV -> (client, page) -> toChartResponsePage(client.getPopularTvSeries(page), MediaSummaryResponse::from);
+            case TOP_RATED_TV -> (client, page) -> toChartResponsePage(client.getTopRatedTvSeries(page), MediaSummaryResponse::from);
+            case ON_THE_AIR_TV -> (client, page) -> toChartResponsePage(client.getOnTheAirTvSeries(page), MediaSummaryResponse::from);
+            case AIRING_TODAY_TV -> (client, page) -> toChartResponsePage(client.getAiringTodayTvSeries(page), MediaSummaryResponse::from);
 
             // 트렌드 차트
-            case TRENDING_MOVIES_WEEK -> (client, page) -> client.getTrendingMovies("week", page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
-            case TRENDING_TV_WEEK -> (client, page) -> client.getTrendingTv("week", page).map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+            case TRENDING_MOVIES_WEEK -> (client, page) -> toChartResponsePage(client.getTrendingMovies("week", page), MediaSummaryResponse::from);
+            case TRENDING_TV_WEEK -> (client, page) -> toChartResponsePage(client.getTrendingTv("week", page), MediaSummaryResponse::from);
 
             // Discover API 기반 차트
             case ACTION_BLOCKBUSTERS -> createDiscoverMovieStrategy(ChartProperties.builder().genreId("28").sortBy("vote_average.desc").build());
@@ -107,12 +116,38 @@ public class ChartStrategyFactory {
     }
 
     private ChartStrategy createDiscoverMovieStrategy(ChartProperties props) {
-        return (client, page) -> client.discoverMovies(page, props)
-                .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+        return (client, page) -> {
+            var res = client.discoverMovies(page, props);
+            return toChartResponsePage(res, MediaSummaryResponse::from);
+        };
     }
 
     private ChartStrategy createDiscoverTvStrategy(ChartProperties props) {
-        return (client, page) -> client.discoverTvSeries(page, props)
-                .map(res -> PagedResponse.fromChart(res, MediaSummaryResponse::from));
+        return (client, page) -> {
+            var res = client.discoverTvSeries(page, props);
+            return toChartResponsePage(res, MediaSummaryResponse::from);
+        };
+    }
+
+    private <T> PageResponse<MediaChartResponse> toChartResponsePage(
+            TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
+        if (tmdbResponse == null || tmdbResponse.getResults() == null) {
+            return PageResponse.empty();
+        }
+        AtomicInteger ranker = new AtomicInteger((tmdbResponse.getPage() - 1) * tmdbDefaultPageSize);
+        List<MediaChartResponse> content = tmdbResponse.getResults().stream()
+                .map(item -> {
+                    MediaSummaryResponse summary = mapper.apply(item);
+                    return MediaChartResponse.from(summary, ranker.incrementAndGet());
+                })
+                .toList();
+        return new PageResponse<>(
+                content,
+                tmdbResponse.getPage(),
+                content.size(),
+                (long) tmdbResponse.getTotalResults(),
+                tmdbResponse.getTotalPages(),
+                tmdbResponse.getPage() >= tmdbResponse.getTotalPages()
+        );
     }
 }

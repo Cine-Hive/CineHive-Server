@@ -39,7 +39,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
 
-    @Value("${jwt.expiration.refresh-token}")
+    @Value("${app.jwt.refresh-token-expiration}")
     private String refreshTokenExpirationIso;
 
     private Map<ProviderType, OAuth2Client> clientMap;

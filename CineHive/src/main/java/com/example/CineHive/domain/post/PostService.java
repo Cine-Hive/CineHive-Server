@@ -1,9 +1,9 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
-import com.example.CineHive.domain.post.dto.PostSortType;
+import org.springframework.data.domain.Pageable;
 import com.example.CineHive.domain.post.dto.PostSummaryResponse;
 import com.example.CineHive.domain.post.dto.UpdatePostRequest;
 
@@ -45,12 +45,10 @@ public interface PostService {
 
     /**
      * 게시글 목록을 페이징하여 조회합니다.
-     * @param page 페이지 번호 (1부터 시작)
-     * @param size 페이지 크기
-     * @param sort 정렬 기준
-     * @return 페이징된 게시글 요약 정보 목록
+     * @param pageable 페이징 및 정렬 정보
+     * @return 페이징된 게시글 요약 목록
      */
-    PagedResponse<PostSummaryResponse> getPosts(int page, int size, PostSortType sort);
+    PageResponse<PostSummaryResponse> getPosts(Pageable pageable);
 
     /**
      * 게시글의 조회수를 1 증가시킵니다.
@@ -59,11 +57,10 @@ public interface PostService {
     void incrementViews(Long postId);
 
     /**
-     * 키워드로 게시글을 검색하고 결과를 페이징하여 반환합니다.
+     * 키워드로 게시글을 검색하고 페이징하여 조회합니다.
      * @param keyword 검색어
-     * @param page    페이지 번호
-     * @param size    페이지 크기
-     * @return 페이징된 검색 결과
+     * @param pageable 페이징 정보 (정렬은 최신순으로 고정)
+     * @return 페이징된 검색 결과 목록
      */
-    PagedResponse<PostSummaryResponse> searchPosts(String keyword, int page, int size);
+    PageResponse<PostSummaryResponse> searchPosts(String keyword, Pageable pageable);
 }
