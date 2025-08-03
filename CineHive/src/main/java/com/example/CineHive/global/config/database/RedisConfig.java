@@ -11,10 +11,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.data.redis.host}")
+    @Value("${spring.redis.host}")
     private String host;
 
-    @Value("${spring.data.redis.port}")
+    @Value("${spring.redis.port}")
     private int port;
 
     /**
@@ -33,22 +33,19 @@ public class RedisConfig {
      * Key와 Value의 Serializer를 StringRedisSerializer로 설정하여,
      * Redis에 저장될 때와 조회될 때 문자열로 올바르게 변환되도록 합니다.
      *
-     * @param redisConnectionFactory Redis 연결을 위한 팩토리
      * @return 설정이 완료된 RedisTemplate 객체
      */
     @Bean
-    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory);
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        // Key와 Value의 직렬화/역직렬화 방식을 String으로 설정
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
+        // Key Serializer는 String으로 설정
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
 
-        // Hash Key와 Hash Value의 직렬화/역직렬화 방식도 String으로 설정 (필요 시)
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new StringRedisSerializer());
+        // Value Serializer도 String으로 설정 (객체를 저장하려면 Jackson2JsonRedisSerializer 등을 사용)
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
 
-        return template;
+        return redisTemplate;
     }
 }
