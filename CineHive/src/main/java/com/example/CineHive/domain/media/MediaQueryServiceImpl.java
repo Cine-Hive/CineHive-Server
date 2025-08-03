@@ -6,7 +6,7 @@ import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
 import com.example.CineHive.domain.admin.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.domain.meta.PlatformMetadataService;
 import com.example.CineHive.global.exception.BusinessException;
@@ -55,11 +55,11 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     @Override
     @Cacheable(value = "mediaSearch", key = "#query + '_' + #page")
-    public PagedResponse<MediaSummaryResponse> searchMedia(String query, int page) {
+    public PageResponse<MediaSummaryResponse> searchMedia(String query, int page) {
         log.info("미디어 검색을 시작합니다. (쿼리: '{}', 페이지: {})", query, page);
         try {
             var tmdbResponse = tmdbApiClient.searchMulti(query, page);
-            return PagedResponse.from(tmdbResponse, MediaSummaryResponse::from);
+            return PageResponse.from(tmdbResponse, MediaSummaryResponse::from);
         } catch (Exception e) {
             throw wrapClientException(e);
         }
@@ -83,7 +83,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     @Override
     @Cacheable(value = "curatedCharts", key = "#chartType.name() + '_' + #page")
-    public PagedResponse<MediaChartResponse> getCuratedChart(ChartType chartType, int page) {
+    public PageResponse<MediaChartResponse> getCuratedChart(ChartType chartType, int page) {
         log.info("큐레이션 차트 조회를 시작합니다. (타입: {}, 페이지: {})", chartType.name(), page);
         ChartStrategy strategy = getChartStrategy(chartType);
         try {
@@ -95,7 +95,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     @Override
     @Cacheable(value = "genreCharts", key = "#mediaType + '_' + #genreId + '_' + #page")
-    public PagedResponse<MediaChartResponse> getGenreChart(String mediaType, Long genreId, int page) {
+    public PageResponse<MediaChartResponse> getGenreChart(String mediaType, Long genreId, int page) {
         log.info("장르별 차트 조회를 시작합니다. (미디어 타입: '{}', 장르 ID: '{}', 페이지: {})", mediaType, genreId, page);
         ChartProperties props = ChartProperties.builder().genreId(String.valueOf(genreId)).build();
         return discoverMedia(parseMediaType(mediaType), props, page);
@@ -103,7 +103,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
 
     @Override
     @Cacheable(value = "platformCharts", key = "#platform.name() + '_' + #page")
-    public PagedResponse<MediaChartResponse> getPlatformChart(Platform platform, int page) {
+    public PageResponse<MediaChartResponse> getPlatformChart(Platform platform, int page) {
         log.info("플랫폼별 차트 조회를 시작합니다. (플랫폼: '{}', 페이지: {})", platform.name(), page);
         ChartProperties props = ChartProperties.builder().networkId(String.valueOf(platform.getId())).build();
         return discoverMedia(MediaType.TV, props, page);
@@ -134,7 +134,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
         }
     }
 
-    private PagedResponse<MediaChartResponse> discoverMedia(MediaType type, ChartProperties properties, int page) {
+    private PageResponse<MediaChartResponse> discoverMedia(MediaType type, ChartProperties properties, int page) {
         log.debug("{} 미디어 탐색을 시작합니다. (속성: {}, 페이지: {})", type, properties, page);
         try {
             if (type.isMovie()) {
@@ -150,8 +150,8 @@ public class MediaQueryServiceImpl implements MediaQueryService {
     }
 
     private ChartSection createChartSection(ChartType chartType) {
-        PagedResponse<MediaChartResponse> pagedResponse = getCuratedChart(chartType, 1);
-        List<MediaChartResponse> content = pagedResponse.content().stream().limit(SUMMARY_SIZE).toList();
+        PageResponse<MediaChartResponse> pageResponse = getCuratedChart(chartType, 1);
+        List<MediaChartResponse> content = pageResponse.content().stream().limit(SUMMARY_SIZE).toList();
         return ChartSection.builder()
                 .chartType(chartType.name())
                 .title(chartType.getDescription())
@@ -159,10 +159,10 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                 .build();
     }
 
-    private <T> PagedResponse<MediaChartResponse> toChartResponsePage(
+    private <T> PageResponse<MediaChartResponse> toChartResponsePage(
             TmdbPagedResponse<T> tmdbResponse, Function<T, MediaSummaryResponse> mapper) {
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return PagedResponse.empty();
+            return PageResponse.empty();
         }
         AtomicInteger ranker = new AtomicInteger((tmdbResponse.getPage() - 1) * tmdbDefaultPageSize);
         List<MediaChartResponse> content = tmdbResponse.getResults().stream()
@@ -171,7 +171,7 @@ public class MediaQueryServiceImpl implements MediaQueryService {
                     return MediaChartResponse.from(summary, ranker.incrementAndGet());
                 })
                 .toList();
-        return new PagedResponse<>(
+        return new PageResponse<>(
                 content,
                 tmdbResponse.getPage(),
                 content.size(),

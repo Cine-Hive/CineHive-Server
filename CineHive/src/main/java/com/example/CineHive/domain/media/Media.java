@@ -1,5 +1,7 @@
 package com.example.CineHive.domain.media;
 
+import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
 import com.example.CineHive.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,7 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -63,12 +67,36 @@ public class Media extends BaseEntity {
         this.genres = genres != null ? genres : new HashSet<>();
     }
 
-    public void updateRating(double totalRating, int newReviewCount) {
+    public static Media from(TmdbMovieDetailResponse tmdb) {
+        return Media.builder()
+                .tmdbId(tmdb.id().intValue())
+                .mediaType(MediaType.MOVIE)
+                .title(tmdb.title())
+                .posterPath(tmdb.posterPath())
+                .releaseDate(tmdb.releaseDate())
+                .genres(tmdb.genres().stream()
+                        .map(g -> Genre.fromTmdbId(g.id()))
+                        .flatMap(java.util.Optional::stream)
+                        .collect(Collectors.toSet()))
+                .build();
+    }
+
+    public static Media from(TmdbTvSeriesDetailResponse tmdb) {
+        return Media.builder()
+                .tmdbId(tmdb.id().intValue())
+                .mediaType(MediaType.TV)
+                .title(tmdb.name())
+                .posterPath(tmdb.posterPath())
+                .releaseDate(tmdb.firstAirDate())
+                .genres(tmdb.genres().stream()
+                        .map(g -> Genre.fromTmdbId(g.id()))
+                        .flatMap(java.util.Optional::stream)
+                        .collect(Collectors.toSet()))
+                .build();
+    }
+
+    public void updateRating(double averageRating, int newReviewCount) {
         this.reviewCount = newReviewCount;
-        if (newReviewCount > 0) {
-            this.averageRating = Math.round((totalRating / newReviewCount) * 100.0) / 100.0;
-        } else {
-            this.averageRating = 0.0;
-        }
+        this.averageRating = averageRating;
     }
 }

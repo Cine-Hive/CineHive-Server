@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.domain.common.dto.PagedResponse;
+import com.example.CineHive.domain.common.dto.PageResponse;
 
 /**
  * TMDB API를 통해 영화 및 TV 시리즈 정보를 조회하는 서비스 인터페이스입니다.
@@ -23,7 +23,7 @@ public interface MediaQueryService {
      * @param page 조회할 페이지 번호
      * @return 검색 결과 목록을 담은 PagedResponse 객체
      */
-    PagedResponse<MediaSummaryResponse> searchMedia(String query, int page);
+    PageResponse<MediaSummaryResponse> searchMedia(String query, int page);
 
     /**
      * 홈 화면용 차트 요약 목록을 조회합니다.
@@ -37,7 +37,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse 객체
      */
-    PagedResponse<MediaChartResponse> getCuratedChart(ChartType chartType, int page);
+    PageResponse<MediaChartResponse> getCuratedChart(ChartType chartType, int page);
 
     /**
      * 특정 장르의 미디어 목록을 조회합니다.
@@ -46,7 +46,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse 객체
      */
-    PagedResponse<MediaChartResponse> getGenreChart(String mediaType, Long genreId, int page);
+    PageResponse<MediaChartResponse> getGenreChart(String mediaType, Long genreId, int page);
 
     /**
      * 특정 스트리밍 플랫폼의 TV 시리즈 목록을 조회합니다.
@@ -54,7 +54,7 @@ public interface MediaQueryService {
      * @param page 페이지 번호
      * @return 차트 정보 목록을 담은 PagedResponse 객체
      */
-    PagedResponse<MediaChartResponse> getPlatformChart(Platform platform, int page);
+    PageResponse<MediaChartResponse> getPlatformChart(Platform platform, int page);
 
     /**
      * 필터 UI 구성을 위한 메타데이터를 조회합니다.
