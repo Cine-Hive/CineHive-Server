@@ -2,7 +2,7 @@ package com.example.CineHive.domain.auth.dto.kakao;
 
 import com.example.CineHive.domain.auth.dto.OAuth2Response;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.auth.ProviderType;
+import com.example.CineHive.domain.auth.controller.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record KakaoUserResponse(

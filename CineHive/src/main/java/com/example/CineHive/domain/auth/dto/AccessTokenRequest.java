@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.dto;
+package com.example.CineHive.domain.auth.controller.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

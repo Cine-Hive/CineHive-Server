@@ -1,7 +1,7 @@
-package com.example.CineHive.domain.user.dto;
+package com.example.CineHive.domain.user.controller.dto;
 
-import com.example.CineHive.domain.media.Genre;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.media.controller.Genre;
+import com.example.CineHive.domain.user.controller.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 

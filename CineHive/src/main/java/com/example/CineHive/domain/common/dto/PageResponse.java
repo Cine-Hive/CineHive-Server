@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.common.dto;
+package com.example.CineHive.domain.common.controller.dto;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import io.swagger.v3.oas.annotations.media.Schema;

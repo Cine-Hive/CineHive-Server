@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.admin.dto;
+package com.example.CineHive.domain.admin.controller.dto;
 
 import com.example.CineHive.domain.media.dto.ChartType;
 import io.swagger.v3.oas.annotations.media.Schema;

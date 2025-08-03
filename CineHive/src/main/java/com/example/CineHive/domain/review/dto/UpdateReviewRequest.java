@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review.dto;
+package com.example.CineHive.domain.review.controller.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;

@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.dto;
+package com.example.CineHive.domain.media.controller.dto;
 
 import com.example.CineHive.client.tmdb.dto.*;
 import lombok.Builder;

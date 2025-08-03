@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.user.dto;
+package com.example.CineHive.domain.user.controller.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
