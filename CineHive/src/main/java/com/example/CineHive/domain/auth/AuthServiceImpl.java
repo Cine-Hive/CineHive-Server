@@ -48,8 +48,8 @@ public class AuthServiceImpl implements AuthService {
 
     // Configuration Properties
     private final SecurityPolicyProperties securityPolicy;
-    @Value("${jwt.expiration.refresh-token}")
-    private String refreshTokenExpirationIso;
+    @Value("${app.jwt.refresh-token-expiration}")
+    String refreshTokenExpirationIso;
 
     // Constants
     private static final String LOGIN_ATTEMPT_KEY_PREFIX = "login:attempts:";

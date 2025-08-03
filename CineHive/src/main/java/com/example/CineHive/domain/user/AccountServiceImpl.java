@@ -32,7 +32,7 @@ public class AccountServiceImpl implements AccountService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordHistoryRepository passwordHistoryRepository;
 
-    @Value("${security.password.history-size}")
+    @Value("${app.security.password.history-size}")
     private int passwordHistorySize;
 
     @Override
