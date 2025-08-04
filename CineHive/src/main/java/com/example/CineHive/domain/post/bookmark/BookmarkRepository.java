@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.bookmark;
 
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

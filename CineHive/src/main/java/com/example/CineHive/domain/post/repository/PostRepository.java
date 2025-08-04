@@ -1,5 +1,6 @@
-package com.example.CineHive.domain.post;
+package com.example.CineHive.domain.post.repository;
 
+import com.example.CineHive.domain.post.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -45,14 +46,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount > 0")
     int decreaseLikeCount(@Param("postId") Long postId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + 1 WHERE p.id = :postId")
-    int increaseDislikeCount(@Param("postId") Long postId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount - 1 WHERE p.id = :postId AND p.dislikeCount > 0")
-    int decreaseDislikeCount(@Param("postId") Long postId);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.bookmarkCount = p.bookmarkCount + 1 WHERE p.id = :postId")

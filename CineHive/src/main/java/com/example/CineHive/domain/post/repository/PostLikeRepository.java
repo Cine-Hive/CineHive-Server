@@ -1,6 +1,7 @@
-package com.example.CineHive.domain.post.like;
+package com.example.CineHive.domain.post.repository;
 
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.entity.PostLike;
 import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,16 +15,16 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface LikeRepository extends JpaRepository<Like, Long> {
+public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
-    Optional<Like> findByUserAndPost(User user, Post post);
+    Optional<PostLike> findByUserAndPost(User user, Post post);
 
     boolean existsByUserAndPost(User user, Post post);
 
     int countByPost_Id(Long postId);
 
     @EntityGraph(attributePaths = {"user"})
-    Page<Like> findAllByPost(Post post, Pageable pageable);
+    Page<PostLike> findAllByPost(Post post, Pageable pageable);
 
     /**
      * 특정 사용자와 게시글에 해당하는 '좋아요'를 삭제합니다.
@@ -33,6 +34,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     int deleteByUserAndPost(User user, Post post);
 
     @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM Like l WHERE l.user.email = :email")
+    @Query("DELETE FROM PostLike pl WHERE pl.user.email = :email")
     int deleteAllByUserEmail(@Param("email") String email);
 }

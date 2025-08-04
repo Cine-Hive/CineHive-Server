@@ -1,14 +1,14 @@
-package com.example.CineHive.domain.post;
+package com.example.CineHive.domain.post.controller;
 
 import com.example.CineHive.domain.post.dto.*;
+import com.example.CineHive.domain.post.service.PostService;
 import com.example.CineHive.global.dto.ApiResponse;
 import com.example.CineHive.global.dto.MessageResponse;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import com.example.CineHive.domain.post.bookmark.BookmarkService;
-import com.example.CineHive.domain.post.dislike.DislikeService;
-import com.example.CineHive.domain.post.like.LikeService;
 import com.example.CineHive.domain.report.ReportService;
+import com.example.CineHive.domain.post.service.PostLikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,8 +35,7 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
 
     private final PostService postService;
-    private final LikeService likeService;
-    private final DislikeService dislikeService;
+    private final PostLikeService postLikeService;
     private final BookmarkService bookmarkService;
     private final ReportService reportService;
 
@@ -184,15 +183,14 @@ public class PostController {
             
             **[주요 동작]**
             - 이미 '좋아요'를 누른 상태에서 다시 호출해도 아무 변화가 없습니다.
-            - 이미 '싫어요'를 누른 상태였다면, '싫어요'는 자동으로 취소되고 '좋아요'가 등록됩니다.
             """)
     @PostMapping("/{postId}/likes")
-    public ResponseEntity<ApiResponse<MessageResponse>> addLike(
-            @PathVariable Long postId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    public MessageResponse addLike(
+                                    @PathVariable Long postId,
+                                    @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        likeService.addLike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '좋아요'를 눌렀습니다.")));
+        postLikeService.like(userDetails.getUsername(), postId);
+        return new MessageResponse("게시글에 '좋아요'를 눌렀습니다.");
     }
 
     @Operation(summary = "게시글 '좋아요' 취소",
@@ -202,55 +200,16 @@ public class PostController {
             **[인증]**
             - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
             
-            **[주요 동작]**
-            - '좋아요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
+            **[응답]**
+            - 성공 시, 응답 본문 없이 `204 No Content` 상태 코드를 반환합니다.
             """)
     @DeleteMapping("/{postId}/likes")
-    public ResponseEntity<ApiResponse<MessageResponse>> removeLike(
-            @PathVariable Long postId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeLike( // void로 변경
+                            @PathVariable Long postId,
+                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-        likeService.removeLike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'좋아요'를 취소했습니다.")));
-    }
-
-    @Operation(summary = "게시글 싫어요",
-            description = """
-            ### **특정 게시글에 '싫어요'를 누릅니다.**
-            
-            **[인증]**
-            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
-            
-            **[주요 동작]**
-            - 이미 '싫어요'를 누른 상태에서 다시 호출해도 아무 변화가 없습니다.
-            - 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소되고 '싫어요'가 등록됩니다.
-            """)
-    @PostMapping("/{postId}/dislikes")
-    public ResponseEntity<ApiResponse<MessageResponse>> addDislike(
-            @PathVariable Long postId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-
-        dislikeService.addDislike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '싫어요'를 눌렀습니다.")));
-    }
-
-    @Operation(summary = "게시글 '싫어요' 취소",
-            description = """
-            ### **특정 게시글에 눌렀던 '싫어요'를 취소합니다.**
-            
-            **[인증]**
-            - **필수**: `Authorization` 헤더에 유효한 Access Token을 포함해야 합니다.
-            
-            **[주요 동작]**
-            - '싫어요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
-            """)
-    @DeleteMapping("/{postId}/dislikes")
-    public ResponseEntity<ApiResponse<MessageResponse>> removeDislike(
-            @PathVariable Long postId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-
-        dislikeService.removeDislike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'싫어요'를 취소했습니다.")));
+        postLikeService.unlike(userDetails.getUsername(), postId);
     }
 
     @Operation(summary = "게시글 북마크",

@@ -1,5 +1,7 @@
-package com.example.CineHive.domain.post;
+package com.example.CineHive.domain.post.service;
 
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;

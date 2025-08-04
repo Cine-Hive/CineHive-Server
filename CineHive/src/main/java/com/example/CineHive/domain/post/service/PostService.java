@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post;
+package com.example.CineHive.domain.post.service;
 
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;

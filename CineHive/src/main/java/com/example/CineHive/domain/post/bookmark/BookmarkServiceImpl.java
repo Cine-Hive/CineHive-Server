@@ -1,11 +1,11 @@
 package com.example.CineHive.domain.post.bookmark;
 
 import com.example.CineHive.global.util.DomainFinder;
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.PostRepository;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

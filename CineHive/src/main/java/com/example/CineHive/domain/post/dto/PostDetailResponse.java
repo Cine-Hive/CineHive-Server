@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.dto;
 
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
@@ -34,7 +34,6 @@ public record PostDetailResponse(
                 .updatedAt(post.getUpdatedAt())
                 .views(post.getViews())
                 .likeCount(post.getLikeCount())
-                .dislikeCount(post.getDislikeCount())
                 .bookmarkCount(post.getBookmarkCount())
                 .comments(post.getComments().stream()
                         .map(CommentResponse::from)

@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post;
+package com.example.CineHive.domain.post.entity;
 
 import com.example.CineHive.domain.post.comment.Comment;
 import com.example.CineHive.global.entity.BaseEntity;
@@ -14,16 +14,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 게시글 엔티티입니다.
- * 모든 카운트(조회수, 좋아요 등)는 데이터 정합성을 위해 Repository 레벨의 원자적 업데이트 쿼리를 통해 관리됩니다.
- */
-@NamedEntityGraph(
-        name = "Post.withUser",
-        attributeNodes = {
-                @NamedAttributeNode("user")
-        }
-)
+@NamedEntityGraph(name = "Post.withUser", attributeNodes = @NamedAttributeNode("user"))
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -57,9 +48,6 @@ public class Post extends BaseEntity {
     private int likeCount = 0;
 
     @Column(nullable = false)
-    private int dislikeCount = 0;
-
-    @Column(nullable = false)
     private int bookmarkCount = 0;
 
     @Column(nullable = false)
@@ -75,5 +63,10 @@ public class Post extends BaseEntity {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    // 좋아요 카운트 업데이트 로직 캡슐화
+    public void updateLikeCount(int count) {
+        this.likeCount = Math.max(0, count);
     }
 }

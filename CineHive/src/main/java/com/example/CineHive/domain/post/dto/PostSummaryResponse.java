@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.dto;
 
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import java.time.Instant;
