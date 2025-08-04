@@ -1,15 +1,17 @@
 package com.example.CineHive.domain.account.controller;
 
+import com.example.CineHive.domain.account.dto.AccountInfoResponse;
+import com.example.CineHive.domain.account.dto.UpdatePreferencesRequest;
+import com.example.CineHive.domain.account.dto.UpdateProfileRequest;
 import com.example.CineHive.domain.account.service.AccountService;
 import com.example.CineHive.domain.account.dto.UpdatePasswordRequest;
-import com.example.CineHive.global.dto.ApiResponse;
 import com.example.CineHive.global.dto.MessageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -29,11 +31,30 @@ public class AccountController {
     // == 계정 관리
     // =========================================
 
-    @Operation(summary = "내 정보 상세 조회")
+    @Operation(summary = "내 정보 상세 조회",
+            description = "현재 로그인된 사용자의 이메일, 닉네임, 선호 장르 등 상세 프로필 정보를 조회합니다.")
     @GetMapping
-    public void getMyInfo(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. AccountService.getAccountInfo(userEmail) 호출
-        // TODO: 2. AccountInfoResponse DTO로 변환하여 반환
+    public AccountInfoResponse getMyInfo(
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        return accountService.getAccountInfo(userDetails.getUsername());
+    }
+
+    @Operation(summary = "내 프로필 정보 수정 (닉네임 등)",
+            description = "현재 로그인된 사용자의 닉네임, 자기소개 등 공개 프로필 정보를 수정합니다.")
+    @PatchMapping("/profile")
+    public AccountInfoResponse updateMyProfile(
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        return accountService.updateProfile(userDetails.getUsername(), request);
+    }
+
+    @Operation(summary = "내 선호 정보 수정 (장르 등)",
+            description = "현재 로그인된 사용자의 선호 장르와 같은 개인화 설정을 수정합니다.")
+    @PatchMapping("/preferences")
+    public AccountInfoResponse updateMyPreferences(
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdatePreferencesRequest request) {
+        return accountService.updatePreferences(userDetails.getUsername(), request);
     }
 
     @Operation(summary = "비밀번호 변경",
@@ -56,27 +77,26 @@ public class AccountController {
             - 성공 시, "비밀번호가 성공적으로 변경되었습니다." 메시지를 반환합니다.
             """)
     @PatchMapping("/password")
-    public ResponseEntity<ApiResponse<MessageResponse>> changeMyPassword(
+    public MessageResponse changeMyPassword(
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdatePasswordRequest request) {
         accountService.changePassword(userDetails.getUsername(), request);
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("비밀번호가 성공적으로 변경되었습니다.")));
+        return new MessageResponse("비밀번호가 성공적으로 변경되었습니다.");
     }
 
-    @Operation(summary = "내 정보 수정",
-            description = "닉네임, 프로필 이미지, 최근 검색어 저장 여부 등 내 계정 정보를 수정합니다.")
-    @PatchMapping
-    public void updateMyInfo(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. AccountUpdateRequest DTO를 @RequestBody로 받음
-        // TODO: 2. AccountService.updateAccountInfo(userEmail, request) 호출
-        // TODO: 3. 수정된 정보가 포함된 AccountInfoResponse DTO 반환
-    }
-
-    @Operation(summary = "회원 탈퇴")
+    @Operation(summary = "회원 탈퇴",
+            description = """
+            ### **현재 로그인된 사용자의 계정을 비활성화(소프트 삭제)하고 개인정보를 익명화합니다.**
+            
+            **[서버 처리]**
+            - 사용자의 개인 식별 정보(이메일, 이름 등)는 복구할 수 없도록 익명 처리됩니다.
+            - 사용자가 작성했던 게시글, 댓글, 리뷰 등은 '탈퇴한 사용자'의 글로 유지됩니다.
+            """)
     @DeleteMapping
-    public void deleteMyAccount(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: 1. AccountService.deleteAccount(userEmail) 호출
-        // TODO: 2. 성공 시 MessageResponse 반환
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMyAccount(
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        accountService.deleteAccount(userDetails.getUsername());
     }
 
     // =========================================

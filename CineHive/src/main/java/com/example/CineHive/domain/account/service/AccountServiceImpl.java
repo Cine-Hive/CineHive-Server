@@ -1,20 +1,20 @@
 package com.example.CineHive.domain.account.service;
 
 import com.example.CineHive.domain.account.dto.AccountInfoResponse;
-import com.example.CineHive.domain.account.dto.UpdateGenresRequest;
-import com.example.CineHive.domain.account.dto.UpdateNicknameRequest;
 import com.example.CineHive.domain.account.dto.UpdatePasswordRequest;
+import com.example.CineHive.domain.account.dto.UpdatePreferencesRequest;
+import com.example.CineHive.domain.account.dto.UpdateProfileRequest;
 import com.example.CineHive.domain.auth.password.entity.PasswordHistory;
 import com.example.CineHive.domain.auth.password.repository.PasswordHistoryRepository;
-import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.domain.media.Genre;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.global.properties.SecurityPolicyProperties;
+import com.example.CineHive.global.util.DomainFinder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,77 +33,83 @@ public class AccountServiceImpl implements AccountService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordHistoryRepository passwordHistoryRepository;
-
-    @Value("${app.security.password.history-size}")
-    private int passwordHistorySize;
+    private final SecurityPolicyProperties securityPolicy;
 
     @Override
-    public AccountInfoResponse getAccountInfo(String email) {
-        User user = domainFinder.findUserByEmail(email);
+    public AccountInfoResponse getAccountInfo(String userEmail) {
+        User user = domainFinder.findUserByEmail(userEmail);
         return AccountInfoResponse.from(user);
     }
 
     @Override
     @Transactional
-    public void changeNickname(String email, UpdateNicknameRequest request) {
-        User user = domainFinder.findUserByEmail(email);
-        String newNickname = request.nickname();
-        if (userRepository.existsByNickname(newNickname) && !user.getNickname().equals(newNickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
-        }
-        user.changeNickname(newNickname);
-        log.info("사용자({}), 닉네임을 '{}'(으)로 변경했습니다.", email, newNickname);
-    }
-
-    @Override
-    @Transactional
-    public void changePassword(String email, UpdatePasswordRequest request) {
-        User user = domainFinder.findUserByEmail(email);
-
+    public void changePassword(String userEmail, UpdatePasswordRequest request) {
+        User user = domainFinder.findUserByEmail(userEmail);
         if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
-
-        String newPassword = request.newPassword();
-
-        validatePasswordHistory(user, newPassword);
+        validatePasswordHistory(user, request.newPassword());
         archiveOldPassword(user);
-        user.changePassword(passwordEncoder.encode(newPassword));
-        log.info("사용자({}), 비밀번호를 변경했습니다.", email);
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        log.info("사용자(ID:{})가 비밀번호를 변경했습니다.", user.getId());
     }
 
     @Override
     @Transactional
-    public void updateGenres(String email, UpdateGenresRequest request) {
-        User user = domainFinder.findUserByEmail(email);
-        Set<Genre> newGenres = request.genres().stream()
-                .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
-                .collect(Collectors.toSet());
-        user.updateGenres(newGenres);
-        log.info("사용자({}), 선호 장르를 업데이트했습니다.", email);
+    public AccountInfoResponse updateProfile(String userEmail, UpdateProfileRequest request) {
+        User user = domainFinder.findUserByEmail(userEmail);
+        if (request.nickname() != null) {
+            if (userRepository.existsByNicknameAndIdNot(request.nickname(), user.getId())) {
+                throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+            }
+            user.changeNickname(request.nickname());
+            log.info("사용자(ID:{})가 프로필을 수정했습니다. (닉네임 변경)", user.getId());
+        }
+        // TODO: 추후 bio, profileImageUrl 등 다른 프로필 정보 업데이트 로직 추가
+        return AccountInfoResponse.from(user);
     }
-
-
 
     @Override
     @Transactional
-    public void deleteAccount(String email) {
-        log.warn("사용자({})의 모든 데이터를 삭제합니다. (회원 탈퇴)", email);
-        User user = domainFinder.findUserByEmail(email);
+    public AccountInfoResponse updatePreferences(String userEmail, UpdatePreferencesRequest request) {
+        User user = domainFinder.findUserByEmail(userEmail);
+        try {
+            // DTO에 @NotNull이 있으므로, null 체크는 불필요
+            Set<Genre> newGenres = request.genres().stream()
+                    .map(genreName -> Genre.valueOf(genreName.toUpperCase()))
+                    .collect(Collectors.toSet());
+            user.updateGenres(newGenres);
+            log.info("사용자(ID:{})가 선호 설정을 수정했습니다. (장르 변경)", user.getId());
+        } catch (IllegalArgumentException e) {
+            // 예외 발생 시, 어떤 값 때문에 문제가 생겼는지 로그를 남겨 디버깅 용이성 확보
+            log.warn("잘못된 장르 이름으로 업데이트 시도. 사용자 ID: {}, 요청된 장르: {}", user.getId(), request.genres());
+            // ErrorCode에 정의된 메시지를 사용하도록 통일
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        // TODO: 추후 알림 설정 등 다른 선호 정보 업데이트 로직 추가
+        return AccountInfoResponse.from(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccount(String userEmail) {
+        User user = domainFinder.findUserByEmail(userEmail);
+        Long userId = user.getId();
+        log.warn("사용자(ID:{})의 회원 탈퇴 절차를 시작합니다.", userId);
+
+        user.anonymize();
         userRepository.delete(user);
-        log.info("사용자({}) 계정이 성공적으로 삭제되었습니다.", email);
+
+        // TODO: 탈퇴한 사용자의 Refresh Token도 삭제하는 로직 추가 (RefreshTokenRepository.deleteById(userEmail))
+        // TODO: 탈퇴 이벤트(UserDeactivatedEvent)를 발행하여, 관련 데이터(게시글, 댓글 등)를 비동기적으로 처리하는 리스너 구현
+
+        log.info("사용자(ID:{}) 계정이 성공적으로 비활성화(소프트 삭제)되었습니다.", userId);
     }
 
-    /**
-     * 새로운 비밀번호가 과거에 사용된 비밀번호와 일치하는지 검증합니다.
-     * @param user 검증할 사용자
-     * @param newPassword 새로운 비밀번호 (평문)
-     */
     private void validatePasswordHistory(User user, String newPassword) {
         List<PasswordHistory> history = passwordHistoryRepository.findByUserOrderByCreatedAtDesc(user);
-
         history.stream()
-                .limit(passwordHistorySize)
+                .limit(securityPolicy.getPassword().getHistorySize())
                 .forEach(record -> {
                     if (passwordEncoder.matches(newPassword, record.getPasswordHash())) {
                         throw new BusinessException(ErrorCode.PASSWORD_REUSE_PROHIBITED);
@@ -111,16 +117,11 @@ public class AccountServiceImpl implements AccountService {
                 });
     }
 
-    /**
-     * 현재 비밀번호를 히스토리 테이블에 저장하고, 설정된 개수를 초과하는 가장 오래된 기록은 삭제합니다.
-     * @param user 비밀번호를 기록할 사용자
-     */
     private void archiveOldPassword(User user) {
         PasswordHistory newHistoryRecord = new PasswordHistory(user, user.getPassword());
         passwordHistoryRepository.save(newHistoryRecord);
-
         List<PasswordHistory> history = passwordHistoryRepository.findByUserOrderByCreatedAtDesc(user);
-        if (history.size() > passwordHistorySize) {
+        if (history.size() > securityPolicy.getPassword().getHistorySize()) {
             PasswordHistory oldestRecord = history.get(history.size() - 1);
             passwordHistoryRepository.delete(oldestRecord);
         }
