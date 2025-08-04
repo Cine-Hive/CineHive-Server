@@ -25,7 +25,7 @@ public record TmdbMovieDetailResponse(
         @JsonProperty("backdrop_path")
         String backdropPath,
         List<TmdbGenreResponse> genres,
-        TmdbCreditsResponse credits,
+        TmdbMediaCreditsResponse credits,
         TmdbVideosResponse videos,
         TmdbImagesResponse images,
         TmdbPagedResponse<TmdbMovieResponse> recommendations,

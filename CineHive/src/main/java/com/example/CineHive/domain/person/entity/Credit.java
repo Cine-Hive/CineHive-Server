@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.credit;
+package com.example.CineHive.domain.person.entity;
 
 import com.example.CineHive.global.entity.BaseEntity;
 import com.example.CineHive.domain.media.Media;

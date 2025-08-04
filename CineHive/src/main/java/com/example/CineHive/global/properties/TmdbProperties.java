@@ -12,4 +12,5 @@ import org.springframework.stereotype.Component;
 public class TmdbProperties {
     private String apiKey;
     private String baseUrl;
+    private int pageSize;
 }
