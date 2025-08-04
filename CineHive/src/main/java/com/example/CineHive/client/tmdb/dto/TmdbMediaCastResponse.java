@@ -2,13 +2,14 @@ package com.example.CineHive.client.tmdb.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * TMDB API의 개별 제작진(Crew) 정보를 담는 DTO입니다.
- */
-public record TmdbCrewResponse(
+public record TmdbMediaCastResponse(
+        @JsonProperty("id")
         Long id,
+        @JsonProperty("name")
         String name,
-        String job,
+        @JsonProperty("character")
+        String character,
         @JsonProperty("profile_path")
         String profilePath
-) {}
+) {
+}
