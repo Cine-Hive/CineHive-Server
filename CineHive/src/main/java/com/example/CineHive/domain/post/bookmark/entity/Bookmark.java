@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.bookmark;
+package com.example.CineHive.domain.post.bookmark.entity;
 
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.global.entity.BaseEntity;

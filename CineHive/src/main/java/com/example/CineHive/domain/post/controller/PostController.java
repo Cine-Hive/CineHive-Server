@@ -6,7 +6,7 @@ import com.example.CineHive.global.dto.ApiResponse;
 import com.example.CineHive.global.dto.MessageResponse;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
-import com.example.CineHive.domain.post.bookmark.BookmarkService;
+import com.example.CineHive.domain.post.bookmark.service.BookmarkService;
 import com.example.CineHive.domain.report.ReportService;
 import com.example.CineHive.domain.post.service.PostLikeService;
 import io.swagger.v3.oas.annotations.Operation;

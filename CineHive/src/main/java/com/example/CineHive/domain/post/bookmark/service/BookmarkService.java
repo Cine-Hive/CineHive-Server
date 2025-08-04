@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.bookmark;
+package com.example.CineHive.domain.post.bookmark.service;
 
 /**
  * 게시글 북마크 관련 비즈니스 로직을 처리하는 서비스 인터페이스입니다.

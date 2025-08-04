@@ -1,5 +1,6 @@
-package com.example.CineHive.domain.post.bookmark;
+package com.example.CineHive.domain.post.bookmark.repository;
 
+import com.example.CineHive.domain.post.bookmark.entity.Bookmark;
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.domain.Page;

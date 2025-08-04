@@ -1,5 +1,7 @@
-package com.example.CineHive.domain.post.bookmark;
+package com.example.CineHive.domain.post.bookmark.service;
 
+import com.example.CineHive.domain.post.bookmark.entity.Bookmark;
+import com.example.CineHive.domain.post.bookmark.repository.BookmarkRepository;
 import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
