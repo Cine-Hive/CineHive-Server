@@ -1,5 +1,6 @@
-package com.example.CineHive.domain.post.comment;
+package com.example.CineHive.domain.post.comment.controller;
 
+import com.example.CineHive.domain.post.comment.service.CommentService;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;

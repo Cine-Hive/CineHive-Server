@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.entity;
 
-import com.example.CineHive.domain.post.comment.Comment;
+import com.example.CineHive.domain.post.comment.entity.Comment;
 import com.example.CineHive.global.entity.BaseEntity;
 import com.example.CineHive.domain.user.entity.User;
 import jakarta.persistence.*;

@@ -1,5 +1,7 @@
-package com.example.CineHive.domain.post.comment;
+package com.example.CineHive.domain.post.comment.service;
 
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
 import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;

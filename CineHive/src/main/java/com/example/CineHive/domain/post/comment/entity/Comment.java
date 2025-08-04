@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.post.comment;
+package com.example.CineHive.domain.post.comment.entity;
 
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.global.entity.BaseEntity;
@@ -43,6 +43,9 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @Column(nullable = false)
+    private int likeCount = 0;
 
     @Builder
     public Comment(String content, Post post, User user) {

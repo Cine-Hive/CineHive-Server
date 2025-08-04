@@ -1,5 +1,6 @@
-package com.example.CineHive.domain.post.comment;
+package com.example.CineHive.domain.post.comment.repository;
 
+import com.example.CineHive.domain.post.comment.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -34,4 +35,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Comment c WHERE c.user.email = :email")
     int deleteAllByUserEmail(@Param("email") String email);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.id = :commentId")
+    int increaseLikeCount(@Param("commentId") Long commentId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.id = :commentId AND c.likeCount > 0")
+    int decreaseLikeCount(@Param("commentId") Long commentId);
 }
