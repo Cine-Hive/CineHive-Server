@@ -1,12 +1,12 @@
 package com.example.CineHive.controller.post;
 
 import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.auth.ProviderType;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.enums.Gender;
+import com.example.CineHive.domain.auth.enums.ProviderType;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.user.UserRepository;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

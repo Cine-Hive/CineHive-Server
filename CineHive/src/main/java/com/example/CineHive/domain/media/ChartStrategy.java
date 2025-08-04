@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.media.dto.MediaChartResponse;
 
 @FunctionalInterface

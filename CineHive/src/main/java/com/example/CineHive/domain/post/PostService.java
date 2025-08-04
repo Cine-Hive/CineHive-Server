@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import org.springframework.data.domain.Pageable;

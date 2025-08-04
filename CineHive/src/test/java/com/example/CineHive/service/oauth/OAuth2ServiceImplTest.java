@@ -1,17 +1,17 @@
 package com.example.CineHive.service.oauth;
 
 import com.example.CineHive.client.oauth.OAuth2Client;
-import com.example.CineHive.domain.auth.OAuth2ServiceImpl;
-import com.example.CineHive.global.config.security.OAuthProperties;
+import com.example.CineHive.domain.auth.oauth.service.OAuth2ServiceImpl;
+import com.example.CineHive.global.properties.OAuthProperties;
 import com.example.CineHive.domain.auth.dto.LoginResponse;
-import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.auth.RefreshToken;
-import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.auth.ProviderType;
-import com.example.CineHive.domain.user.User;
-import com.example.CineHive.domain.user.UserRole;
-import com.example.CineHive.domain.auth.RefreshTokenRepository;
-import com.example.CineHive.domain.user.UserRepository;
+import com.example.CineHive.domain.auth.oauth.dto.OAuth2UserInfo;
+import com.example.CineHive.domain.auth.entity.RefreshToken;
+import com.example.CineHive.domain.user.enums.Gender;
+import com.example.CineHive.domain.auth.enums.ProviderType;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.enums.UserRole;
+import com.example.CineHive.domain.auth.repository.RefreshTokenRepository;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

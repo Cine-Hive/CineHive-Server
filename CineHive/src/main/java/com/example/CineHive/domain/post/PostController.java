@@ -1,9 +1,9 @@
 package com.example.CineHive.domain.post;
 
 import com.example.CineHive.domain.post.dto.*;
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.MessageResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.MessageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
 import com.example.CineHive.domain.post.bookmark.BookmarkService;
 import com.example.CineHive.domain.post.dislike.DislikeService;

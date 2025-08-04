@@ -1,9 +1,9 @@
 package com.example.CineHive.global.config.init;
 
-import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.user.User;
-import com.example.CineHive.domain.user.UserRole;
-import com.example.CineHive.domain.user.UserRepository;
+import com.example.CineHive.domain.user.enums.Gender;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.enums.UserRole;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;

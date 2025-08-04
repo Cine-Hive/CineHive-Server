@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.review;
 
-import com.example.CineHive.domain.common.DomainFinder;
-import com.example.CineHive.domain.common.dto.SliceResponse;
+import com.example.CineHive.global.util.DomainFinder;
+import com.example.CineHive.global.dto.SliceResponse;
 import com.example.CineHive.domain.media.Media;
 import com.example.CineHive.domain.media.MediaRepository;
 import com.example.CineHive.domain.media.MediaService;
@@ -9,8 +9,8 @@ import com.example.CineHive.domain.media.MediaType;
 import com.example.CineHive.domain.review.dto.CreateReviewRequest;
 import com.example.CineHive.domain.review.dto.ReviewResponse;
 import com.example.CineHive.domain.review.dto.UpdateReviewRequest;
-import com.example.CineHive.domain.user.User;
-import com.example.CineHive.global.config.security.ReviewProperties;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.global.properties.ReviewProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;

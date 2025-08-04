@@ -1,12 +1,11 @@
 package com.example.CineHive.domain.review;
 
-import com.example.CineHive.domain.common.DomainFinder;
+import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.domain.media.Media;
 import com.example.CineHive.domain.media.MediaService;
 import com.example.CineHive.domain.review.dto.RatingStats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

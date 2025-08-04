@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.post.like;
 
 import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

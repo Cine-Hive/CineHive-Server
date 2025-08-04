@@ -5,7 +5,7 @@ import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.domain.media.dto.ChartType;
 import com.example.CineHive.domain.media.dto.MediaChartResponse;
 import com.example.CineHive.domain.media.dto.MediaSummaryResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

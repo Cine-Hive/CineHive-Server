@@ -1,7 +1,7 @@
 package com.example.CineHive.global.security;
 
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.ErrorResponse;
+import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.ErrorResponse;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

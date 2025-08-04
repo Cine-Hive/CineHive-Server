@@ -1,8 +1,8 @@
 package com.example.CineHive.global.exception;
 
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.ErrorResponse;
-import com.example.CineHive.domain.common.dto.FieldErrorDetail;
+import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.ErrorResponse;
+import com.example.CineHive.global.dto.FieldErrorDetail;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

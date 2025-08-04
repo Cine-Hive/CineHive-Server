@@ -4,6 +4,7 @@ import com.example.CineHive.client.tmdb.dto.*;
 import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.global.properties.TmdbProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,16 +33,11 @@ public class TmdbApiClient {
 
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
-
-    @Value("${app.tmdb.base-url}")
-    private String tmdbBaseUrl;
-
-    @Value("${app.tmdb.api-key}")
-    private String apiKey;
+    private final TmdbProperties tmdbProperties;
 
     private WebClient tmdbWebClient;
+    private String apiKey;
 
-    // --- 상수 정의 ---
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final String API_KEY_PARAM = "api_key";
     private static final String LANGUAGE_PARAM = "language";
@@ -56,7 +52,8 @@ public class TmdbApiClient {
 
     @PostConstruct
     public void init() {
-        this.tmdbWebClient = webClientBuilder.baseUrl(tmdbBaseUrl).build();
+        this.tmdbWebClient = webClientBuilder.baseUrl(tmdbProperties.getBaseUrl()).build();
+        this.apiKey = tmdbProperties.getApiKey();
     }
 
     // --- 기본 영화 차트 API ---

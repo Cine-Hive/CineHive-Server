@@ -1,9 +1,9 @@
 package com.example.CineHive.domain.post.like;
 
-import com.example.CineHive.domain.common.DomainFinder;
+import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.domain.post.Post;
 import com.example.CineHive.domain.post.dislike.DislikeRepository;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import com.example.CineHive.domain.post.PostRepository;

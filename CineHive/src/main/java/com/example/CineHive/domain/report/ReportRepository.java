@@ -2,7 +2,7 @@ package com.example.CineHive.domain.report;
 
 import com.example.CineHive.domain.post.comment.Comment;
 import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

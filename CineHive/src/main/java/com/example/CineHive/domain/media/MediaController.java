@@ -1,8 +1,8 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

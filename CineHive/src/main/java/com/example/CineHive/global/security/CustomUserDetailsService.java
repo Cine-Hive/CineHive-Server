@@ -1,8 +1,8 @@
 package com.example.CineHive.global.security;
 
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.user.UserRepository;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
