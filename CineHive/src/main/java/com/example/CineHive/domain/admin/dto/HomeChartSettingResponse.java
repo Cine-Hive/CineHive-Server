@@ -1,7 +1,11 @@
 package com.example.CineHive.domain.admin.dto;
 
 import com.example.CineHive.domain.media.dto.ChartType;
+<<<<<<< HEAD
 import com.example.CineHive.domain.admin.entity.HomeChartSetting;
+=======
+import com.example.CineHive.domain.admin.HomeChartSetting;
+>>>>>>> parent of 49bd7c6b ([Ref]: 도메인 패키지 구조 정리)
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

@@ -1,7 +1,12 @@
 package com.example.CineHive.domain.review.dto;
 
+<<<<<<< HEAD
 import com.example.CineHive.domain.review.entity.Review;
 import com.example.CineHive.domain.user.entity.User;
+=======
+import com.example.CineHive.domain.review.Review;
+import com.example.CineHive.domain.user.User;
+>>>>>>> parent of 49bd7c6b ([Ref]: 도메인 패키지 구조 정리)
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 

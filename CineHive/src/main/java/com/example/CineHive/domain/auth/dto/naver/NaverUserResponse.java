@@ -2,7 +2,7 @@ package com.example.CineHive.domain.auth.dto.naver;
 
 import com.example.CineHive.domain.auth.dto.OAuth2Response;
 import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.auth.controller.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 
 public record NaverUserResponse(
         String resultcode,

@@ -1,7 +1,12 @@
 package com.example.CineHive.domain.report.dto;
 
+<<<<<<< HEAD
 import com.example.CineHive.domain.report.entity.Report;
 import com.example.CineHive.domain.report.entity.ReportStatus;
+=======
+import com.example.CineHive.domain.report.Report;
+import com.example.CineHive.domain.report.ReportStatus;
+>>>>>>> parent of 49bd7c6b ([Ref]: 도메인 패키지 구조 정리)
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.auth.controller.dto;
+package com.example.CineHive.domain.auth.dto;
 
-import com.example.CineHive.domain.auth.controller.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 
 /**
  * 다양한 OAuth2 제공업체로부터 받은 사용자 정보를

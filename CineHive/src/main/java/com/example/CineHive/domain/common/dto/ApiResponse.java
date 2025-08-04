@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package com.example.CineHive.domain.common.dto;
+=======
+package com.example.CineHive.domain.common.dto; // 패키지 이동
+>>>>>>> parent of 49bd7c6b ([Ref]: 도메인 패키지 구조 정리)
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.auth.controller.dto;
+package com.example.CineHive.domain.auth.dto;
 
 import com.example.CineHive.global.validation.PasswordMatches;
 import io.swagger.v3.oas.annotations.media.Schema;

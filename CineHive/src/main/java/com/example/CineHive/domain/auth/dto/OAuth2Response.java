@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.auth.controller.dto;
+package com.example.CineHive.domain.auth.dto;
 
-import com.example.CineHive.domain.auth.controller.ProviderType;
+import com.example.CineHive.domain.auth.ProviderType;
 
 /**
  * 모든 OAuth2 사용자 정보 응답이 구현해야 하는 인터페이스입니다.

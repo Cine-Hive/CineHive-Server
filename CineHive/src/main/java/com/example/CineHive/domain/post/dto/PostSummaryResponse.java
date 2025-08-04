@@ -1,6 +1,10 @@
 package com.example.CineHive.domain.post.dto;
 
+<<<<<<< HEAD
 import com.example.CineHive.domain.post.entity.Post;
+=======
+import com.example.CineHive.domain.post.Post;
+>>>>>>> parent of 49bd7c6b ([Ref]: 도메인 패키지 구조 정리)
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import java.time.Instant;

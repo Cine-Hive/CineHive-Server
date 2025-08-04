@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.banner.controller.dto;
+package com.example.CineHive.domain.banner.dto;
 
-import com.example.CineHive.domain.banner.controller.Banner;
+import com.example.CineHive.domain.banner.Banner;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
