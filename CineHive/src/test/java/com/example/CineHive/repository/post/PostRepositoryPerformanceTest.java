@@ -2,10 +2,10 @@ package com.example.CineHive.repository.post;
 
 import com.example.CineHive.domain.post.PostRepository;
 import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.domain.user.Gender;
-import com.example.CineHive.domain.user.User;
-import com.example.CineHive.domain.user.UserRole;
-import com.example.CineHive.domain.user.UserRepository;
+import com.example.CineHive.domain.user.enums.Gender;
+import com.example.CineHive.domain.user.entity.User;
+import com.example.CineHive.domain.user.enums.UserRole;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

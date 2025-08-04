@@ -2,7 +2,7 @@ package com.example.CineHive.domain.media;
 
 import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
-import com.example.CineHive.domain.common.BaseEntity;
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 

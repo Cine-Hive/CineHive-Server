@@ -11,10 +11,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.redis.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.data.redis.port}")
     private int port;
 
     /**
@@ -40,10 +40,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        // Key Serializer는 String으로 설정
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-
-        // Value Serializer도 String으로 설정 (객체를 저장하려면 Jackson2JsonRedisSerializer 등을 사용)
         redisTemplate.setValueSerializer(new StringRedisSerializer());
 
         return redisTemplate;

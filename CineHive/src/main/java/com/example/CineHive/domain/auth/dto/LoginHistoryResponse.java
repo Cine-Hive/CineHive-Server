@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.auth.dto;
 
-import com.example.CineHive.domain.auth.LoginHistory;
+import com.example.CineHive.domain.auth.entity.LoginHistory;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.Instant;
 

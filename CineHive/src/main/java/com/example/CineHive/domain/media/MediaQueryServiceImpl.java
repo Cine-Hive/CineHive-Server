@@ -6,7 +6,7 @@ import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
 import com.example.CineHive.domain.admin.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.domain.meta.PlatformMetadataService;
 import com.example.CineHive.global.exception.BusinessException;

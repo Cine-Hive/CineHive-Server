@@ -1,8 +1,8 @@
 package com.example.CineHive.domain.post;
 
 import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.common.BaseEntity;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.global.entity.BaseEntity;
+import com.example.CineHive.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

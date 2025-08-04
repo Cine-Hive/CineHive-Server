@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.media;
 
 import com.example.CineHive.domain.media.dto.*;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 
 /**
  * TMDB API를 통해 영화 및 TV 시리즈 정보를 조회하는 서비스 인터페이스입니다.

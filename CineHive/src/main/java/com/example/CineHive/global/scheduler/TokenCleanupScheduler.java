@@ -1,7 +1,7 @@
 package com.example.CineHive.global.scheduler;
 
-import com.example.CineHive.domain.auth.PasswordHistoryRepository;
-import com.example.CineHive.domain.auth.PasswordResetTokenRepository;
+import com.example.CineHive.domain.auth.password.repository.PasswordHistoryRepository;
+import com.example.CineHive.domain.auth.password.repository.PasswordResetTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

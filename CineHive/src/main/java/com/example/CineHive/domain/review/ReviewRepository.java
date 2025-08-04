@@ -2,7 +2,7 @@ package com.example.CineHive.domain.review;
 
 import com.example.CineHive.domain.media.Media;
 import com.example.CineHive.domain.review.dto.RatingStats;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

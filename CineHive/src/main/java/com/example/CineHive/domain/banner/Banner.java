@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.banner;
 
-import com.example.CineHive.domain.common.BaseEntity;
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

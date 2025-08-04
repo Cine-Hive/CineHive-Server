@@ -3,7 +3,7 @@ package com.example.CineHive.domain.post.comment;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.dto.PageResponse;
 
 /**
  * 댓글 관련 비즈니스 로직을 처리하는 서비스의 인터페이스입니다.

@@ -1,6 +1,6 @@
 package com.example.CineHive.global.advice;
 
-import com.example.CineHive.domain.common.dto.ApiResponse;
+import com.example.CineHive.global.dto.ApiResponse;
 import com.example.CineHive.global.exception.GlobalExceptionHandler;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;

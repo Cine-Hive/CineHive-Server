@@ -1,10 +1,10 @@
 package com.example.CineHive.client.oauth;
 
-import com.example.CineHive.domain.auth.ProviderType;
-import com.example.CineHive.domain.auth.dto.OAuth2UserInfo;
-import com.example.CineHive.domain.auth.dto.google.GoogleTokenResponse;
-import com.example.CineHive.domain.auth.dto.google.GoogleUserResponse;
-import com.example.CineHive.global.config.security.OAuthProperties;
+import com.example.CineHive.domain.auth.enums.ProviderType;
+import com.example.CineHive.domain.auth.oauth.dto.OAuth2UserInfo;
+import com.example.CineHive.domain.auth.oauth.dto.google.GoogleTokenResponse;
+import com.example.CineHive.domain.auth.oauth.dto.google.GoogleUserResponse;
+import com.example.CineHive.global.properties.OAuthProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;

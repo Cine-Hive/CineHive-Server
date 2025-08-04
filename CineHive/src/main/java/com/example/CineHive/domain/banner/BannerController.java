@@ -1,8 +1,8 @@
 package com.example.CineHive.domain.banner;
 
 import com.example.CineHive.domain.banner.dto.BannerResponse;
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.ErrorResponse;
+import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

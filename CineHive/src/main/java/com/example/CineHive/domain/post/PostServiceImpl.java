@@ -1,12 +1,12 @@
 package com.example.CineHive.domain.post;
 
-import com.example.CineHive.domain.common.DomainFinder;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.global.util.DomainFinder;
+import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.post.dto.CreatePostRequest;
 import com.example.CineHive.domain.post.dto.PostDetailResponse;
 import com.example.CineHive.domain.post.dto.PostSummaryResponse;
 import com.example.CineHive.domain.post.dto.UpdatePostRequest;
-import com.example.CineHive.domain.user.User;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;

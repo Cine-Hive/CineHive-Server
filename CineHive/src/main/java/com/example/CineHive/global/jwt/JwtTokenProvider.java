@@ -1,17 +1,16 @@
 package com.example.CineHive.global.jwt;
 
+import com.example.CineHive.global.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
-import java.time.Duration;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -24,24 +23,20 @@ import java.util.function.Function;
 public class JwtTokenProvider {
 
     private final SecretKey key;
-    private final long accessTokenExpiration;
-    private final long refreshTokenExpiration;
+    private final long accessTokenExpirationMillis;
+    private final long refreshTokenExpirationMillis;
 
     /**
      * JwtTokenProvider 생성자입니다.
-     * application.yml에 정의된 JWT 시크릿 키와 토큰 만료 시간을 주입받아 초기화합니다.
+     * JwtProperties를 주입받아 JWT 시크릿 키와 토큰 만료 시간을 초기화합니다.
      *
-     * @param secretKey                Base64로 인코딩된 JWT 시크릿 키 문자열
-     * @param accessTokenExpiration    Access Token의 만료 시간 (ISO-8601 Duration 형식, 예: "PT30M")
-     * @param refreshTokenExpiration   Refresh Token의 만료 시간 (ISO-8601 Duration 형식, 예: "P30D")
+     * @param jwtProperties application.yml의 'app.jwt' 설정을 담고 있는 객체
      */
-    public JwtTokenProvider(@Value("${app.jwt.secret-key}") String secretKey,
-                            @Value("${app.jwt.access-token-expiration}") String accessTokenExpiration,
-                            @Value("${app.jwt.refresh-token-expiration}") String refreshTokenExpiration) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    public JwtTokenProvider(JwtProperties jwtProperties) {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.accessTokenExpiration = parseDuration(accessTokenExpiration);
-        this.refreshTokenExpiration = parseDuration(refreshTokenExpiration);
+        this.accessTokenExpirationMillis = jwtProperties.getAccessTokenExpiration().toMillis();
+        this.refreshTokenExpirationMillis = jwtProperties.getRefreshTokenExpiration().toMillis();
     }
 
     /**
@@ -51,7 +46,7 @@ public class JwtTokenProvider {
      * @return 생성된 Access Token 문자열
      */
     public String createAccessToken(String email) {
-        return createToken(email, accessTokenExpiration);
+        return createToken(email, accessTokenExpirationMillis);
     }
 
     /**
@@ -61,7 +56,7 @@ public class JwtTokenProvider {
      * @return 생성된 Refresh Token 문자열
      */
     public String createRefreshToken(String email) {
-        return createToken(email, refreshTokenExpiration);
+        return createToken(email, refreshTokenExpirationMillis);
     }
 
     /**
@@ -156,14 +151,5 @@ public class JwtTokenProvider {
             return bearerToken.substring(7);
         }
         return null;
-    }
-
-    /**
-     * ISO-8601 Duration 형식의 문자열을 밀리초 단위로 변환합니다.
-     * @param duration ISO-8601 형식의 문자열 (예: "PT30M")
-     * @return 변환된 밀리초
-     */
-    private long parseDuration(String duration) {
-        return Duration.parse(duration).toMillis();
     }
 }
