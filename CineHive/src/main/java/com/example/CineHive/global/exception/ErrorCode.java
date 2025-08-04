@@ -22,6 +22,8 @@ public enum ErrorCode {
     VALIDATION_FAILED          (HttpStatus.BAD_REQUEST, "C007", "유효성 검증에 실패했습니다."),
     CONSTRAINT_VIOLATION       (HttpStatus.BAD_REQUEST, "C008", "파라미터 유효성 검증 실패"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C009", "지원하지 않는 HTTP 메서드입니다."),
+    FEATURE_NOT_IMPLEMENTED(HttpStatus.NOT_IMPLEMENTED, "C011", "아직 구현되지 않은 기능입니다."),
+    TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "C012", "요청 대상을 찾을 수 없습니다."),
 
     // User & Auth (U0xx)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "해당 사용자를 찾을 수 없습니다."),
@@ -72,8 +74,10 @@ public enum ErrorCode {
     CHART_STRATEGY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "M002", "해당 차트 타입을 처리할 수 없습니다."),
     GENRE_NOT_FOUND(HttpStatus.NOT_FOUND, "M003", "해당 장르를 찾을 수 없습니다."),
     TMDB_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "M004", "외부 영화 API 호출 중 오류가 발생했습니다."),
-    MEDIA_NOT_FOUND(HttpStatus.NOT_FOUND, "M005", "해당 미디어를 찾을 수 없습니다.");
+    MEDIA_NOT_FOUND(HttpStatus.NOT_FOUND, "M005", "해당 미디어를 찾을 수 없습니다."),
 
+    // Person (PE0xx)
+    PERSON_NOT_FOUND(HttpStatus.NOT_FOUND, "PE001", "해당 인물을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
