@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "비밀번호 재설정 컨트롤러", description = "비밀번호 찾기 및 재설정 API")
+@Tag(name = "Password Reset Controller", description = "비밀번호 찾기 및 재설정 API")
 @RestController
 @RequestMapping("/api/v1/auth/password")
 @RequiredArgsConstructor
