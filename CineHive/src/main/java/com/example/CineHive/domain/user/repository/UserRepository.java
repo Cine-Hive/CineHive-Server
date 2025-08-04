@@ -41,6 +41,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNickname(String nickname);
 
     /**
+     * 특정 ID를 제외하고, 해당 닉네임이 데이터베이스에 존재하는지 확인합니다.
+     * (닉네임 변경 시, 자기 자신을 제외한 중복 검사에 사용됩니다.)
+     * @param nickname 확인할 닉네임
+     * @param id 제외할 사용자의 ID
+     * @return 닉네임이 존재하면 true
+     */
+    boolean existsByNicknameAndIdNot(String nickname, Long id);
+
+    /**
      * 특정 이메일을 가진 사용자를 삭제합니다.
      * @param email 삭제할 사용자의 이메일
      */
