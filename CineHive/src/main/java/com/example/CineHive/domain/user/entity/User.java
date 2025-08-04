@@ -13,10 +13,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +29,8 @@ import java.util.stream.Collectors;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE user_id = ?")
+@Where(clause = "deleted_at IS NULL")
 @Table(name = "users")
 public class User extends BaseEntity {
 
@@ -69,6 +75,9 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private LoginHistory loginHistory;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     @Builder
     public User(String email, String password, String name, String nickname, Gender gender, Set<Genre> genres, ProviderType provider, UserRole role) {
@@ -146,5 +155,17 @@ public class User extends BaseEntity {
         } else {
             this.loginHistory.updateLoginInfo(browser);
         }
+    }
+
+    /**
+     * 회원 탈퇴 시 개인 식별 정보를 익명화합니다.
+     */
+    public void anonymize() {
+        this.email = this.id + "@deleted.user"; // Unique 제약조건 유지를 위해 ID 사용
+        this.name = "탈퇴한 사용자";
+        this.nickname = "탈퇴한 사용자";
+        this.password = UUID.randomUUID().toString(); // 로그인 방지를 위해 랜덤 값으로 변경
+        this.genres.clear();
+        // TODO: 프로필 이미지 등 다른 개인정보 필드도 초기화
     }
 }
