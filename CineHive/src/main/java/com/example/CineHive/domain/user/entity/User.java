@@ -2,7 +2,6 @@ package com.example.CineHive.domain.user.entity;
 
 import com.example.CineHive.domain.auth.entity.LoginHistory;
 import com.example.CineHive.domain.auth.entity.ProviderType;
-import com.example.CineHive.domain.auth.dto.RegisterRequest;
 import com.example.CineHive.domain.common.entity.BaseEntity;
 import com.example.CineHive.domain.media.entity.Genre;
 import jakarta.persistence.*;
@@ -88,7 +87,7 @@ public class User extends BaseEntity {
      * @param passwordEncoder 비밀번호 암호화기
      * @return 생성된 User 엔티티
      */
-    public static User from(RegisterRequest dto, PasswordEncoder passwordEncoder) {
+    public static User from(com.example.CineHive.domain.auth.controller.dto.RegisterRequest dto, PasswordEncoder passwordEncoder) {
         return User.builder()
                 .email(dto.email())
                 .password(passwordEncoder.encode(dto.password()))

@@ -1,8 +1,8 @@
-package com.example.CineHive.domain.media.controller.entity;
+package com.example.CineHive.domain.media.entity;
 
 import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
-import com.example.CineHive.domain.common.controller.BaseEntity;
+import com.example.CineHive.domain.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

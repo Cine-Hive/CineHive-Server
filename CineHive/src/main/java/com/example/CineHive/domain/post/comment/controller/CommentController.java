@@ -3,9 +3,6 @@ package com.example.CineHive.domain.post.comment.controller;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.MessageResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.post.comment.service.CommentService;
 import com.example.CineHive.domain.report.service.ReportService;
 import com.example.CineHive.domain.report.dto.ReportRequest;
@@ -54,13 +51,13 @@ public class CommentController {
             - 응답으로 받은 댓글 정보를 사용하여 UI의 댓글 목록 최상단에 새로운 댓글을 즉시 추가할 수 있습니다.
             """)
     @PostMapping("/posts/{postId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> addComment(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<CommentResponse>> addComment(
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         CommentResponse commentResponse = commentService.addComment(postId, request, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(commentResponse));
+        return ResponseEntity.status(HttpStatus.CREATED).body(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(commentResponse));
     }
 
     @Operation(summary = "특정 게시글의 댓글 목록 페이징 조회",
@@ -82,13 +79,13 @@ public class CommentController {
             - 응답의 페이징 정보를 바탕으로 '더 보기' 버튼이나 페이지네이션 UI를 구현할 수 있습니다.
             """)
     @GetMapping("/posts/{postId}/comments")
-    public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> getCommentsByPost(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.PageResponse<CommentResponse>>> getCommentsByPost(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, size);
-        return ResponseEntity.ok(ApiResponse.ok(comments));
+        com.example.CineHive.domain.common.controller.dto.PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, size);
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(comments));
     }
 
     @Operation(summary = "댓글 수정",
@@ -111,13 +108,13 @@ public class CommentController {
             - 성공 시 `200 OK` 상태 코드와 함께, 수정이 완료된 댓글의 전체 정보(`CommentResponse`)를 반환합니다.
             """)
     @PutMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<CommentResponse>> updateComment(
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         CommentResponse updatedComment = commentService.updateComment(commentId, request, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(updatedComment));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(updatedComment));
     }
 
     @Operation(summary = "댓글 삭제",
@@ -135,12 +132,12 @@ public class CommentController {
             - 이 API 호출 성공 시, UI의 댓글 목록에서 해당 댓글을 제거해야 합니다.
             """)
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<MessageResponse>> deleteComment(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> deleteComment(
             @PathVariable Long commentId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         commentService.deleteComment(commentId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("댓글이 성공적으로 삭제되었습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("댓글이 성공적으로 삭제되었습니다.")));
     }
 
     @Operation(summary = "댓글 신고",
@@ -164,12 +161,12 @@ public class CommentController {
             - 성공 시 `201 CREATED` 상태 코드와 함께 신고 접수 완료 메시지를 반환합니다.
             """)
     @PostMapping("/comments/{commentId}/reports")
-    public ResponseEntity<ApiResponse<MessageResponse>> reportComment(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> reportComment(
             @PathVariable Long commentId,
             @Valid @RequestBody ReportRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         reportService.reportComment(commentId, request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(new MessageResponse("댓글 신고가 정상적으로 접수되었습니다.")));
+                .body(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("댓글 신고가 정상적으로 접수되었습니다.")));
     }
 }

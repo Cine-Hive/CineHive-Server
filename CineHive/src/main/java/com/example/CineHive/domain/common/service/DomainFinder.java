@@ -1,18 +1,19 @@
-package com.example.CineHive.domain.common.controller.entity;
+package com.example.CineHive.domain.common.service;
 
-import com.example.CineHive.domain.media.controller.Media;
-import com.example.CineHive.domain.media.controller.MediaRepository;
-import com.example.CineHive.domain.media.controller.MediaType;
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.post.controller.PostRepository;
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.comment.CommentRepository;
-import com.example.CineHive.domain.review.controller.Review;
-import com.example.CineHive.domain.review.controller.ReviewRepository;
-import com.example.CineHive.domain.user.controller.User;
-import com.example.CineHive.domain.user.controller.UserRepository;
+import com.example.CineHive.domain.media.repository.MediaRepository;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
+import com.example.CineHive.domain.review.entity.Review;
+import com.example.CineHive.domain.review.repository.ReviewRepository;
+import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.domain.media.entity.MediaType;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.user.entity.User;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

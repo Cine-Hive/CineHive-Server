@@ -1,18 +1,13 @@
 package com.example.CineHive.domain.post.controller;
 
 import com.example.CineHive.domain.post.dto.*;
-import com.example.CineHive.domain.common.dto.ApiResponse;
-import com.example.CineHive.domain.common.dto.MessageResponse;
-import com.example.CineHive.domain.common.dto.PageResponse;
 import com.example.CineHive.domain.report.dto.ReportRequest;
-import com.example.CineHive.domain.post.bookmark.BookmarkService;
-import com.example.CineHive.domain.post.dislike.DislikeService;
-import com.example.CineHive.domain.post.like.LikeService;
 import com.example.CineHive.domain.post.service.PostService;
 import com.example.CineHive.domain.post.bookmark.service.BookmarkService;
 import com.example.CineHive.domain.post.dislike.service.DislikeService;
 import com.example.CineHive.domain.post.like.service.LikeService;
 import com.example.CineHive.domain.report.service.ReportService;
+import com.example.CineHive.domain.common.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,23 +72,23 @@ public class PostController {
                - `sort`: 정렬 기준. `createdAt,desc` (최신순), `views,desc` (조회수순), `likeCount,desc` (좋아요순) 등 `프로퍼티명,정렬방향` 형식으로 요청 가능합니다.
                """)
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> getPosts(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.PageResponse<PostSummaryResponse>>> getPosts(
             @Parameter(hidden = true)
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        PageResponse<PostSummaryResponse> pageResponse = postService.getPosts(pageable);
-        return ResponseEntity.ok(ApiResponse.ok(pageResponse));
+        com.example.CineHive.domain.common.controller.dto.PageResponse<PostSummaryResponse> pageResponse = postService.getPosts(pageable);
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(pageResponse));
     }
 
     @Operation(summary = "게시글 키워드 검색 페이징 조회")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> searchPosts(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.PageResponse<PostSummaryResponse>>> searchPosts(
             @RequestParam String keyword,
             @Parameter(hidden = true)
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        PageResponse<PostSummaryResponse> response = postService.searchPosts(keyword, pageable);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+        com.example.CineHive.domain.common.controller.dto.PageResponse<PostSummaryResponse> response = postService.searchPosts(keyword, pageable);
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(response));
     }
 
     @Operation(summary = "새 게시글 작성",
@@ -111,11 +106,11 @@ public class PostController {
             - 성공 시, 생성된 게시글의 상세 정보(`PostDetailResponse`)와 함께 `201 CREATED` 상태 코드가 반환됩니다.
             """)
     @PostMapping
-    public ResponseEntity<ApiResponse<PostDetailResponse>> createPost(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<PostDetailResponse>> createPost(
             @Valid @RequestBody CreatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         PostDetailResponse createdPost = postService.createPost(request, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(createdPost));
+        return ResponseEntity.status(HttpStatus.CREATED).body(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(createdPost));
     }
 
     @Operation(summary = "게시글 상세 조회",
@@ -127,9 +122,9 @@ public class PostController {
             - **상세 정보 반환**: 게시글의 모든 정보와 함께 댓글 목록(`comments`)도 포함되어 반환됩니다.
             """)
     @GetMapping("/{postId}")
-    public ResponseEntity<ApiResponse<PostDetailResponse>> getPostById(@PathVariable Long postId) {
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<PostDetailResponse>> getPostById(@PathVariable Long postId) {
         PostDetailResponse postDetailResponse = postService.getPostById(postId);
-        return ResponseEntity.ok(ApiResponse.ok(postDetailResponse));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(postDetailResponse));
     }
 
     @Operation(summary = "게시글 수정",
@@ -148,12 +143,12 @@ public class PostController {
             - 성공 시, 수정된 게시글의 전체 상세 정보(`PostDetailResponse`)가 반환됩니다.
             """)
     @PutMapping("/{postId}")
-    public ResponseEntity<ApiResponse<PostDetailResponse>> updatePost(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<PostDetailResponse>> updatePost(
             @PathVariable Long postId,
             @Valid @RequestBody UpdatePostRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         PostDetailResponse updatedPost = postService.updatePost(postId, request, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(updatedPost));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(updatedPost));
     }
 
     @Operation(summary = "게시글 삭제",
@@ -168,11 +163,11 @@ public class PostController {
             - 성공 시, "게시글이 성공적으로 삭제되었습니다." 메시지를 담은 `MessageResponse`가 반환됩니다.
             """)
     @DeleteMapping("/{postId}")
-    public ResponseEntity<ApiResponse<MessageResponse>> deletePost(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> deletePost(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         postService.deletePost(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글이 성공적으로 삭제되었습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("게시글이 성공적으로 삭제되었습니다.")));
     }
 
     // =========================================
@@ -191,12 +186,12 @@ public class PostController {
             - 이미 '싫어요'를 누른 상태였다면, '싫어요'는 자동으로 취소되고 '좋아요'가 등록됩니다.
             """)
     @PostMapping("/{postId}/likes")
-    public ResponseEntity<ApiResponse<MessageResponse>> addLike(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> addLike(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         likeService.addLike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '좋아요'를 눌렀습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("게시글에 '좋아요'를 눌렀습니다.")));
     }
 
     @Operation(summary = "게시글 '좋아요' 취소",
@@ -210,12 +205,12 @@ public class PostController {
             - '좋아요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
             """)
     @DeleteMapping("/{postId}/likes")
-    public ResponseEntity<ApiResponse<MessageResponse>> removeLike(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> removeLike(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         likeService.removeLike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'좋아요'를 취소했습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("'좋아요'를 취소했습니다.")));
     }
 
     @Operation(summary = "게시글 싫어요",
@@ -230,12 +225,12 @@ public class PostController {
             - 이미 '좋아요'를 누른 상태였다면, '좋아요'는 자동으로 취소되고 '싫어요'가 등록됩니다.
             """)
     @PostMapping("/{postId}/dislikes")
-    public ResponseEntity<ApiResponse<MessageResponse>> addDislike(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> addDislike(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         dislikeService.addDislike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글에 '싫어요'를 눌렀습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("게시글에 '싫어요'를 눌렀습니다.")));
     }
 
     @Operation(summary = "게시글 '싫어요' 취소",
@@ -249,12 +244,12 @@ public class PostController {
             - '싫어요'를 누른 기록이 있는 경우에만 정상적으로 취소됩니다.
             """)
     @DeleteMapping("/{postId}/dislikes")
-    public ResponseEntity<ApiResponse<MessageResponse>> removeDislike(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> removeDislike(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         dislikeService.removeDislike(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("'싫어요'를 취소했습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("'싫어요'를 취소했습니다.")));
     }
 
     @Operation(summary = "게시글 북마크",
@@ -268,11 +263,11 @@ public class PostController {
             - 이미 북마크한 게시글을 다시 요청하면 중복으로 추가되지 않고, 에러(예: 409 Conflict)가 발생할 수 있습니다.
             """)
     @PostMapping("/{postId}/bookmarks")
-    public ResponseEntity<ApiResponse<MessageResponse>> addBookmark(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> addBookmark(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         bookmarkService.addBookmark(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("게시글을 북마크했습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("게시글을 북마크했습니다.")));
     }
 
     @Operation(summary = "게시글 북마크 취소",
@@ -286,11 +281,11 @@ public class PostController {
             - 북마크한 기록이 있는 게시글에 대해서만 정상적으로 취소됩니다.
             """)
     @DeleteMapping("/{postId}/bookmarks")
-    public ResponseEntity<ApiResponse<MessageResponse>> removeBookmark(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> removeBookmark(
             @PathVariable Long postId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         bookmarkService.removeBookmark(postId, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok(new MessageResponse("북마크를 취소했습니다.")));
+        return ResponseEntity.ok(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("북마크를 취소했습니다.")));
     }
 
     @Operation(summary = "게시글 신고",
@@ -311,12 +306,12 @@ public class PostController {
             - 성공 시, 신고 접수 완료 메시지와 함께 `201 CREATED` 상태 코드가 반환됩니다.
             """)
     @PostMapping("/{postId}/reports")
-    public ResponseEntity<ApiResponse<MessageResponse>> reportPost(
+    public ResponseEntity<com.example.CineHive.domain.common.controller.dto.ApiResponse<com.example.CineHive.domain.common.controller.dto.MessageResponse>> reportPost(
             @PathVariable Long postId,
             @Valid @RequestBody ReportRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         reportService.reportPost(postId, request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(new MessageResponse("게시글 신고가 정상적으로 접수되었습니다.")));
+                .body(com.example.CineHive.domain.common.controller.dto.ApiResponse.ok(new com.example.CineHive.domain.common.controller.dto.MessageResponse("게시글 신고가 정상적으로 접수되었습니다.")));
     }
 }

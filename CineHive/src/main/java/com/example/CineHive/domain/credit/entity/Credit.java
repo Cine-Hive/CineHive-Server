@@ -1,7 +1,7 @@
-package com.example.CineHive.domain.credit.controller.entity;
+package com.example.CineHive.domain.credit.entity;
 
-import com.example.CineHive.domain.common.controller.BaseEntity;
-import com.example.CineHive.domain.media.controller.Media;
+import com.example.CineHive.domain.common.entity.BaseEntity;
+import com.example.CineHive.domain.media.entity.Media;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,7 +28,7 @@ public class Credit extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false)
-    private Person person;
+    private com.example.CineHive.domain.credit.controller.entity.Person person;
 
     @Column(nullable = false)
     private String job;
@@ -36,7 +36,7 @@ public class Credit extends BaseEntity {
     private String characterName;
 
     @Builder
-    public Credit(Media media, Person person, String job, String characterName) {
+    public Credit(Media media, com.example.CineHive.domain.credit.controller.entity.Person person, String job, String characterName) {
         this.media = media;
         this.person = person;
         this.job = job;

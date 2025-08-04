@@ -1,6 +1,6 @@
-package com.example.CineHive.domain.credit.controller.entity;
+package com.example.CineHive.domain.credit.entity;
 
-import com.example.CineHive.domain.common.controller.BaseEntity;
+import com.example.CineHive.domain.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

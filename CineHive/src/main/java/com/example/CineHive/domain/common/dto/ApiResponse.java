@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.common.controller.dto; // 패키지 이동
+package com.example.CineHive.domain.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

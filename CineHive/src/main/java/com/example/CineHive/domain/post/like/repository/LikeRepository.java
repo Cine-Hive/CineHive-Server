@@ -3,9 +3,6 @@ package com.example.CineHive.domain.post.like.repository;
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.post.like.entity.Like;
-
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.user.controller.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

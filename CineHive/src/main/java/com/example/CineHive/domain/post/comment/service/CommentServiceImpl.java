@@ -1,15 +1,16 @@
-package com.example.CineHive.domain.post.controller.comment;
+package com.example.CineHive.domain.post.comment.service;
 
-import com.example.CineHive.domain.common.controller.DomainFinder;
-import com.example.CineHive.domain.common.dto.PageResponse;
+import com.example.CineHive.domain.common.service.DomainFinder;
 import com.example.CineHive.domain.post.comment.dto.CommentResponse;
 import com.example.CineHive.domain.post.comment.dto.CreateCommentRequest;
 import com.example.CineHive.domain.post.comment.dto.UpdateCommentRequest;
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.user.controller.User;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
+import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.controller.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,13 +53,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size) {
+    public com.example.CineHive.domain.common.controller.dto.PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int size) {
         domainFinder.findPostById(postId);
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Comment> commentPage = commentRepository.findByPost_Id(postId, pageable);
 
-        return new PageResponse<>(
+        return new com.example.CineHive.domain.common.controller.dto.PageResponse<>(
                 commentPage.getContent().stream().map(CommentResponse::from).toList(),
                 commentPage.getNumber() + 1,
                 commentPage.getSize(),

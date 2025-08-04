@@ -3,9 +3,6 @@ package com.example.CineHive.domain.post.bookmark.repository;
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.post.bookmark.entity.Bookmark;
-
-import com.example.CineHive.domain.post.controller.Post;
-import com.example.CineHive.domain.user.controller.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -14,9 +11,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Repository
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {

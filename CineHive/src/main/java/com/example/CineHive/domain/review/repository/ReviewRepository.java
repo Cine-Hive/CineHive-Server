@@ -3,10 +3,7 @@ package com.example.CineHive.domain.review.repository;
 import com.example.CineHive.domain.media.entity.Media;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.review.entity.Review;
-
-import com.example.CineHive.domain.media.controller.Media;
 import com.example.CineHive.domain.review.dto.RatingStats;
-import com.example.CineHive.domain.user.controller.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
