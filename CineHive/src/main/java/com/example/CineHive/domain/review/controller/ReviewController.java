@@ -1,11 +1,13 @@
 package com.example.CineHive.domain.review.controller;
 
-import com.example.CineHive.domain.review.service.ReviewService;
-import com.example.CineHive.global.dto.SliceResponse;
 import com.example.CineHive.domain.media.MediaType;
 import com.example.CineHive.domain.review.dto.CreateReviewRequest;
 import com.example.CineHive.domain.review.dto.ReviewResponse;
 import com.example.CineHive.domain.review.dto.UpdateReviewRequest;
+import com.example.CineHive.domain.review.service.ReviewLikeService;
+import com.example.CineHive.domain.review.service.ReviewService;
+import com.example.CineHive.global.dto.MessageResponse;
+import com.example.CineHive.global.dto.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -29,7 +31,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-@Tag(name = "Review Controller", description = "미디어 리뷰 CRUD API")
+@Tag(name = "Review Controller", description = "미디어 리뷰 CRUD 및 상호작용 API")
 @Validated
 @RestController
 @RequestMapping("/api/v1")
@@ -37,6 +39,7 @@ import java.net.URI;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final ReviewLikeService reviewLikeService;
 
     @Operation(summary = "리뷰 작성",
             description = """
@@ -113,10 +116,10 @@ public class ReviewController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@reviewService.isAuthor(#reviewId, principal.username)")
     public void updateReview(
-                              @Parameter(description = "수정할 리뷰의 고유 ID", example = "1", required = true)
-                              @PathVariable Long reviewId,
-                              @Valid @RequestBody UpdateReviewRequest request,
-                              @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+            @Parameter(description = "수정할 리뷰의 고유 ID", example = "1", required = true)
+            @PathVariable Long reviewId,
+            @Valid @RequestBody UpdateReviewRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         reviewService.updateReview(reviewId, request, userDetails.getUsername());
     }
@@ -140,5 +143,25 @@ public class ReviewController {
             @PathVariable Long reviewId,
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
         reviewService.deleteReview(reviewId, userDetails.getUsername());
+    }
+
+    @Operation(summary = "리뷰 좋아요", description = "특정 리뷰에 '좋아요'를 누릅니다.")
+    @PostMapping("/reviews/{reviewId}/likes")
+    public MessageResponse addLikeToReview(
+            @PathVariable Long reviewId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        reviewLikeService.like(userDetails.getUsername(), reviewId);
+        return new MessageResponse("리뷰에 '좋아요'를 눌렀습니다.");
+    }
+
+    @Operation(summary = "리뷰 '좋아요' 취소", description = "특정 리뷰에 눌렀던 '좋아요'를 취소합니다.")
+    @DeleteMapping("/reviews/{reviewId}/likes")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeLikeFromReview(
+            @PathVariable Long reviewId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        reviewLikeService.unlike(userDetails.getUsername(), reviewId);
     }
 }
