@@ -6,7 +6,7 @@ import com.example.CineHive.domain.account.dto.UpdatePreferencesRequest;
 import com.example.CineHive.domain.account.dto.UpdateProfileRequest;
 import com.example.CineHive.domain.auth.password.entity.PasswordHistory;
 import com.example.CineHive.domain.auth.password.repository.PasswordHistoryRepository;
-import com.example.CineHive.domain.media.Genre;
+import com.example.CineHive.domain.media.enums.Genre;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;

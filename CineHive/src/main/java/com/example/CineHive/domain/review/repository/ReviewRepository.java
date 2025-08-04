@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.review.repository;
 
-import com.example.CineHive.domain.media.Media;
+import com.example.CineHive.domain.media.entity.Media;
 import com.example.CineHive.domain.review.dto.RatingStats;
 import com.example.CineHive.domain.review.entity.Review;
 import com.example.CineHive.domain.user.entity.User;

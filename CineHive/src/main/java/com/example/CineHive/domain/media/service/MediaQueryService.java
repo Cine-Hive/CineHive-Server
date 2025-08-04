@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.global.dto.PageResponse;

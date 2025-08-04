@@ -1,6 +1,9 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.repository.MediaRepository;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.domain.review.dto.RatingStats;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;

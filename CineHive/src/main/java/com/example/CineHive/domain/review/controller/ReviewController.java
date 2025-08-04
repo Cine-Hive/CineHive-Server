@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.review.controller;
 
-import com.example.CineHive.domain.media.MediaType;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.domain.review.dto.CreateReviewRequest;
 import com.example.CineHive.domain.review.dto.ReviewResponse;
 import com.example.CineHive.domain.review.dto.UpdateReviewRequest;

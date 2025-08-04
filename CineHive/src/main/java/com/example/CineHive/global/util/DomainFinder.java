@@ -1,8 +1,8 @@
 package com.example.CineHive.global.util;
 
-import com.example.CineHive.domain.media.Media;
-import com.example.CineHive.domain.media.MediaRepository;
-import com.example.CineHive.domain.media.MediaType;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.repository.MediaRepository;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.post.repository.PostRepository;
 import com.example.CineHive.domain.post.comment.entity.Comment;

@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.person.entity;
 
 import com.example.CineHive.global.entity.BaseEntity;
-import com.example.CineHive.domain.media.Media;
+import com.example.CineHive.domain.media.entity.Media;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

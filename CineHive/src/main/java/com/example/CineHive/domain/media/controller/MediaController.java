@@ -1,13 +1,20 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.controller;
 
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.service.MediaLikeService;
+import com.example.CineHive.domain.media.service.MediaQueryService;
 import com.example.CineHive.domain.media.dto.*;
+import com.example.CineHive.domain.media.enums.*;
+import com.example.CineHive.domain.media.service.MediaService;
 import com.example.CineHive.global.dto.ApiResponse;
+import com.example.CineHive.global.dto.MessageResponse;
 import com.example.CineHive.global.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +32,8 @@ import org.springframework.web.bind.annotation.*;
 public class MediaController {
 
     private final MediaQueryService mediaQueryService;
+    private final MediaService mediaService;
+    private final MediaLikeService mediaLikeService;
     // TODO: private final UserMediaStatusService userMediaStatusService;
     // TODO: private final CurationService curationService;
 
@@ -71,6 +80,31 @@ public class MediaController {
         // TODO: 1. UpdateMediaStatusRequest (신규 DTO)를 @RequestBody로 받음
         // TODO: 2. UserMediaStatusService.updateStatus(userEmail, mediaId, mediaType, request) 호출
         // TODO: 3. 성공 시 MessageResponse 반환
+    }
+
+    @Operation(summary = "미디어 '좋아요' 등록", description = "특정 미디어에 '좋아요'를 누릅니다.")
+    @PostMapping("/{mediaType}/{tmdbId}/likes")
+    public MessageResponse likeMedia(
+            @PathVariable MediaType mediaType,
+            @PathVariable Integer tmdbId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        Media media = mediaService.findOrCreateMedia(tmdbId, mediaType);
+        mediaLikeService.like(userDetails.getUsername(), media.getId());
+
+        return new MessageResponse("미디어에 '좋아요'를 눌렀습니다.");
+    }
+
+    @Operation(summary = "미디어 '좋아요' 취소", description = "특정 미디어에 눌렀던 '좋아요'를 취소합니다.")
+    @DeleteMapping("/{mediaType}/{tmdbId}/likes")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlikeMedia(
+            @PathVariable MediaType mediaType,
+            @PathVariable Integer tmdbId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        Media media = mediaService.findOrCreateMedia(tmdbId, mediaType);
+        mediaLikeService.unlike(userDetails.getUsername(), media.getId());
     }
 
     // =========================================

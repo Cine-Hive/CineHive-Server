@@ -1,5 +1,7 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.service;
 
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.domain.review.dto.RatingStats;
 
 /**

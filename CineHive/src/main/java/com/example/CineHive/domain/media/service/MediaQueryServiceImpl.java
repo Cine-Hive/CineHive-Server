@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.service;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.TmdbMovieResponse;
@@ -6,6 +6,9 @@ import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
 import com.example.CineHive.domain.admin.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
+import com.example.CineHive.domain.media.ChartStrategy;
+import com.example.CineHive.domain.media.ChartStrategyFactory;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.domain.media.dto.*;
 import com.example.CineHive.domain.meta.PlatformMetadataService;

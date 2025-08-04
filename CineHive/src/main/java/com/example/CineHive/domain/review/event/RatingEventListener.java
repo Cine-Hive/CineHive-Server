@@ -2,8 +2,8 @@ package com.example.CineHive.domain.review.event;
 
 import com.example.CineHive.domain.review.repository.ReviewRepository;
 import com.example.CineHive.global.util.DomainFinder;
-import com.example.CineHive.domain.media.Media;
-import com.example.CineHive.domain.media.MediaService;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.service.MediaService;
 import com.example.CineHive.domain.review.dto.RatingStats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

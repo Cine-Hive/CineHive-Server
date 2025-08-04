@@ -1,7 +1,9 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.entity;
 
 import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
+import com.example.CineHive.domain.media.enums.Genre;
+import com.example.CineHive.domain.media.enums.MediaType;
 import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -55,6 +57,9 @@ public class Media extends BaseEntity {
 
     @Column(nullable = false)
     private int reviewCount = 0;
+
+    @Column(nullable = false)
+    private int likeCount = 0;
 
     @Builder
     public Media(Integer tmdbId, MediaType mediaType, String title, String posterPath, String releaseDate, Set<Genre> genres) {
