@@ -97,7 +97,7 @@ public record MediaDetailResponse(
                 .toList();
     }
 
-    private static List<CreditResponse> toCreditResponses(TmdbCreditsResponse credits, String job) {
+    private static List<CreditResponse> toCreditResponses(TmdbMediaCreditsResponse credits, String job) {
         if (credits == null) return Collections.emptyList();
 
         Stream<CreditResponse> stream = Stream.empty();
