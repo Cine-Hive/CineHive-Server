@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review;
+package com.example.CineHive.domain.review.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

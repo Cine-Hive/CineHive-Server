@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review;
+package com.example.CineHive.domain.review.entity;
 
 import com.example.CineHive.global.entity.BaseEntity;
 import com.example.CineHive.domain.media.Media;
@@ -40,6 +40,9 @@ public class Review extends BaseEntity {
 
     @Column(nullable = false)
     private double rating;
+
+    @Column(nullable = false)
+    private int likeCount = 0;
 
     @Builder
     public Review(User user, Media media, String content, double rating) {

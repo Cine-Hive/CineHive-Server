@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review;
+package com.example.CineHive.domain.review.event;
 
 import lombok.Getter;
 

@@ -1,5 +1,8 @@
-package com.example.CineHive.domain.review;
+package com.example.CineHive.domain.review.service;
 
+import com.example.CineHive.domain.review.repository.ReviewRepository;
+import com.example.CineHive.domain.review.entity.Review;
+import com.example.CineHive.domain.review.event.ReviewChangedEvent;
 import com.example.CineHive.global.util.DomainFinder;
 import com.example.CineHive.global.dto.SliceResponse;
 import com.example.CineHive.domain.media.Media;

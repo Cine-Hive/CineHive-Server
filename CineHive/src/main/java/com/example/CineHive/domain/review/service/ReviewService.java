@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.review;
+package com.example.CineHive.domain.review.service;
 
 import com.example.CineHive.global.dto.SliceResponse;
 import com.example.CineHive.domain.media.MediaType;
