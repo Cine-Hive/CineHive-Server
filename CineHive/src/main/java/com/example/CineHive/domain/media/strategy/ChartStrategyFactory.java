@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media;
+package com.example.CineHive.domain.media.strategy;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.domain.media.dto.ChartProperties;
