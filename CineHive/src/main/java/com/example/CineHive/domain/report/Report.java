@@ -1,7 +1,7 @@
 package com.example.CineHive.domain.report;
 
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.global.entity.BaseEntity;
 import com.example.CineHive.domain.user.entity.User;
 import jakarta.persistence.*;

@@ -1,13 +1,13 @@
 package com.example.CineHive.controller.post;
 
-import com.example.CineHive.domain.post.bookmark.Bookmark;
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.bookmark.entity.Bookmark;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.enums.Gender;
 import com.example.CineHive.domain.auth.enums.ProviderType;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.enums.UserRole;
-import com.example.CineHive.domain.post.bookmark.BookmarkRepository;
-import com.example.CineHive.domain.post.PostRepository;
+import com.example.CineHive.domain.post.bookmark.repository.BookmarkRepository;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

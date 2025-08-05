@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.account.dto;
 
-import com.example.CineHive.domain.media.Genre;
+import com.example.CineHive.domain.media.enums.Genre;
 import com.example.CineHive.domain.user.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

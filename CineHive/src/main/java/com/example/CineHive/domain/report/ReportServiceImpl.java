@@ -1,13 +1,13 @@
 package com.example.CineHive.domain.report;
 
 import com.example.CineHive.domain.report.dto.ReportRequest;
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.comment.CommentRepository;
-import com.example.CineHive.domain.post.PostRepository;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

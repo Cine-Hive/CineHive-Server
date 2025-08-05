@@ -1,7 +1,7 @@
 package com.example.CineHive.repository.post;
 
-import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.user.enums.Gender;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.enums.UserRole;

@@ -1,14 +1,14 @@
 package com.example.CineHive.global.util;
 
-import com.example.CineHive.domain.media.Media;
-import com.example.CineHive.domain.media.MediaRepository;
-import com.example.CineHive.domain.media.MediaType;
-import com.example.CineHive.domain.post.Post;
-import com.example.CineHive.domain.post.PostRepository;
-import com.example.CineHive.domain.post.comment.Comment;
-import com.example.CineHive.domain.post.comment.CommentRepository;
-import com.example.CineHive.domain.review.Review;
-import com.example.CineHive.domain.review.ReviewRepository;
+import com.example.CineHive.domain.media.entity.Media;
+import com.example.CineHive.domain.media.repository.MediaRepository;
+import com.example.CineHive.domain.media.enums.MediaType;
+import com.example.CineHive.domain.post.entity.Post;
+import com.example.CineHive.domain.post.repository.PostRepository;
+import com.example.CineHive.domain.post.comment.entity.Comment;
+import com.example.CineHive.domain.post.comment.repository.CommentRepository;
+import com.example.CineHive.domain.review.entity.Review;
+import com.example.CineHive.domain.review.repository.ReviewRepository;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import com.example.CineHive.global.exception.BusinessException;

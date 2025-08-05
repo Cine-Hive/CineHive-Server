@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.post.comment.dto;
 
-import com.example.CineHive.domain.post.comment.Comment;
+import com.example.CineHive.domain.post.comment.entity.Comment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

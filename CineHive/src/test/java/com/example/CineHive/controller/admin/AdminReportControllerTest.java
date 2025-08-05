@@ -1,6 +1,6 @@
 package com.example.CineHive.controller.admin;
 
-import com.example.CineHive.domain.post.Post;
+import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.report.Report;
 import com.example.CineHive.domain.report.ReportStatus;
 import com.example.CineHive.domain.user.enums.Gender;
@@ -8,7 +8,7 @@ import com.example.CineHive.domain.auth.enums.ProviderType;
 import com.example.CineHive.domain.user.entity.User;
 import com.example.CineHive.domain.user.enums.UserRole;
 import com.example.CineHive.global.exception.ErrorCode;
-import com.example.CineHive.domain.post.PostRepository;
+import com.example.CineHive.domain.post.repository.PostRepository;
 import com.example.CineHive.domain.report.ReportRepository;
 import com.example.CineHive.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;

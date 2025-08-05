@@ -4,7 +4,7 @@ import com.example.CineHive.domain.auth.entity.LoginHistory;
 import com.example.CineHive.domain.auth.enums.ProviderType;
 import com.example.CineHive.domain.auth.dto.RegisterRequest;
 import com.example.CineHive.global.entity.BaseEntity;
-import com.example.CineHive.domain.media.Genre;
+import com.example.CineHive.domain.media.enums.Genre;
 import com.example.CineHive.domain.user.enums.Gender;
 import com.example.CineHive.domain.user.enums.UserRole;
 import com.example.CineHive.domain.user.enums.UserType;
