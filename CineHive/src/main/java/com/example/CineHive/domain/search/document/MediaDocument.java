@@ -1,0 +1,109 @@
+package com.example.CineHive.domain.search.document;
+
+import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
+import lombok.Builder;
+import lombok.Getter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.*;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Elasticsearch에 저장될 미디어 문서를 정의하는 클래스입니다.
+ * TMDB의 원천 데이터와 CineHive의 커뮤니티 데이터를 모두 포함합니다.
+ */
+@Getter
+@Builder
+@Document(indexName = "media")
+@Setting(settingPath = "elasticsearch/nori-settings.json")
+public class MediaDocument {
+
+    @Id
+    private Long id; // TMDB ID를 Document ID로 사용
+
+    @Field(type = FieldType.Long)
+    private Long tmdbId;
+
+    @Field(type = FieldType.Keyword)
+    private String mediaType; // "MOVIE" or "TV"
+
+    // Text는 전문 검색용, Keyword는 정확한 일치, 정렬, 집계용 (Multi-field)
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
+            otherFields = @InnerField(suffix = "keyword", type = FieldType.Keyword)
+    )
+    private String title;
+
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    private String overview;
+
+    @Field(type = FieldType.Keyword)
+    private List<String> genres;
+
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    private List<String> cast;
+
+    @Field(type = FieldType.Keyword, index = false) // 검색 불필요, 저장만 함
+    private String posterPath;
+
+    @Field(type = FieldType.Date)
+    private String releaseDate;
+
+    // --- CineHive 커뮤니티 데이터 ---
+    @Field(type = FieldType.Integer)
+    private int likeCount;
+
+    @Field(type = FieldType.Integer)
+    private int reviewCount;
+
+    @Field(type = FieldType.Double)
+    private double avgRating;
+
+    @Field(type = FieldType.Date)
+    private Instant updatedAt; // 우리 시스템에서 정보가 업데이트된 시각
+
+    /**
+     * TMDB 영화 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
+     */
+    public static MediaDocument from(TmdbMovieDetailResponse tmdb) {
+        return MediaDocument.builder()
+                .id(tmdb.id())
+                .tmdbId(tmdb.id())
+                .mediaType("MOVIE")
+                .title(tmdb.title())
+                .overview(tmdb.overview())
+                .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
+                .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
+                .posterPath(tmdb.posterPath())
+                .releaseDate(tmdb.releaseDate())
+                .likeCount(0) // 초기값
+                .reviewCount(0) // 초기값
+                .avgRating(0.0) // 초기값
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    /**
+     * TMDB TV 시리즈 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
+     */
+    public static MediaDocument from(TmdbTvSeriesDetailResponse tmdb) {
+        return MediaDocument.builder()
+                .id(tmdb.id())
+                .tmdbId(tmdb.id())
+                .mediaType("TV")
+                .title(tmdb.name())
+                .overview(tmdb.overview())
+                .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
+                .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
+                .posterPath(tmdb.posterPath())
+                .releaseDate(tmdb.firstAirDate())
+                .likeCount(0)
+                .reviewCount(0)
+                .avgRating(0.0)
+                .updatedAt(Instant.now())
+                .build();
+    }
+}
