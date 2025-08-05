@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.search;
+package com.example.CineHive.domain.search.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
