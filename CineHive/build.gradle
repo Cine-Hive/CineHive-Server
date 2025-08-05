@@ -29,6 +29,7 @@ dependencies {
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 	// --- 웹 (리액티브 스택) ---
 	implementation 'org.springframework.boot:spring-boot-starter-web' // 서블릿 기반 웹 스택
