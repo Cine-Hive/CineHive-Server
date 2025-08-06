@@ -1,9 +1,15 @@
 package com.example.CineHive.domain.search.controller;
 
+import com.example.CineHive.domain.search.dto.MediaSearchResponse;
+import com.example.CineHive.domain.search.dto.PostSearchResponse;
+import com.example.CineHive.domain.search.service.SearchService;
+import com.example.CineHive.global.dto.SliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SearchController {
 
-    // TODO: private final SearchService searchService;
+    private final SearchService searchService;
 
     @Operation(summary = "통합 검색",
             description = "영화, TV, 게시글, 인물 등 여러 도메인의 검색 결과를 종합하여 반환합니다.")
@@ -43,11 +49,20 @@ public class SearchController {
         // TODO: 2. PagedResponse<MediaSummaryResponse> 형태로 반환
     }
 
-    @Operation(summary = "게시글 검색")
+    @Operation(summary = "게시글 검색", description = "게시글의 제목과 내용에서 키워드로 검색합니다.")
     @GetMapping("/posts")
-    public void searchPosts(@RequestParam String query) {
-        // TODO: 1. PostService.searchPosts(query) 호출 (페이징)
-        // TODO: 2. PagedResponse<PostSummaryResponse> 형태로 반환
+    public SliceResponse<PostSearchResponse> searchPosts(
+            @RequestParam String query,
+            @ParameterObject Pageable pageable) {
+        return searchService.searchPosts(query, pageable);
+    }
+
+    @Operation(summary = "미디어(영화/TV 통합) 검색", description = "영화와 TV 시리즈의 제목과 줄거리에서 키워드로 검색합니다.")
+    @GetMapping("/media")
+    public SliceResponse<MediaSearchResponse> searchMedia(
+            @RequestParam String query,
+            @ParameterObject Pageable pageable) {
+        return searchService.searchMedia(query, pageable);
     }
 
     @Operation(summary = "인물 검색")
