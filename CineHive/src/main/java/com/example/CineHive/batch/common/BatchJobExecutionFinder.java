@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.BatchStatus;

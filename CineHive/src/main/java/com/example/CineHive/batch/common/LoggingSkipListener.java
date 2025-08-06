@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.common;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.SkipListener;

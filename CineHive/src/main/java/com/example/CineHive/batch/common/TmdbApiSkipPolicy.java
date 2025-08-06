@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.common;
 
 import com.example.CineHive.global.exception.TmdbClientException;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;

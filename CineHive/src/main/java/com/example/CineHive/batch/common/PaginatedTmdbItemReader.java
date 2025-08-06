@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.common;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import lombok.extern.slf4j.Slf4j;

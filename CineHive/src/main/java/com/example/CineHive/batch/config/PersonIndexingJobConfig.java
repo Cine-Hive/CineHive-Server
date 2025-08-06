@@ -1,5 +1,6 @@
 package com.example.CineHive.batch;
 
+import com.example.CineHive.batch.common.PaginatedTmdbItemReader;
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.TmdbPersonInListResponse;
 import com.example.CineHive.domain.search.document.PersonDocument;

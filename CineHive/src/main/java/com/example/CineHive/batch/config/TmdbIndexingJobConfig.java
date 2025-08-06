@@ -1,5 +1,8 @@
 package com.example.CineHive.batch;
 
+import com.example.CineHive.batch.common.BatchJobExecutionFinder;
+import com.example.CineHive.batch.common.LoggingSkipListener;
+import com.example.CineHive.batch.common.TmdbApiSkipPolicy;
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.TmdbChangeItemResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbChangesResponse;
@@ -25,12 +28,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
