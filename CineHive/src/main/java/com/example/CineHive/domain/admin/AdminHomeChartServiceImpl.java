@@ -2,7 +2,7 @@ package com.example.CineHive.domain.admin;
 
 import com.example.CineHive.domain.admin.dto.HomeChartSettingRequest;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
-import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.enums.ChartType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;

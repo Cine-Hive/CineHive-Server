@@ -6,7 +6,7 @@ import com.example.CineHive.domain.banner.dto.BannerAdminRequest;
 import com.example.CineHive.domain.banner.dto.BannerAdminResponse;
 import com.example.CineHive.global.dto.ApiResponse;
 import com.example.CineHive.global.dto.MessageResponse;
-import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.enums.ChartType;
 import com.example.CineHive.domain.banner.BannerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;

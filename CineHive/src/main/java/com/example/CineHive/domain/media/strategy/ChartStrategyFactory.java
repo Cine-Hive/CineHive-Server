@@ -2,7 +2,7 @@ package com.example.CineHive.domain.media.strategy;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.domain.media.dto.ChartProperties;
-import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.enums.ChartType;
 import com.example.CineHive.domain.media.dto.MediaChartResponse;
 import com.example.CineHive.domain.media.dto.MediaSummaryResponse;
 import com.example.CineHive.global.dto.PageResponse;

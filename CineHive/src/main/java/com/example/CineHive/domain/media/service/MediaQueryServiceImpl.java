@@ -6,6 +6,8 @@ import com.example.CineHive.client.tmdb.dto.TmdbPagedResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesResponse;
 import com.example.CineHive.domain.admin.AdminHomeChartService;
 import com.example.CineHive.domain.admin.dto.HomeChartSettingResponse;
+import com.example.CineHive.domain.media.enums.ChartType;
+import com.example.CineHive.domain.media.enums.Platform;
 import com.example.CineHive.domain.media.strategy.ChartStrategy;
 import com.example.CineHive.domain.media.strategy.ChartStrategyFactory;
 import com.example.CineHive.domain.media.enums.MediaType;

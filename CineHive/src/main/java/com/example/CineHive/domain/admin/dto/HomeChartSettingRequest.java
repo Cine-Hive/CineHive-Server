@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.admin.dto;
 
-import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.enums.ChartType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
