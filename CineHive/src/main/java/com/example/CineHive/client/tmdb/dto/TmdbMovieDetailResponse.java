@@ -26,6 +26,7 @@ public record TmdbMovieDetailResponse(
         String backdropPath,
         List<TmdbGenreResponse> genres,
         TmdbMediaCreditsResponse credits,
+        boolean adult,
         TmdbVideosResponse videos,
         TmdbImagesResponse images,
         TmdbPagedResponse<TmdbMovieResponse> recommendations,
