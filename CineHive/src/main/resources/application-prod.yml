@@ -1,0 +1,38 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mariadb://${DB_HOST}/${DB_NAME}?useUnicode=true&characterEncoding=utf8mb4
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      # password: ${REDIS_PASS}
+
+  elasticsearch:
+    uris: http://${ES_HOST}:9200
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  cache:
+    redis:
+      time-to-live: 60m
+
+app:
+  jwt:
+    secret-key: ${JWT_SECRET}
+  tmdb:
+    api-key: ${TMDB_API_KEY}
+
+logging:
+  level:
+    com.example.CineHive: INFO
