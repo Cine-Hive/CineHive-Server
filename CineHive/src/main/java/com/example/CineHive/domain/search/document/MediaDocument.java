@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class MediaDocument {
 
     @Id
-    private Long id; // TMDB ID를 Document ID로 사용
+    private Long id;
 
     @Field(type = FieldType.Long)
     private Long tmdbId;
@@ -30,7 +30,6 @@ public class MediaDocument {
     @Field(type = FieldType.Keyword)
     private String mediaType; // "MOVIE" or "TV"
 
-    // Text는 전문 검색용, Keyword는 정확한 일치, 정렬, 집계용 (Multi-field)
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
             otherFields = @InnerField(suffix = "keyword", type = FieldType.Keyword)
@@ -46,13 +45,12 @@ public class MediaDocument {
     @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private List<String> cast;
 
-    @Field(type = FieldType.Keyword, index = false) // 검색 불필요, 저장만 함
+    @Field(type = FieldType.Keyword, index = false)
     private String posterPath;
 
     @Field(type = FieldType.Date)
     private String releaseDate;
 
-    // --- CineHive 커뮤니티 데이터 ---
     @Field(type = FieldType.Integer)
     private int likeCount;
 
@@ -63,7 +61,7 @@ public class MediaDocument {
     private double avgRating;
 
     @Field(type = FieldType.Date)
-    private Instant updatedAt; // 우리 시스템에서 정보가 업데이트된 시각
+    private Instant updatedAt;
 
     /**
      * TMDB 영화 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
@@ -79,9 +77,9 @@ public class MediaDocument {
                 .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
                 .posterPath(tmdb.posterPath())
                 .releaseDate(tmdb.releaseDate())
-                .likeCount(0) // 초기값
-                .reviewCount(0) // 초기값
-                .avgRating(0.0) // 초기값
+                .likeCount(0)
+                .reviewCount(0)
+                .avgRating(0.0)
                 .updatedAt(Instant.now())
                 .build();
     }
