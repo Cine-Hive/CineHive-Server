@@ -5,6 +5,7 @@ import com.example.CineHive.domain.search.dto.PostSearchResponse;
 import com.example.CineHive.global.dto.PageResponse;
 import com.example.CineHive.global.dto.SliceResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 검색 기능을 총괄하는 서비스 인터페이스입니다.
