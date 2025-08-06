@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
