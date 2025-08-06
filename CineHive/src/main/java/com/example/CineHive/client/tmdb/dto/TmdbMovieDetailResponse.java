@@ -33,5 +33,7 @@ public record TmdbMovieDetailResponse(
         TmdbPagedResponse<TmdbMovieResponse> similar,
         TmdbKeywordsResponse keywords,
         @JsonProperty("watch/providers")
-        TmdbWatchProvidersResponse watchProviders
+        TmdbWatchProvidersResponse watchProviders,
+        @JsonProperty("belongs_to_collection")
+        TmdbCollectionResponse collection
 ) {}
