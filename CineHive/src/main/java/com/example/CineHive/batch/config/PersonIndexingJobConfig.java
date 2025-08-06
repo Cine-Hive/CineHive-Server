@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.config;
 
 import com.example.CineHive.batch.common.PaginatedTmdbItemReader;
 import com.example.CineHive.client.tmdb.TmdbApiClient;

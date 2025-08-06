@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.config;
 
 import com.example.CineHive.domain.post.entity.Post;
 import com.example.CineHive.domain.post.repository.PostRepository;

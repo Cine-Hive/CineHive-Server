@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.config;
 
 import com.example.CineHive.batch.common.BatchJobExecutionFinder;
 import com.example.CineHive.batch.common.LoggingSkipListener;

@@ -1,4 +1,4 @@
-package com.example.CineHive.batch;
+package com.example.CineHive.batch.config;
 
 import com.example.CineHive.domain.search.document.UserDocument;
 import com.example.CineHive.domain.search.repository.UserDocumentRepository;
