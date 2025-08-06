@@ -28,7 +28,7 @@ public class MediaDocument {
     private Long tmdbId;
 
     @Field(type = FieldType.Keyword)
-    private String mediaType; // "MOVIE" or "TV"
+    private String mediaType;
 
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
@@ -63,6 +63,9 @@ public class MediaDocument {
     @Field(type = FieldType.Date)
     private Instant updatedAt;
 
+    @Field(type = FieldType.Boolean)
+    private boolean adult;
+
     /**
      * TMDB 영화 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
      */
@@ -81,6 +84,7 @@ public class MediaDocument {
                 .reviewCount(0)
                 .avgRating(0.0)
                 .updatedAt(Instant.now())
+                .adult(tmdb.adult())
                 .build();
     }
 
@@ -102,6 +106,7 @@ public class MediaDocument {
                 .reviewCount(0)
                 .avgRating(0.0)
                 .updatedAt(Instant.now())
+                .adult(tmdb.adult())
                 .build();
     }
 }
