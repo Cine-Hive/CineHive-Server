@@ -7,7 +7,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 
 @Builder
 @Document(indexName = "collections")
-@Setting(settingPath = "elasticsearch/settings/nori-settings.json")
+@Setting(settingPath = "elasticsearch/nori-settings.json")
 public record CollectionDocument(
         @Id
         Long id,
