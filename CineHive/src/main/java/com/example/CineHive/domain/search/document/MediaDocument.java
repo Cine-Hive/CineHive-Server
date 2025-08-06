@@ -30,11 +30,11 @@ public class MediaDocument {
     @Field(type = FieldType.Keyword)
     private String mediaType;
 
-    @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
-            otherFields = @InnerField(suffix = "keyword", type = FieldType.Keyword)
-    )
+    @Field(type = FieldType.Search_As_You_Type, analyzer = "nori_analyzer")
     private String title;
+
+    @CompletionField(analyzer = "nori_analyzer", searchAnalyzer = "nori_analyzer")
+    private String title_suggest;
 
     @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private String overview;
@@ -75,6 +75,7 @@ public class MediaDocument {
                 .tmdbId(tmdb.id())
                 .mediaType("MOVIE")
                 .title(tmdb.title())
+                .title_suggest(tmdb.title())
                 .overview(tmdb.overview())
                 .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
                 .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
@@ -97,6 +98,7 @@ public class MediaDocument {
                 .tmdbId(tmdb.id())
                 .mediaType("TV")
                 .title(tmdb.name())
+                .title_suggest(tmdb.name())
                 .overview(tmdb.overview())
                 .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
                 .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
