@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile # 파일명 표준에 맞게 수정
+      dockerfile: Dockerfile
     container_name: cinehive-app
     ports:
       - "8081:8081"
@@ -25,9 +25,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ES_HOST=es
-      # 민감 정보는 외부에서 주입
-      - TMDB_API_KEY=${TMDB_API_KEY}
-      - JWT_SECRET=${JWT_SECRET}
 
   # 2. MariaDB 서비스
   db:
