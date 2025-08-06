@@ -66,6 +66,10 @@ dependencies {
 
 	// M1/M2 Mac용 (오류 로그 방지)
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.101.Final:osx-aarch_64'
+
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.batch:spring-batch-integration'
 }
 
 tasks.named('test') {
