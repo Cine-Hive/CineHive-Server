@@ -1,16 +1,18 @@
 package com.example.CineHive.batch.config;
 
-import com.example.CineHive.batch.common.BatchJobExecutionFinder;
-import com.example.CineHive.batch.common.LoggingSkipListener;
-import com.example.CineHive.batch.common.TmdbApiSkipPolicy;
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.TmdbChangeItemResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbChangesResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
+import com.example.CineHive.domain.collection.entity.Collection;
+import com.example.CineHive.domain.collection.repository.CollectionRepository;
 import com.example.CineHive.domain.search.document.MediaDocument;
 import com.example.CineHive.domain.search.repository.MediaDocumentRepository;
 import com.example.CineHive.global.exception.TmdbClientException;
+import com.example.CineHive.batch.common.BatchJobExecutionFinder;
+import com.example.CineHive.batch.common.LoggingSkipListener;
+import com.example.CineHive.batch.common.TmdbApiSkipPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -40,6 +42,7 @@ public class TmdbIndexingJobConfig {
 
     private final TmdbApiClient tmdbApiClient;
     private final MediaDocumentRepository mediaDocumentRepository;
+    private final CollectionRepository collectionRepository; // 컬렉션 저장을 위한 의존성
     private final BatchJobExecutionFinder jobExecutionFinder;
     private static final int CHUNK_SIZE = 100;
     private static final String JOB_NAME = "tmdbMediaIndexingJob";
@@ -92,7 +95,6 @@ public class TmdbIndexingJobConfig {
                 .build();
     }
 
-    // --- Readers (StepScope로 동적 생성) ---
     @Bean
     @StepScope
     public ItemReader<Long> movieChangesItemReader() {
@@ -105,26 +107,34 @@ public class TmdbIndexingJobConfig {
         return createChangesItemReader(tmdbApiClient::getTvChanges);
     }
 
-    // --- Processors ---
     @Bean
     public ItemProcessor<Long, MediaDocument> movieDetailProcessor() {
-        // try-catch를 제거하여 예외가 Step으로 전파되도록 함
         return movieId -> {
             TmdbMovieDetailResponse movieDetail = tmdbApiClient.getMovieDetail(movieId);
+
+            // 영화에 포함된 컬렉션 정보를 우리 DB에 저장
+            if (movieDetail.collection() != null) {
+                Collection collection = Collection.builder()
+                        .id(movieDetail.collection().id())
+                        .name(movieDetail.collection().name())
+                        .posterPath(movieDetail.collection().posterPath())
+                        .backdropPath(movieDetail.collection().backdropPath())
+                        .build();
+                collectionRepository.save(collection);
+            }
+
             return MediaDocument.from(movieDetail);
         };
     }
 
     @Bean
     public ItemProcessor<Long, MediaDocument> tvDetailProcessor() {
-        // try-catch를 제거하여 예외가 Step으로 전파되도록 함
         return tvId -> {
             TmdbTvSeriesDetailResponse tvDetail = tmdbApiClient.getTvSeriesDetail(tvId);
             return MediaDocument.from(tvDetail);
         };
     }
 
-    // --- Writer (공통 사용) ---
     @Bean
     public ItemWriter<MediaDocument> elasticsearchItemWriter() {
         return items -> {
@@ -132,7 +142,6 @@ public class TmdbIndexingJobConfig {
         };
     }
 
-    // --- Helper Method for Readers ---
     private ListItemReader<Long> createChangesItemReader(ChangesApiLoader apiLoader) {
         LocalDateTime lastSuccessTime = jobExecutionFinder.findLastSuccessfulJobEndTime(JOB_NAME)
                 .orElse(LocalDateTime.now().minusDays(1));
