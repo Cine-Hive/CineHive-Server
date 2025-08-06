@@ -8,7 +8,7 @@
       }
     },
     "analyzer": {
-      "nori": {
+      "nori_analyzer": {
         "type": "custom",
         "tokenizer": "nori_tokenizer",
         "filter": [
