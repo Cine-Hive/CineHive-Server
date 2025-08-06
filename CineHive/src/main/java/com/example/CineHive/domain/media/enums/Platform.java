@@ -1,4 +1,4 @@
-package com.example.CineHive.domain.media.dto;
+package com.example.CineHive.domain.media.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
