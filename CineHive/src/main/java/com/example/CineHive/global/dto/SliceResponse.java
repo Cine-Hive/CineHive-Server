@@ -30,19 +30,18 @@ public record SliceResponse<T>(
      * Slice 객체와 DTO 변환 함수를 받아 SliceResponse를 생성하는 정적 팩토리 메서드입니다.
      * @param slice     원본 Slice 객체 (null일 경우 안전하게 처리)
      * @param converter Entity를 DTO로 변환하는 함수
-     * @return SliceResponse 객체
      * @param <E> Entity 타입
      * @param <T> DTO 타입
+     * @return SliceResponse 객체
      */
     public static <E, T> SliceResponse<T> from(Slice<E> slice, Function<E, T> converter) {
-        // ✔ Null-Safety 강화
         if (slice == null || !slice.hasContent()) {
             return new SliceResponse<>(Collections.emptyList(), 0, 0, true, true, false);
         }
 
         List<T> content = slice.getContent().stream()
                 .map(converter)
-                .toList(); // Java 16+ .collect(Collectors.toList())와 동일
+                .toList();
 
         return new SliceResponse<>(
                 content,
