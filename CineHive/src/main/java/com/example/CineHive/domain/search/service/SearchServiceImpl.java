@@ -5,10 +5,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
 import com.example.CineHive.domain.media.enums.MediaType;
-import com.example.CineHive.domain.search.document.MediaDocument;
-import com.example.CineHive.domain.search.document.PersonDocument;
-import com.example.CineHive.domain.search.document.PostDocument;
-import com.example.CineHive.domain.search.document.UserDocument;
+import com.example.CineHive.domain.search.document.*;
 import com.example.CineHive.domain.search.dto.*;
 import com.example.CineHive.global.dto.SliceResponse;
 import lombok.RequiredArgsConstructor;
@@ -169,8 +166,25 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public SliceResponse<CollectionSearchResponse> searchCollections(String query, Pageable pageable) {
-        log.warn("컬렉션 검색 기능은 아직 구현되지 않았습니다.");
-        return SliceResponse.from(Page.empty(), item -> null);
+        log.debug("Elasticsearch 컬렉션 검색을 시작합니다. Query: {}", query);
+        logSearchKeyword(query);
+
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .match(m -> m
+                                .field("name")
+                                .query(query)
+                        )
+                )
+                .withPageable(pageable)
+                .build();
+
+        SearchHits<CollectionDocument> searchHits = elasticsearchOperations.search(nativeQuery, CollectionDocument.class);
+        SearchPage<CollectionDocument> resultPage = org.springframework.data.elasticsearch.core.SearchHitSupport.searchPageFor(searchHits, pageable);
+
+        return SliceResponse.from(resultPage.map(SearchHit::getContent), doc ->
+                new CollectionSearchResponse(doc.id(), doc.name(), doc.posterPath())
+        );
     }
 
     @Override
