@@ -1,14 +1,18 @@
 package com.example.CineHive.batch;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
+import com.example.CineHive.client.tmdb.dto.TmdbChangeItemResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbChangesResponse;
 import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
-import com.example.CineHive.client.tmdb.dto.TmdbMovieResponse;
+import com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse;
 import com.example.CineHive.domain.search.document.MediaDocument;
 import com.example.CineHive.domain.search.repository.MediaDocumentRepository;
+import com.example.CineHive.global.exception.TmdbClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -16,10 +20,15 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,72 +39,126 @@ public class TmdbIndexingJobConfig {
 
     private final TmdbApiClient tmdbApiClient;
     private final MediaDocumentRepository mediaDocumentRepository;
-
+    private final BatchJobExecutionFinder jobExecutionFinder;
     private static final int CHUNK_SIZE = 100;
+    private static final String JOB_NAME = "tmdbMediaIndexingJob";
 
-    /**
-     * TMDB 미디어 데이터를 Elasticsearch에 색인하는 전체 Job을 정의합니다.
-     */
     @Bean
-    public Job tmdbMediaIndexingJob(JobRepository jobRepository, Step movieIndexingStep) {
-        return new JobBuilder("tmdbMediaIndexingJob", jobRepository)
-                .start(movieIndexingStep)
-                // TODO: TV 시리즈 색인 Step 추가
+    public Job tmdbMediaIndexingJob(JobRepository jobRepository,
+                                    @Qualifier("movieChangesIndexingStep") Step movieChangesIndexingStep,
+                                    @Qualifier("tvChangesIndexingStep") Step tvChangesIndexingStep) {
+        return new JobBuilder(JOB_NAME, jobRepository)
+                .start(movieChangesIndexingStep)
+                .next(tvChangesIndexingStep)
                 .build();
     }
 
-    /**
-     * 영화 데이터를 읽고, 처리하고, 쓰는 단일 Step을 정의합니다.
-     */
     @Bean
-    public Step movieIndexingStep(JobRepository jobRepository, PlatformTransactionManager tm,
-                                  ItemReader<TmdbMovieResponse> movieItemReader,
-                                  ItemProcessor<TmdbMovieResponse, MediaDocument> movieItemProcessor,
-                                  ItemWriter<MediaDocument> elasticsearchItemWriter) {
-        return new StepBuilder("movieIndexingStep", jobRepository)
-                .<TmdbMovieResponse, MediaDocument>chunk(CHUNK_SIZE, tm)
-                .reader(movieItemReader)
-                .processor(movieItemProcessor)
+    public Step movieChangesIndexingStep(JobRepository jobRepository, PlatformTransactionManager tm,
+                                         ItemReader<Long> movieChangesItemReader,
+                                         ItemProcessor<Long, MediaDocument> movieDetailProcessor,
+                                         ItemWriter<MediaDocument> elasticsearchItemWriter) {
+        return new StepBuilder("movieChangesIndexingStep", jobRepository)
+                .<Long, MediaDocument>chunk(CHUNK_SIZE, tm)
+                .reader(movieChangesItemReader)
+                .processor(movieDetailProcessor)
                 .writer(elasticsearchItemWriter)
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(TmdbClientException.class) // 404를 포함한 모든 클라이언트 오류는 일단 재시도 대상
+                .skipPolicy(new TmdbApiSkipPolicy()) // 커스텀 Skip 정책 적용
+                .skipLimit(100)
                 .build();
     }
 
-    /**
-     * [Reader] TMDB API에서 인기 영화 목록을 읽어옵니다.
-     * 실제 운영에서는 /changes API를 사용하도록 개선해야 합니다.
-     */
     @Bean
-    public ItemReader<TmdbMovieResponse> movieItemReader() {
-        log.info("TMDB 인기 영화 목록 조회를 시작합니다 (Batch Reader).");
-        // 우선 1페이지만 읽어오는 간단한 리더로 구현
-        List<TmdbMovieResponse> popularMovies = tmdbApiClient.getPopularMovies(1).getResults();
-        return new ListItemReader<>(popularMovies);
+    public Step tvChangesIndexingStep(JobRepository jobRepository, PlatformTransactionManager tm,
+                                      ItemReader<Long> tvChangesItemReader,
+                                      ItemProcessor<Long, MediaDocument> tvDetailProcessor,
+                                      ItemWriter<MediaDocument> elasticsearchItemWriter) {
+        return new StepBuilder("tvChangesIndexingStep", jobRepository)
+                .<Long, MediaDocument>chunk(CHUNK_SIZE, tm)
+                .reader(tvChangesItemReader)
+                .processor(tvDetailProcessor)
+                .writer(elasticsearchItemWriter)
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(TmdbClientException.class)
+                .skipPolicy(new TmdbApiSkipPolicy())
+                .skipLimit(100)
+                .build();
     }
 
-    /**
-     * [Processor] 읽어온 영화 정보를 MediaDocument로 변환합니다.
-     */
+    // --- Readers (StepScope로 동적 생성) ---
     @Bean
-    public ItemProcessor<TmdbMovieResponse, MediaDocument> movieItemProcessor() {
-        return movieSummary -> {
-            log.debug("Processing movie ID: {}", movieSummary.id());
-            try {
-                // 요약 정보만으로는 부족하므로, 상세 정보를 다시 조회
-                TmdbMovieDetailResponse movieDetail = tmdbApiClient.getMovieDetail(movieSummary.id());
-                return MediaDocument.from(movieDetail);
-            } catch (Exception e) {
-                log.error("영화 ID {} 처리 중 오류 발생: {}", movieSummary.id(), e.getMessage());
-                return null; // 실패한 아이템은 건너뜀
-            }
+    @StepScope
+    public ItemReader<Long> movieChangesItemReader() {
+        return createChangesItemReader(tmdbApiClient::getMovieChanges);
+    }
+
+    @Bean
+    @StepScope
+    public ItemReader<Long> tvChangesItemReader() {
+        return createChangesItemReader(tmdbApiClient::getTvChanges);
+    }
+
+    // --- Processors ---
+    @Bean
+    public ItemProcessor<Long, MediaDocument> movieDetailProcessor() {
+        // try-catch를 제거하여 예외가 Step으로 전파되도록 함
+        return movieId -> {
+            TmdbMovieDetailResponse movieDetail = tmdbApiClient.getMovieDetail(movieId);
+            return MediaDocument.from(movieDetail);
         };
     }
 
-    /**
-     * [Writer] 변환된 MediaDocument를 Elasticsearch에 대량 저장합니다.
-     * Builder 대신 Repository의 saveAll 메서드를 직접 호출하는 람다로 구현합니다.
-     */
+    @Bean
+    public ItemProcessor<Long, MediaDocument> tvDetailProcessor() {
+        // try-catch를 제거하여 예외가 Step으로 전파되도록 함
+        return tvId -> {
+            TmdbTvSeriesDetailResponse tvDetail = tmdbApiClient.getTvSeriesDetail(tvId);
+            return MediaDocument.from(tvDetail);
+        };
+    }
+
+    // --- Writer (공통 사용) ---
     @Bean
     public ItemWriter<MediaDocument> elasticsearchItemWriter() {
-        return items -> mediaDocumentRepository.saveAll(items);
+        return items -> {
+            if (!items.isEmpty()) mediaDocumentRepository.saveAll(items);
+        };
+    }
+
+    // --- Helper Method for Readers ---
+    private ListItemReader<Long> createChangesItemReader(ChangesApiLoader apiLoader) {
+        // 마지막 성공 시각 조회, 없으면 어제 날짜 기준
+        LocalDateTime lastSuccessTime = jobExecutionFinder.findLastSuccessfulJobEndTime(JOB_NAME)
+                .orElse(LocalDateTime.now().minusDays(1));
+
+        String startDate = lastSuccessTime.toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        List<Long> changedIds = new ArrayList<>();
+        int currentPage = 1;
+        int totalPages;
+
+        do {
+            TmdbChangesResponse response = apiLoader.load(startDate, currentPage++);
+            if (response == null || response.results() == null) break;
+
+            response.results().stream()
+                    .filter(item -> !item.adult()) // 성인물 제외
+                    .map(TmdbChangeItemResponse::id)
+                    .forEach(changedIds::add);
+            totalPages = response.totalPages();
+        } while (currentPage <= totalPages);
+
+        log.info("Total changed IDs found since {}: {}", startDate, changedIds.size());
+        return new ListItemReader<>(changedIds);
+    }
+
+    // API 호출을 위한 함수형 인터페이스
+    @FunctionalInterface
+    private interface ChangesApiLoader {
+        TmdbChangesResponse load(String startDate, int page);
     }
 }
