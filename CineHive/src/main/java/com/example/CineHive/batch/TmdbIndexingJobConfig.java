@@ -65,9 +65,10 @@ public class TmdbIndexingJobConfig {
                 .writer(elasticsearchItemWriter)
                 .faultTolerant()
                 .retryLimit(3)
-                .retry(TmdbClientException.class) // 404를 포함한 모든 클라이언트 오류는 일단 재시도 대상
-                .skipPolicy(new TmdbApiSkipPolicy()) // 커스텀 Skip 정책 적용
-                .skipLimit(100)
+                .retry(TmdbClientException.class)
+                .skipPolicy(new TmdbApiSkipPolicy())
+                .skipLimit(50)
+                .listener(new LoggingSkipListener<>())
                 .build();
     }
 
@@ -85,7 +86,8 @@ public class TmdbIndexingJobConfig {
                 .retryLimit(3)
                 .retry(TmdbClientException.class)
                 .skipPolicy(new TmdbApiSkipPolicy())
-                .skipLimit(100)
+                .skipLimit(50)
+                .listener(new LoggingSkipListener<>())
                 .build();
     }
 
@@ -131,7 +133,6 @@ public class TmdbIndexingJobConfig {
 
     // --- Helper Method for Readers ---
     private ListItemReader<Long> createChangesItemReader(ChangesApiLoader apiLoader) {
-        // 마지막 성공 시각 조회, 없으면 어제 날짜 기준
         LocalDateTime lastSuccessTime = jobExecutionFinder.findLastSuccessfulJobEndTime(JOB_NAME)
                 .orElse(LocalDateTime.now().minusDays(1));
 
@@ -146,7 +147,6 @@ public class TmdbIndexingJobConfig {
             if (response == null || response.results() == null) break;
 
             response.results().stream()
-                    .filter(item -> !item.adult()) // 성인물 제외
                     .map(TmdbChangeItemResponse::id)
                     .forEach(changedIds::add);
             totalPages = response.totalPages();
@@ -156,7 +156,6 @@ public class TmdbIndexingJobConfig {
         return new ListItemReader<>(changedIds);
     }
 
-    // API 호출을 위한 함수형 인터페이스
     @FunctionalInterface
     private interface ChangesApiLoader {
         TmdbChangesResponse load(String startDate, int page);
