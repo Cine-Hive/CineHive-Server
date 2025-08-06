@@ -1,4 +1,4 @@
-package com.example.CineHive.client.tmdb.exception;
+package com.example.CineHive.global.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
