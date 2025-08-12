@@ -9,7 +9,7 @@ COPY gradle/wrapper/ gradle/wrapper/
 # 1-2. 실행 권한 부여
 RUN chmod +x gradlew
 
-# 1-3. 의존성만 먼저 내려받아 캐시 활용 (매우 좋은 최적화입니다)
+# 1-3. 의존성만 먼저 내려받아 캐시 활용
 RUN ./gradlew dependencies --no-daemon --quiet
 
 # 1-4. 전체 소스 복사 후 Boot JAR 생성

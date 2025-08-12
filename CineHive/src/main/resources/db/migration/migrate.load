@@ -1,0 +1,14 @@
+LOAD DATABASE
+    FROM mysql://cinehive:password@db/cinehive_v1
+    INTO postgresql://cinehive:password@postgres-db/cinehive_v1
+
+WITH
+    include drop,
+    create tables,
+    create indexes,
+    reset sequences,
+    foreign keys
+
+CAST
+    type datetime to timestamp,
+    type tinyint when (= 1) to boolean;

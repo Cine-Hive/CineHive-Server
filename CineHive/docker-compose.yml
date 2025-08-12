@@ -15,32 +15,32 @@ services:
       es:
         condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=dev # 기본 프로필을 dev로 설정
+      - SPRING_PROFILES_ACTIVE=dev
       - SERVER_PORT=8081
-      # DB, Redis, ES 접속 정보는 application-dev.yml이 환경 변수를 읽도록 함
+      # DB 접속 정보
       - DB_HOST=db
       - DB_NAME=cinehive_v1
       - DB_USER=cinehive
       - DB_PASS=password
+      # Redis, ES 접속 정보
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ES_HOST=es
 
-  # 2. MariaDB 서비스
+  # 2. PostgreSQL 서비스
   db:
-    image: mariadb:10.11
+    image: postgres:15-alpine
     container_name: cinehive-db
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MARIADB_ROOT_PASSWORD=root
-      - MARIADB_DATABASE=cinehive_v1
-      - MARIADB_USER=cinehive
-      - MARIADB_PASSWORD=password
+      - POSTGRES_DB=cinehive_v1
+      - POSTGRES_USER=cinehive
+      - POSTGRES_PASSWORD=password
     volumes:
-      - db-data:/var/lib/mysql
+      - postgres-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD-SHELL", "pg_isready -U cinehive -d cinehive_v1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,7 +59,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # 4. Elasticsearch 서비스 (nori 플러그인 미리 설치된 커스텀 이미지 사용)
+  # 4. Elasticsearch 서비스
   es:
     build:
       context: .
@@ -86,7 +86,7 @@ services:
       retries: 20
       start_period: 60s
 
-  # 5. Kibana (선택)
+  # 5. Kibana
   kibana:
     image: kibana:8.13.4
     container_name: cinehive-kibana
@@ -99,6 +99,6 @@ services:
       - xpack.security.enabled=false
 
 volumes:
-  db-data:
+  postgres-db-data:
   redis-data:
   es-data:

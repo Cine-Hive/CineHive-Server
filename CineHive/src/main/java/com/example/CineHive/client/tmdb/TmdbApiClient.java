@@ -226,6 +226,16 @@ public class TmdbApiClient {
         return get("/network/" + networkId + "/images", TmdbNetworkImagesResponse.class, new LinkedMultiValueMap<>());
     }
 
+    /**
+     * TMDB의 API Configuration 정보를 조회합니다.
+     * 이미지 base URL, 사이즈 목록 등을 포함합니다.
+     * @return Configuration 정보 응답 DTO
+     */
+    public TmdbConfigurationResponse getConfiguration() {
+        // 기존 get 메서드를 재활용합니다. 쿼리 파라미터가 없으므로 빈 Map을 전달합니다.
+        return get("/configuration", TmdbConfigurationResponse.class, new LinkedMultiValueMap<>());
+    }
+
     // --- Private Helper Methods ---
 
     private <T> T parseResponse(String json, TypeReference<T> typeReference) {
