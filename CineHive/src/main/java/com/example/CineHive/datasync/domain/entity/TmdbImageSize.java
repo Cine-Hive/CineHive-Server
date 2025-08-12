@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
+@Entity(name = "SyncTmdbImageSize")
 @Table(name = "ref_tmdb_image_size")
 @IdClass(TmdbImageSizeId.class)
 @Getter

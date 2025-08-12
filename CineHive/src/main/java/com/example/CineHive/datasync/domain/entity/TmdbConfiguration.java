@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.ZonedDateTime;
 
-@Entity
+@Entity(name = "SyncTmdbConfiguration")
 @Table(name = "ref_tmdb_configuration")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
