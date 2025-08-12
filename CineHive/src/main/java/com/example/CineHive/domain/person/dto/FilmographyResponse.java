@@ -1,8 +1,11 @@
 package com.example.CineHive.domain.person.dto;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPersonCreditResponse;
+import com.example.CineHive.domain.media.enums.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+
+import java.time.LocalDate;
 
 @Builder
 @Schema(description = "필모그래피 목록의 각 작품 정보")
@@ -24,21 +27,31 @@ public record FilmographyResponse(
      * TMDB API의 Credit 객체를 우리 서비스의 응답 DTO로 변환합니다.
      */
     public static FilmographyResponse from(TmdbPersonCreditResponse credit) {
-        String role = credit.character() != null && !credit.character().isEmpty()
-                ? credit.character()
-                : credit.job();
+        LocalDate date = MediaType.MOVIE.getValue().equals(credit.mediaType().getValue()) ? credit.releaseDate() : credit.firstAirDate();
+        Integer year = (date != null) ? date.getYear() : null;
 
-        Integer year = credit.getReleaseDate() != null
-                ? credit.getReleaseDate().getYear()
-                : null;
+        String title = MediaType.MOVIE.getValue().equals(credit.mediaType().getValue()) ? credit.title() : credit.name();
 
         return FilmographyResponse.builder()
                 .mediaId(credit.id())
-                .mediaType(credit.mediaType())
-                .title(credit.getTitle())
+                .mediaType(credit.mediaType().getValue())
+                .title(title)
                 .posterPath(credit.posterPath())
                 .releaseYear(year)
-                .role(role)
+                .role(determineRole(credit))
                 .build();
+    }
+
+    /**
+     * [추가] Credit 객체에서 역할(배우/감독 등)을 결정하는 private 헬퍼 메서드
+     */
+    private static String determineRole(TmdbPersonCreditResponse credit) {
+        if (credit.character() != null && !credit.character().isBlank()) {
+            return credit.character();
+        }
+        if (credit.job() != null && !credit.job().isBlank()) {
+            return credit.job();
+        }
+        return "N/A";
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -93,39 +94,49 @@ public class PersonQueryServiceImpl implements PersonQueryService {
     }
 
     @Override
-    @Cacheable(cacheNames = "filmographies",
-            key = "'person:' + #personTmdbId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
+    @Cacheable(cacheNames = "filmographies", key = "'person:' + #personTmdbId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public SliceResponse<FilmographyResponse> getFilmography(Long personTmdbId, Pageable pageable) {
         log.debug("인물 필모그래피를 조회합니다. TMDB ID: {}, Pageable: {}", personTmdbId, pageable);
 
         try {
             TmdbPersonDetailResponse personDetail = tmdbApiClient.getPersonDetail(personTmdbId);
 
-            List<TmdbPersonCreditResponse> allCredits = Stream.of(personDetail.movieCredits(), personDetail.tvCredits())
-                    .filter(Objects::nonNull)
-                    .flatMap(credits -> Stream.concat(
-                            Optional.ofNullable(credits.cast()).stream().flatMap(List::stream),
-                            Optional.ofNullable(credits.crew()).stream().flatMap(List::stream)
-                    )).toList();
+            // [수정] movieCredits와 tvCredits의 cast, crew 목록을 안전하게 하나의 리스트로 합칩니다.
+            List<TmdbPersonCreditResponse> allCredits = Stream.concat(
+                    Optional.ofNullable(personDetail.movieCredits()).stream().flatMap(c -> Stream.concat(
+                            Optional.ofNullable(c.cast()).orElse(Collections.emptyList()).stream(),
+                            Optional.ofNullable(c.crew()).orElse(Collections.emptyList()).stream()
+                    )),
+                    Optional.ofNullable(personDetail.tvCredits()).stream().flatMap(c -> Stream.concat(
+                            Optional.ofNullable(c.cast()).orElse(Collections.emptyList()).stream(),
+                            Optional.ofNullable(c.crew()).orElse(Collections.emptyList()).stream()
+                    ))
+            ).collect(Collectors.toList());
 
+            // [수정] 중복 제거, 날짜 없는 작품 필터링, 최신순 정렬 로직
             List<FilmographyResponse> sortedFilmography = allCredits.stream()
-                    .filter(credit -> credit.id() != null && credit.getReleaseDate() != null)
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toMap(TmdbPersonCreditResponse::id, Function.identity(), (e1, e2) -> e1, LinkedHashMap::new),
-                            map -> new ArrayList<>(map.values())
-                    )).stream()
-                    .sorted(Comparator.comparing(TmdbPersonCreditResponse::getReleaseDate).reversed())
+                    // 1. 작품 ID를 기준으로 중복 제거 (배우와 제작진으로 중복 출연 시 하나만 남김)
+                    .collect(Collectors.toMap(
+                            TmdbPersonCreditResponse::id, // Key: 미디어 ID
+                            Function.identity(),          // Value: Credit 객체
+                            (existing, replacement) -> existing // 중복 시 기존 것 유지
+                    ))
+                    .values().stream()
+                    // 2. 날짜가 없는 작품은 필모그래피에서 제외
+                    .filter(credit -> getCreditDate(credit) != null)
+                    // 3. 최신 작품 순으로 정렬
+                    .sorted(Comparator.comparing(this::getCreditDate).reversed())
+                    // 4. 최종 DTO로 변환
                     .map(FilmographyResponse::from)
                     .toList();
 
+            // 페이지네이션 로직
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), sortedFilmography.size());
-
             List<FilmographyResponse> content = (start >= sortedFilmography.size())
                     ? Collections.emptyList()
                     : sortedFilmography.subList(start, end);
-
-            boolean hasNext = pageable.getPageSize() > 0 && end < sortedFilmography.size();
+            boolean hasNext = end < sortedFilmography.size();
             Slice<FilmographyResponse> slice = new SliceImpl<>(content, pageable, hasNext);
 
             return SliceResponse.from(slice, Function.identity());
@@ -148,5 +159,10 @@ public class PersonQueryServiceImpl implements PersonQueryService {
             if (credits.cast() != null) allCredits.addAll(credits.cast());
             if (credits.crew() != null) allCredits.addAll(credits.crew());
         }
+    }
+
+    private LocalDate getCreditDate(TmdbPersonCreditResponse credit) {
+        if (credit.mediaType() == null) return null;
+        return credit.mediaType().isMovie() ? credit.releaseDate() : credit.firstAirDate();
     }
 }
