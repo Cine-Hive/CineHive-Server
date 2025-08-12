@@ -73,7 +73,7 @@ public class Media extends BaseEntity {
 
     public static Media from(TmdbMovieDetailResponse tmdb) {
         return Media.builder()
-                .tmdbId(tmdb.id().intValue())
+                .tmdbId((int) tmdb.id())
                 .mediaType(MediaType.MOVIE)
                 .title(tmdb.title())
                 .posterPath(tmdb.posterPath())
