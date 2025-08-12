@@ -1,6 +1,7 @@
 package com.example.CineHive.global.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
 import java.util.Collections;
@@ -51,5 +52,15 @@ public record SliceResponse<T>(
                 slice.isLast(),
                 slice.hasNext()
         );
+    }
+
+    /**
+     * 비어있는 SliceResponse 객체를 생성합니다. 인덱스가 존재하지 않을 때 사용됩니다.
+     * @param pageable 페이징 정보
+     * @return 비어있는 SliceResponse 객체
+     * @param <T> DTO 타입
+     */
+    public static <T> SliceResponse<T> empty(Pageable pageable) {
+        return new SliceResponse<>(Collections.emptyList(), pageable.getPageNumber(), pageable.getPageSize(), true, true, false);
     }
 }

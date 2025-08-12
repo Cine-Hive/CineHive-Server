@@ -30,11 +30,28 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    private static final String[] SWAGGER_PATHS = {
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/webjars/**"
+    // --- URL 패턴 상수화 ---
+    private static final String[] AUTH_WHITELIST = {
+            // Swagger UI
+            "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
+            // 인증 API
+            "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/reissue",
+            "/api/v1/auth/check-email", "/api/v1/auth/check-nickname",
+            // OAuth2
+            "/api/v1/oauth2/**"
+    };
+
+    private static final String[] PUBLIC_GET_PATHS = {
+            // 검색 API
+            "/api/v1/search/**",
+            // 미디어, 배너, 게시글, 댓글 등 조회 API
+            "/api/v1/media/**", "/api/v1/banners", "/api/v1/posts", "/api/v1/posts/**",
+            "/api/v1/posts/{postId}/comments"
+    };
+
+    private static final String[] ACTUATOR_PUBLIC_PATHS = {
+            // Actuator 상태 체크
+            "/actuator/health", "/actuator/info"
     };
 
     @Bean
@@ -51,21 +68,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
                         // --- 인증 없이 접근 허용 (Permit All) ---
-                        .requestMatchers(SWAGGER_PATHS).permitAll()
-                        .requestMatchers("/api/v1/auth/register").permitAll()
-                        .requestMatchers("/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/auth/reissue").permitAll() // <-- 토큰 재발급 경로는 인증 없이 접근 허용
-                        .requestMatchers("/api/v1/auth/check-email", "/api/v1/auth/check-nickname").permitAll()
-                        .requestMatchers("/api/v1/oauth2/**").permitAll()
-
-                        // --- GET 요청 중 대부분 허용 ---
-                        .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/banners").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers(ACTUATOR_PUBLIC_PATHS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS).permitAll()
 
                         // --- 특정 역할(Role)이 필요한 경우 ---
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/batch/**").hasRole("ADMIN")
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
 
                         // --- 그 외 모든 요청은 인증 필요 ---
                         .anyRequest().authenticated()

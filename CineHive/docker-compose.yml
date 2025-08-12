@@ -59,9 +59,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # 4. Elasticsearch 서비스
+  # 4. Elasticsearch 서비스 (nori 플러그인 미리 설치된 커스텀 이미지 사용)
   es:
-    image: elasticsearch:8.13.4
+    build:
+      context: .
+      dockerfile: Dockerfile.elasticsearch
     container_name: cinehive-es
     ports:
       - "9200:9200"
@@ -70,15 +72,19 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - bootstrap.memory_lock=true
     volumes:
       - es-data:/usr/share/elasticsearch/data
-    command: ["bash", "-c", "elasticsearch-plugin install analysis-nori --batch && exec elasticsearch"]
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:9200/_cluster/health?wait_for_status=yellow"]
-      interval: 15s
+      test: ["CMD", "curl", "-s", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s"]
+      interval: 30s
       timeout: 10s
-      retries: 30
-      start_period: 120s
+      retries: 20
+      start_period: 60s
 
   # 5. Kibana (선택)
   kibana:
@@ -90,6 +96,7 @@ services:
       - es
     environment:
       - ELASTICSEARCH_HOSTS=http://es:9200
+      - xpack.security.enabled=false
 
 volumes:
   db-data:

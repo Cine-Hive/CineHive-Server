@@ -21,6 +21,10 @@ spring:
   batch:
     jdbc:
       initialize-schema: always
+    sql:
+      init:
+        mode: always
+        schema-locations: classpath:org/springframework/batch/core/schema-mariadb.sql
 
 # =========================================
 # 애플리케이션별 맞춤 설정
@@ -79,3 +83,6 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      show-details: always # health 체크 시 상세 정보를 항상 보여줍니다.

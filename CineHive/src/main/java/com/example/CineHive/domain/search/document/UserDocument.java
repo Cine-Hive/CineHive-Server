@@ -15,7 +15,7 @@ public record UserDocument(
         @Id
         Long id,
 
-        @Field(type = FieldType.Text, analyzer = "nori")
+        @Field(type = FieldType.Text, analyzer = "nori_analyzer")
         String nickname,
 
         @Field(type = FieldType.Keyword, index = false)

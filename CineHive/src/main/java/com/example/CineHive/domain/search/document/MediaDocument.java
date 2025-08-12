@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,10 +31,16 @@ public class MediaDocument {
     @Field(type = FieldType.Keyword)
     private String mediaType;
 
-    @Field(type = FieldType.Search_As_You_Type, analyzer = "nori_analyzer")
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "nori_analyzer"),
+            otherFields = {
+                    @InnerField(suffix = "search_as_you_type", type = FieldType.Search_As_You_Type, analyzer = "nori_analyzer"),
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String title;
 
-    @CompletionField(analyzer = "nori_analyzer", searchAnalyzer = "nori_analyzer")
+    @CompletionField(analyzer = "keyword", searchAnalyzer = "keyword")
     private String title_suggest;
 
     @Field(type = FieldType.Text, analyzer = "nori_analyzer")
@@ -44,6 +51,9 @@ public class MediaDocument {
 
     @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private List<String> cast;
+
+    @Field(type = FieldType.Keyword)
+    private List<String> keywords;
 
     @Field(type = FieldType.Keyword, index = false)
     private String posterPath;
@@ -70,6 +80,13 @@ public class MediaDocument {
      * TMDB 영화 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
      */
     public static MediaDocument from(TmdbMovieDetailResponse tmdb) {
+        List<String> keywordsList = Collections.emptyList();
+        if (tmdb.keywords() != null && tmdb.keywords().getUnifiedKeywords() != null) {
+            keywordsList = tmdb.keywords().getUnifiedKeywords().stream()
+                    .map(k -> k.name())
+                    .collect(Collectors.toList());
+        }
+
         return MediaDocument.builder()
                 .id(tmdb.id())
                 .tmdbId(tmdb.id())
@@ -77,8 +94,13 @@ public class MediaDocument {
                 .title(tmdb.title())
                 .title_suggest(tmdb.title())
                 .overview(tmdb.overview())
-                .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
-                .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
+                .genres(tmdb.genres() != null ?
+                        tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()) :
+                        Collections.emptyList())
+                .cast(tmdb.credits() != null && tmdb.credits().cast() != null ?
+                        tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList()) :
+                        Collections.emptyList())
+                .keywords(keywordsList)
                 .posterPath(tmdb.posterPath())
                 .releaseDate(tmdb.releaseDate())
                 .likeCount(0)
@@ -93,6 +115,13 @@ public class MediaDocument {
      * TMDB TV 시리즈 DTO를 MediaDocument로 변환합니다. (배치 작업에서 사용)
      */
     public static MediaDocument from(TmdbTvSeriesDetailResponse tmdb) {
+        List<String> keywordsList = Collections.emptyList();
+        if (tmdb.keywords() != null && tmdb.keywords().getUnifiedKeywords() != null) {
+            keywordsList = tmdb.keywords().getUnifiedKeywords().stream()
+                    .map(k -> k.name())
+                    .collect(Collectors.toList());
+        }
+
         return MediaDocument.builder()
                 .id(tmdb.id())
                 .tmdbId(tmdb.id())
@@ -100,8 +129,13 @@ public class MediaDocument {
                 .title(tmdb.name())
                 .title_suggest(tmdb.name())
                 .overview(tmdb.overview())
-                .genres(tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()))
-                .cast(tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList())) // 상위 5명
+                .genres(tmdb.genres() != null ?
+                        tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()) :
+                        Collections.emptyList())
+                .cast(tmdb.credits() != null && tmdb.credits().cast() != null ?
+                        tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList()) :
+                        Collections.emptyList())
+                .keywords(keywordsList)
                 .posterPath(tmdb.posterPath())
                 .releaseDate(tmdb.firstAirDate())
                 .likeCount(0)

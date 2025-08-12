@@ -4,7 +4,7 @@
       "nori_tokenizer": {
         "type": "nori_tokenizer",
         "decompound_mode": "mixed",
-        "discard_punctuation": "false"
+        "discard_punctuation": false
       }
     },
     "analyzer": {
@@ -12,6 +12,7 @@
         "type": "custom",
         "tokenizer": "nori_tokenizer",
         "filter": [
+          "lowercase",
           "nori_part_of_speech",
           "nori_readingform"
         ]
@@ -21,8 +22,7 @@
       "nori_part_of_speech": {
         "type": "nori_part_of_speech",
         "stoptags": [
-          "E", "J", "XSV", "XSA", "SF", "SP", "SSC", "SSO", "SC", "SE",
-          "IC", "SY"
+          "E", "IC", "J", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SC", "SE", "XPN", "XSA", "XSN", "XSV", "UNA", "NA", "VSV"
         ]
       }
     }

@@ -12,7 +12,7 @@ public record CollectionDocument(
         @Id
         Long id,
 
-        @Field(type = FieldType.Text, analyzer = "nori")
+        @Field(type = FieldType.Text, analyzer = "nori_analyzer")
         String name,
 
         @Field(type = FieldType.Keyword, index = false)

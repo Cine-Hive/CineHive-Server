@@ -30,8 +30,24 @@ spring:
     redis:
       time-to-live: 10m
 
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+
+app:
+  tmdb:
+    api-key: "35f22d327ac49da1df98b95fadad73aa"
+
 logging:
   level:
     com.example.CineHive: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
+    org.springframework.data.elasticsearch: DEBUG
+    org.springframework.data.elasticsearch.core: DEBUG
+    org.springframework.data.elasticsearch.client: DEBUG
+    org.elasticsearch.client: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.springframework.batch: DEBUG

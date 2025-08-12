@@ -60,7 +60,7 @@ public class SearchController {
     @GetMapping("/media")
     public SliceResponse<MediaSearchResponse> searchMedia(
             @Parameter(description = "검색어") @RequestParam String query,
-            @Parameter(description = "미디어 타입 (movie, tv)", required = false) @RequestParam(required = false) MediaType mediaType,
+            @Parameter(description = "미디어 타입 (movie, tv)") @RequestParam(required = false) MediaType mediaType,
             @ParameterObject Pageable pageable) {
         return searchService.searchMedia(query, mediaType, pageable);
     }
@@ -113,13 +113,14 @@ public class SearchController {
         return searchService.searchUsers(nickname, pageable);
     }
 
-    @Operation(summary = "컬렉션 검색 (구현 예정)",
+    @Operation(summary = "컬렉션 검색",
             description = """
-            ### **사용자들이 만든 컬렉션을 검색합니다. (현재는 비어있는 목록을 반환합니다)**
+            ### **TMDB에서 제공하는 컬렉션(시리즈, 프랜차이즈)을 검색합니다.**
+            - 응답은 무한 스크롤에 최적화된 `Slice` 형태로 제공됩니다.
             """)
     @GetMapping("/collections")
     public SliceResponse<CollectionSearchResponse> searchCollections(
-            @Parameter(description = "검색어") @RequestParam String query,
+            @Parameter(description = "컬렉션 이름") @RequestParam String query,
             @ParameterObject Pageable pageable) {
         return searchService.searchCollections(query, pageable);
     }
@@ -152,7 +153,8 @@ public class SearchController {
             2.  반환된 문자열 목록을 검색창 아래 드롭다운 메뉴로 보여줍니다.
             """)
     @GetMapping("/suggest")
-    public List<String> getSearchSuggestions(@RequestParam String prefix) {
+    public List<String> getSearchSuggestions(
+            @Parameter(description = "검색어 접두사") @RequestParam String prefix) {
         return searchService.getSearchSuggestions(prefix);
     }
 
@@ -167,7 +169,8 @@ public class SearchController {
             2.  둘 중 하나의 API를 선택하거나, 필요에 따라 혼합하여 사용할 수 있습니다.
             """)
     @GetMapping("/autocomplete")
-    public List<String> getAutocompletions(@RequestParam String prefix) {
+    public List<String> getAutocompletions(
+            @Parameter(description = "검색어 접두사") @RequestParam String prefix) {
         return searchService.getAutocompletions(prefix);
     }
 
