@@ -1,13 +1,11 @@
 package com.example.CineHive.datasync.batch;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
-import com.example.CineHive.client.tmdb.dto.TmdbMediaCreditsResponse;
-import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
+import com.example.CineHive.client.tmdb.dto.*;
 import com.example.CineHive.datasync.domain.entity.*;
 import com.example.CineHive.datasync.domain.service.MovieSyncService;
 import com.example.CineHive.datasync.dto.MovieDelta;
 import com.example.CineHive.datasync.dto.TmdbExportItem;
-import com.example.CineHive.domain.collection.entity.Collection;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,20 +54,13 @@ public class InitFullSyncJobConfig {
 
     private static final String EXPORT_URL_TEMPLATE = "http://files.tmdb.org/p/exports/%s_ids_%s.json.gz";
 
-    /**
-     * 초기 데이터 전체 동기화를 위한 메인 Job.
-     * 영화 ID 시딩 -> 영화 상세 정보 수집 순서로 진행됩니다.
-     */
     @Bean("initFullSyncJob")
     public Job initFullSyncJob(Step movieExportsSeedStep, Step movieDetailStep) {
         return new JobBuilder("initFullSyncJob", jobRepository)
                 .start(movieExportsSeedStep)
                 .next(movieDetailStep)
-                // .next(tvExportsSeedStep) // TODO: TV, Person 스텝 추가
                 .build();
     }
-
-    // --- Seed Step: TMDB Daily Export 파일에서 ID를 읽어 큐에 저장 ---
 
     @Bean
     @StepScope
@@ -84,8 +75,6 @@ public class InitFullSyncJobConfig {
                 .build();
     }
 
-    // --- Detail Step: 큐에서 ID를 읽어 상세 정보를 가져와 DB에 저장 ---
-
     @Bean
     public Step movieDetailStep(JpaPagingItemReader<TmdbWorkQueue> movieWorkQueueReader,
                                 ItemProcessor<TmdbWorkQueue, MovieDelta> movieDetailProcessor,
@@ -95,12 +84,10 @@ public class InitFullSyncJobConfig {
                 .reader(movieWorkQueueReader)
                 .processor(movieDetailProcessor)
                 .writer(movieDetailWriter)
-                .faultTolerant().retryLimit(3).retry(IOException.class) // 네트워크 오류는 3번 재시도
-                .skipLimit(100).skip(Exception.class) // 그 외 오류는 100번까지 스킵
+                .faultTolerant().retryLimit(3).retry(IOException.class)
+                .skipLimit(100).skip(Exception.class)
                 .build();
     }
-
-    // --- ItemReaders, Processors, Writers ---
 
     @Bean
     @StepScope
@@ -135,38 +122,17 @@ public class InitFullSyncJobConfig {
                 return null;
             }
 
-            // --- 날짜 파싱 ---
-            LocalDate releaseDate = null;
-            if (response.releaseDate() != null && !response.releaseDate().isBlank()) {
-                try {
-                    releaseDate = LocalDate.parse(response.releaseDate());
-                } catch (DateTimeParseException e) {
-                    log.warn("Could not parse release_date '{}' for movie ID {}", response.releaseDate(), movieId);
-                }
-            }
+            LocalDate releaseDate = parseDate(response.releaseDate(), movieId);
 
-            // --- 1. Movie 본체 엔티티 생성 (모든 필드 매핑) ---
             Movie movie = Movie.builder()
-                    .tmdbId(response.id())
-                    .title(response.title())
-                    .originalTitle(response.originalTitle())
-                    .overview(response.overview())
-                    .tagline(response.tagline()) // 추가
-                    .releaseDate(releaseDate)
-                    .runtime(response.runtime())
-                    .status(response.status())
-                    .budget(response.budget()) // 추가
-                    .revenue(response.revenue()) // 추가
-                    .posterPath(response.posterPath())
-                    .backdropPath(response.backdropPath())
-                    .popularity(response.popularity() != null ? BigDecimal.valueOf(response.popularity()) : null)
-                    .voteAverage(response.voteAverage() != null ? BigDecimal.valueOf(response.voteAverage()) : null)
-                    .voteCount(response.voteCount())
-                    .collectionId(response.collection() != null ? response.collection().id() : null) // 추가
-                    .updatedFromTmdbAt(ZonedDateTime.now(ZoneOffset.UTC))
-                    .build();
+                    .tmdbId(response.id()).title(response.title()).originalTitle(response.originalTitle())
+                    .overview(response.overview()).tagline(response.tagline()).releaseDate(releaseDate)
+                    .runtime(response.runtime()).status(response.status()).budget(response.budget())
+                    .revenue(response.revenue()).posterPath(response.posterPath()).backdropPath(response.backdropPath())
+                    .popularity(toBigDecimal(response.popularity())).voteAverage(toBigDecimal(response.voteAverage())).voteCount(response.voteCount())
+                    .collectionId(Optional.ofNullable(response.collection()).map(TmdbCollectionResponse::id).orElse(null))
+                    .updatedFromTmdbAt(ZonedDateTime.now(ZoneOffset.UTC)).build();
 
-            // --- 2. 관계 엔티티들 생성 ---
             List<MovieGenre> genres = Optional.ofNullable(response.genres()).orElse(Collections.emptyList()).stream()
                     .map(g -> MovieGenre.builder().movieId(movieId).genreId(g.id().longValue()).build()).toList();
 
@@ -174,23 +140,33 @@ public class InitFullSyncJobConfig {
                     .map(k -> MovieKeyword.builder().movieId(movieId).keywordId(k.id()).build()).toList();
 
             List<MovieCast> cast = Optional.ofNullable(response.credits()).map(TmdbMediaCreditsResponse::cast).orElse(Collections.emptyList()).stream()
-                    .map(c -> MovieCast.builder().creditId(c.creditId()).movieId(movieId).personId(c.id()).characterName(c.character()).castOrder(c.order()).build()).toList();
+                    .map(c -> MovieCast.builder()
+                            .creditId(c.creditId())
+                            .movieId(movieId)
+                            .personId(c.id())
+                            .characterName(c.character())
+                            .castOrder(c.order())
+                            .build()
+                    ).toList();
 
             List<MovieCrew> crew = Optional.ofNullable(response.credits()).map(TmdbMediaCreditsResponse::crew).orElse(Collections.emptyList()).stream()
-                    .map(c -> MovieCrew.builder().creditId(c.creditId()).movieId(movieId).personId(c.id()).job(c.job()).department(c.department()).build()).toList();
+                    .map(c -> MovieCrew.builder()
+                            .creditId(c.creditId())
+                            .movieId(movieId)
+                            .personId(c.id())
+                            .job(c.job())
+                            .department(c.department())
+                            .build()
+                    ).toList();
 
-            // [추가] Collection, ProductionCompany 등 새로운 엔티티 생성 로직
             Collection collection = Optional.ofNullable(response.collection())
-                    .map(c -> Collection.builder().tmdbId(c.id()).name(c.name()).posterPath(c.posterPath()).backdropPath(c.backdropPath()).build())
-                    .orElse(null);
+                    .map(c -> Collection.builder().tmdbId(c.id()).name(c.name()).posterPath(c.posterPath()).backdropPath(c.backdropPath()).build()).orElse(null);
 
             List<ProductionCompany> companies = Optional.ofNullable(response.productionCompanies()).orElse(Collections.emptyList()).stream()
-                    .map(c -> ProductionCompany.builder().tmdbId(c.id()).name(c.name()).logoPath(c.logoPath()).originCountry(c.originCountry()).build())
-                    .toList();
+                    .map(c -> ProductionCompany.builder().tmdbId(c.id()).name(c.name()).logoPath(c.logoPath()).originCountry(c.originCountry()).build()).toList();
 
             List<MovieProductionCompany> movieCompanies = companies.stream()
-                    .map(c -> MovieProductionCompany.builder().movieId(movieId).companyId(c.getTmdbId()).build())
-                    .toList();
+                    .map(c -> MovieProductionCompany.builder().movieId(movieId).companyId(c.getTmdbId()).build()).toList();
 
             return new MovieDelta(movie, genres, keywords, cast, crew, collection, companies, movieCompanies);
         };
@@ -216,16 +192,10 @@ public class InitFullSyncJobConfig {
     // --- Helper Methods & Classes ---
 
     private JsonItemReader<TmdbExportItem> createExportItemReader(String entityType, String fileDate) {
-        if (fileDate == null) {
-            fileDate = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("MM_dd_yyyy"));
-        }
+        if (fileDate == null) fileDate = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("MM_dd_yyyy"));
         String url = String.format(EXPORT_URL_TEMPLATE, entityType, fileDate);
         try {
-            return new JsonItemReaderBuilder<TmdbExportItem>()
-                    .name(entityType + "ExportReader")
-                    .resource(new UrlResource(url))
-                    .jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class))
-                    .build();
+            return new JsonItemReaderBuilder<TmdbExportItem>().name(entityType + "ExportReader").resource(new UrlResource(url)).jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class)).build();
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid URL: " + url, e);
         }
@@ -235,5 +205,19 @@ public class InitFullSyncJobConfig {
         if (popularity > 100) return 10;
         if (popularity > 50) return 5;
         return 0;
+    }
+
+    private LocalDate parseDate(String dateStr, Long movieId) {
+        if (dateStr == null || dateStr.isBlank()) return null;
+        try {
+            return LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            log.warn("Could not parse date '{}' for movie ID {}", dateStr, movieId);
+            return null;
+        }
+    }
+
+    private BigDecimal toBigDecimal(Double value) {
+        return value != null ? BigDecimal.valueOf(value) : null;
     }
 }
