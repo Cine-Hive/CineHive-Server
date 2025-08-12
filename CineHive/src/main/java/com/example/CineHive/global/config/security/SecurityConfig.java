@@ -74,7 +74,7 @@ public class SecurityConfig {
 
                         // --- 특정 역할(Role)이 필요한 경우 ---
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/batch/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/ops/batch/**").hasRole("ADMIN")
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
 
                         // --- 그 외 모든 요청은 인증 필요 ---
