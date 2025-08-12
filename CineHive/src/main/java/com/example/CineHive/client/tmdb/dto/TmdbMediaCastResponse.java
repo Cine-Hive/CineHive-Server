@@ -3,13 +3,10 @@ package com.example.CineHive.client.tmdb.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record TmdbMediaCastResponse(
-        @JsonProperty("id")
-        Long id,
-        @JsonProperty("name")
+        long id,
         String name,
-        @JsonProperty("character")
         String character,
-        @JsonProperty("profile_path")
-        String profilePath
-) {
-}
+        int order,
+        @JsonProperty("credit_id")
+        String creditId
+) {}
