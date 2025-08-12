@@ -8,6 +8,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface MovieCrewRepository extends JpaRepository<MovieCrew, String> {
     @Modifying
-    @Query("DELETE FROM MovieCrew mc WHERE mc.movieId = :movieId")
+    @Query("DELETE FROM SyncMovieCrew mc WHERE mc.movieId = :movieId")
     void deleteAllByMovieId(@Param("movieId") Long movieId);
 }

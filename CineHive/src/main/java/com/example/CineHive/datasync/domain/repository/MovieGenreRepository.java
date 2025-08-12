@@ -9,6 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface MovieGenreRepository extends JpaRepository<MovieGenre, MovieGenreId> {
     @Modifying
-    @Query("DELETE FROM MovieGenre mg WHERE mg.movieId = :movieId")
+    @Query("DELETE FROM SyncMovieGenre mg WHERE mg.movieId = :movieId")
     void deleteAllByMovieId(@Param("movieId") Long movieId);
 }
