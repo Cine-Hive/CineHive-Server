@@ -30,7 +30,7 @@ public record PageResponse<T>(
         List<D> content = page.getContent().stream().map(mapper).toList();
         return new PageResponse<>(
                 content,
-                page.getNumber() + 1, // Page는 0-based, API는 1-based
+                page.getNumber() + 1,
                 page.getSize(),
                 page.getTotalElements(),
                 page.getTotalPages(),

@@ -1,0 +1,104 @@
+services:
+  # 1. Spring Boot 애플리케이션 서비스
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinehive-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev # 기본 프로필을 dev로 설정
+      - SERVER_PORT=8081
+      # DB, Redis, ES 접속 정보는 application-dev.yml이 환경 변수를 읽도록 함
+      - DB_HOST=db
+      - DB_NAME=cinehive_v1
+      - DB_USER=cinehive
+      - DB_PASS=password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ES_HOST=es
+
+  # 2. MariaDB 서비스
+  db:
+    image: mariadb:10.11
+    container_name: cinehive-db
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=cinehive_v1
+      - MARIADB_USER=cinehive
+      - MARIADB_PASSWORD=password
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Redis 서비스
+  redis:
+    image: redis:7-alpine
+    container_name: cinehive-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. Elasticsearch 서비스 (nori 플러그인 미리 설치된 커스텀 이미지 사용)
+  es:
+    build:
+      context: .
+      dockerfile: Dockerfile.elasticsearch
+    container_name: cinehive-es
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - bootstrap.memory_lock=true
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  # 5. Kibana (선택)
+  kibana:
+    image: kibana:8.13.4
+    container_name: cinehive-kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - es
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es:9200
+      - xpack.security.enabled=false
+
+volumes:
+  db-data:
+  redis-data:
+  es-data:

@@ -1,6 +1,6 @@
 package com.example.CineHive.domain.admin;
 
-import com.example.CineHive.domain.media.dto.ChartType;
+import com.example.CineHive.domain.media.enums.ChartType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

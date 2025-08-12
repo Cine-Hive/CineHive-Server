@@ -2,7 +2,7 @@ package com.example.CineHive.domain.meta;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.domain.media.dto.LogoInfo;
-import com.example.CineHive.domain.media.dto.Platform;
+import com.example.CineHive.domain.media.enums.Platform;
 import com.example.CineHive.domain.media.dto.PlatformOption;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;

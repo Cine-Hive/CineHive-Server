@@ -1,10 +1,10 @@
 package com.example.CineHive.client.tmdb;
 
 import com.example.CineHive.client.tmdb.dto.*;
-import com.example.CineHive.client.tmdb.exception.TmdbClientException;
 import com.example.CineHive.domain.media.dto.ChartProperties;
 import com.example.CineHive.global.exception.BusinessException;
 import com.example.CineHive.global.exception.ErrorCode;
+import com.example.CineHive.global.exception.TmdbClientException;
 import com.example.CineHive.global.properties.TmdbProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -176,6 +176,30 @@ public class TmdbApiClient {
         params.add(QUERY_PARAM, query);
         String json = getRaw("/search/multi", params);
         return parseResponse(json, new TypeReference<>() {});
+    }
+
+    /**
+     * 특정 기간 동안 변경된 영화 ID 목록을 조회합니다.
+     * @param startDate 조회 시작일 (YYYY-MM-DD 형식)
+     * @param page 페이지 번호
+     * @return 변경된 영화 목록 응답
+     */
+    public TmdbChangesResponse getMovieChanges(String startDate, int page) {
+        MultiValueMap<String, String> params = createPageParams(page);
+        params.add("start_date", startDate);
+        return get("/movie/changes", TmdbChangesResponse.class, params);
+    }
+
+    /**
+     * 특정 기간 동안 변경된 TV 시리즈 ID 목록을 조회합니다.
+     * @param startDate 조회 시작일 (YYYY-MM-DD 형식)
+     * @param page 페이지 번호
+     * @return 변경된 TV 시리즈 목록 응답
+     */
+    public TmdbChangesResponse getTvChanges(String startDate, int page) {
+        MultiValueMap<String, String> params = createPageParams(page);
+        params.add("start_date", startDate);
+        return get("/tv/changes", TmdbChangesResponse.class, params);
     }
 
     // --- Discover API ---

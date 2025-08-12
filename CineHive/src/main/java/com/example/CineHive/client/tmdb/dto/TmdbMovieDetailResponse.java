@@ -26,11 +26,14 @@ public record TmdbMovieDetailResponse(
         String backdropPath,
         List<TmdbGenreResponse> genres,
         TmdbMediaCreditsResponse credits,
+        boolean adult,
         TmdbVideosResponse videos,
         TmdbImagesResponse images,
         TmdbPagedResponse<TmdbMovieResponse> recommendations,
         TmdbPagedResponse<TmdbMovieResponse> similar,
         TmdbKeywordsResponse keywords,
         @JsonProperty("watch/providers")
-        TmdbWatchProvidersResponse watchProviders
+        TmdbWatchProvidersResponse watchProviders,
+        @JsonProperty("belongs_to_collection")
+        TmdbCollectionResponse collection
 ) {}

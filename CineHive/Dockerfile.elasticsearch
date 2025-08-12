@@ -1,0 +1,7 @@
+FROM elasticsearch:8.13.4
+
+# nori 플러그인 설치
+RUN bin/elasticsearch-plugin install analysis-nori --batch
+
+# 권한 설정
+USER elasticsearch

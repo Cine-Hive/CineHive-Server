@@ -33,6 +33,7 @@ public record TmdbTvSeriesDetailResponse(
         String type,
         List<TmdbGenreResponse> genres,
         TmdbMediaCreditsResponse credits,
+        boolean adult,
         TmdbVideosResponse videos,
         TmdbImagesResponse images,
         TmdbPagedResponse<TmdbTvSeriesResponse> recommendations,

@@ -3,6 +3,11 @@ package com.example.CineHive.domain.media.enums;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * 미디어의 타입을 정의하는 Enum 클래스.
  * MOVIE(영화)와 TV(TV 시리즈)를 구분합니다.
@@ -18,8 +23,13 @@ public enum MediaType {
      */
     private final String value;
 
+    // value를 키로, MediaType Enum을 값으로 갖는 불변 Map을 생성하여 캐싱합니다.
+    private static final Map<String, MediaType> VALUE_MAP =
+            Collections.unmodifiableMap(Stream.of(values())
+                    .collect(Collectors.toMap(MediaType::getValue, e -> e)));
+
     /**
-     * 문자열 값을 기반으로 해당하는 MediaType Enum을 반환합니다.
+     * 문자열 값을 기반으로 해당하는 MediaType Enum을 반환합니다. (캐싱된 Map 사용)
      *
      * @param value 변환할 문자열 (예: "movie", "TV")
      * @return 주어진 문자열에 해당하는 MediaType Enum
@@ -31,13 +41,11 @@ public enum MediaType {
         }
 
         String normalizedValue = value.toLowerCase().trim();
-        for (MediaType type : MediaType.values()) {
-            if (type.getValue().equals(normalizedValue)) {
-                return type;
-            }
+        MediaType type = VALUE_MAP.get(normalizedValue);
+        if (type == null) {
+            throw new IllegalArgumentException("잘못된 미디어 타입입니다: " + value + ". 지원되는 타입: movie, tv");
         }
-
-        throw new IllegalArgumentException("잘못된 미디어 타입입니다: " + value + ". 지원되는 타입: movie, tv");
+        return type;
     }
 
     /**

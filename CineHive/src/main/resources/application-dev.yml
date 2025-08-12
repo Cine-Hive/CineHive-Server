@@ -1,0 +1,53 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:localhost}:3306/${DB_NAME:cinehive_v1}?useUnicode=true&characterEncoding=utf8mb4&connectTimeout=3000&socketTimeout=3000
+    username: ${DB_USER:cinehive}
+    password: ${DB_PASS:password}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  elasticsearch:
+    uris: http://${ES_HOST:es}:9200
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  cache:
+    redis:
+      time-to-live: 10m
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+
+app:
+  tmdb:
+    api-key: "35f22d327ac49da1df98b95fadad73aa"
+
+logging:
+  level:
+    com.example.CineHive: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    org.springframework.data.elasticsearch: DEBUG
+    org.springframework.data.elasticsearch.core: DEBUG
+    org.springframework.data.elasticsearch.client: DEBUG
+    org.elasticsearch.client: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.springframework.batch: DEBUG
