@@ -15,7 +15,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableBatchProcessing
 @EnableCaching
 @EnableRedisRepositories
-@EnableJpaRepositories(basePackages = "com.example.CineHive")
+@EnableJpaRepositories(basePackages = {
+    "com.example.CineHive.domain",
+    "com.example.CineHive.datasync",
+    "com.example.CineHive.client"
+})
 public class CineHiveApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CineHiveApplication.class, args);
