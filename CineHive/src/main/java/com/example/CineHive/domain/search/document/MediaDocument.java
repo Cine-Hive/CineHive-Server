@@ -132,8 +132,8 @@ public class MediaDocument {
                 .genres(tmdb.genres() != null ?
                         tmdb.genres().stream().map(g -> g.name()).collect(Collectors.toList()) :
                         Collections.emptyList())
-                .cast(tmdb.credits() != null && tmdb.credits().cast() != null ?
-                        tmdb.credits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList()) :
+                .cast(tmdb.aggregateCredits() != null && tmdb.aggregateCredits().cast() != null ?
+                        tmdb.aggregateCredits().cast().stream().map(c -> c.name()).limit(5).collect(Collectors.toList()) :
                         Collections.emptyList())
                 .keywords(keywordsList)
                 .posterPath(tmdb.posterPath())
@@ -142,7 +142,7 @@ public class MediaDocument {
                 .reviewCount(0)
                 .avgRating(0.0)
                 .updatedAt(Instant.now())
-                .adult(tmdb.adult())
+                .adult(false)
                 .build();
     }
 }
