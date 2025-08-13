@@ -1,20 +1,17 @@
 package com.example.CineHive.datasync.domain.entity;
 
 import com.example.CineHive.global.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "SyncProductionCompany")
-@Table(name = "production_company")
+@Entity(name = "SyncNetwork")
+@Table(name = "network")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProductionCompany extends BaseEntity {
+public class Network extends BaseEntity {
 
     @Id
     @Column(name = "tmdb_id")
@@ -30,7 +27,7 @@ public class ProductionCompany extends BaseEntity {
     private String originCountry;
 
     @Builder
-    public ProductionCompany(Long tmdbId, String name, String logoPath, String originCountry) {
+    public Network(Long tmdbId, String name, String logoPath, String originCountry) {
         this.tmdbId = tmdbId;
         this.name = name;
         this.logoPath = logoPath;

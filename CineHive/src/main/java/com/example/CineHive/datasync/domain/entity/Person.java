@@ -2,6 +2,7 @@ package com.example.CineHive.datasync.domain.entity;
 
 import com.example.CineHive.client.tmdb.dto.TmdbPersonDetailResponse;
 import com.example.CineHive.datasync.domain.enums.GenderType;
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.time.ZonedDateTime;
 @Table(name = "person")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Person {
+public class Person extends BaseEntity {
 
     @Id
     @Column(name = "tmdb_id")

@@ -1,5 +1,6 @@
 package com.example.CineHive.datasync.domain.entity;
 
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "collection")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Collection {
+public class Collection extends BaseEntity {
 
     @Id
     @Column(name = "tmdb_id")

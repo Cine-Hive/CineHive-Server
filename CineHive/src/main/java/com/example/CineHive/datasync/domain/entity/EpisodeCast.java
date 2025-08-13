@@ -1,5 +1,6 @@
 package com.example.CineHive.datasync.domain.entity;
 
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "episode_cast")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EpisodeCast {
+public class EpisodeCast extends BaseEntity {
     @Id
     @Column(name = "credit_id", length = 32)
     private String creditId;

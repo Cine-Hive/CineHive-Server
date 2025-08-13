@@ -1,5 +1,6 @@
 package com.example.CineHive.datasync.domain.entity;
 
+import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -17,7 +18,7 @@ import java.time.ZonedDateTime;
 @Table(name = "movie")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Movie {
+public class Movie extends BaseEntity {
 
     @Id
     @Column(name = "tmdb_id")

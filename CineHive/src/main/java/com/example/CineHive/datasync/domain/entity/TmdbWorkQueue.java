@@ -2,34 +2,84 @@ package com.example.CineHive.datasync.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.ZonedDateTime;
+import lombok.Setter;
 
-@Entity(name = "SyncTmdbWorkQueue")
-@Table(name = "tmdb_work_queue")
-@IdClass(TmdbWorkQueueId.class)
+import java.time.LocalDateTime;
+
+@Entity(name = "TmdbWorkQueue")
+@Table(name = "tmdb_work_queue",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"entity_type", "tmdb_id"}))
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TmdbWorkQueue {
 
     @Id
-    private String entityType;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Id
+    @Column(name = "entity_type", nullable = false, length = 32)
+    @Enumerated(EnumType.STRING)
+    private EntityType entityType;
+
+    @Column(name = "tmdb_id", nullable = false)
     private Long tmdbId;
 
-    private int priority;
-    private int attempts;
-    private ZonedDateTime enqueuedAt;
+    @Column(name = "priority")
+    private Integer priority = 0;
 
-    @Builder
-    public TmdbWorkQueue(String entityType, Long tmdbId, int priority) {
+    @Column(name = "attempts")
+    private Integer attempts = 0;
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
+    @Column(name = "last_error", columnDefinition = "TEXT")
+    private String lastError;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    public enum EntityType {
+        MOVIE("movie"),
+        TV("tv"),
+        PERSON("person");
+
+        private final String value;
+
+        EntityType(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    public TmdbWorkQueue(EntityType entityType, Long tmdbId, Integer priority) {
         this.entityType = entityType;
         this.tmdbId = tmdbId;
         this.priority = priority;
-        this.attempts = 0;
-        this.enqueuedAt = ZonedDateTime.now();
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void markAsProcessed() {
+        this.processedAt = LocalDateTime.now();
+        this.attempts++;
+    }
+
+    public void markAsFailed(String error) {
+        this.attempts++;
+        this.lastError = error;
+    }
+
+    public boolean isProcessed() {
+        return processedAt != null;
+    }
+
+    public boolean hasErrors() {
+        return lastError != null;
     }
 }

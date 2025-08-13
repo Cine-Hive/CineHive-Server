@@ -6,25 +6,28 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
-@Entity(name = "SyncTvKeyword")
-@Table(name = "tv_keyword")
-@IdClass(TvKeywordId.class)
+@Entity(name = "SyncTvSeriesNetwork")
+@Table(name = "tv_series_network")
+@IdClass(TvSeriesNetworkId.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TvKeyword extends BaseEntity {
+public class TvSeriesNetwork extends BaseEntity {
 
     @Id
     @Column(name = "tv_id")
     private Long tvId;
 
     @Id
-    @Column(name = "keyword_id")
-    private Long keywordId;
+    @Column(name = "network_id")
+    private Long networkId;
 
     @Builder
-    public TvKeyword(Long tvId, Long keywordId) {
+    public TvSeriesNetwork(Long tvId, Long networkId) {
         this.tvId = tvId;
-        this.keywordId = keywordId;
+        this.networkId = networkId;
     }
 }
