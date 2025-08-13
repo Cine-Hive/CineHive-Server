@@ -1,13 +1,12 @@
 package com.example.CineHive.datasync.domain.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,6 +31,9 @@ public class TvSeries {
     @Column(columnDefinition = "TEXT")
     private String overview;
 
+    @Column(columnDefinition = "TEXT")
+    private String tagline;
+
     @Column(name = "original_language", length = 8)
     private String originalLanguage;
 
@@ -48,10 +50,25 @@ public class TvSeries {
     @Column(length = 64)
     private String status;
 
-    @Column(name = "poster_path", length = 255)
+    @Column(length = 64)
+    private String type;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "created_by_json", columnDefinition = "jsonb")
+    private String createdByJson;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "last_episode_to_air_json", columnDefinition = "jsonb")
+    private String lastEpisodeToAirJson;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "next_episode_to_air_json", columnDefinition = "jsonb")
+    private String nextEpisodeToAirJson;
+
+    @Column(name = "poster_path")
     private String posterPath;
 
-    @Column(name = "backdrop_path", length = 255)
+    @Column(name = "backdrop_path")
     private String backdropPath;
 
     @Column(precision = 10, scale = 4)
@@ -63,6 +80,7 @@ public class TvSeries {
     @Column(name = "vote_count")
     private Integer voteCount;
 
+    @Column(name = "soft_deleted")
     private boolean softDeleted = false;
 
     @Column(name = "soft_deleted_at")
@@ -72,14 +90,18 @@ public class TvSeries {
     private ZonedDateTime updatedFromTmdbAt;
 
     @Builder
-    public TvSeries(Long tmdbId, String name, String originalName, String overview, String originalLanguage,
-                    LocalDate firstAirDate, LocalDate lastAirDate, Integer numberOfSeasons, Integer numberOfEpisodes,
-                    boolean inProduction, String status, String posterPath, String backdropPath, BigDecimal popularity,
-                    BigDecimal voteAverage, Integer voteCount, ZonedDateTime updatedFromTmdbAt) {
+    public TvSeries(Long tmdbId, String name, String originalName, String overview, String tagline,
+                    String originalLanguage, LocalDate firstAirDate, LocalDate lastAirDate,
+                    Integer numberOfSeasons, Integer numberOfEpisodes, boolean inProduction,
+                    String status, String type, String createdByJson, String lastEpisodeToAirJson,
+                    String nextEpisodeToAirJson, String posterPath, String backdropPath,
+                    BigDecimal popularity, BigDecimal voteAverage, Integer voteCount,
+                    ZonedDateTime updatedFromTmdbAt) {
         this.tmdbId = tmdbId;
         this.name = name;
         this.originalName = originalName;
         this.overview = overview;
+        this.tagline = tagline;
         this.originalLanguage = originalLanguage;
         this.firstAirDate = firstAirDate;
         this.lastAirDate = lastAirDate;
@@ -87,6 +109,10 @@ public class TvSeries {
         this.numberOfEpisodes = numberOfEpisodes;
         this.inProduction = inProduction;
         this.status = status;
+        this.type = type;
+        this.createdByJson = createdByJson;
+        this.lastEpisodeToAirJson = lastEpisodeToAirJson;
+        this.nextEpisodeToAirJson = nextEpisodeToAirJson;
         this.posterPath = posterPath;
         this.backdropPath = backdropPath;
         this.popularity = popularity;
