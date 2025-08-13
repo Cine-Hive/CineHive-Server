@@ -2,11 +2,8 @@ package com.example.CineHive.client.tmdb.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record TmdbMediaCrewResponse(
+public record TmdbCreatorResponse(
         long id,
         String name,
-        String job,
-        String department,
-        @JsonProperty("credit_id") String creditId,
         @JsonProperty("profile_path") String profilePath
 ) {}

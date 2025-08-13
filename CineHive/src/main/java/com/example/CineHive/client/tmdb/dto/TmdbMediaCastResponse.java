@@ -7,6 +7,6 @@ public record TmdbMediaCastResponse(
         String name,
         String character,
         int order,
-        @JsonProperty("credit_id")
-        String creditId
+        @JsonProperty("credit_id") String creditId,
+        @JsonProperty("profile_path") String profilePath
 ) {}

@@ -1,7 +1,7 @@
 package com.example.CineHive.client.tmdb.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.math.BigDecimal;
+
 import java.util.List;
 
 public record TmdbMovieDetailResponse(
@@ -30,7 +30,7 @@ public record TmdbMovieDetailResponse(
         TmdbKeywordsResponse keywords,
         @JsonProperty("watch/providers") TmdbWatchProvidersResponse watchProviders,
         @JsonProperty("belongs_to_collection") TmdbCollectionResponse collection,
-        @JsonProperty("production_companies") List<TmdbProductionCompany> productionCompanies,
+        @JsonProperty("production_companies") List<TmdbProductionCompanyResponse> productionCompanies,
         @JsonProperty("release_dates") TmdbReleaseDatesResponse releaseDates,
         TmdbTranslationsResponse translations
 ) {}
