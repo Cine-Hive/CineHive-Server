@@ -26,4 +26,14 @@ public class MovieGenre extends BaseEntity {
         this.movieId = movieId;
         this.genreId = genreId;
     }
+
+    /**
+     * 영화 ID와 장르 ID로 MovieGenre 엔티티를 생성하는 static factory 메서드
+     */
+    public static MovieGenre of(Long movieId, Long genreId) {
+        return MovieGenre.builder()
+                .movieId(movieId)
+                .genreId(genreId)
+                .build();
+    }
 }
