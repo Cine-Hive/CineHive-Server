@@ -101,4 +101,45 @@ public class Movie extends BaseEntity {
         this.collectionId = collectionId;
         this.updatedFromTmdbAt = updatedFromTmdbAt;
     }
+
+    /**
+     * TMDB API 응답으로부터 Movie 엔티티를 생성하는 static factory 메서드
+     */
+    public static Movie fromTmdbResponse(com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse response) {
+        return Movie.builder()
+                .tmdbId(response.id())
+                .title(response.title())
+                .originalTitle(response.originalTitle())
+                .overview(response.overview())
+                .tagline(response.tagline())
+                .releaseDate(parseDate(response.releaseDate()))
+                .runtime(response.runtime())
+                .status(response.status())
+                .budget(response.budget())
+                .revenue(response.revenue())
+                .posterPath(response.posterPath())
+                .backdropPath(response.backdropPath())
+                .popularity(toBigDecimal(response.popularity()))
+                .voteAverage(toBigDecimal(response.voteAverage()))
+                .voteCount(response.voteCount())
+                .collectionId(response.collection() != null ? response.collection().id() : null)
+                .updatedFromTmdbAt(ZonedDateTime.now())
+                .build();
+    }
+
+    private static LocalDate parseDate(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
+            return null;
+        }
+        
+        try {
+            return LocalDate.parse(dateString, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private static BigDecimal toBigDecimal(Double value) {
+        return value != null ? BigDecimal.valueOf(value) : null;
+    }
 }
