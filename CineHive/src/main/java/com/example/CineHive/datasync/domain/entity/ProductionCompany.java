@@ -36,4 +36,16 @@ public class ProductionCompany extends BaseEntity {
         this.logoPath = logoPath;
         this.originCountry = originCountry;
     }
+
+    /**
+     * TMDB API 응답으로부터 ProductionCompany 엔티티를 생성하는 static factory 메서드
+     */
+    public static ProductionCompany fromTmdbResponse(com.example.CineHive.client.tmdb.dto.TmdbProductionCompanyResponse response) {
+        return ProductionCompany.builder()
+                .tmdbId(response.id())
+                .name(response.name())
+                .logoPath(response.logoPath())
+                .originCountry(response.originCountry())
+                .build();
+    }
 }
