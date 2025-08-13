@@ -3,7 +3,6 @@ package com.example.CineHive.datasync.domain.repository;
 import com.example.CineHive.datasync.domain.entity.TmdbWorkQueue;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -59,4 +58,6 @@ public interface TmdbWorkQueueRepository extends JpaRepository<TmdbWorkQueue, Lo
         @Param("entityType") TmdbWorkQueue.EntityType entityType,
         @Param("tmdbId") Long tmdbId
     );
+
+    int deleteByAttemptsGreaterThanEqual(int attempts);
 }
