@@ -24,7 +24,7 @@ import java.util.zip.GZIPInputStream;
 public class ExportDownloadTasklet implements Tasklet {
 
     private static final String TMDB_EXPORT_URL_PATTERN = "http://files.tmdb.org/p/exports/%s_ids_%s.json.gz";
-    private static final String EXPORT_BASE_DIR = "/data/exports";
+    private static final String EXPORT_BASE_DIR = "/data/tmdb/exports";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM_dd_yyyy");
 
     @Override
@@ -38,13 +38,15 @@ public class ExportDownloadTasklet implements Tasklet {
         Path gzFile = downloadExportFile(entityType, fileDate, exportDir);
         Path jsonFile = decompressFile(gzFile, exportDir, entityType, fileDate);
 
-        // Store path in StepExecutionContext for next step
+        // Store path in JobExecutionContext for next step
         chunkContext.getStepContext()
                 .getStepExecution()
+                .getJobExecution()
                 .getExecutionContext()
                 .putString("exportPath", jsonFile.toString());
 
         log.info("Export file successfully downloaded and decompressed: {}", jsonFile);
+        log.info("Stored exportPath in JobExecutionContext: {}", jsonFile.toString());
         
         return RepeatStatus.FINISHED;
     }
@@ -80,6 +82,12 @@ public class ExportDownloadTasklet implements Tasklet {
         String url = String.format(TMDB_EXPORT_URL_PATTERN, entityType, fileDate);
         Path gzFile = exportDir.resolve(String.format("%s_ids_%s.json.gz", entityType, fileDate));
 
+        // Check if file already exists (resume capability)
+        if (Files.exists(gzFile)) {
+            log.info("Compressed file already exists, skipping download: {}", gzFile);
+            return gzFile;
+        }
+
         log.info("Downloading from URL: {}", url);
         
         try (InputStream in = URI.create(url).toURL().openStream()) {
@@ -94,6 +102,12 @@ public class ExportDownloadTasklet implements Tasklet {
 
     private Path decompressFile(Path gzFile, Path exportDir, String entityType, String fileDate) throws Exception {
         Path jsonFile = exportDir.resolve(String.format("%s_ids_%s.json", entityType, fileDate));
+        
+        // Check if already decompressed
+        if (Files.exists(jsonFile)) {
+            log.info("Decompressed file already exists, skipping decompression: {}", jsonFile);
+            return jsonFile;
+        }
         
         log.info("Decompressing file: {}", gzFile.getFileName());
         
@@ -114,9 +128,8 @@ public class ExportDownloadTasklet implements Tasklet {
             log.info("Decompressed {} bytes to: {}", totalBytes, jsonFile.getFileName());
         }
         
-        // Optionally delete the compressed file to save space
-        Files.deleteIfExists(gzFile);
-        log.debug("Deleted compressed file: {}", gzFile);
+        // Keep the compressed file for resume capability
+        log.debug("Keeping compressed file for potential resume: {}", gzFile);
         
         return jsonFile;
     }
