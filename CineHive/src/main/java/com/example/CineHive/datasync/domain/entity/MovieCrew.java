@@ -36,4 +36,17 @@ public class MovieCrew extends BaseEntity {
         this.job = job;
         this.department = department;
     }
+
+    /**
+     * TMDB API 응답으로부터 MovieCrew 엔티티를 생성하는 static factory 메서드
+     */
+    public static MovieCrew fromTmdbResponse(Long movieId, com.example.CineHive.client.tmdb.dto.TmdbMediaCrewResponse response) {
+        return MovieCrew.builder()
+                .creditId(response.creditId())
+                .movieId(movieId)
+                .personId(response.id())
+                .job(response.job())
+                .department(response.department())
+                .build();
+    }
 }
