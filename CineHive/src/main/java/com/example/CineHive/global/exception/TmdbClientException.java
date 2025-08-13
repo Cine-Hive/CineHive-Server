@@ -15,4 +15,8 @@ public class TmdbClientException extends RuntimeException {
         super(message);
         this.httpStatus = httpStatus;
     }
+    
+    public HttpStatus getStatus() {
+        return httpStatus;
+    }
 }
