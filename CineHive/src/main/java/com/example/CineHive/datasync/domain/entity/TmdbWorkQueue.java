@@ -30,6 +30,12 @@ public class TmdbWorkQueue {
     @Column(name = "priority")
     private Integer priority = 0;
 
+    @Column(name = "processed", nullable = false)
+    private boolean processed = false;
+    
+    @Column(name = "status", length = 20)
+    private String status = "READY";
+
     @Column(name = "attempts")
     private Integer attempts = 0;
 
@@ -66,17 +72,26 @@ public class TmdbWorkQueue {
     }
 
     public void markAsProcessed() {
+        this.processed = true;
         this.processedAt = LocalDateTime.now();
+        this.status = "DONE";
         this.attempts++;
     }
 
     public void markAsFailed(String error) {
         this.attempts++;
         this.lastError = error;
+        this.status = "FAILED";
+    }
+    
+    public void markAsSkipped() {
+        this.processed = true;
+        this.status = "SKIPPED";
+        this.processedAt = LocalDateTime.now();
     }
 
     public boolean isProcessed() {
-        return processedAt != null;
+        return processed;
     }
 
     public boolean hasErrors() {
