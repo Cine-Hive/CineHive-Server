@@ -36,4 +36,16 @@ public class Collection extends BaseEntity {
         this.posterPath = posterPath;
         this.backdropPath = backdropPath;
     }
+
+    /**
+     * TMDB API 응답으로부터 Collection 엔티티를 생성하는 static factory 메서드
+     */
+    public static Collection fromTmdbResponse(com.example.CineHive.client.tmdb.dto.TmdbCollectionResponse response) {
+        return Collection.builder()
+                .tmdbId(response.id())
+                .name(response.name())
+                .posterPath(response.posterPath())
+                .backdropPath(response.backdropPath())
+                .build();
+    }
 }
