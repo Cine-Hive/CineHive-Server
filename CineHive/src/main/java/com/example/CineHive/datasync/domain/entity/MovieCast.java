@@ -36,4 +36,17 @@ public class MovieCast extends BaseEntity {
         this.characterName = characterName;
         this.castOrder = castOrder;
     }
+
+    /**
+     * TMDB API 응답으로부터 MovieCast 엔티티를 생성하는 static factory 메서드
+     */
+    public static MovieCast fromTmdbResponse(Long movieId, com.example.CineHive.client.tmdb.dto.TmdbMediaCastResponse response, int castOrder) {
+        return MovieCast.builder()
+                .creditId(response.creditId())
+                .movieId(movieId)
+                .personId(response.id())
+                .characterName(response.character())
+                .castOrder(castOrder)
+                .build();
+    }
 }
