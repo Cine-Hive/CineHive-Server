@@ -107,7 +107,8 @@ public class InitFullSyncJobConfig {
     }
 
     public ItemProcessor<TmdbExportItem, TmdbWorkQueue> exportItemProcessor(String entityType) {
-        return item -> item.adult() ? null : TmdbWorkQueue.builder().entityType(entityType).tmdbId(item.id()).priority(calculatePriority(item.popularity())).build();
+        return item -> item.adult() ? null : 
+            new TmdbWorkQueue(TmdbWorkQueue.EntityType.valueOf(entityType.toUpperCase()), item.id(), calculatePriority(item.popularity()));
     }
 
     @Bean
@@ -168,7 +169,7 @@ public class InitFullSyncJobConfig {
             List<MovieProductionCompany> movieCompanies = companies.stream()
                     .map(c -> MovieProductionCompany.builder().movieId(movieId).companyId(c.getTmdbId()).build()).toList();
 
-            return new MovieDelta(movie, genres, keywords, cast, crew, collection, companies, movieCompanies);
+            return new MovieDelta(movie, collection, companies, genres, keywords, cast, crew, movieCompanies);
         };
     }
 
