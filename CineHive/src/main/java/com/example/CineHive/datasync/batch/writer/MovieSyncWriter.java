@@ -1,29 +1,64 @@
 package com.example.CineHive.datasync.batch.writer;
 
 import com.example.CineHive.datasync.domain.entity.TmdbWorkQueue;
+import com.example.CineHive.datasync.domain.repository.TmdbWorkQueueRepository;
 import com.example.CineHive.datasync.domain.service.MovieSyncService;
+import com.example.CineHive.datasync.dto.MovieDelta;
+import com.example.CineHive.global.exception.TmdbClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MovieSyncWriter implements ItemWriter<TmdbWorkQueue> {
+public class MovieSyncWriter implements ItemWriter<MovieDelta> {
 
     private final MovieSyncService movieSyncService;
+    private final TmdbWorkQueueRepository workQueueRepository;
 
     @Override
-    public void write(Chunk<? extends TmdbWorkQueue> chunk) throws Exception {
-        for (TmdbWorkQueue queueItem : chunk.getItems()) {
+    @Transactional
+    public void write(Chunk<? extends MovieDelta> chunk) throws Exception {
+        for (MovieDelta delta : chunk.getItems()) {
+            if (delta == null) {
+                continue;
+            }
+            
+            Long tmdbId = delta.movie().getTmdbId();
+            
             try {
-                movieSyncService.syncMovieFromQueue(queueItem);
+                // Sync movie to database
+                movieSyncService.syncMovie(delta);
+                
+                // Mark as completed in work queue
+                workQueueRepository.updateStatus(tmdbId, "movie", "DONE");
+                
+                log.debug("Movie synced successfully: tmdbId={}", tmdbId);
+                
+            } catch (TmdbClientException e) {
+                if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS.value()) {
+                    // Re-throw for retry mechanism
+                    log.warn("Rate limit hit for movie: tmdbId={}", tmdbId);
+                    throw e;
+                } else if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                    // Mark as skipped for not found
+                    workQueueRepository.updateStatus(tmdbId, "movie", "SKIPPED");
+                    log.info("Movie not found, marked as skipped: tmdbId={}", tmdbId);
+                } else {
+                    // Mark as failed for other errors
+                    workQueueRepository.updateStatusWithError(tmdbId, "movie", "FAILED", e.getMessage());
+                    log.error("Failed to sync movie: tmdbId={}, error={}", tmdbId, e.getMessage());
+                }
             } catch (Exception e) {
-                log.error("영화 동기화 실패: movieId={}, error={}", queueItem.getTmdbId(), e.getMessage());
-                // 개별 아이템 실패는 전체를 중단시키지 않음 (faultTolerant 설정)
-                throw e;
+                // Mark as failed for unexpected errors
+                workQueueRepository.updateStatusWithError(tmdbId, "movie", "FAILED", e.getMessage());
+                log.error("Unexpected error syncing movie: tmdbId={}", tmdbId, e);
+                // Don't re-throw to continue processing other items
             }
         }
     }
