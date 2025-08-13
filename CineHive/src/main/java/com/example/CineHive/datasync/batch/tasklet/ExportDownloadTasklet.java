@@ -1,7 +1,5 @@
 package com.example.CineHive.datasync.batch.tasklet;
 
-import com.example.CineHive.client.tmdb.TmdbApiClient;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -9,71 +7,117 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.zip.GZIPInputStream;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ExportDownloadTasklet implements Tasklet {
 
-    private final TmdbApiClient tmdbApiClient;
-    
-    private static final DateTimeFormatter FILE_DATE_FORMATTER = DateTimeFormatter.ofPattern("MM_dd_yyyy");
+    private static final String TMDB_EXPORT_URL_PATTERN = "http://files.tmdb.org/p/exports/%s_ids_%s.json.gz";
+    private static final String EXPORT_BASE_DIR = "/data/exports";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM_dd_yyyy");
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        // Job Parameter에서 파일 날짜 가져오기 (기본값: 어제)
-        String fileDate = chunkContext.getStepContext()
-                .getJobParameters()
-                .getOrDefault("fileDate", getYesterdayString())
-                .toString();
+        String entityType = getEntityType(chunkContext);
+        String fileDate = getFileDate(chunkContext);
 
-        log.info("TMDB Daily Export 다운로드 시작: fileDate={}", fileDate);
+        log.info("Starting download for {} export file with date: {}", entityType, fileDate);
 
-        try {
-            // 1. Daily Export 파일 다운로드 (압축 파일)
-            byte[] gzipData = tmdbApiClient.downloadDailyExport(fileDate, "movie");
-            
-            // 2. 임시 디렉토리 생성
-            Path tempDir = Paths.get("temp");
-            Files.createDirectories(tempDir);
-            
-            // 3. GZIP 압축 해제 및 NDJSON 파일 저장
-            Path outputFile = tempDir.resolve("movie_export.json");
-            try (GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(gzipData));
-                 FileOutputStream fileOutputStream = new FileOutputStream(outputFile.toFile())) {
-                
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = gzipInputStream.read(buffer)) != -1) {
-                    fileOutputStream.write(buffer, 0, bytesRead);
-                }
-            }
-            
-            // 4. ExecutionContext에 파일 경로 저장 (다음 Step에서 사용)
-            chunkContext.getStepContext()
-                    .getStepExecution()
-                    .getJobExecution()
-                    .getExecutionContext()
-                    .putString("exportFilePath", outputFile.toString());
-            
-            log.info("Daily Export 파일 다운로드 및 압축 해제 완료: {}", outputFile);
-            
-            return RepeatStatus.FINISHED;
-            
-        } catch (Exception e) {
-            log.error("Daily Export 다운로드 실패: fileDate={}", fileDate, e);
-            throw e;
-        }
+        Path exportDir = createExportDirectory(fileDate);
+        Path gzFile = downloadExportFile(entityType, fileDate, exportDir);
+        Path jsonFile = decompressFile(gzFile, exportDir, entityType, fileDate);
+
+        // Store path in StepExecutionContext for next step
+        chunkContext.getStepContext()
+                .getStepExecution()
+                .getExecutionContext()
+                .putString("exportPath", jsonFile.toString());
+
+        log.info("Export file successfully downloaded and decompressed: {}", jsonFile);
+        
+        return RepeatStatus.FINISHED;
     }
 
-    private String getYesterdayString() {
-        return LocalDate.now().minusDays(1).format(FILE_DATE_FORMATTER);
+    private String getEntityType(ChunkContext chunkContext) {
+        Object entityType = chunkContext.getStepContext()
+                .getJobParameters()
+                .get("entityType");
+        return entityType != null ? entityType.toString() : "movie";
+    }
+
+    private String getFileDate(ChunkContext chunkContext) {
+        Object fileDate = chunkContext.getStepContext()
+                .getJobParameters()
+                .get("fileDate");
+        
+        if (fileDate == null || fileDate.toString().isBlank()) {
+            // Default to yesterday's export
+            return LocalDate.now().minusDays(1).format(DATE_FORMATTER);
+        }
+        
+        return fileDate.toString();
+    }
+
+    private Path createExportDirectory(String fileDate) throws Exception {
+        Path exportDir = Paths.get(EXPORT_BASE_DIR, fileDate);
+        Files.createDirectories(exportDir);
+        log.debug("Export directory created/verified: {}", exportDir);
+        return exportDir;
+    }
+
+    private Path downloadExportFile(String entityType, String fileDate, Path exportDir) throws Exception {
+        String url = String.format(TMDB_EXPORT_URL_PATTERN, entityType, fileDate);
+        Path gzFile = exportDir.resolve(String.format("%s_ids_%s.json.gz", entityType, fileDate));
+
+        log.info("Downloading from URL: {}", url);
+        
+        try (InputStream in = URI.create(url).toURL().openStream()) {
+            Files.copy(in, gzFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+        
+        long fileSize = Files.size(gzFile);
+        log.info("Downloaded file: {} (size: {} bytes)", gzFile.getFileName(), fileSize);
+        
+        return gzFile;
+    }
+
+    private Path decompressFile(Path gzFile, Path exportDir, String entityType, String fileDate) throws Exception {
+        Path jsonFile = exportDir.resolve(String.format("%s_ids_%s.json", entityType, fileDate));
+        
+        log.info("Decompressing file: {}", gzFile.getFileName());
+        
+        try (GZIPInputStream gis = new GZIPInputStream(Files.newInputStream(gzFile));
+             OutputStream out = Files.newOutputStream(jsonFile, 
+                     StandardOpenOption.CREATE, 
+                     StandardOpenOption.TRUNCATE_EXISTING)) {
+            
+            byte[] buffer = new byte[8192];
+            int len;
+            long totalBytes = 0;
+            
+            while ((len = gis.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+                totalBytes += len;
+            }
+            
+            log.info("Decompressed {} bytes to: {}", totalBytes, jsonFile.getFileName());
+        }
+        
+        // Optionally delete the compressed file to save space
+        Files.deleteIfExists(gzFile);
+        log.debug("Deleted compressed file: {}", gzFile);
+        
+        return jsonFile;
     }
 }
