@@ -1,11 +1,18 @@
 package com.example.CineHive.datasync.domain.service;
 
+import com.example.CineHive.client.tmdb.TmdbApiClient;
+import com.example.CineHive.client.tmdb.dto.TmdbMovieDetailResponse;
 import com.example.CineHive.datasync.dto.MovieDelta;
+import com.example.CineHive.datasync.domain.entity.TmdbWorkQueue;
 import com.example.CineHive.datasync.domain.repository.*;
+import com.example.CineHive.global.exception.TmdbClientException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovieSyncService {
@@ -19,7 +26,46 @@ public class MovieSyncService {
     private final MovieCastRepository movieCastRepository;
     private final MovieCrewRepository movieCrewRepository;
     private final MovieProductionCompanyRepository movieProductionCompanyRepository;
+    private final TmdbWorkQueueRepository tmdbWorkQueueRepository;
+    
+    // TMDB API 클라이언트
+    private final TmdbApiClient tmdbApiClient;
 
+    /**
+     * 배치 처리용 영화 동기화 메소드
+     * TMDB API 호출 + 큐 관리를 포함한 완전한 동기화
+     */
+    @Transactional
+    public void syncMovieFromQueue(TmdbWorkQueue queueItem) {
+        Long movieId = queueItem.getTmdbId();
+        
+        try {
+            // 1. TMDB API 호출로 상세 정보 가져오기
+            TmdbMovieDetailResponse tmdbResponse = tmdbApiClient.getMovieDetailForBatch(movieId);
+            
+            // 2. TMDB 응답을 MovieDelta로 변환
+            MovieDelta delta = MovieDelta.fromTmdbResponse(tmdbResponse);
+            
+            // 3. 데이터베이스에 동기화
+            syncMovie(delta);
+            
+            // 4. 큐 아이템을 처리 완료로 마킹
+            queueItem.markAsProcessed();
+            tmdbWorkQueueRepository.save(queueItem);
+            
+            log.debug("영화 동기화 완료: movieId={}", movieId);
+            
+        } catch (TmdbClientException e) {
+            handleTmdbApiError(queueItem, e, movieId);
+        } catch (Exception e) {
+            handleSyncError(queueItem, e, movieId);
+        }
+    }
+    
+    /**
+     * MovieDelta를 받아서 데이터베이스에 동기화하는 메소드
+     * 기존 로직 유지 (delete-insert 패턴)
+     */
     @Transactional
     public void syncMovie(MovieDelta delta) {
         Long movieId = delta.movie().getTmdbId();
@@ -64,5 +110,25 @@ public class MovieSyncService {
         }
 
         // 4. Outbox 패턴을 이용한 캐시 무효화 이벤트 기록 (추후 구현)
+    }
+    
+    private void handleTmdbApiError(TmdbWorkQueue queueItem, TmdbClientException e, Long movieId) {
+        if (e.getStatus() == HttpStatus.NOT_FOUND) {
+            // 404는 영구 스킵 처리
+            queueItem.markAsProcessed();
+            queueItem.setLastError("Movie not found in TMDB: " + movieId);
+            log.warn("영화 ID {}를 TMDB에서 찾을 수 없어 스킵합니다.", movieId);
+        } else {
+            // 기타 API 에러는 재시도 대상
+            queueItem.markAsFailed("TMDB API Error: " + e.getMessage());
+            log.error("영화 {} TMDB API 호출 실패: {}", movieId, e.getMessage());
+        }
+        tmdbWorkQueueRepository.save(queueItem);
+    }
+    
+    private void handleSyncError(TmdbWorkQueue queueItem, Exception e, Long movieId) {
+        queueItem.markAsFailed("Sync Error: " + e.getMessage());
+        tmdbWorkQueueRepository.save(queueItem);
+        log.error("영화 {} 동기화 중 오류 발생", movieId, e);
     }
 }
