@@ -1,6 +1,5 @@
 package com.example.CineHive.datasync.batch.writer;
 
-import com.example.CineHive.datasync.domain.entity.TmdbWorkQueue;
 import com.example.CineHive.datasync.domain.repository.TmdbWorkQueueRepository;
 import com.example.CineHive.datasync.domain.service.MovieSyncService;
 import com.example.CineHive.datasync.dto.MovieDelta;
@@ -36,27 +35,27 @@ public class MovieSyncWriter implements ItemWriter<MovieDelta> {
                 movieSyncService.syncMovie(delta);
                 
                 // Mark as completed in work queue
-                workQueueRepository.updateStatus(tmdbId, "movie", "DONE");
+                workQueueRepository.updateStatus(tmdbId, "MOVIE", "DONE");
                 
                 log.debug("Movie synced successfully: tmdbId={}", tmdbId);
                 
             } catch (TmdbClientException e) {
-                if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS.value()) {
+                if (e.getHttpStatus() == HttpStatus.TOO_MANY_REQUESTS) {
                     // Re-throw for retry mechanism
                     log.warn("Rate limit hit for movie: tmdbId={}", tmdbId);
                     throw e;
-                } else if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                } else if (e.getHttpStatus() == HttpStatus.NOT_FOUND) {
                     // Mark as skipped for not found
-                    workQueueRepository.updateStatus(tmdbId, "movie", "SKIPPED");
+                    workQueueRepository.updateStatus(tmdbId, "MOVIE", "SKIPPED");
                     log.info("Movie not found, marked as skipped: tmdbId={}", tmdbId);
                 } else {
                     // Mark as failed for other errors
-                    workQueueRepository.updateStatusWithError(tmdbId, "movie", "FAILED", e.getMessage());
+                    workQueueRepository.updateStatusWithError(tmdbId, "MOVIE", "FAILED", e.getMessage());
                     log.error("Failed to sync movie: tmdbId={}, error={}", tmdbId, e.getMessage());
                 }
             } catch (Exception e) {
                 // Mark as failed for unexpected errors
-                workQueueRepository.updateStatusWithError(tmdbId, "movie", "FAILED", e.getMessage());
+                workQueueRepository.updateStatusWithError(tmdbId, "MOVIE", "FAILED", e.getMessage());
                 log.error("Unexpected error syncing movie: tmdbId={}", tmdbId, e);
                 // Don't re-throw to continue processing other items
             }
