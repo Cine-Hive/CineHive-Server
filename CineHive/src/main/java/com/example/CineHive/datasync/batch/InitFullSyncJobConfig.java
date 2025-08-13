@@ -19,38 +19,31 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
-import org.springframework.batch.item.json.JacksonJsonObjectReader;
-import org.springframework.batch.item.json.JsonItemReader;
-import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
-import org.springframework.batch.retry.policy.ExceptionClassifierRetryPolicy;
-import org.springframework.batch.retry.policy.SimpleRetryPolicy;
-import org.springframework.batch.retry.policy.TimeoutRetryPolicy;
-import org.springframework.batch.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.LineMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -66,28 +59,29 @@ public class InitFullSyncJobConfig {
     private final ExportDownloadTasklet exportDownloadTasklet;
     private final TmdbExportWriter tmdbExportWriter;
     private final MovieSyncWriter movieSyncWriter;
+    private final ObjectMapper objectMapper;
 
     private static final String EXPORT_URL_TEMPLATE = "http://files.tmdb.org/p/exports/%s_ids_%s.json.gz";
 
-    @Bean("initFullSyncJob")
-    public Job initFullSyncJob() {
-        return new JobBuilder("initFullSyncJob", jobRepository)
-                .start(downloadExportStep())
-                .next(seedWorkQueueStep())
+    @Bean("fullSyncJob")
+    public Job fullSyncJob() {
+        return new JobBuilder("fullSyncJob", jobRepository)
+                .start(exportDownloadStep())
+                .next(exportSeedingStep())
                 .next(movieDetailStep())
                 .build();
     }
 
     @Bean
-    public Step downloadExportStep() {
-        return new StepBuilder("downloadExportStep", jobRepository)
+    public Step exportDownloadStep() {
+        return new StepBuilder("exportDownloadStep", jobRepository)
                 .tasklet(exportDownloadTasklet, transactionManager)
                 .build();
     }
     
     @Bean
-    public Step seedWorkQueueStep() {
-        return new StepBuilder("seedWorkQueueStep", jobRepository)
+    public Step exportSeedingStep() {
+        return new StepBuilder("exportSeedingStep", jobRepository)
                 .<TmdbExportItem, TmdbExportItem>chunk(5000, transactionManager)
                 .reader(exportReader(null))
                 .writer(tmdbExportWriter)
@@ -110,7 +104,6 @@ public class InitFullSyncJobConfig {
                 .processor(movieDetailProcessor())
                 .writer(movieSyncWriter)
                 .taskExecutor(batchTaskExecutor())
-                .throttleLimit(8)  // TMDB rate limit consideration
                 .faultTolerant()
                 .retry(IOException.class)
                 .retry(TmdbClientException.class)
@@ -123,33 +116,50 @@ public class InitFullSyncJobConfig {
 
     @Bean
     @StepScope
-    public JsonItemReader<TmdbExportItem> exportReader(
-            @Value("#{stepExecutionContext['exportPath']}") String exportPath) {
-        if (exportPath == null) {
-            // Fallback for testing
-            return new JsonItemReaderBuilder<TmdbExportItem>()
-                    .name("exportReader")
-                    .resource(new FileSystemResource("/data/exports/movie_export.json"))
-                    .jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class))
-                    .build();
+    public FlatFileItemReader<TmdbExportItem> exportReader(
+            @Value("#{jobExecutionContext['exportPath']}") String exportPath) {
+        
+        // Validate that exportPath was provided
+        if (exportPath == null || exportPath.isBlank()) {
+            throw new IllegalStateException("exportPath is missing from JobExecutionContext. " +
+                    "ExportDownloadTasklet should have set this value.");
         }
         
-        return new JsonItemReaderBuilder<TmdbExportItem>()
-                .name("exportReader")
-                .resource(new FileSystemResource(exportPath))
-                .jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class))
-                .build();
+        log.info("Creating export reader with path from JobExecutionContext: {}", exportPath);
+        
+        FlatFileItemReader<TmdbExportItem> reader = new FlatFileItemReader<>();
+        reader.setName("exportReader");
+        reader.setResource(new FileSystemResource(exportPath));
+        
+        // NDJSON: each line is a separate JSON object
+        reader.setLineMapper(new LineMapper<TmdbExportItem>() {
+            @Override
+            public TmdbExportItem mapLine(String line, int lineNumber) throws Exception {
+                return objectMapper.readValue(line, TmdbExportItem.class);
+            }
+        });
+        
+        // Keep strict mode true to fail fast if file doesn't exist
+        reader.setStrict(true);
+        return reader;
     }
 
     @Bean
     @StepScope
     public JpaPagingItemReader<TmdbWorkQueue> movieWorkQueueReader() {
-        return new JpaPagingItemReaderBuilder<TmdbWorkQueue>()
+        // processed = false만 체크하고, entityType은 필터링하지 않음 (일단 테스트)
+        String queryString = "SELECT w FROM TmdbWorkQueue w WHERE w.processed = false ORDER BY w.priority DESC, w.tmdbId ASC";
+        log.info("Creating movieWorkQueueReader with simplified query: {}", queryString);
+        
+        JpaPagingItemReader<TmdbWorkQueue> reader = new JpaPagingItemReaderBuilder<TmdbWorkQueue>()
                 .name("movieWorkQueueReader")
                 .entityManagerFactory(entityManagerFactory)
-                .queryString("SELECT w FROM TmdbWorkQueue w WHERE w.entityType = 'movie' AND w.status = 'READY' ORDER BY w.priority DESC, w.tmdbId ASC")
+                .queryString(queryString)
                 .pageSize(100)
                 .build();
+                
+        log.info("movieWorkQueueReader created successfully");
+        return reader;
     }
 
     @Bean
@@ -167,6 +177,12 @@ public class InitFullSyncJobConfig {
     @Bean
     public ItemProcessor<TmdbWorkQueue, MovieDelta> movieDetailProcessor() {
         return workItem -> {
+            // MOVIE 타입만 처리
+            if (workItem.getEntityType() != TmdbWorkQueue.EntityType.MOVIE) {
+                log.debug("Skipping non-movie entity: type={}, id={}", workItem.getEntityType(), workItem.getTmdbId());
+                return null;
+            }
+            
             Long movieId = workItem.getTmdbId();
             log.info("Processing Movie ID: {}", movieId);
 
