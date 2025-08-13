@@ -2,10 +2,14 @@ package com.example.CineHive.datasync.batch;
 
 import com.example.CineHive.client.tmdb.TmdbApiClient;
 import com.example.CineHive.client.tmdb.dto.*;
+import com.example.CineHive.datasync.batch.tasklet.ExportDownloadTasklet;
+import com.example.CineHive.datasync.batch.writer.MovieSyncWriter;
+import com.example.CineHive.datasync.batch.writer.TmdbExportWriter;
 import com.example.CineHive.datasync.domain.entity.*;
 import com.example.CineHive.datasync.domain.service.MovieSyncService;
 import com.example.CineHive.datasync.dto.MovieDelta;
 import com.example.CineHive.datasync.dto.TmdbExportItem;
+import com.example.CineHive.global.exception.TmdbClientException;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +19,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaItemWriter;
@@ -23,10 +28,17 @@ import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilde
 import org.springframework.batch.item.json.JacksonJsonObjectReader;
 import org.springframework.batch.item.json.JsonItemReader;
 import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
+import org.springframework.batch.retry.policy.ExceptionClassifierRetryPolicy;
+import org.springframework.batch.retry.policy.SimpleRetryPolicy;
+import org.springframework.batch.retry.policy.TimeoutRetryPolicy;
+import org.springframework.batch.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.io.IOException;
@@ -51,48 +63,82 @@ public class InitFullSyncJobConfig {
     private final EntityManagerFactory entityManagerFactory;
     private final TmdbApiClient tmdbApiClient;
     private final MovieSyncService movieSyncService;
+    private final ExportDownloadTasklet exportDownloadTasklet;
+    private final TmdbExportWriter tmdbExportWriter;
+    private final MovieSyncWriter movieSyncWriter;
 
     private static final String EXPORT_URL_TEMPLATE = "http://files.tmdb.org/p/exports/%s_ids_%s.json.gz";
 
     @Bean("initFullSyncJob")
-    public Job initFullSyncJob(Step movieExportsSeedStep, Step movieDetailStep) {
+    public Job initFullSyncJob() {
         return new JobBuilder("initFullSyncJob", jobRepository)
-                .start(movieExportsSeedStep)
-                .next(movieDetailStep)
+                .start(downloadExportStep())
+                .next(seedWorkQueueStep())
+                .next(movieDetailStep())
                 .build();
     }
 
     @Bean
-    @StepScope
-    public Step movieExportsSeedStep(JsonItemReader<TmdbExportItem> movieExportItemReader,
-                                     JpaItemWriter<TmdbWorkQueue> workQueueItemWriter) {
-        return new StepBuilder("movieExportsSeedStep", jobRepository)
-                .<TmdbExportItem, TmdbWorkQueue>chunk(5000, transactionManager)
-                .reader(movieExportItemReader)
-                .processor(exportItemProcessor("movie"))
-                .writer(workQueueItemWriter)
-                .faultTolerant().skip(Exception.class).skipLimit(1000)
+    public Step downloadExportStep() {
+        return new StepBuilder("downloadExportStep", jobRepository)
+                .tasklet(exportDownloadTasklet, transactionManager)
+                .build();
+    }
+    
+    @Bean
+    public Step seedWorkQueueStep() {
+        return new StepBuilder("seedWorkQueueStep", jobRepository)
+                .<TmdbExportItem, TmdbExportItem>chunk(5000, transactionManager)
+                .reader(exportReader(null))
+                .writer(tmdbExportWriter)
+                .faultTolerant()
+                .skip(Exception.class)
+                .skipLimit(1000)
                 .build();
     }
 
     @Bean
-    public Step movieDetailStep(JpaPagingItemReader<TmdbWorkQueue> movieWorkQueueReader,
-                                ItemProcessor<TmdbWorkQueue, MovieDelta> movieDetailProcessor,
-                                ItemWriter<MovieDelta> movieDetailWriter) {
+    public Step movieDetailStep() {
+        ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+        backOffPolicy.setInitialInterval(1000);
+        backOffPolicy.setMaxInterval(10000);
+        backOffPolicy.setMultiplier(2);
+        
         return new StepBuilder("movieDetailStep", jobRepository)
                 .<TmdbWorkQueue, MovieDelta>chunk(100, transactionManager)
-                .reader(movieWorkQueueReader)
-                .processor(movieDetailProcessor)
-                .writer(movieDetailWriter)
-                .faultTolerant().retryLimit(3).retry(IOException.class)
-                .skipLimit(100).skip(Exception.class)
+                .reader(movieWorkQueueReader())
+                .processor(movieDetailProcessor())
+                .writer(movieSyncWriter)
+                .taskExecutor(batchTaskExecutor())
+                .throttleLimit(8)  // TMDB rate limit consideration
+                .faultTolerant()
+                .retry(IOException.class)
+                .retry(TmdbClientException.class)
+                .retryLimit(3)
+                .backOffPolicy(backOffPolicy)
+                .skip(Exception.class)
+                .skipLimit(100)
                 .build();
     }
 
     @Bean
     @StepScope
-    public JsonItemReader<TmdbExportItem> movieExportItemReader(@Value("#{jobParameters['fileDate']}") String fileDate) {
-        return createExportItemReader("movie", fileDate);
+    public JsonItemReader<TmdbExportItem> exportReader(
+            @Value("#{stepExecutionContext['exportPath']}") String exportPath) {
+        if (exportPath == null) {
+            // Fallback for testing
+            return new JsonItemReaderBuilder<TmdbExportItem>()
+                    .name("exportReader")
+                    .resource(new FileSystemResource("/data/exports/movie_export.json"))
+                    .jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class))
+                    .build();
+        }
+        
+        return new JsonItemReaderBuilder<TmdbExportItem>()
+                .name("exportReader")
+                .resource(new FileSystemResource(exportPath))
+                .jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class))
+                .build();
     }
 
     @Bean
@@ -101,14 +147,21 @@ public class InitFullSyncJobConfig {
         return new JpaPagingItemReaderBuilder<TmdbWorkQueue>()
                 .name("movieWorkQueueReader")
                 .entityManagerFactory(entityManagerFactory)
-                .queryString("SELECT w FROM SyncTmdbWorkQueue w WHERE w.entityType = 'movie' ORDER BY w.priority DESC, w.tmdbId ASC")
+                .queryString("SELECT w FROM TmdbWorkQueue w WHERE w.entityType = 'movie' AND w.status = 'READY' ORDER BY w.priority DESC, w.tmdbId ASC")
                 .pageSize(100)
                 .build();
     }
 
-    public ItemProcessor<TmdbExportItem, TmdbWorkQueue> exportItemProcessor(String entityType) {
-        return item -> item.adult() ? null : 
-            new TmdbWorkQueue(TmdbWorkQueue.EntityType.valueOf(entityType.toUpperCase()), item.id(), calculatePriority(item.popularity()));
+    @Bean
+    public TaskExecutor batchTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("batch-");
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
     }
 
     @Bean
@@ -173,41 +226,9 @@ public class InitFullSyncJobConfig {
         };
     }
 
-    @Bean
-    public JpaItemWriter<TmdbWorkQueue> workQueueItemWriter() {
-        JpaItemWriter<TmdbWorkQueue> writer = new JpaItemWriter<>();
-        writer.setEntityManagerFactory(entityManagerFactory);
-        return writer;
-    }
 
-    @Bean
-    public ItemWriter<MovieDelta> movieDetailWriter() {
-        return chunk -> {
-            log.info("Writing a chunk of {} movies.", chunk.getItems().size());
-            for (MovieDelta delta : chunk.getItems()) {
-                movieSyncService.syncMovie(delta);
-            }
-        };
-    }
-
-    // --- Helper Methods & Classes ---
-
-    private JsonItemReader<TmdbExportItem> createExportItemReader(String entityType, String fileDate) {
-        if (fileDate == null) fileDate = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("MM_dd_yyyy"));
-        String url = String.format(EXPORT_URL_TEMPLATE, entityType, fileDate);
-        try {
-            return new JsonItemReaderBuilder<TmdbExportItem>().name(entityType + "ExportReader").resource(new UrlResource(url)).jsonObjectReader(new JacksonJsonObjectReader<>(TmdbExportItem.class)).build();
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Invalid URL: " + url, e);
-        }
-    }
-
-    private int calculatePriority(double popularity) {
-        if (popularity > 100) return 10;
-        if (popularity > 50) return 5;
-        return 0;
-    }
-
+    // --- Helper Methods ---
+    
     private LocalDate parseDate(String dateStr, Long movieId) {
         if (dateStr == null || dateStr.isBlank()) return null;
         try {
@@ -220,5 +241,10 @@ public class InitFullSyncJobConfig {
 
     private BigDecimal toBigDecimal(Double value) {
         return value != null ? BigDecimal.valueOf(value) : null;
+    }
+    
+    private int calculatePriority(Double popularity) {
+        if (popularity == null) return 0;
+        return Math.min((int) (popularity * 10), 1000);
     }
 }
