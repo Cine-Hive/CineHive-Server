@@ -232,8 +232,60 @@ public class TmdbApiClient {
      * @return Configuration 정보 응답 DTO
      */
     public TmdbConfigurationResponse getConfiguration() {
-        // 기존 get 메서드를 재활용합니다. 쿼리 파라미터가 없으므로 빈 Map을 전달합니다.
         return get("/configuration", TmdbConfigurationResponse.class, new LinkedMultiValueMap<>());
+    }
+
+    // --- Batch Sync API ---
+
+    /**
+     * TMDB Daily Export 파일을 다운로드합니다.
+     * @param fileDate 파일 날짜 (MM_dd_yyyy 형식)
+     * @param entityType 엔티티 타입 (movie, tv, person)
+     * @return 압축된 NDJSON 파일의 바이트 배열
+     */
+    public byte[] downloadDailyExport(String fileDate, String entityType) {
+        String baseUrl = tmdbProperties.getExportBaseUrl();
+        String fileName = entityType + "_ids_" + fileDate + ".json.gz";
+        String url = baseUrl + "/" + fileName;
+        
+        try {
+            return RestClient.create()
+                .get()
+                .uri(url)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (request, response) -> {
+                    throw new TmdbClientException(
+                        "Daily export download failed for " + fileName,
+                        (HttpStatus) response.getStatusCode()
+                    );
+                })
+                .body(byte[].class);
+        } catch (Exception e) {
+            log.error("TMDB Daily Export 다운로드 실패. 파일명: {}", fileName, e);
+            throw new TmdbClientException("Daily export download failed: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * 영화 상세 정보를 배치 처리용으로 조회합니다.
+     * append_to_response로 한 번에 최대 정보를 가져옵니다.
+     * @param movieId 영화 TMDB ID
+     * @return 영화 상세 정보 (credits, keywords, images 포함)
+     */
+    public TmdbMovieDetailResponse getMovieDetailForBatch(Long movieId) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "credits,keywords,images");
+        params.add(INCLUDE_IMAGE_LANGUAGE, "ko,null");
+        
+        try {
+            return get("/movie/" + movieId, TmdbMovieDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("영화 ID {}를 찾을 수 없습니다.", movieId);
+                throw e;
+            }
+            throw e;
+        }
     }
 
     // --- Private Helper Methods ---
