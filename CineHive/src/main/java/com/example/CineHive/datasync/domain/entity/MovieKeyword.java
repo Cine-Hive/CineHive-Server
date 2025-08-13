@@ -27,4 +27,14 @@ public class MovieKeyword extends BaseEntity {
         this.movieId = movieId;
         this.keywordId = keywordId;
     }
+
+    /**
+     * 영화 ID와 키워드 ID로 MovieKeyword 엔티티를 생성하는 static factory 메서드
+     */
+    public static MovieKeyword of(Long movieId, Long keywordId) {
+        return MovieKeyword.builder()
+                .movieId(movieId)
+                .keywordId(keywordId)
+                .build();
+    }
 }
