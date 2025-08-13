@@ -30,26 +30,34 @@ public class TmdbExportWriter implements ItemWriter<TmdbExportItem> {
 
         // 배치로 중복 없이 삽입 (ON CONFLICT DO NOTHING 방식)
         String sql = """
-            INSERT INTO tmdb_work_queue (entity_type, tmdb_id, priority, created_at, attempts) 
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP, 0)
+            INSERT INTO tmdb_work_queue (entity_type, tmdb_id, priority, status, created_at, attempts) 
+            VALUES (?, ?, ?, 'READY', CURRENT_TIMESTAMP, 0)
             ON CONFLICT (entity_type, tmdb_id) DO NOTHING
             """;
 
         jdbcTemplate.batchUpdate(sql, items.stream()
-                .filter(item -> !item.shouldSkip()) // adult == true 스킵
+                .filter(item -> !item.adult()) // adult == true 스킵
                 .map(item -> new Object[]{
-                    TmdbWorkQueue.EntityType.MOVIE.name(),
+                    "movie",  // entity_type
                     item.id(),
-                    item.getPriority()
+                    calculatePriority(item.popularity())
                 })
                 .toList());
 
         int processedCount = (int) items.stream()
-                .filter(item -> !item.shouldSkip())
+                .filter(item -> !item.adult())
                 .count();
         
         int skippedCount = items.size() - processedCount;
 
         log.debug("TMDB Export 시딩 완료: processed={}, skipped={}", processedCount, skippedCount);
+    }
+    
+    private int calculatePriority(Double popularity) {
+        if (popularity == null) return 0;
+        
+        // Convert popularity to priority (higher popularity = higher priority)
+        // Scale: 0-100 popularity -> 0-1000 priority
+        return Math.min((int) (popularity * 10), 1000);
     }
 }
