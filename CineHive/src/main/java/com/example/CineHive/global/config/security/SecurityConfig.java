@@ -38,7 +38,9 @@ public class SecurityConfig {
             "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/reissue",
             "/api/v1/auth/check-email", "/api/v1/auth/check-nickname",
             // OAuth2
-            "/api/v1/oauth2/**"
+            "/api/v1/oauth2/**",
+            // Operations endpoints (dev only)
+            "/ops/**"
     };
 
     private static final String[] PUBLIC_GET_PATHS = {
