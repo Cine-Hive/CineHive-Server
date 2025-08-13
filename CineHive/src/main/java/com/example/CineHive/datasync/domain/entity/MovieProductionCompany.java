@@ -27,4 +27,14 @@ public class MovieProductionCompany extends BaseEntity {
         this.movieId = movieId;
         this.companyId = companyId;
     }
+
+    /**
+     * 영화 ID와 제작사 ID로 MovieProductionCompany 엔티티를 생성하는 static factory 메서드
+     */
+    public static MovieProductionCompany of(Long movieId, Long companyId) {
+        return MovieProductionCompany.builder()
+                .movieId(movieId)
+                .companyId(companyId)
+                .build();
+    }
 }
