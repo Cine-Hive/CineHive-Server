@@ -287,6 +287,113 @@ public class TmdbApiClient {
             throw e;
         }
     }
+    
+    /**
+     * TV 시리즈 상세 정보를 배치 처리용으로 조회합니다.
+     * append_to_response로 한 번에 최대 정보를 가져옵니다.
+     * @param tvId TV 시리즈 TMDB ID
+     * @return TV 시리즈 상세 정보 (aggregate_credits, keywords, images 포함)
+     */
+    public TmdbTvSeriesDetailResponse getTvDetailForBatch(Long tvId) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "aggregate_credits,keywords,images");
+        params.add(INCLUDE_IMAGE_LANGUAGE, "ko,null");
+        
+        try {
+            return get("/tv/" + tvId, TmdbTvSeriesDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("TV 시리즈 ID {}를 찾을 수 없습니다.", tvId);
+                throw e;
+            }
+            throw e;
+        }
+    }
+    
+    /**
+     * 인물 상세 정보를 배치 처리용으로 조회합니다.
+     * append_to_response로 한 번에 최대 정보를 가져옵니다.
+     * @param personId 인물 TMDB ID
+     * @return 인물 상세 정보 (movie_credits, tv_credits, images 포함)
+     */
+    public TmdbPersonDetailResponse getPersonDetailForBatch(Long personId) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "movie_credits,tv_credits,images");
+        
+        try {
+            return get("/person/" + personId, TmdbPersonDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("인물 ID {}를 찾을 수 없습니다.", personId);
+                throw e;
+            }
+            throw e;
+        }
+    }
+    
+    /**
+     * 컬렉션 상세 정보를 조회합니다.
+     * @param collectionId 컬렉션 TMDB ID
+     * @return 컬렉션 상세 정보
+     */
+    public TmdbCollectionDetailResponse getCollectionDetail(Long collectionId) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "images");
+        
+        try {
+            return get("/collection/" + collectionId, TmdbCollectionDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("컬렉션 ID {}를 찾을 수 없습니다.", collectionId);
+                throw e;
+            }
+            throw e;
+        }
+    }
+    
+    /**
+     * TV 시즌 상세 정보를 조회합니다.
+     * @param tvId TV 시리즈 TMDB ID
+     * @param seasonNumber 시즌 번호
+     * @return 시즌 상세 정보
+     */
+    public TmdbSeasonDetailResponse getSeasonDetail(Long tvId, Integer seasonNumber) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "credits,images,videos,external_ids");
+        
+        try {
+            return get("/tv/" + tvId + "/season/" + seasonNumber, TmdbSeasonDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("TV {} 시즌 {}를 찾을 수 없습니다.", tvId, seasonNumber);
+                throw e;
+            }
+            throw e;
+        }
+    }
+    
+    /**
+     * 에피소드 상세 정보를 조회합니다.
+     * @param tvId TV 시리즈 TMDB ID
+     * @param seasonNumber 시즌 번호
+     * @param episodeNumber 에피소드 번호
+     * @return 에피소드 상세 정보
+     */
+    public TmdbEpisodeDetailResponse getEpisodeDetail(Long tvId, Integer seasonNumber, Integer episodeNumber) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(APPEND_TO_RESPONSE, "credits,images,videos");
+        
+        try {
+            return get("/tv/" + tvId + "/season/" + seasonNumber + "/episode/" + episodeNumber, 
+                      TmdbEpisodeDetailResponse.class, params);
+        } catch (TmdbClientException e) {
+            if (e.getStatus() == HttpStatus.NOT_FOUND) {
+                log.warn("TV {} 시즌 {} 에피소드 {}를 찾을 수 없습니다.", tvId, seasonNumber, episodeNumber);
+                throw e;
+            }
+            throw e;
+        }
+    }
 
     // --- Private Helper Methods ---
 
