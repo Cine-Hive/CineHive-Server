@@ -8,13 +8,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity(name = "SyncMovieCrew")
-@Table(name = "movie_crew")
+@Table(name = "movie_crew",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"credit_id", "movie_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MovieCrew extends BaseEntity {
 
     @Id
-    @Column(name = "credit_id", length = 32)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+    
+    @Column(name = "credit_id", length = 32, nullable = false)
     private String creditId;
 
     @Column(name = "movie_id", nullable = false)
