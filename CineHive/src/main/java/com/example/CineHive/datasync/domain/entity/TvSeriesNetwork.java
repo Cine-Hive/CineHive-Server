@@ -30,4 +30,14 @@ public class TvSeriesNetwork extends BaseEntity {
         this.tvId = tvId;
         this.networkId = networkId;
     }
+    
+    /**
+     * TV ID와 Network ID로 TvSeriesNetwork 엔티티를 생성하는 static factory 메서드
+     */
+    public static TvSeriesNetwork of(Long tvId, Long networkId) {
+        return TvSeriesNetwork.builder()
+                .tvId(tvId)
+                .networkId(networkId)
+                .build();
+    }
 }
