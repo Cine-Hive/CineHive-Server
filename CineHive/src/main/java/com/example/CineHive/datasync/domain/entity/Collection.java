@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.ZonedDateTime;
 
 @Entity(name = "SyncCollection")
 @Table(name = "collection")
@@ -28,13 +29,22 @@ public class Collection extends BaseEntity {
 
     @Column(name = "backdrop_path")
     private String backdropPath;
+    
+    @Column(columnDefinition = "TEXT")
+    private String overview;
+    
+    @Column(name = "updated_from_tmdb_at")
+    private ZonedDateTime updatedFromTmdbAt;
 
     @Builder
-    public Collection(Long tmdbId, String name, String posterPath, String backdropPath) {
+    public Collection(Long tmdbId, String name, String posterPath, String backdropPath, 
+                     String overview, ZonedDateTime updatedFromTmdbAt) {
         this.tmdbId = tmdbId;
         this.name = name;
         this.posterPath = posterPath;
         this.backdropPath = backdropPath;
+        this.overview = overview;
+        this.updatedFromTmdbAt = updatedFromTmdbAt;
     }
 
     /**
