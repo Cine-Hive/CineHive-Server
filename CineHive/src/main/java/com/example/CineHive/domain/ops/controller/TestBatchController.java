@@ -1,5 +1,6 @@
 package com.example.CineHive.domain.ops.controller;
 
+import com.example.CineHive.datasync.batch.DataSeedingService;
 import com.example.CineHive.datasync.domain.entity.TmdbWorkQueue;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -37,6 +38,25 @@ public class TestBatchController {
     @Autowired
     @Qualifier("fullSyncJob")
     private Job fullSyncJob;
+    
+    @Autowired(required = false)
+    @Qualifier("optimizedMovieSyncJob")
+    private Job optimizedMovieSyncJob;
+    
+    @Autowired(required = false)
+    @Qualifier("highPerformanceMovieSyncJob")
+    private Job highPerformanceMovieSyncJob;
+    
+    @Autowired(required = false)
+    @Qualifier("highPerformanceFullSyncJob")
+    private Job highPerformanceFullSyncJob;
+    
+    @Autowired(required = false)
+    @Qualifier("tvAndPersonSeedingJob")
+    private Job tvAndPersonSeedingJob;
+    
+    @Autowired(required = false)
+    private DataSeedingService dataSeedingService;
 
     @GetMapping("/query-debug")
     @Transactional(readOnly = true)
@@ -160,6 +180,124 @@ public class TestBatchController {
             
         } catch (Exception e) {
             log.error("Failed to trigger batch job", e);
+            result.put("success", false);
+            result.put("error", e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    @PostMapping("/trigger-optimized-batch")
+    public Map<String, Object> triggerOptimizedBatch() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            if (optimizedMovieSyncJob == null) {
+                result.put("success", false);
+                result.put("error", "Optimized batch job not available");
+                return result;
+            }
+            
+            JobParameters params = new JobParametersBuilder()
+                    .addLong("time", System.currentTimeMillis())
+                    .addLong("batchSize", 100L)
+                    .toJobParameters();
+            
+            jobLauncher.run(optimizedMovieSyncJob, params);
+            
+            result.put("success", true);
+            result.put("message", "Optimized batch job triggered successfully");
+            
+        } catch (Exception e) {
+            log.error("Failed to trigger optimized batch job", e);
+            result.put("success", false);
+            result.put("error", e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    @PostMapping("/trigger-high-performance-batch")
+    public Map<String, Object> triggerHighPerformanceBatch() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            if (highPerformanceMovieSyncJob == null) {
+                result.put("success", false);
+                result.put("error", "High performance batch job not available");
+                return result;
+            }
+            
+            JobParameters params = new JobParametersBuilder()
+                    .addLong("time", System.currentTimeMillis())
+                    .toJobParameters();
+            
+            jobLauncher.run(highPerformanceMovieSyncJob, params);
+            
+            result.put("success", true);
+            result.put("message", "High performance batch job triggered successfully");
+            
+        } catch (Exception e) {
+            log.error("Failed to trigger high performance batch job", e);
+            result.put("success", false);
+            result.put("error", e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    @PostMapping("/trigger-full-sync-batch")
+    public Map<String, Object> triggerFullSyncBatch() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            if (highPerformanceFullSyncJob == null) {
+                result.put("success", false);
+                result.put("error", "High performance full sync job not available");
+                return result;
+            }
+            
+            JobParameters params = new JobParametersBuilder()
+                    .addLong("time", System.currentTimeMillis())
+                    .toJobParameters();
+            
+            jobLauncher.run(highPerformanceFullSyncJob, params);
+            
+            result.put("success", true);
+            result.put("message", "High performance full sync batch job triggered successfully");
+            
+        } catch (Exception e) {
+            log.error("Failed to trigger high performance full sync batch job", e);
+            result.put("success", false);
+            result.put("error", e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    @PostMapping("/seed-tv-person")
+    public Map<String, Object> seedTvAndPerson() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            if (dataSeedingService == null) {
+                result.put("success", false);
+                result.put("error", "Data seeding service not available");
+                return result;
+            }
+            
+            // DataSeedingService를 사용하여 TV와 Person 데이터 시드
+            dataSeedingService.seedAllEntityTypes();
+            
+            // 큐 상태 확인
+            Map<String, Map<String, Integer>> queueStatus = dataSeedingService.verifyQueueStatus();
+            
+            result.put("success", true);
+            result.put("message", "TV and Person data seeded successfully");
+            result.put("queueStatus", queueStatus);
+            
+        } catch (Exception e) {
+            log.error("Failed to seed TV and Person data", e);
             result.put("success", false);
             result.put("error", e.getMessage());
         }
