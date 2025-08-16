@@ -27,4 +27,14 @@ public class TvKeyword extends BaseEntity {
         this.tvId = tvId;
         this.keywordId = keywordId;
     }
+    
+    /**
+     * TV ID와 Keyword ID로 TvKeyword 엔티티를 생성하는 static factory 메서드
+     */
+    public static TvKeyword of(Long tvId, Long keywordId) {
+        return TvKeyword.builder()
+                .tvId(tvId)
+                .keywordId(keywordId)
+                .build();
+    }
 }
