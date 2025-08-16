@@ -15,7 +15,7 @@ services:
       es:
         condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=local
       - SERVER_PORT=8081
       # DB 접속 정보
       - DB_HOST=db
@@ -26,6 +26,12 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ES_HOST=es
+      # TMDB API Key
+      - APP_TMDB_API_KEY=35f22d327ac49da1df98b95fadad73aa
+      # Run batch job on startup
+      - RUN_BATCH_JOB=true
+    volumes:
+      - tmdb-exports:/data/tmdb/exports
 
   # 2. PostgreSQL 서비스
   db:
@@ -102,3 +108,4 @@ volumes:
   postgres-db-data:
   redis-data:
   es-data:
+  tmdb-exports:
