@@ -21,6 +21,9 @@ public class MovieSyncService {
     private final MovieRepository movieRepository;
     private final CollectionRepository collectionRepository;
     private final ProductionCompanyRepository productionCompanyRepository;
+    private final PersonRepository personRepository;  // Person 리포지토리 추가
+    private final GenreRepository genreRepository;
+    private final KeywordRepository keywordRepository;
     private final MovieGenreRepository movieGenreRepository;
     private final MovieKeywordRepository movieKeywordRepository;
     private final MovieCastRepository movieCastRepository;
@@ -64,52 +67,131 @@ public class MovieSyncService {
     
     /**
      * MovieDelta를 받아서 데이터베이스에 동기화하는 메소드
-     * 기존 로직 유지 (delete-insert 패턴)
+     * 저장 순서: 참조 데이터 -> Movie 본체 -> 관계 테이블 (FK 제약조건 해결)
      */
     @Transactional
     public void syncMovie(MovieDelta delta) {
         Long movieId = delta.movie().getTmdbId();
+        log.debug("영화 동기화 시작: movieId={}", movieId);
 
-        // 1. 독립적인 엔티티들 먼저 저장 (UPSERT)
-        // Collection 정보가 있으면 저장
-        if (delta.collection() != null) {
-            collectionRepository.save(delta.collection());
+        try {
+            // ========== 1단계: 참조/기준 데이터 저장 (UPSERT) ==========
+            // 이 데이터들은 관계 테이블이 참조하므로 반드시 먼저 저장되어야 함
+            
+            // 1-1. Genre 저장 (movie_genre가 참조)
+            if (delta.genreEntities() != null && !delta.genreEntities().isEmpty()) {
+                log.debug("Saving {} genres for movie {}", delta.genreEntities().size(), movieId);
+                genreRepository.saveAll(delta.genreEntities());
+                genreRepository.flush();
+            }
+            
+            // 1-2. Keyword 저장 (movie_keyword가 참조)
+            if (delta.keywordEntities() != null && !delta.keywordEntities().isEmpty()) {
+                log.debug("Saving {} keywords for movie {}", delta.keywordEntities().size(), movieId);
+                keywordRepository.saveAll(delta.keywordEntities());
+                keywordRepository.flush();
+            }
+            
+            // 1-3. Person 저장 (movie_cast/movie_crew가 참조)
+            if (delta.persons() != null && !delta.persons().isEmpty()) {
+                log.debug("Saving {} persons for movie {}", delta.persons().size(), movieId);
+                personRepository.saveAll(delta.persons());
+                personRepository.flush();
+            }
+            
+            // 1-4. ProductionCompany 저장 (movie_production_company가 참조)
+            if (delta.companies() != null && !delta.companies().isEmpty()) {
+                log.debug("Saving {} production companies for movie {}", delta.companies().size(), movieId);
+                productionCompanyRepository.saveAll(delta.companies());
+                productionCompanyRepository.flush();
+            }
+            
+            // 1-5. Collection 저장 (movie가 참조)
+            if (delta.collection() != null) {
+                log.debug("Saving collection for movie {}", movieId);
+                collectionRepository.save(delta.collection());
+                collectionRepository.flush();
+            }
+
+            // ========== 2단계: Movie 본체 저장 (UPSERT) ==========
+            log.debug("Saving movie entity: movieId={}", movieId);
+            movieRepository.save(delta.movie());
+            movieRepository.flush();
+
+            // ========== 3단계: 관계 테이블 저장 (Delete-Insert) ==========
+            // 양쪽 FK가 모두 존재함이 보장된 후 실행
+            
+            // 3-1. movie_genre
+            movieGenreRepository.deleteAllByMovieId(movieId);
+            if (delta.genres() != null && !delta.genres().isEmpty()) {
+                try {
+                    movieGenreRepository.saveAll(delta.genres());
+                    log.debug("Saved {} movie_genre relations for movie {}", delta.genres().size(), movieId);
+                } catch (Exception e) {
+                    log.error("FK 위반: movie_genre 저장 실패 - movieId={}, genreIds={}", 
+                        movieId, delta.genres().stream().map(mg -> mg.getGenreId()).toList(), e);
+                    throw e;
+                }
+            }
+
+            // 3-2. movie_keyword
+            movieKeywordRepository.deleteAllByMovieId(movieId);
+            if (delta.keywords() != null && !delta.keywords().isEmpty()) {
+                try {
+                    movieKeywordRepository.saveAll(delta.keywords());
+                    log.debug("Saved {} movie_keyword relations for movie {}", delta.keywords().size(), movieId);
+                } catch (Exception e) {
+                    log.error("FK 위반: movie_keyword 저장 실패 - movieId={}, keywordIds={}", 
+                        movieId, delta.keywords().stream().map(mk -> mk.getKeywordId()).toList(), e);
+                    throw e;
+                }
+            }
+
+            // 3-3. movie_cast
+            movieCastRepository.deleteAllByMovieId(movieId);
+            if (delta.cast() != null && !delta.cast().isEmpty()) {
+                try {
+                    movieCastRepository.saveAll(delta.cast());
+                    log.debug("Saved {} movie_cast relations for movie {}", delta.cast().size(), movieId);
+                } catch (Exception e) {
+                    log.error("FK 위반: movie_cast 저장 실패 - movieId={}, personIds={}", 
+                        movieId, delta.cast().stream().map(mc -> mc.getPersonId()).toList(), e);
+                    throw e;
+                }
+            }
+
+            // 3-4. movie_crew
+            movieCrewRepository.deleteAllByMovieId(movieId);
+            if (delta.crew() != null && !delta.crew().isEmpty()) {
+                try {
+                    movieCrewRepository.saveAll(delta.crew());
+                    log.debug("Saved {} movie_crew relations for movie {}", delta.crew().size(), movieId);
+                } catch (Exception e) {
+                    log.error("FK 위반: movie_crew 저장 실패 - movieId={}, personIds={}", 
+                        movieId, delta.crew().stream().map(mc -> mc.getPersonId()).toList(), e);
+                    throw e;
+                }
+            }
+
+            // 3-5. movie_production_company
+            movieProductionCompanyRepository.deleteAllByMovieId(movieId);
+            if (delta.movieCompanies() != null && !delta.movieCompanies().isEmpty()) {
+                try {
+                    movieProductionCompanyRepository.saveAll(delta.movieCompanies());
+                    log.debug("Saved {} movie_production_company relations for movie {}", delta.movieCompanies().size(), movieId);
+                } catch (Exception e) {
+                    log.error("FK 위반: movie_production_company 저장 실패 - movieId={}, companyIds={}", 
+                        movieId, delta.movieCompanies().stream().map(mpc -> mpc.getCompanyId()).toList(), e);
+                    throw e;
+                }
+            }
+
+            log.info("영화 동기화 완료: movieId={}", movieId);
+            
+        } catch (Exception e) {
+            log.error("영화 동기화 실패: movieId={}, error={}", movieId, e.getMessage(), e);
+            throw e;
         }
-        // ProductionCompany 정보가 있으면 모두 저장
-        if (delta.companies() != null && !delta.companies().isEmpty()) {
-            productionCompanyRepository.saveAll(delta.companies());
-        }
-
-        // 2. Movie 본체 엔티티 저장 (UPSERT)
-        movieRepository.save(delta.movie());
-
-        // 3. 관계 데이터는 기존 것을 모두 지우고 새로 삽입 (Full Sync에서의 멱등성 보장)
-        movieGenreRepository.deleteAllByMovieId(movieId);
-        if (delta.genres() != null && !delta.genres().isEmpty()) {
-            movieGenreRepository.saveAll(delta.genres());
-        }
-
-        movieKeywordRepository.deleteAllByMovieId(movieId);
-        if (delta.keywords() != null && !delta.keywords().isEmpty()) {
-            movieKeywordRepository.saveAll(delta.keywords());
-        }
-
-        movieCastRepository.deleteAllByMovieId(movieId);
-        if (delta.cast() != null && !delta.cast().isEmpty()) {
-            movieCastRepository.saveAll(delta.cast());
-        }
-
-        movieCrewRepository.deleteAllByMovieId(movieId);
-        if (delta.crew() != null && !delta.crew().isEmpty()) {
-            movieCrewRepository.saveAll(delta.crew());
-        }
-
-        movieProductionCompanyRepository.deleteAllByMovieId(movieId);
-        if (delta.movieCompanies() != null && !delta.movieCompanies().isEmpty()) {
-            movieProductionCompanyRepository.saveAll(delta.movieCompanies());
-        }
-
-        // 4. Outbox 패턴을 이용한 캐시 무효화 이벤트 기록 (추후 구현)
     }
     
     private void handleTmdbApiError(TmdbWorkQueue queueItem, TmdbClientException e, Long movieId) {
