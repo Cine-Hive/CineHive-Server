@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -66,10 +68,32 @@ public interface TmdbWorkQueueRepository extends JpaRepository<TmdbWorkQueue, Lo
     @Modifying
     @Transactional
     @Query("UPDATE TmdbWorkQueue w SET w.status = :status, w.processed = true, w.processedAt = CURRENT_TIMESTAMP WHERE w.tmdbId = :tmdbId AND w.entityType = :entityType")
-    void updateStatus(@Param("tmdbId") Long tmdbId, @Param("entityType") String entityType, @Param("status") String status);
+    void updateStatus(@Param("tmdbId") Long tmdbId, 
+                      @Param("entityType") TmdbWorkQueue.EntityType entityType, 
+                      @Param("status") TmdbWorkQueue.ProcessStatus status);
     
     @Modifying
     @Transactional
     @Query("UPDATE TmdbWorkQueue w SET w.status = :status, w.lastError = :error, w.attempts = w.attempts + 1 WHERE w.tmdbId = :tmdbId AND w.entityType = :entityType")
-    void updateStatusWithError(@Param("tmdbId") Long tmdbId, @Param("entityType") String entityType, @Param("status") String status, @Param("error") String error);
+    void updateStatusWithError(@Param("tmdbId") Long tmdbId, 
+                               @Param("entityType") TmdbWorkQueue.EntityType entityType, 
+                               @Param("status") TmdbWorkQueue.ProcessStatus status, 
+                               @Param("error") String error);
+    
+    // 모니터링을 위한 추가 메서드들
+    Long countByStatus(TmdbWorkQueue.ProcessStatus status);
+    
+    Long countByEntityType(TmdbWorkQueue.EntityType entityType);
+    
+    @Query("""
+        SELECT COUNT(w) FROM TmdbWorkQueue w 
+        WHERE w.entityType = :entityType 
+        AND w.status = 'PROCESSED'
+        AND w.processedAt BETWEEN :startDate AND :endDate
+        """)
+    Long countProcessedBetween(@Param("entityType") TmdbWorkQueue.EntityType entityType,
+                               @Param("startDate") LocalDateTime startDate,
+                               @Param("endDate") LocalDateTime endDate);
+    
+    Page<TmdbWorkQueue> findByStatus(TmdbWorkQueue.ProcessStatus status, Pageable pageable);
 }
