@@ -49,4 +49,20 @@ public class TvSeasonImage {
         this.width = width;
         this.height = height;
     }
+    
+    /**
+     * TMDB API 응답을 TvSeasonImage 엔티티로 변환하는 static factory 메서드
+     */
+    public static TvSeasonImage fromTmdbResponse(Long seasonTmdbId, com.example.CineHive.client.tmdb.dto.TmdbImageResponse response) {
+        return TvSeasonImage.builder()
+                .seasonTmdbId(seasonTmdbId)
+                .filePath(response.filePath())
+                .iso6391(response.iso_639_1())
+                .aspectRatio(response.aspectRatio() != null ? BigDecimal.valueOf(response.aspectRatio()) : null)
+                .voteAverage(response.voteAverage() != null ? BigDecimal.valueOf(response.voteAverage()) : null)
+                .voteCount(response.voteCount())
+                .width(response.width())
+                .height(response.height())
+                .build();
+    }
 }
