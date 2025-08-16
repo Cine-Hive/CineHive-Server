@@ -12,6 +12,10 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Entity(name = "SyncTvSeries")
 @Table(name = "tv_series")
@@ -120,5 +124,69 @@ public class TvSeries extends BaseEntity {
         this.voteAverage = voteAverage;
         this.voteCount = voteCount;
         this.updatedFromTmdbAt = updatedFromTmdbAt;
+    }
+    
+    /**
+     * TMDB API 응답을 TvSeries 엔티티로 변환하는 static factory 메서드
+     */
+    public static TvSeries fromTmdbResponse(com.example.CineHive.client.tmdb.dto.TmdbTvSeriesDetailResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        
+        String createdByJson = null;
+        String lastEpisodeJson = null;
+        String nextEpisodeJson = null;
+        
+        try {
+            if (response.createdBy() != null && !response.createdBy().isEmpty()) {
+                createdByJson = objectMapper.writeValueAsString(response.createdBy());
+            }
+            if (response.lastEpisodeToAir() != null) {
+                lastEpisodeJson = objectMapper.writeValueAsString(response.lastEpisodeToAir());
+            }
+            if (response.nextEpisodeToAir() != null) {
+                nextEpisodeJson = objectMapper.writeValueAsString(response.nextEpisodeToAir());
+            }
+        } catch (JsonProcessingException e) {
+            // 로그 처리는 실제 구현시 추가
+        }
+        
+        return TvSeries.builder()
+                .tmdbId(response.id())
+                .name(response.name())
+                .originalName(response.originalName())
+                .overview(response.overview())
+                .tagline(response.tagline())
+                .firstAirDate(parseDate(response.firstAirDate()))
+                .lastAirDate(parseDate(response.lastAirDate()))
+                .numberOfSeasons(response.numberOfSeasons())
+                .numberOfEpisodes(response.numberOfEpisodes())
+                .inProduction(response.inProduction())
+                .status(response.status())
+                .type(response.type())
+                .createdByJson(createdByJson)
+                .lastEpisodeToAirJson(lastEpisodeJson)
+                .nextEpisodeToAirJson(nextEpisodeJson)
+                .posterPath(response.posterPath())
+                .backdropPath(response.backdropPath())
+                .popularity(response.popularity())
+                .voteAverage(response.voteAverage())
+                .voteCount(response.voteCount())
+                .updatedFromTmdbAt(ZonedDateTime.now())
+                .build();
+    }
+    
+    /**
+     * 날짜 문자열을 LocalDate로 파싱하는 유틸리티 메서드
+     */
+    private static LocalDate parseDate(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
+            return null;
+        }
+        
+        try {
+            return LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 }
