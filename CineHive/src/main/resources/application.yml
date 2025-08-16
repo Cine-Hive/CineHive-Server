@@ -26,6 +26,8 @@ spring:
       init:
         mode: always
         schema-locations: classpath:org/springframework/batch/core/schema-postgresql.sql
+    job:
+      enabled: false  # 자동 실행 방지
 
   flyway:
     enabled: true
@@ -33,6 +35,22 @@ spring:
     baseline-on-migrate: true
     baseline-version: 1 # 기존 스키마를 버전 1로 설정
     baseline-description: "Initial schema"
+  
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
+        session:
+          events:
+            flush_mode: COMMIT  # 트랜잭션 끝에만 flush
+  
+  task:
+    scheduling:
+      pool:
+        size: 2  # 스케줄러 스레드 풀 크기
 
 # =========================================
 # 애플리케이션별 맞춤 설정

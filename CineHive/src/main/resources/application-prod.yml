@@ -4,10 +4,10 @@ spring:
       on-profile: prod
 
   datasource:
-    url: jdbc:mariadb://${DB_HOST}/${DB_NAME}?useUnicode=true&characterEncoding=utf8mb4
+    url: jdbc:postgresql://${DB_HOST}/${DB_NAME}
     username: ${DB_USER}
     password: ${DB_PASS}
-    driver-class-name: org.mariadb.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   data:
     redis:
@@ -21,11 +21,27 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
 
   cache:
     redis:
       time-to-live: 60m
+
+  batch:
+    jdbc:
+      initialize-schema: never
+    sql:
+      init:
+        mode: never
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # baseline-on-migrate: false # 운영 DB는 Flyway가 처음부터 관리해야 함
+
 
 app:
   jwt:
