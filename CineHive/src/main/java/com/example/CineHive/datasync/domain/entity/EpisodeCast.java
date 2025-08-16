@@ -39,4 +39,19 @@ public class EpisodeCast extends BaseEntity {
         this.castOrder = castOrder;
         this.isGuest = isGuest;
     }
+    
+    /**
+     * TMDB API 응답을 EpisodeCast 엔티티로 변환하는 static factory 메서드
+     */
+    public static EpisodeCast fromTmdbResponse(Long episodeId, com.example.CineHive.client.tmdb.dto.TmdbMediaCastResponse response, 
+                                              int castOrder, boolean isGuest) {
+        return EpisodeCast.builder()
+                .creditId(response.creditId())
+                .episodeId(episodeId)
+                .personId(response.id())
+                .characterName(response.character())
+                .castOrder(castOrder)
+                .isGuest(isGuest)
+                .build();
+    }
 }
