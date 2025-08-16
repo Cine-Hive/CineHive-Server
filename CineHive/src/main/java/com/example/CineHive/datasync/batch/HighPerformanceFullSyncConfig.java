@@ -794,6 +794,38 @@ public class HighPerformanceFullSyncConfig {
                         tnParams
                     );
                 }
+                
+                // TV Seasons
+                if (delta.seasons() != null && !delta.seasons().isEmpty()) {
+                    List<Object[]> seasonParams = delta.seasons().stream()
+                        .map(season -> new Object[]{
+                            season.getTmdbId(),
+                            tvId,
+                            season.getSeasonNumber(),
+                            season.getName(),
+                            season.getOverview(),
+                            season.getAirDate() != null ? java.sql.Date.valueOf(season.getAirDate()) : null,
+                            season.getEpisodeCount(),
+                            season.getPosterPath(),
+                            season.getVoteAverage(),
+                            Timestamp.from(season.getUpdatedFromTmdbAt().toInstant())
+                        })
+                        .collect(Collectors.toList());
+                    
+                    jdbc.batchUpdate(
+                        "INSERT INTO tv_season (tmdb_id, tv_tmdb_id, season_number, name, overview, " +
+                        "air_date, episode_count, poster_path, vote_average, updated_from_tmdb_at, " +
+                        "created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                        "ON CONFLICT (tmdb_id) DO UPDATE SET " +
+                        "tv_tmdb_id = EXCLUDED.tv_tmdb_id, season_number = EXCLUDED.season_number, " +
+                        "name = EXCLUDED.name, overview = EXCLUDED.overview, " +
+                        "air_date = EXCLUDED.air_date, episode_count = EXCLUDED.episode_count, " +
+                        "poster_path = EXCLUDED.poster_path, vote_average = EXCLUDED.vote_average, " +
+                        "updated_from_tmdb_at = EXCLUDED.updated_from_tmdb_at, updated_at = NOW()",
+                        seasonParams
+                    );
+                }
             }
         }
     }
