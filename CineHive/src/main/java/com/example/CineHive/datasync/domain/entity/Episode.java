@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @Entity(name = "SyncEpisode")
 @Table(name = "episode")
@@ -76,5 +78,39 @@ public class Episode extends BaseEntity {
         this.voteAverage = voteAverage;
         this.voteCount = voteCount;
         this.updatedFromTmdbAt = updatedFromTmdbAt;
+    }
+    
+    /**
+     * TMDB API 응답을 Episode 엔티티로 변환하는 static factory 메서드
+     * 주의: 이 메서드는 간단한 에피소드 정보만 처리함. 상세 정보는 별도 API 호출 필요
+     */
+    public static Episode fromTmdbResponse(Long tvTmdbId, Long seasonTmdbId, 
+                                          com.example.CineHive.client.tmdb.dto.TmdbEpisodeSimpleResponse response) {
+        return Episode.builder()
+                .tmdbId(response.id())
+                .tvTmdbId(tvTmdbId)
+                .seasonTmdbId(seasonTmdbId)
+                .seasonNumber(response.seasonNumber())
+                .episodeNumber(response.episodeNumber())
+                .name(response.name())
+                .overview(response.overview())
+                .airDate(parseDate(response.airDate()))
+                .updatedFromTmdbAt(ZonedDateTime.now())
+                .build();
+    }
+    
+    /**
+     * 날짜 문자열을 LocalDate로 파싱하는 유틸리티 메서드
+     */
+    private static LocalDate parseDate(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
+            return null;
+        }
+        
+        try {
+            return LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 }
