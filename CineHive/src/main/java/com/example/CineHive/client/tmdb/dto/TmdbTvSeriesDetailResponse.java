@@ -26,7 +26,7 @@ public record TmdbTvSeriesDetailResponse(
         @JsonProperty("aggregate_credits") TmdbMediaCreditsResponse aggregateCredits, // aggregate_credits가 더 정확
         TmdbKeywordsResponse keywords,
         List<TmdbSeasonResponse> seasons,
-        List<TmdbNetworkImagesResponse> networks,
+        List<TmdbNetworkResponse> networks,
         @JsonProperty("production_companies") List<TmdbProductionCompanyResponse> productionCompanies,
         @JsonProperty("created_by") List<TmdbCreatorResponse> createdBy,
         @JsonProperty("last_episode_to_air") TmdbEpisodeSimpleResponse lastEpisodeToAir,
