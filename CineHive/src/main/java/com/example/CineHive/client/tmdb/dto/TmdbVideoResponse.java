@@ -12,5 +12,10 @@ public record TmdbVideoResponse(
         String type, // e.g., "Trailer", "Teaser"
         boolean official,
         @JsonProperty("published_at")
-        String publishedAt
+        String publishedAt,
+        @JsonProperty("iso_639_1")
+        String iso6391,
+        @JsonProperty("iso_3166_1")
+        String iso31661,
+        Integer size
 ) {}
