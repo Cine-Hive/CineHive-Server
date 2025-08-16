@@ -1,22 +1,21 @@
 package com.example.CineHive.datasync.domain.entity;
 
-import com.example.CineHive.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "genres")
+@Table(name = "genre")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class Genre extends BaseEntity {
+public class Genre {
     
     @Id
     @Column(name = "tmdb_id")
     private Long tmdbId;
     
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 128)
     private String name;
 }
