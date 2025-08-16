@@ -49,4 +49,20 @@ public class EpisodeImage {
         this.width = width;
         this.height = height;
     }
+    
+    /**
+     * TMDB API 응답을 EpisodeImage 엔티티로 변환하는 static factory 메서드
+     */
+    public static EpisodeImage fromTmdbResponse(Long episodeTmdbId, com.example.CineHive.client.tmdb.dto.TmdbImageResponse response) {
+        return EpisodeImage.builder()
+                .episodeTmdbId(episodeTmdbId)
+                .filePath(response.filePath())
+                .iso6391(response.iso_639_1())
+                .aspectRatio(response.aspectRatio() != null ? BigDecimal.valueOf(response.aspectRatio()) : null)
+                .voteAverage(response.voteAverage() != null ? BigDecimal.valueOf(response.voteAverage()) : null)
+                .voteCount(response.voteCount())
+                .width(response.width())
+                .height(response.height())
+                .build();
+    }
 }
