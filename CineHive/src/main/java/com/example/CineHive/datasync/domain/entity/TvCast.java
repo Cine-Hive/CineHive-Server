@@ -36,4 +36,17 @@ public class TvCast extends BaseEntity {
         this.characterName = characterName;
         this.castOrder = castOrder;
     }
+    
+    /**
+     * TMDB API 응답을 TvCast 엔티티로 변환하는 static factory 메서드
+     */
+    public static TvCast fromTmdbResponse(Long tvId, com.example.CineHive.client.tmdb.dto.TmdbMediaCastResponse response, int castOrder) {
+        return TvCast.builder()
+                .creditId(response.creditId())
+                .tvId(tvId)
+                .personId(response.id())
+                .characterName(response.character())
+                .castOrder(castOrder)
+                .build();
+    }
 }
