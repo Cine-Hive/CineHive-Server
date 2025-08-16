@@ -26,4 +26,14 @@ public class TvGenre extends BaseEntity {
         this.tvId = tvId;
         this.genreId = genreId;
     }
+    
+    /**
+     * TV ID와 Genre ID로 TvGenre 엔티티를 생성하는 static factory 메서드
+     */
+    public static TvGenre of(Long tvId, Long genreId) {
+        return TvGenre.builder()
+                .tvId(tvId)
+                .genreId(genreId)
+                .build();
+    }
 }
