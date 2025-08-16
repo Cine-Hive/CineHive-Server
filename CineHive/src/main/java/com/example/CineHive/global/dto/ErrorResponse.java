@@ -26,4 +26,9 @@ public record ErrorResponse(
     public static ErrorResponse of(int status, String code, String error, String message, String path, List<FieldErrorDetail> details) {
         return new ErrorResponse(LocalDateTime.now(), status, code, error, message, path, details);
     }
+    
+    // 간단한 메시지용
+    public static ErrorResponse of(String message) {
+        return new ErrorResponse(LocalDateTime.now(), 500, "INTERNAL_ERROR", "Internal Server Error", message, "", List.of());
+    }
 }
