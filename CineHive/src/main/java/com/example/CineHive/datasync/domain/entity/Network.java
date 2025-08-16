@@ -33,4 +33,16 @@ public class Network extends BaseEntity {
         this.logoPath = logoPath;
         this.originCountry = originCountry;
     }
+    
+    /**
+     * TMDB API 응답을 Network 엔티티로 변환하는 static factory 메서드
+     */
+    public static Network fromTmdbResponse(com.example.CineHive.client.tmdb.dto.TmdbNetworkResponse response) {
+        return Network.builder()
+                .tmdbId(response.id())
+                .name(response.name())
+                .logoPath(response.logoPath())
+                .originCountry(response.originCountry())
+                .build();
+    }
 }
