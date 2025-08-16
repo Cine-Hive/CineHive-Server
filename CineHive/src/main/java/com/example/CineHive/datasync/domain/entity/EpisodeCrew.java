@@ -35,4 +35,17 @@ public class EpisodeCrew extends BaseEntity {
         this.job = job;
         this.department = department;
     }
+    
+    /**
+     * TMDB API 응답을 EpisodeCrew 엔티티로 변환하는 static factory 메서드
+     */
+    public static EpisodeCrew fromTmdbResponse(Long episodeId, com.example.CineHive.client.tmdb.dto.TmdbMediaCrewResponse response) {
+        return EpisodeCrew.builder()
+                .creditId(response.creditId())
+                .episodeId(episodeId)
+                .personId(response.id())
+                .job(response.job())
+                .department(response.department())
+                .build();
+    }
 }
