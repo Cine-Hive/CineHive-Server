@@ -34,7 +34,8 @@ public class TmdbWorkQueue {
     private boolean processed = false;
     
     @Column(name = "status", length = 20)
-    private String status = "READY";
+    @Enumerated(EnumType.STRING)
+    private ProcessStatus status = ProcessStatus.PENDING;
 
     @Column(name = "attempts")
     private Integer attempts = 0;
@@ -63,6 +64,14 @@ public class TmdbWorkQueue {
             return value;
         }
     }
+    
+    public enum ProcessStatus {
+        PENDING,
+        PROCESSING,
+        DONE,
+        FAILED,
+        SKIPPED
+    }
 
     public TmdbWorkQueue(EntityType entityType, Long tmdbId, Integer priority) {
         this.entityType = entityType;
@@ -74,19 +83,19 @@ public class TmdbWorkQueue {
     public void markAsProcessed() {
         this.processed = true;
         this.processedAt = LocalDateTime.now();
-        this.status = "DONE";
+        this.status = ProcessStatus.DONE;
         this.attempts++;
     }
 
     public void markAsFailed(String error) {
         this.attempts++;
         this.lastError = error;
-        this.status = "FAILED";
+        this.status = ProcessStatus.FAILED;
     }
     
     public void markAsSkipped() {
         this.processed = true;
-        this.status = "SKIPPED";
+        this.status = ProcessStatus.SKIPPED;
         this.processedAt = LocalDateTime.now();
     }
 
